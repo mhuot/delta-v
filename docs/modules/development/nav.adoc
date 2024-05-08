@@ -84,5 +84,3 @@
 ** xref:amqp/custom_processors.adoc[]
 
 * xref:ticketing/inmemory-plugin.adoc[]
-
-* xref:reporting/jasperreport-styleguide.adoc[]

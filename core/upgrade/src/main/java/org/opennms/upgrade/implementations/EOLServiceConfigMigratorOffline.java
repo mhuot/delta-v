@@ -136,8 +136,7 @@ public class EOLServiceConfigMigratorOffline extends AbstractOnmsUpgrade {
                 "OpenNMS:Name=AccessPointMonitor",
                 "OpenNMS:Name=PollerBackEnd",
                 "OpenNMS:Name=Reportd",
-                "OpenNMS:Name=Statsd",
-                "OpenNMS:Name=Tl1d"
+                "OpenNMS:Name=Statsd"
         };
 
         try {

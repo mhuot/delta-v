@@ -79,8 +79,6 @@
                     <ul class="list-unstyled">
                         <li><a href="graph/index.jsp">Resource Graphs</a></li>
                         <li><a href="KSC/index.jsp">KSC Performance, Nodes, Domains</a></li>
-                        <li><a href="report/database/index.jsp">Database Reports</a></li>
-                        <li><a href="statisticsReports/index.htm">Statistics Reports</a></li>
                     </ul>
                 </div>
             </div>
