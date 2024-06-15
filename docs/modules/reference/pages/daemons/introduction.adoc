@@ -94,10 +94,6 @@ This can be helpful for devices that cannot be directly polled to check service 
 | Handles uptime percentage calculations.
 | `CORE_SERVICE_RTCD_ENABLED=true`
 
-| Scriptd
-| Lets you configure Bean Shell script to run in response to events.
-| `CORE_SERVICE_SCRIPTD_ENABLED=true`
-
 | SnmpPoller
 | Checks SNMP interface admin status.
 It is separate from pollerd's SnmpMonitor.

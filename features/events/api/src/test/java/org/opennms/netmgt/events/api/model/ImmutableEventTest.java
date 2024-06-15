@@ -65,12 +65,6 @@ public class ImmutableEventTest {
             // Expected...
         }
 
-        try {
-            immutableEvent.getScriptCollection().add(ImmutableScript.newBuilder().build());
-        } catch (Exception e) {
-            // Expected...
-        }
-
         // Immutable to Mutable
         Event convertedEvent = Event.copyFrom(immutableEvent);
 
@@ -168,10 +162,6 @@ public class ImmutableEventTest {
         Forward forward = new Forward();
         forward.setContent("test");
         event.getForwardCollection().add(forward);
-
-        Script script = new Script();
-        script.setContent("test");
-        event.getScriptCollection().add(script);
 
         event.setIfIndex(100);
         event.setIfAlias("test-ifalias");

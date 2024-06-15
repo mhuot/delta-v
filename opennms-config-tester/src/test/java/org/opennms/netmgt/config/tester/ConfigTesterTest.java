@@ -353,11 +353,6 @@ public class ConfigTesterTest {
     }
 
     @Test
-    public void testScriptdConfiguration() {
-        testConfigFile("scriptd-configuration.xml");
-    }
-
-    @Test
     public void testServiceConfiguration() {
         testConfigFile("service-configuration.xml");
     }

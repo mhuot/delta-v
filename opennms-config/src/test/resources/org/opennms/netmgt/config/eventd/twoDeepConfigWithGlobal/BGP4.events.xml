@@ -4,7 +4,6 @@
       <doNotOverride>logmsg</doNotOverride>
       <doNotOverride>operaction</doNotOverride>
       <doNotOverride>tticket</doNotOverride>
-      <doNotOverride>script</doNotOverride>
     </security>
 </global>
 <!-- Start of auto generated data from MIB: BGP4-MIB -->
