@@ -111,6 +111,11 @@ public class ConfigTesterTest {
     }
 
     @Test
+    public void testActiondConfiguration() {
+        testConfigFile("actiond-configuration.xml");
+    }
+
+    @Test
     public void testAmiConfig() {
         testConfigFile("ami-config.xml");
     }

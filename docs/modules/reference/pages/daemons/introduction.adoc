@@ -13,9 +13,8 @@ See xref:operation:deep-dive/admin/configuration/daemon-config-files.adoc[] sect
 |===
 | Name | Description | Container Environment variable with defaults
 
-| Ackd
-| The acknowledge daemon is responsible for alarm acknowledgement.
-| `CORE_SERVICE_ACKD_ENABLED=true`
+| Actiond
+| Generates Java actions based on received events.
 
 | Alarmd
 | Handles alarm workflows.
