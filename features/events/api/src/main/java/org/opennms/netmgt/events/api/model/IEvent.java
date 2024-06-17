@@ -35,10 +35,6 @@ import java.util.List;
 public interface IEvent {
     IAlarmData getAlarmData();
     IAutoAcknowledge getAutoacknowledge();
-    IAutoAction getAutoaction(final int index);
-    IAutoAction[] getAutoaction();
-    List<IAutoAction> getAutoactionCollection();
-    int getAutoactionCount();
     ICorrelation getCorrelation();
     Date getCreationTime();
     Long getDbid();
@@ -87,6 +83,5 @@ public interface IEvent {
     boolean hasDbid();
     boolean hasIfIndex();
     boolean hasNodeid();
-    Enumeration<IAutoAction> enumerateAutoaction();
     String toStringSimple();
 }

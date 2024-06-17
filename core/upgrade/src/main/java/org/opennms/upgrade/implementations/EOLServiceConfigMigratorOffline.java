@@ -45,6 +45,21 @@ import org.opennms.upgrade.api.OnmsUpgradeException;
  * @author <a href="mailto:ranger@opennms.org">Benjamin Reed</a>
  */
 public class EOLServiceConfigMigratorOffline extends AbstractOnmsUpgrade {
+
+    static final List<String> EOL_SERVICES = List.of(
+            "OpenNMS:Name=Linkd",
+            "OpenNMS:Name=Xmlrpcd",
+            "OpenNMS:Name=XmlrpcProvisioner",
+            "OpenNMS:Name=AccessPointMonitor",
+            "OpenNMS:Name=PollerBackEnd",
+            "OpenNMS:Name=Reportd",
+            "OpenNMS:Name=Statsd",
+            "OpenNMS:Name=Scriptd",
+            "OpenNMS:Name=Tl1d",
+            "OpenNMS:Name=Ackd",
+            "OpenNMS:Name=Actiond"
+    );
+
     /** 
      * The services configuration file.
      */
