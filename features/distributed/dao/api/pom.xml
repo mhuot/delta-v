@@ -34,7 +34,7 @@
                             org.opennms.netmgt.endpoints.grafana.persistence.api,
                             org.opennms.netmgt.flows.classification.persistence.api,
                             org.opennms.netmgt.telemetry.protocols.bmp.persistence.api,
-                            org.opennms.features.deviceconfig.persistence.api
+                            org.opennms.features.usageanalytics.api
                         </Export-Package>
                         <Import-Package>
                             com.google.common.base,
@@ -60,7 +60,7 @@
                             org.opennms.core.utils,
                             org.opennms.core.xml,
 
-                            org.opennms.features.deviceconfig.persistence.api,
+                            org.opennms.features.usageanalytics.api,
 
                             org.opennms.netmgt.enlinkd.persistence.api,
                             org.opennms.netmgt.enlinkd.service.api,
@@ -101,7 +101,7 @@
                             org.opennms.netmgt.endpoints.grafana.persistence.api,
                             org.opennms.netmgt.flows.classification.persistence.api,
                             org.opennms.netmgt.telemetry.protocols.bmp.persistence.api,
-                            org.opennms.features.deviceconfig.persistence.api
+                            org.opennms.features.usageanalytics.api
                         </Private-Package>
                     </instructions>
                 </configuration>
@@ -125,7 +125,7 @@
                                     <include>org.opennms.features.endpoints.grafana.persistence:org.opennms.features.endpoints.persistence.grafana.api</include>
                                     <include>org.opennms.features.endpoints.grafana:org.opennms.features.endpoints.grafana.api</include>
                                     <include>org.opennms.features.telemetry.protocols.bmp.persistence:org.opennms.features.telemetry.protocols.bmp.persistence.api</include>
-                                    <include>org.opennms.features.device-config.persistence:org.opennms.features.device-config.persistence.api</include>
+                                    <include>org.opennms.features.usageanalytics:org.opennms.features.usageanalytics.api</include>
                                 </includes>
                             </artifactSet>
                             <createDependencyReducedPom>true</createDependencyReducedPom>
@@ -176,8 +176,8 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.opennms.features.device-config.persistence</groupId>
-            <artifactId>org.opennms.features.device-config.persistence.api</artifactId>
+            <groupId>org.opennms.features.usageanalytics</groupId>
+            <artifactId>org.opennms.features.usageanalytics.api</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
