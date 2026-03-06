@@ -20,9 +20,9 @@
  * License.
  */
 
-package org.opennms.features.grpc.exporter;
+/**
+ * Enumeration class to provide list of metric names.
+ */
+public enum UsageAnalyticMetricName {
 
-public interface Callback {
-
-    void sendInventorySnapShot();
 }

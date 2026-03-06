@@ -56,6 +56,7 @@ import org.opennms.netmgt.alarmd.northbounder.email.EmailNorthbounderConfig;
 import org.opennms.netmgt.alarmd.northbounder.jms.JmsNorthbounderConfig;
 import org.opennms.netmgt.alarmd.northbounder.snmptrap.SnmpTrapNorthbounderConfig;
 import org.opennms.netmgt.alarmd.northbounder.syslog.SyslogNorthbounderConfig;
+import org.opennms.netmgt.config.actiond.ActiondConfiguration;
 import org.opennms.netmgt.config.ami.AmiConfig;
 import org.opennms.netmgt.config.categories.Catinfo;
 import org.opennms.netmgt.config.collectd.CollectdConfiguration;
@@ -86,7 +87,6 @@ import org.opennms.netmgt.config.poller.PollerConfiguration;
 import org.opennms.netmgt.config.poller.outages.Outages;
 import org.opennms.netmgt.config.prometheus.PrometheusDatacollectionConfig;
 import org.opennms.netmgt.config.rtc.RTCConfiguration;
-import org.opennms.netmgt.config.scriptd.ScriptdConfiguration;
 import org.opennms.netmgt.config.service.ServiceConfiguration;
 import org.opennms.netmgt.config.siteStatusViews.SiteStatusViewConfiguration;
 import org.opennms.netmgt.config.snmp.SnmpConfig;
@@ -195,6 +195,7 @@ public class WillItUnmarshalIT {
 
         addFile(Source.SPRING, "eventconf-bad-element.xml", Events.class, false, "Invalid content was found starting with element 'bad-element'.");
 
+        addFile(Source.CONFIG, "actiond-configuration.xml", ActiondConfiguration.class, true, null);
         addFile(Source.CONFIG, "ami-config.xml", AmiConfig.class, true, null);
         addFile(Source.CONFIG, "bsf-northbounder-configuration.xml", BSFNorthbounderConfig.class, true, null);
         addFile(Source.CONFIG, "categories.xml", Catinfo.class, false, null);
@@ -228,7 +229,6 @@ public class WillItUnmarshalIT {
         // moved to CmWillItUnmarshalIT
         //addFile(Source.CLASSPATH, "/defaults/provisiond-configuration.xml", ProvisiondConfiguration.class, false, null);
         addFile(Source.CONFIG, "rtc-configuration.xml", RTCConfiguration.class, true, null);
-        addFile(Source.CONFIG, "scriptd-configuration.xml", ScriptdConfiguration.class, true, null);
         addFile(Source.CONFIG, "service-configuration.xml", ServiceConfiguration.class, false, null);
         addFile(Source.CONFIG, "site-status-views.xml", SiteStatusViewConfiguration.class, true, null);
         addFile(Source.CONFIG, "snmptrap-northbounder-configuration.xml", SnmpTrapNorthbounderConfig.class, true, null);
@@ -263,7 +263,6 @@ public class WillItUnmarshalIT {
         addFile(Source.EXAMPLE, "devices/motorola_cpei_150_wimax_gateway/http-datacollection-config.xml", HttpDatacollectionConfig.class, false, null);
         addFile(Source.EXAMPLE, "discovery-configuration.xml", DiscoveryConfiguration.class, false, null);
         addFile(Source.EXAMPLE, "event-proxy/Proxy.events.xml", Events.class, false, null);
-        addFile(Source.EXAMPLE, "event-proxy/scriptd-configuration.xml", ScriptdConfiguration.class, false, null);
         addFile(Source.EXAMPLE, "event-proxy/vacuumd-configuration.xml", VacuumdConfiguration.class, false, null);
         addFile(Source.EXAMPLE, "groups.xml", Groupinfo.class, false, null);
         addFile(Source.EXAMPLE, "jvm-datacollection/collectd-configuration.xml", CollectdConfiguration.class, false, null);
@@ -284,7 +283,6 @@ public class WillItUnmarshalIT {
         addFile(Source.EXAMPLE, "old-datacollection-config.xml", DatacollectionConfig.class, false, null);
         addFile(Source.EXAMPLE, "poll-outages.xml", Outages.class, false, null);
         addFile(Source.EXAMPLE, "poller-configuration.xml", PollerConfiguration.class, false, null);
-        addFile(Source.EXAMPLE, "scriptd-configuration.xml", ScriptdConfiguration.class, false, null);
         addFile(Source.EXAMPLE, "snmp-config.xml", SnmpConfig.class, false, null);
         addFile(Source.EXAMPLE, "surveillance-views.xml", SurveillanceViewConfiguration.class, false, null);
         addFile(Source.EXAMPLE, "threshd-configuration.xml", ThreshdConfiguration.class, false, null);

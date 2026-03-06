@@ -111,6 +111,11 @@ public class ConfigTesterTest {
     }
 
     @Test
+    public void testActiondConfiguration() {
+        testConfigFile("actiond-configuration.xml");
+    }
+
+    @Test
     public void testAmiConfig() {
         testConfigFile("ami-config.xml");
     }
@@ -350,11 +355,6 @@ public class ConfigTesterTest {
     @Test
     public void testTelemetrydConfiguration() {
         testConfigFile("telemetryd-configuration.xml");
-    }
-
-    @Test
-    public void testScriptdConfiguration() {
-        testConfigFile("scriptd-configuration.xml");
     }
 
     @Test

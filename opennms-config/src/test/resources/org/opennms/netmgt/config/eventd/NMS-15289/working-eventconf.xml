@@ -4,7 +4,6 @@
             <doNotOverride>logmsg</doNotOverride>
             <doNotOverride>operaction</doNotOverride>
             <doNotOverride>tticket</doNotOverride>
-            <doNotOverride>script</doNotOverride>
         </security>
     </global>
     <event-file>working/working.events.xml</event-file>

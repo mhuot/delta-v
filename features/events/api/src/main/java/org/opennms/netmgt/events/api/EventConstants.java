@@ -511,9 +511,6 @@ public abstract class EventConstants {
     public static final String PARAM_MONITORING_SYSTEM_PREV_LOCATION = "monitoringSystemPreviousLocation";
 
     public static final String PARAM_TOPOLOGY_NAMESPACE = "namespace";
-    public static final String DEVICE_CONFIG_BACKUP_STARTED_UEI = "uei.opennms.org/deviceconfig/configBackupStarted";
-    public static final String DEVICE_CONFIG_BACKUP_FAILED_UEI = "uei.opennms.org/deviceconfig/configBackupFailed";
-    public static final String DEVICE_CONFIG_BACKUP_SUCCEEDED_UEI = "uei.opennms.org/deviceconfig/configBackupSucceeded";
     //
     // end eventUEIs
     //
@@ -935,11 +932,6 @@ public abstract class EventConstants {
      * active.
      */
     static final int STATE_OFF = 0;
-
-    /**
-     * UEI used for requesting an acknowledgment of an OnmsAcknowledgeable.
-     */
-    public static final String ACKNOWLEDGE_EVENT_UEI = "uei.opennms.org/ackd/acknowledge";
 
     /**
      * UEI used for indicating a change management event.

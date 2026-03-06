@@ -207,10 +207,6 @@
   <dependencies>
     <dependency>
       <groupId>org.opennms</groupId>
-      <artifactId>opennms-ackd</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms</groupId>
       <artifactId>opennms-alarmd</artifactId>
     </dependency>
     <dependency>
@@ -1098,23 +1094,6 @@
     <dependency>
       <groupId>org.opennms.features</groupId>
       <artifactId>org.opennms.features.perspectivepoller</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <!-- Device Config -->
-    <dependency>
-      <groupId>org.opennms.features.device-config.persistence</groupId>
-      <artifactId>org.opennms.features.device-config.persistence.impl</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms.features.device-config</groupId>
-      <artifactId>org.opennms.features.device-config.monitor-adaptor</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms.features.device-config</groupId>
-      <artifactId>org.opennms.features.device-config.monitor</artifactId>
       <version>${project.version}</version>
     </dependency>
 

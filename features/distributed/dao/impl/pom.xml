@@ -37,7 +37,7 @@
                             org.opennms.netmgt.endpoints.grafana.persistence.api,
                             org.opennms.netmgt.flows.classification.persistence.api,
                             org.opennms.netmgt.telemetry.protocols.bmp.persistence.api,
-                            org.opennms.features.deviceconfig.persistence.api
+                            org.opennms.features.usageanalytics.api
                         </Export-Package>
                         <Import-Package>
                             com.google.common.base,
@@ -89,14 +89,13 @@
                             org.opennms.core.spring,
                             org.opennms.core.sysprops,
 
-                            org.opennms.features.deviceconfig.persistence.api,
+                            org.opennms.features.usageanalytics.api,
 
                             org.opennms.netmgt.collection.api,
                             org.opennms.netmgt.collection.core,
                             org.opennms.netmgt.collection.support,
 
                             org.opennms.netmgt.config,
-                            org.opennms.netmgt.config.ackd,
                             org.opennms.netmgt.config.api,
                             org.opennms.netmgt.config.collectd,
                             org.opennms.netmgt.config.datacollection,
@@ -185,7 +184,6 @@
                             org.opennms.netmgt.endpoints.grafana.persistence.impl,
                             org.opennms.netmgt.flows.classification.persistence.impl,
                             org.opennms.netmgt.telemetry.protocols.bmp.persistence.impl,
-                            org.opennms.features.deviceconfig.persistence.impl,
                             org.opennms.features.usageanalytics.impl
                         </Private-Package>
                     </instructions>
@@ -210,7 +208,7 @@
                                     <include>org.opennms.features.endpoints.grafana.persistence:org.opennms.features.endpoints.grafana.persistence.impl</include>
                                     <include>org.opennms.features.flows.classification.persistence:org.opennms.features.flows.classification.persistence.impl</include>
                                     <include>org.opennms.features.telemetry.protocols.bmp.persistence:org.opennms.features.telemetry.protocols.bmp.persistence.impl</include>
-                                    <include>org.opennms.features.device-config.persistence:org.opennms.features.device-config.persistence.impl</include>
+                                    <include>org.opennms.features.usageanalytics:org.opennms.features.usageanalytics.impl</include>
                                 </includes>
                             </artifactSet>
                             <transformers>
@@ -273,8 +271,8 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.opennms.features.device-config.persistence</groupId>
-            <artifactId>org.opennms.features.device-config.persistence.impl</artifactId>
+            <groupId>org.opennms.features.usageanalytics</groupId>
+            <artifactId>org.opennms.features.usageanalytics.impl</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

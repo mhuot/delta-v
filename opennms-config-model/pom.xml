@@ -41,6 +41,7 @@
             <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
             <Bundle-Version>${project.version}</Bundle-Version>
             <Export-Package>
+              org.opennms.netmgt.config.actiond.*;version="${project.version}",
               org.opennms.netmgt.config.ami.*;version="${project.version}",
               org.opennms.netmgt.config.categories.*;version="${project.version}",
               org.opennms.netmgt.config.collectd.*;version="${project.version}",
@@ -65,7 +66,6 @@
               org.opennms.netmgt.config.poller.*;version="${project.version}",
               org.opennms.netmgt.config.provisiond.*;version="${project.version}",
               org.opennms.netmgt.config.rtc.*;version="${project.version}",
-              org.opennms.netmgt.config.scriptd.*;version="${project.version}",
               org.opennms.netmgt.config.server.*;version="${project.version}",
               org.opennms.netmgt.config.service.*;version="${project.version}",
               org.opennms.netmgt.config.siteStatusViews.*;version="${project.version}",
