@@ -53,11 +53,6 @@ public abstract class ConfigFileConstants {
     //
 
     /**
-     * The opennms actiond config file
-     */
-    public static final int ACTIOND_CONFIG_FILE_NAME;
-
-    /**
      * The opennms capsd config file
      */
     public static final int CAPSD_CONFIG_FILE_NAME;
@@ -269,11 +264,6 @@ public abstract class ConfigFileConstants {
     public static final int WEBUI_COLORS_FILE_NAME;
 
     /**
-     * This is the name of the path of the webui colors dtd
-     */
-    public static final int KSC_REPORT_FILE_NAME;
-
-    /**
      * The opennms surveillance views config file
      */
     public static final int SURVEILLANCE_VIEWS_FILE_NAME;
@@ -419,7 +409,6 @@ public abstract class ConfigFileConstants {
 
         DB_CONFIG_FILE_NAME = 0;
         JMS_CONFIG_FILE_NAME = 1;
-        ACTIOND_CONFIG_FILE_NAME = 2;
         CAPSD_CONFIG_FILE_NAME = 3;
         DISCOVERY_CONFIG_FILE_NAME = 4;
 
@@ -469,7 +458,6 @@ public abstract class ConfigFileConstants {
 
         WEBUI_COLORS_FILE_NAME = 45;
 
-        KSC_REPORT_FILE_NAME = 46;
         SCRIPTD_CONFIG_FILE_NAME = 47;
 
         RRD_CONFIG_FILE_NAME = 51;
@@ -526,7 +514,6 @@ public abstract class ConfigFileConstants {
 
         FILE_ID_TO_NAME[DB_CONFIG_FILE_NAME] = "opennms-database.xml";
         FILE_ID_TO_NAME[JMS_CONFIG_FILE_NAME] = "opennms-jms.xml";
-        FILE_ID_TO_NAME[ACTIOND_CONFIG_FILE_NAME] = "actiond-configuration.xml";
         FILE_ID_TO_NAME[CAPSD_CONFIG_FILE_NAME] = "capsd-configuration.xml";
         FILE_ID_TO_NAME[DISCOVERY_CONFIG_FILE_NAME] = "discovery-configuration.xml";
 
@@ -577,8 +564,6 @@ public abstract class ConfigFileConstants {
         FILE_ID_TO_NAME[VIEWS_DISPLAY_CONF_FILE_NAME] = "viewsdisplay.xml";
 
         FILE_ID_TO_NAME[WEBUI_COLORS_FILE_NAME] = "webui-colors.xml";
-
-        FILE_ID_TO_NAME[KSC_REPORT_FILE_NAME] = "ksc-performance-reports.xml";
 
         FILE_ID_TO_NAME[SCRIPTD_CONFIG_FILE_NAME] = "scriptd-configuration.xml";
 

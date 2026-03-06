@@ -319,7 +319,6 @@ public class JmsNorthBounderIT {
             event.setEventCorrelation(null);
             event.setEventSuppressedCount(0);
             event.setEventOperInstruct("operinstruct");
-            event.setEventAutoAction(null);
             event.setEventOperAction(null);
             event.setEventOperActionMenuText(null);
             event.setEventNotification(null);
@@ -441,7 +440,6 @@ public class JmsNorthBounderIT {
             event.setEventCorrelation(null);
             event.setEventSuppressedCount(0);
             event.setEventOperInstruct("operinstruct");
-            event.setEventAutoAction(null);
             event.setEventOperAction(null);
             event.setEventOperActionMenuText(null);
             event.setEventNotification(null);
@@ -567,7 +565,6 @@ public class JmsNorthBounderIT {
             event.setEventCorrelation(null);
             event.setEventSuppressedCount(0);
             event.setEventOperInstruct("operinstruct");
-            event.setEventAutoAction(null);
             event.setEventOperAction(null);
             event.setEventOperActionMenuText(null);
             event.setEventNotification(null);

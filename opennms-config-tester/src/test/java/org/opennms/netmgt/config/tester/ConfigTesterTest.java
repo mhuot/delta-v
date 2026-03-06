@@ -111,16 +111,6 @@ public class ConfigTesterTest {
     }
 
     @Test
-    public void testAckdConfiguration() {
-        testConfigFile("ackd-configuration.xml");
-    }
-
-    @Test
-    public void testActiondConfiguration() {
-        testConfigFile("actiond-configuration.xml");
-    }
-
-    @Test
     public void testAmiConfig() {
         testConfigFile("ami-config.xml");
     }
@@ -244,11 +234,6 @@ public class ConfigTesterTest {
     @Test
     public void testJmxDatacollectionConfig() {
         testConfigFile("jmx-datacollection-config.xml");
-    }
-
-    @Test
-    public void testKscPerformanceReports() {
-        testConfigFile("ksc-performance-reports.xml");
     }
 
     @Test

@@ -119,7 +119,7 @@ final class PollerEventProcessor implements EventListener, MessageHandler {
         // reloadPollerConfig
         /*
          * NOTE: This is ignored because the reload is handled through an
-         * autoaction.
+         * autoaction (autoaction were removed,  but comment left here on purpose).
          */
         // ueiList.add(EventConstants.RELOAD_POLLER_CONFIG_EVENT_UEI);
         // NODE OUTAGE RELATED EVENTS

@@ -56,8 +56,6 @@ import org.opennms.netmgt.alarmd.northbounder.email.EmailNorthbounderConfig;
 import org.opennms.netmgt.alarmd.northbounder.jms.JmsNorthbounderConfig;
 import org.opennms.netmgt.alarmd.northbounder.snmptrap.SnmpTrapNorthbounderConfig;
 import org.opennms.netmgt.alarmd.northbounder.syslog.SyslogNorthbounderConfig;
-import org.opennms.netmgt.config.ackd.AckdConfiguration;
-import org.opennms.netmgt.config.actiond.ActiondConfiguration;
 import org.opennms.netmgt.config.ami.AmiConfig;
 import org.opennms.netmgt.config.categories.Catinfo;
 import org.opennms.netmgt.config.collectd.CollectdConfiguration;
@@ -78,7 +76,6 @@ import org.opennms.netmgt.config.httpdatacollection.HttpDatacollectionConfig;
 import org.opennms.netmgt.config.javamail.JavamailConfiguration;
 import org.opennms.netmgt.config.jdbc.JdbcDataCollectionConfig;
 import org.opennms.netmgt.config.jmx.JmxConfig;
-import org.opennms.netmgt.config.kscReports.ReportsList;
 import org.opennms.netmgt.config.mailtransporttest.MailTransportTest;
 import org.opennms.netmgt.config.microblog.MicroblogConfiguration;
 import org.opennms.netmgt.config.notifd.NotifdConfiguration;
@@ -198,8 +195,6 @@ public class WillItUnmarshalIT {
 
         addFile(Source.SPRING, "eventconf-bad-element.xml", Events.class, false, "Invalid content was found starting with element 'bad-element'.");
 
-        addFile(Source.CONFIG, "ackd-configuration.xml", AckdConfiguration.class, false, null);
-        addFile(Source.CONFIG, "actiond-configuration.xml", ActiondConfiguration.class, true, null);
         addFile(Source.CONFIG, "ami-config.xml", AmiConfig.class, true, null);
         addFile(Source.CONFIG, "bsf-northbounder-configuration.xml", BSFNorthbounderConfig.class, true, null);
         addFile(Source.CONFIG, "categories.xml", Catinfo.class, false, null);
@@ -223,7 +218,6 @@ public class WillItUnmarshalIT {
         addFile(Source.CONFIG, "jms-northbounder-configuration.xml", JmsNorthbounderConfig.class, true, null);
         addFile(Source.CONFIG, "jmx-config.xml", JmxConfig.class, true, null);
         addFile(Source.CONFIG, "jmx-datacollection-config.xml", JmxDatacollectionConfig.class, true, null);
-        addFile(Source.CONFIG, "ksc-performance-reports.xml", ReportsList.class, true, null);
         addFile(Source.CONFIG, "microblog-configuration.xml", MicroblogConfiguration.class, false, null);
         addFile(Source.CONFIG, "notifd-configuration.xml", NotifdConfiguration.class, true, null);
         addFile(Source.CONFIG, "notificationCommands.xml", NotificationCommands.class, true, null);
