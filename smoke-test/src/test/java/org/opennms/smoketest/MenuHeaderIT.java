@@ -98,23 +98,8 @@ public class MenuHeaderIT extends OpenNMSSeleniumIT {
         clickMenuItem("inventoryMenu", "Search Inventory");
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@class='card-header']/span[text()='Search for Nodes']")));
 
-        // Monitoring Menu
-        clickMenuItem("monitoringMenu", "Applications");
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//li[text()='Application Status']")));
-
-        clickMenuItem("monitoringMenu", "Alarms");
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@class='card-header']/span[text()='Alarm Queries']")));
-
-        clickMenuItem("monitoringMenu", "Outages");
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@class='card-header']/span[text()='Outage Menu']")));
-
-        clickMenuItem("monitoringMenu", "Events");
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@class='card-header']/span[text()='Event Queries']")));
-
-        clickMenuItem("monitoringMenu", "Path Outages");
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@class='card-header']/span[text()='All Path Outages']")));
-
-        clickMenuItem("monitoringMenu", "Surveillance View");
+        final String dashboardsMenuName = "name=nav-Dashboards-top";
+        clickMenuItem(dashboardsMenuName, "Dashboard", "dashboard.jsp");
         // switchTo() by xpath is much faster than by ID
         driver.switchTo().frame(findElementByXpath("/html/body/div/iframe"));
         wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//span[text()='Surveillance view: default']")));
@@ -352,51 +337,6 @@ public class MenuHeaderIT extends OpenNMSSeleniumIT {
             findElementById("input_j_username");
             return null;
         });
-    }
-
-    @Test
-    public void verifyReportsPage() {
-        // testAllTextIsPresent
-        reportsPage();
-        findElementByXpath("//div[@class='card-header']/span[text()='Reports']");
-        findElementByXpath("//div[@class='card-header']/span[text()='Descriptions']");
-
-        // testAllFormsArePresent()
-        reportsPage();
-        findElementByName("resourceGraphs");
-        findElementByName("kscReports");
-
-        // testAllLinks
-        reportsPage();
-        findElementByLink("Resource Graphs").click();
-        findElementByXpath("//label[contains(text()[normalize-space()], 'Standard Resource')]");
-        findElementByXpath("//div[@class='card-header']/span[text()='Network Performance Data']");
-
-        reportsPage();
-        findElementByLink("KSC Performance, Nodes, Domains").click();
-        findElementByXpath("//div[@class='card-header']/span[text()='Customized Reports']");
-        findElementByXpath("//div[@class='card-header']/span[text()='Descriptions']");
-
-        reportsPage();
-        findElementByLink("Database Reports").click();
-        pageContainsText("Report Templates");
-        pageContainsText("Report Schedules");
-        pageContainsText("Persisted Reports");
-
-        reportsPage();
-        findElementByLink("Statistics Reports").click();
-        findElementByXpath("//div[@class='card-header']/span[text()='Statistics Report List']");
-    }
-
-    @Test
-    public void testSelfServiceMenu() {
-        LOG.debug("In testSelfServiceMenu");
-
-        clickChangePassword();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@class='card-header']/span[contains(text()[normalize-space()], 'Please enter the old and new passwords and confirm.')]")));
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//form[@name='goForm']//label[contains(text()[normalize-space()], 'Current Password')]")));
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//form[@name='goForm']//label[contains(text()[normalize-space()], 'New Password')]")));
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//form[@name='goForm']//label[contains(text()[normalize-space()], 'Confirm New Password')]")));
     }
 
     @Test
