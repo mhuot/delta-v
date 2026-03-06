@@ -418,7 +418,6 @@
                 <feature>opennms-jaas-login-module</feature>
                 <feature>dashlet-alarms</feature>
                 <feature>dashlet-bsm</feature>
-                <feature>dashlet-charts</feature>
                 <feature>dashlet-image</feature>
                 <feature>dashlet-ksc</feature>
                 <feature>dashlet-map</feature>
@@ -429,7 +428,6 @@
                 <feature>dashlet-topology</feature>
                 <feature>dashlet-url</feature>
                 <feature>dashlet-grafana</feature>
-                <feature>nrtg</feature>
                 <feature>opennms-amqp-event-forwarder</feature>
                 <feature>opennms-amqp-event-receiver</feature>
                 <feature>opennms-amqp-alarm-northbounder</feature>
