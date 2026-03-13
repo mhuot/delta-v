@@ -989,11 +989,6 @@
       <artifactId>jung-shaded</artifactId>
       <scope>provided</scope>
     </dependency>
-    <dependency>
-      <groupId>org.opennms.features.notifications</groupId>
-      <artifactId>org.opennms.features.notifications.shell</artifactId>
-      <version>${project.version}</version>
-    </dependency>
 
     <!-- Daemon loader bundles (for opennms/daemon container) -->
     <dependency>

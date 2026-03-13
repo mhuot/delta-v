@@ -468,11 +468,6 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.opennms.features.notifications</groupId>
-      <artifactId>org.opennms.features.notifications.ticket-strategy</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.opennms.features</groupId>
       <artifactId>org.opennms.features.system-report</artifactId>
       <scope>compile</scope>
