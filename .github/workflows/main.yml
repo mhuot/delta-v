@@ -72,10 +72,10 @@ jobs:
           path: opennms-assemblies/minion/target/org.opennms.assemblies.minion-*.tar.gz
       - name: Build Daemon and Alarmd assemblies
         run: |
-          ./maven/bin/mvn -DskipTests -pl container/features install
-          ./maven/bin/mvn -DskipTests -pl features/container/sentinel install
-          ./maven/bin/mvn -DskipTests -pl opennms-assemblies/daemon install
-          ./maven/bin/mvn -DskipTests -pl opennms-assemblies/alarmd install
+          ./maven/bin/mvn --batch-mode -DskipTests -pl :opennms -am install
+          ./maven/bin/mvn --batch-mode -DskipTests -pl :sentinel -am install
+          ./maven/bin/mvn --batch-mode -DskipTests -pl :org.opennms.assemblies.daemon install
+          ./maven/bin/mvn --batch-mode -DskipTests -pl :org.opennms.assemblies.alarmd install
       - name: Persist tarball Sentinel
         uses: actions/upload-artifact@v4
         with:
