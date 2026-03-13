@@ -18,14 +18,15 @@ permissions: write-all
 jobs:
   build-with-smoke-test:
     if: "!contains(github.event.commits[0].message, '[skip build-with-smoke-test]')"
-    runs-on:
-      group: Default
-      labels:
-        - self-hosted
-        - Linux
-        - X64
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
       - name: Cleaning project for quick validation
         run: |
           make validate
@@ -63,11 +64,27 @@ jobs:
         with:
           name: tarball-minion
           path: opennms-assemblies/minion/target/org.opennms.assemblies.minion-*.tar.gz
+      - name: Build Daemon and Alarmd assemblies
+        run: |
+          ./maven/bin/mvn -DskipTests -pl container/features install
+          ./maven/bin/mvn -DskipTests -pl features/container/sentinel install
+          ./maven/bin/mvn -DskipTests -pl opennms-assemblies/daemon install
+          ./maven/bin/mvn -DskipTests -pl opennms-assemblies/alarmd install
       - name: Persist tarball Sentinel
         uses: actions/upload-artifact@v4
         with:
           name: tarball-sentinel
           path: opennms-assemblies/sentinel/target/org.opennms.assemblies.sentinel-*.tar.gz
+      - name: Persist tarball Daemon
+        uses: actions/upload-artifact@v4
+        with:
+          name: tarball-daemon
+          path: opennms-assemblies/daemon/target/*daemon*.tar.gz
+      - name: Persist tarball Alarmd
+        uses: actions/upload-artifact@v4
+        with:
+          name: tarball-alarmd
+          path: opennms-assemblies/alarmd/target/*alarmd*.tar.gz
 
   unit-tests:
     if: "!contains(github.event.commits[0].message, '[skip unit-tests]')"
@@ -78,14 +95,15 @@ jobs:
       matrix:
         shard_idx: [ 0, 1, 2 ]
         shards: [ 3 ]
-    runs-on:
-      group: Default
-      labels:
-        - self-hosted
-        - Linux
-        - X64
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
       - name: Prepare the build for tests
         run: |
           make quick-compile
@@ -121,14 +139,15 @@ jobs:
         shards: [ 8 ]
     needs:
       - unit-tests
-    runs-on:
-      group: Default
-      labels:
-        - self-hosted
-        - Linux
-        - X64
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
       - name: Prepare the build for tests
         run: |
           make quick-compile
@@ -167,14 +186,15 @@ jobs:
         shards: [ 8 ]
     needs:
       - unit-tests
-    runs-on:
-      group: Default
-      labels:
-        - self-hosted
-        - Linux
-        - X64
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
       - name: Prepare the build for tests
         run: |
           make quick-compile
@@ -212,14 +232,15 @@ jobs:
         shards: [ 1 ]
     needs:
       - unit-tests
-    runs-on:
-      group: Default
-      labels:
-        - self-hosted
-        - Linux
-        - X64
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
       - name: Prepare the build for tests
         run: |
           make quick-compile
@@ -257,14 +278,15 @@ jobs:
         shards: [ 1 ]
     needs:
       - unit-tests
-    runs-on:
-      group: Default
-      labels:
-        - self-hosted
-        - Linux
-        - X64
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
       - name: Prepare the build for tests
         run: |
           make quick-compile
@@ -571,11 +593,135 @@ jobs:
             BUILD_JOB_ID=${{ github.run_id }}
           tags: ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest
 
+  daemon-oci:
+    if: "!contains(github.event.commits[0].message, '[skip daemon-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
+    needs:
+      - integration-tests
+      - e2e-tests-core
+      - e2e-tests-minion
+      - e2e-tests-sentinel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          cache-image: false
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-daemon
+          path: opennms-assemblies/daemon/target
+      - name: Extract Daemon tarball for container build
+        run: |
+          mkdir -p opennms-container/daemon/tarball-root
+          tar xzf opennms-assemblies/daemon/target/*daemon*.tar.gz --strip-components 1 -C opennms-container/daemon/tarball-root
+      - name: Get the release version for the OCI tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "TARGET=daemon" >> ${GITHUB_ENV}
+          REF_NAME=${{ github.ref_name }}
+          VERSION=${REF_NAME#v}
+          VERSION=${VERSION#delta-v-}
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+      - name: Prepare
+        run: |
+          echo "OCI_REPOSITORY=${TARGET:-daemon-snapshot}" >> ${GITHUB_ENV}
+          echo "SHORT_GIT_SHA=$(git rev-parse --short HEAD)" >> ${GITHUB_ENV}
+          echo "GIT_SHA=$(git rev-parse HEAD)" >> ${GITHUB_ENV}
+          echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> ${GITHUB_ENV}
+          echo "TAG=${VERSION:-$(git rev-parse --short HEAD)}" >> ${GITHUB_ENV}
+      - name: Build and push Daemon container image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./opennms-container/daemon
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            RELEASE_BRANCH=${{ github.ref_name }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
+            VERSION=${{ env.TAG }}
+            REVISION=${{ env.GIT_SHA }}
+            SOURCE=${{ github.server_url }}/${{ github.repository }}/tree/${{ env.GIT_SHA }}/opennms-container/daemon
+            BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            BUILD_JOB_ID=${{ github.run_id }}
+          tags: ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest
+
+  alarmd-oci:
+    if: "!contains(github.event.commits[0].message, '[skip alarmd-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
+    needs:
+      - integration-tests
+      - e2e-tests-core
+      - e2e-tests-minion
+      - e2e-tests-sentinel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          cache-image: false
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-alarmd
+          path: opennms-assemblies/alarmd/target
+      - name: Extract Alarmd tarball for container build
+        run: |
+          mkdir -p opennms-container/alarmd/tarball-root
+          tar xzf opennms-assemblies/alarmd/target/*alarmd*.tar.gz --strip-components 1 -C opennms-container/alarmd/tarball-root
+      - name: Get the release version for the OCI tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "TARGET=alarmd" >> ${GITHUB_ENV}
+          REF_NAME=${{ github.ref_name }}
+          VERSION=${REF_NAME#v}
+          VERSION=${VERSION#delta-v-}
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+      - name: Prepare
+        run: |
+          echo "OCI_REPOSITORY=${TARGET:-alarmd-snapshot}" >> ${GITHUB_ENV}
+          echo "SHORT_GIT_SHA=$(git rev-parse --short HEAD)" >> ${GITHUB_ENV}
+          echo "GIT_SHA=$(git rev-parse HEAD)" >> ${GITHUB_ENV}
+          echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> ${GITHUB_ENV}
+          echo "TAG=${VERSION:-$(git rev-parse --short HEAD)}" >> ${GITHUB_ENV}
+      - name: Build and push Alarmd container image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./opennms-container/alarmd
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            RELEASE_BRANCH=${{ github.ref_name }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
+            VERSION=${{ env.TAG }}
+            REVISION=${{ env.GIT_SHA }}
+            SOURCE=${{ github.server_url }}/${{ github.repository }}/tree/${{ env.GIT_SHA }}/opennms-container/alarmd
+            BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            BUILD_JOB_ID=${{ github.run_id }}
+          tags: ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest
+
   create-github-release:
     needs:
       - core-packages
       - minion-packages
       - sentinel-packages
+      - daemon-oci
+      - alarmd-oci
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
@@ -595,6 +741,14 @@ jobs:
           path: opennms-assemblies/sentinel/target
       - uses: actions/download-artifact@v4
         with:
+          name: tarball-daemon
+          path: opennms-assemblies/daemon/target
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-alarmd
+          path: opennms-assemblies/alarmd/target
+      - uses: actions/download-artifact@v4
+        with:
           name: core-pkgs
           path: target/artifacts/packages/core
       - uses: actions/download-artifact@v4
@@ -612,6 +766,8 @@ jobs:
             opennms-full-assembly/target/*.tar.gz
             opennms-assemblies/minion/target/*.tar.gz
             opennms-assemblies/sentinel/target/*.tar.gz
+            opennms-assemblies/daemon/target/*daemon*.tar.gz
+            opennms-assemblies/alarmd/target/*alarmd*.tar.gz
             target/artifacts/packages/core/*.deb
             target/artifacts/packages/core/*.rpm
             target/artifacts/packages/minion/*.deb
