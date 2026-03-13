@@ -64,10 +64,10 @@ MAINTAINER_EMAIL      ?= maintainer@delta-v.dev
 INSTALL_VERSION       := ${OPENNMS_VERSION}-${RELEASE_COMMIT}
 BUILD_DATE            := $(shell date '+%Y%m%d')
 OCI_PLATFORM          := linux/$(shell uname -m)
-OCI_REGISTRY          ?= docker.io
+OCI_REGISTRY          ?= ghcr.io
 OCI_REGISTRY_USER     ?= changeme
 OCI_REGISTRY_PASSWORD ?= changeme
-OCI_REGISTRY_ORG      ?= pbranestrategy
+OCI_REGISTRY_ORG      ?= pbrane
 TRIVY_ARGS            := --timeout 30m --format json
 
 DOCKER_ANTORA_IMAGE   := opennms/antora:3.1.4-b10433
