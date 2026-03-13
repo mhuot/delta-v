@@ -1,0 +1,17 @@
+---
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432/tcp"
+    command: ['-c', 'shared_buffers=256MB', '-c', 'max_connections=200', '-c', 'fsync=off']
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 2s
+      retries: 10
