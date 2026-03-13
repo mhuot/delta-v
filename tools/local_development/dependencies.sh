@@ -176,7 +176,7 @@ ROOT="$(pwd)"
 ROOT_POM="$ROOT/pom.xml"
 
 PRODUCT_NAME=$(sed -n 's:.*<product.name>\(.*\)</product.name>.*:\1:p' "$ROOT_POM" | head -n 1)
-OPENNMS_VERSION="$(.circleci/scripts/pom2version.sh pom.xml)"
+OPENNMS_VERSION="$(.cicd-assets/pom2version.sh pom.xml)"
 
 MAVEN_VERSION=$(mvn -v | awk '/Apache Maven/ {print $3}')
 MAVEN_JAVA_VERSION=$(mvn -v | awk '/Java version/ {print $3}'| tr -d ',')
@@ -246,7 +246,7 @@ install_jrrd2_from_source(){
     cd jrrd2
     make
     
-    JRRD_VERSION="$("$ROOT"/.circleci/scripts/pom2version.sh "$ROOT"/jrrd2/java/pom.xml)"
+    JRRD_VERSION="$("$ROOT"/.cicd-assets/pom2version.sh "$ROOT"/jrrd2/java/pom.xml)"
     
     JRRD_JAR=$(find "$ROOT/jrrd2" -name "jrrd2-*-$JRRD_VERSION.jar" | head -n 1)
     JRRD_LIB=$(find "$ROOT/jrrd2" -name "libjrrd2.so" | head -n 1)

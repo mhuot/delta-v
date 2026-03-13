@@ -126,7 +126,7 @@ TIP: Instead of maintaining a local PostgreSQL installation, you can also run an
 .Set the OpenNMS release version in a global environment variable
 [source, console]
 ----
-export ONMS_RELEASE=$(./.circleci/scripts/pom2version.sh pom.xml)
+export ONMS_RELEASE=$(./.cicd-assets/pom2version.sh pom.xml)
 ----
 
 .Run the core server instance as your user instead of the opennms system user

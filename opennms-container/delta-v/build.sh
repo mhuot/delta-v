@@ -23,14 +23,14 @@ DOCKER_REGISTRY="${DOCKER_REGISTRY:-docker.io}"
 DOCKER_ORG="${DOCKER_ORG:-opennms}"
 
 # Detect version from POM
-VERSION="$("$REPO_ROOT/.circleci/scripts/pom2version.sh" "$REPO_ROOT/pom.xml")"
+VERSION="$("$REPO_ROOT/.cicd-assets/pom2version.sh" "$REPO_ROOT/pom.xml")"
 
 log() { echo "==> $*"; }
 err() { echo "ERROR: $*" >&2; exit 1; }
 
 check_prereqs() {
     command -v docker >/dev/null 2>&1 || err "docker not found"
-    command -v perl >/dev/null 2>&1   || err "perl not found (needed by compile.pl)"
+    command -v make >/dev/null 2>&1   || err "make not found (needed for build)"
 
     # Verify Java 17
     if [ -z "${JAVA_HOME:-}" ]; then

@@ -8,5 +8,8 @@
 "docs/**/*":
   - indigo423
 
-".circleci/**/*":
+".github/workflows/**/*":
+  - mershad-manesh
+
+".cicd-assets/**/*":
   - mershad-manesh

@@ -53,7 +53,7 @@ cd ui && pnpm install && pnpm build && pnpm test
 ## Running Locally After Build
 
 ```bash
-export ONMS_RELEASE=$(./.circleci/scripts/pom2version.sh pom.xml)
+export ONMS_RELEASE=$(./.cicd-assets/pom2version.sh pom.xml)
 echo "RUNAS=$(id -u -n)" > "target/opennms-${ONMS_RELEASE}/etc/opennms.conf"
 # Configure PostgreSQL in target/opennms-${ONMS_RELEASE}/etc/opennms-datasources.xml
 ./target/opennms-"${ONMS_RELEASE}"/bin/runjava -s

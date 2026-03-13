@@ -9,7 +9,7 @@ ifeq (,$(shell which docker))
 $(error 'docker' command not found, but this Makefile requires it)
 endif
 
-VERSION                 := $(shell ../../.circleci/scripts/pom2version.sh ../../pom.xml)
+VERSION                 := $(shell ../../.cicd-assets/pom2version.sh ../../pom.xml)
 SHELL                   := /bin/bash -o nounset -o pipefail -o errexit
 BUILD_DATE              := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 BASE_IMAGE              := opennms/deploy-base:ubi9-3.6.3.b335-jre-17

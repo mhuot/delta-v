@@ -21,7 +21,7 @@ echo "Detected OS: $OS_NAME"
 # ------------------------------------------------------
 ROOT="$(pwd)"
 
-RELEASE="$(.circleci/scripts/pom2version.sh pom.xml)"
+RELEASE="$(.cicd-assets/pom2version.sh pom.xml)"
 
 
 usage(){
