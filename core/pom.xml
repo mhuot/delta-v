@@ -62,6 +62,7 @@
     <module>tracing</module>
     <module>grpc</module>
     <module>encrypt-util</module>
+    <module>daemon-loader-shared</module>
     <module>daemon-loader-alarmd</module>
     <module>daemon-loader-collectd</module>
     <module>daemon-loader-discovery</module>
@@ -76,6 +77,7 @@
     <module>daemon-loader-scriptd</module>
     <module>daemon-loader-bsmd</module>
     <module>daemon-loader-perspectivepoller</module>
+    <module>daemon-loader-telemetryd</module>
     <module>event-forwarder-kafka</module>
     <module>fileutils</module>
     <module>tsid</module>

@@ -867,7 +867,6 @@
         <feature>spring-security-opennms</feature>
         <feature>opennms-collection-api</feature>
         <feature>opennms-core-web</feature>
-        <feature>opennms-dhcpd</feature>
         <feature>opennms-icmp-api</feature>
         <feature>opennms-provisioning-api</feature>
         <feature>wsman-integration</feature>
@@ -876,7 +875,6 @@
         <bundle>mvn:org.opennms.core.jmx/org.opennms.core.jmx.impl/${project.version}</bundle>
         <bundle>mvn:org.opennms/opennms-detector-bsf/${project.version}</bundle>
         <bundle>mvn:org.opennms/opennms-detector-datagram/${project.version}</bundle>
-        <bundle>mvn:org.opennms/opennms-detector-dhcp/${project.version}</bundle>
         <bundle>mvn:org.opennms/opennms-detector-generic/${project.version}</bundle>
         <bundle>mvn:org.opennms/opennms-detector-jdbc/${project.version}</bundle>
         <bundle>mvn:org.opennms/opennms-detector-jmx/${project.version}</bundle>
@@ -887,10 +885,6 @@
         <bundle>mvn:org.opennms/opennms-detector-ssh/${project.version}</bundle>
         <bundle>mvn:org.opennms/opennms-detector-web/${project.version}</bundle>
         <bundle>mvn:org.opennms/opennms-detector-registry/${project.version}</bundle>
-    </feature>
-    <feature name="opennms-dhcpd" description="OpenNMS :: Features :: DHCPD" version="${project.version}">
-        <bundle>mvn:org.opennms.features/org.opennms.features.dhcpd/${project.version}</bundle>
-        <bundle>mvn:com.helger/dhcp4java/${dhcp4javaVersion}</bundle>
     </feature>
     <feature name="opennms-provisioning-shell" version="${project.version}" description="OpenNMS :: Provisioning :: Shell">
         <bundle>mvn:org.opennms/opennms-provision-shell/${project.version}</bundle>
@@ -928,7 +922,6 @@
         <feature>ssh</feature>
         <feature>opennms-core-web</feature>
         <feature>opennms-core-ipc-rpc-api</feature>
-        <feature>opennms-dhcpd</feature>
         <feature>opennms-icmp-api</feature>
         <feature>opennms-poller-api</feature>
         <feature>opennms-dao-api</feature>
@@ -1029,7 +1022,6 @@
         <bundle>mvn:org.opennms.features.telemetry.config/org.opennms.features.telemetry.config.api/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.telemetry/org.opennms.features.telemetry.api/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.telemetry/org.opennms.features.telemetry.common/${project.version}</bundle>
-        <bundle>mvn:org.opennms.features.telemetry/org.opennms.features.telemetry.listeners/${project.version}</bundle>
         <bundle dependency="true">mvn:org.opennms.core/org.opennms.core.fileutils/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.telemetry.protocols/org.opennms.features.telemetry.protocols.adapters/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.telemetry/org.opennms.features.telemetry.shell/${project.version}</bundle>
@@ -1047,13 +1039,14 @@
         <feature>opennms-telemetry-collection</feature>
         <feature>opennms-util</feature>
         <bundle dependency="true">wrap:mvn:com.google.protobuf/protobuf-java/${protobufVersion}</bundle>
+        <bundle dependency="true">mvn:org.opennms.core.ipc.twin/org.opennms.core.ipc.twin.api/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.telemetry/org.opennms.features.telemetry.api/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.telemetry/org.opennms.features.telemetry.common/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.telemetry/org.opennms.features.telemetry.registry/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.telemetry/org.opennms.features.telemetry.daemon/${project.version}</bundle>
+        <bundle>mvn:org.opennms.features.telemetry/org.opennms.features.telemetry.listeners/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.telemetry.protocols/org.opennms.features.telemetry.protocols.common/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.telemetry.config/org.opennms.features.telemetry.config.jaxb/${project.version}</bundle>
-        <bundle>mvn:org.opennms.features.telemetry/org.opennms.features.telemetry.listeners/${project.version}</bundle>
     </feature>
     <feature name="opennms-telemetry-bmp" start-level="${earlyStartLevel}" version="${project.version}" description="OpenNMS :: Telemetry :: BMP">
         <feature>opennms-telemetry-bmp-adapter</feature>
@@ -1190,7 +1183,6 @@
         <bundle>mvn:org.opennms.core/org.opennms.core.cache/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.telemetry/org.opennms.features.telemetry.api/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.telemetry/org.opennms.features.telemetry.common/${project.version}</bundle>
-        <bundle>mvn:org.opennms.features.telemetry/org.opennms.features.telemetry.listeners/${project.version}</bundle>
 
         <bundle>wrap:mvn:com.google.protobuf/protobuf-java/${protobufVersion}</bundle>
         <bundle>wrap:mvn:com.google.protobuf/protobuf-java-util/${protobufVersion}$overwrite=merge&amp;Import-Package=javax.annotation;version=!,*</bundle>
@@ -2127,8 +2119,13 @@
         <bundle>mvn:org.opennms.core.mate/org.opennms.core.mate.api/${project.version}</bundle>
         <!-- Poller daemon classes -->
         <bundle>mvn:org.opennms/opennms-services/${project.version}</bundle>
+        <!-- Poller RPC client (LocationAwarePollerClientImpl, PollerClientRpcModule) -->
+        <bundle>mvn:org.opennms.features.poller/org.opennms.features.poller.client-rpc/${project.version}</bundle>
+        <bundle>mvn:org.opennms/opennms-provision-api/${project.version}</bundle>
         <!-- Daemon loader (creates Poller, starts it) -->
         <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-pollerd/${project.version}</bundle>
+        <feature>opennms-core-ipc-rpc-kafka</feature>
+        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-shared/${project.version}</bundle>
     </feature>
 
     <!-- Karaf-only PerspectivePollerd: polls from multiple locations via Minion RPC -->
@@ -2165,6 +2162,7 @@
         <bundle>mvn:org.opennms.features/org.opennms.features.perspectivepoller/${project.version}</bundle>
         <!-- Daemon loader (creates PerspectivePollerd, starts it) -->
         <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-perspectivepoller/${project.version}</bundle>
+        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-shared/${project.version}</bundle>
     </feature>
 
     <!-- Karaf-only Collectd: loads Collectd daemon without Manager/Eventd -->
@@ -2191,6 +2189,8 @@
         <bundle>mvn:org.opennms/opennms-services/${project.version}</bundle>
         <!-- Daemon loader (creates Collectd, starts it) -->
         <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-collectd/${project.version}</bundle>
+        <feature>opennms-core-ipc-rpc-kafka</feature>
+        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-shared/${project.version}</bundle>
     </feature>
 
     <!-- Karaf-only Rtcd: loads RTCManager daemon without Manager/Eventd -->
@@ -2220,11 +2220,21 @@
         <feature>opennms-distributed-core-impl</feature>
         <feature>opennms-persistence</feature>
         <feature>opennms-config</feature>
+        <feature>opennms-core-tracing</feature>
         <!-- API bundles needed by onmsgi:reference proxies -->
         <bundle>mvn:org.opennms/opennms-icmp-api/${project.version}</bundle>
         <bundle>mvn:org.opennms/opennms-provision-api/${project.version}</bundle>
         <bundle>mvn:org.opennms.features/org.opennms.features.discovery/${project.version}</bundle>
+        <!-- RPC implementation bundles (ICMP proxy, detector client, ICMP pinger) -->
+        <bundle>mvn:org.opennms/org.opennms.icmp.proxy.rpc-impl/${project.version}</bundle>
+        <bundle>mvn:org.opennms/opennms-icmp-best/${project.version}</bundle>
+        <bundle>mvn:org.opennms/opennms-detectorclient-rpc/${project.version}</bundle>
+        <bundle>mvn:org.opennms/opennms-detector-registry/${project.version}</bundle>
+        <bundle>mvn:org.opennms.core.snmp/org.opennms.core.snmp.api/${project.version}</bundle>
+        <bundle>mvn:org.opennms.core.tracing/org.opennms.core.tracing.api/${project.version}</bundle>
         <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-discovery/${project.version}</bundle>
+        <feature>opennms-core-ipc-rpc-kafka</feature>
+        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-shared/${project.version}</bundle>
     </feature>
 
     <!-- Karaf-only Trapd: loads Trapd daemon (UDP :1162) without Manager/Eventd -->
@@ -2291,6 +2301,7 @@
         <feature>opennms-event-forwarder-kafka</feature>
         <feature>opennms-distributed-core-impl</feature>
         <feature>opennms-persistence</feature>
+        <feature>opennms-core-tracing</feature>
         <!-- Config model (provides org.opennms.netmgt.config.utils needed by enlinkd.config at runtime) -->
         <bundle dependency="true">mvn:org.opennms/opennms-config-model/${project.version}</bundle>
         <!-- Enlinkd service API (provides persistence API, service API, criteria, guava, jung) -->
@@ -2314,7 +2325,12 @@
         <bundle>mvn:org.opennms.features.enlinkd/org.opennms.features.enlinkd.config/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.topologies/org.opennms.features.topologies.service.api/${project.version}</bundle>
         <bundle>mvn:org.opennms.core.snmp/org.opennms.core.snmp.api/${project.version}</bundle>
+        <!-- SNMP RPC implementation (LocationAwareSnmpClientRpcImpl) -->
+        <bundle>mvn:org.opennms.core.snmp/org.opennms.core.snmp.proxy.rpc-impl/${project.version}</bundle>
+        <bundle>mvn:org.opennms.core.tracing/org.opennms.core.tracing.api/${project.version}</bundle>
         <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-enlinkd/${project.version}</bundle>
+        <feature>opennms-core-ipc-rpc-kafka</feature>
+        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-shared/${project.version}</bundle>
     </feature>
 
     <!-- Karaf-only Scriptd: loads Scriptd daemon (BSF script execution on events) without Manager/Eventd -->
@@ -2343,6 +2359,7 @@
         <feature>opennms-distributed-core-impl</feature>
         <feature>opennms-persistence</feature>
         <feature>opennms-config</feature>
+        <feature>opennms-core-tracing</feature>
         <feature>quartz</feature>
         <!-- Task coordinator (DefaultTaskCoordinator for import/scan/write lifecycles) -->
         <bundle>mvn:org.opennms.core/org.opennms.core.tasks/${project.version}</bundle>
@@ -2354,8 +2371,14 @@
         <bundle>mvn:org.opennms.core.tracing/org.opennms.core.tracing.api/${project.version}</bundle>
         <!-- Provisiond classes -->
         <bundle>mvn:org.opennms/opennms-provisiond/${project.version}</bundle>
+        <!-- RPC implementation bundles (SNMP proxy, detector client, DNS lookup) -->
+        <bundle>mvn:org.opennms.core.snmp/org.opennms.core.snmp.proxy.rpc-impl/${project.version}</bundle>
+        <bundle>mvn:org.opennms/opennms-detectorclient-rpc/${project.version}</bundle>
+        <bundle>mvn:org.opennms/opennms-detector-registry/${project.version}</bundle>
         <!-- Daemon loader (creates Provisioner, starts it) -->
         <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-provisiond/${project.version}</bundle>
+        <feature>opennms-core-ipc-rpc-kafka</feature>
+        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-shared/${project.version}</bundle>
     </feature>
 
     <!-- Karaf-only Bsmd: loads Bsmd daemon without Manager/Eventd.
@@ -2405,6 +2428,21 @@
         <bundle>mvn:org.opennms.features.events/org.opennms.features.events.daemon/${project.version}</bundle>
         <!-- Daemon loader (creates Alarmd, starts it) -->
         <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-alarmd/${project.version}</bundle>
+    </feature>
+
+    <!-- Karaf-only Telemetryd: loads Telemetryd daemon without Manager/Eventd.
+         Consumes telemetry data from Kafka Sink topics (one per protocol queue).
+         Spawns a KafkaSinkBridge per registered TelemetrySinkModule. -->
+    <feature name="opennms-daemon-telemetryd" version="${project.version}"
+             description="OpenNMS :: Daemon Loader :: Telemetryd">
+        <feature>opennms-spring-extender</feature>
+        <feature>opennms-event-forwarder-kafka</feature>
+        <feature>opennms-distributed-core-impl</feature>
+        <feature>opennms-persistence</feature>
+        <feature>opennms-core-daemon</feature>
+        <feature>opennms-telemetry-daemon</feature>
+        <!-- Daemon loader (creates Telemetryd, starts it, spawns per-module Kafka bridges) -->
+        <bundle>mvn:org.opennms.core/daemon-loader-telemetryd/${project.version}</bundle>
     </feature>
 
 </features>
