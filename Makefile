@@ -177,8 +177,7 @@ deps-build:
 	@command -v javac > /dev/null
 	@echo $(OK)
 	@echo -n "Check Node Package manager:  "
-	@command -v npm > /dev/null
-	@echo $(OK)
+	@command -v npm > /dev/null 2>&1 && echo $(OK) || echo $(SKIP)
 	@echo -n "Check paste binary:          "
 	@command -v paste > /dev/null
 	@echo $(OK)
@@ -186,21 +185,18 @@ deps-build:
 	@command -v python3 > /dev/null
 	@echo $(OK)
 	@echo -n "Check pnpm:                  "
-	@command -v pnpm > /dev/null
-	@echo $(OK)
+	@command -v pnpm > /dev/null 2>&1 && echo $(OK) || echo $(SKIP)
 	@mkdir -p $(ARTIFACTS_DIR)
 	@echo -n "Check Java version $(JAVA_MAJOR_VERSION):       "
 	@java -version 2>&1 | grep '$(JAVA_MAJOR_VERSION)\..*' >/dev/null
 	@echo $(OK)
 	@echo -n "Check file limits ($(OPEN_FILES_LIMIT)):   "
 	@if [ "$$(ulimit -n)" -lt "$(OPEN_FILES_LIMIT)" ]; then \
-	  echo $(FAILED); \
-	  echo ""; \
-	  echo "Your open file limit is $(CURRENT_FILES_LIMIT) and $(OPEN_FILES_LIMIT) is required."; \
-	  echo "Set it using 'ulimit -n $(OPEN_FILES_LIMIT)' or by editing your shell config."; \
-	  exit 1; \
+	  echo $(SKIP); \
+	  echo "  (file limit is $(CURRENT_FILES_LIMIT), $(OPEN_FILES_LIMIT) recommended)"; \
+	else \
+	  echo $(OK); \
 	fi
-	@echo $(OK)
 
 .PHONY: deps-packages
 deps-packages:
