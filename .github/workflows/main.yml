@@ -27,8 +27,13 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '10.24.0'
       - name: Cleaning project for quick validation
         run: |
+          ulimit -n 65536
           make validate
       - name: Build Web UI with pnpm including tests
         run: |
