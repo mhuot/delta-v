@@ -129,6 +129,7 @@ See [DELTA-V_Status.md](DELTA-V_Status.md) for detailed progress tracking.
 | [OPENNMS.md](OPENNMS.md) | Original OpenNMS Horizon project description |
 | [DELTA-V_Status.md](DELTA-V_Status.md) | Detailed status of all Delta-V work |
 | [BUILD.md](BUILD.md) | Build instructions |
+| [docs/CI.md](docs/CI.md) | CI/CD pipeline, local testing, extending workflows |
 | [CLAUDE.md](CLAUDE.md) | AI assistant project context |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guidelines |
 
