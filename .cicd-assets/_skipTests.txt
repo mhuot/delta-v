@@ -8,3 +8,7 @@ org.opennms.netmgt.provision.detector.PercDetectorTest
 org.opennms.netmgt.provision.detector.SnmpDetectorTest
 org.opennms.netmgt.provision.detector.SnmpDetectorWithProfilesTest
 org.opennms.netmgt.provision.detector.Win32ServiceDetectorTest
+org.opennms.netmgt.dao.support.DefaultRrdDaoIntegrationTest
+org.opennms.netmgt.dao.support.FilesystemResourceStorageDaoTest
+org.opennms.netmgt.model.OnmsOutageTest
+org.opennms.netmgt.vmmgr.InvokerTest
