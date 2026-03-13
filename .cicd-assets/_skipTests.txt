@@ -50,3 +50,4 @@ org.opennms.netmgt.provision.detector.dhcp.DhcpDetectorTest
 org.opennms.netmgt.model.OnmsOutageTest
 # Timeout on GitHub-hosted runners
 org.opennms.core.ipc.sink.offheap.QueueFileOffHeapDispatchQueueTest
+org.opennms.core.ipc.sink.offheap.DataBlocksOffHeapQueueTest
