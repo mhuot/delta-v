@@ -1,0 +1,65 @@
+---
+name: Unit Tests
+run-name: Run unit test suite
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions: write-all
+
+jobs:
+  unit-tests:
+    if: "!contains(github.event.commits[0].message, '[skip unit-tests]')"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard_idx: [0, 1, 2]
+        shards: [3]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Restore Maven repository cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.m2/repository
+          key: m2-${{ hashFiles('**/pom.xml') }}-${{ github.sha }}
+          restore-keys: |
+            m2-${{ hashFiles('**/pom.xml') }}
+
+      - name: Compile test classes
+        run: |
+          make quick-compile
+
+      - name: Run unit test suite (shard ${{ matrix.shard_idx }})
+        run: |
+          make unit-tests MAVEN_SHARD_IDX=${{ matrix.shard_idx }} MAVEN_SHARDS=${{ matrix.shards }}
+
+      - name: Publish Unit Test Report (shard ${{ matrix.shard_idx }})
+        if: success() || failure()
+        uses: scacap/action-surefire-report@v1
+        with:
+          check_name: Unit Test Report (shard ${{ matrix.shard_idx }})
+
+      - name: Collect test results and logs (shard ${{ matrix.shard_idx }})
+        if: always()
+        run: |
+          make collect-testresults
+
+      - name: Persist unit test results (shard ${{ matrix.shard_idx }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-tests-artifacts-${{ matrix.shard_idx }}
+          path: |
+            target/artifacts/mvn.*.log
+            target/artifacts/surefire-reports
+            target/artifacts/failsafe-reports

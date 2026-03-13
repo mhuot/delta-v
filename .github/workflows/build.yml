@@ -1,0 +1,95 @@
+---
+name: Build
+run-name: Compile, assemble, and upload Delta-V artifacts
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions: write-all
+
+jobs:
+  build:
+    if: "!contains(github.event.commits[0].message, '[skip build]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '10.24.0'
+
+      - name: Validate project structure
+        run: |
+          make validate
+
+      - name: Build Web UI
+        run: |
+          make compile-ui
+
+      - name: Build and assemble from source
+        run: |
+          make
+
+      - name: Build Daemon and Alarmd assemblies
+        run: |
+          ./maven/bin/mvn --batch-mode -DskipTests -f container/features/pom.xml install
+          ./maven/bin/mvn --batch-mode -DskipTests -f features/container/sentinel/pom.xml install
+          ./maven/bin/mvn --batch-mode -DskipTests -f opennms-assemblies/daemon/pom.xml install
+          ./maven/bin/mvn --batch-mode -DskipTests -f opennms-assemblies/alarmd/pom.xml install
+
+      - name: Upload tarball Core
+        uses: actions/upload-artifact@v4
+        with:
+          name: tarball-core
+          path: opennms-full-assembly/target/opennms-full-assembly-*.tar.gz
+
+      - name: Upload tarball Minion
+        uses: actions/upload-artifact@v4
+        with:
+          name: tarball-minion
+          path: opennms-assemblies/minion/target/org.opennms.assemblies.minion-*.tar.gz
+
+      - name: Upload tarball Sentinel
+        uses: actions/upload-artifact@v4
+        with:
+          name: tarball-sentinel
+          path: opennms-assemblies/sentinel/target/org.opennms.assemblies.sentinel-*.tar.gz
+
+      - name: Upload tarball Daemon
+        uses: actions/upload-artifact@v4
+        with:
+          name: tarball-daemon
+          path: opennms-assemblies/daemon/target/*daemon*.tar.gz
+
+      - name: Upload tarball Alarmd
+        uses: actions/upload-artifact@v4
+        with:
+          name: tarball-alarmd
+          path: opennms-assemblies/alarmd/target/*alarmd*.tar.gz
+
+      - name: Save Maven local repo cache
+        uses: actions/cache/save@v4
+        with:
+          key: m2-${{ hashFiles('**/pom.xml') }}-${{ github.sha }}
+          path: ~/.m2/repository
+
+      - name: Collect build logs
+        if: always()
+        run: |
+          make collect-testresults
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: target/artifacts/mvn.*.log

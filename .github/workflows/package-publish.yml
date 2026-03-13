@@ -1,0 +1,429 @@
+---
+name: Package and Publish
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions: write-all
+
+jobs:
+  core-packages:
+    if: "!contains(github.event.commits[0].message, '[skip core-packages]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-core
+          path: opennms-full-assembly/target
+      - name: Install fpm
+        run: sudo gem install fpm
+      - name: Build Core Debian packages
+        run: make core-pkg-deb PKG_RELEASE=${{ github.run_number }}
+      - name: Build Core RPM packages
+        run: |
+          sudo apt-get update && sudo apt-get install -y rpm
+          make core-pkg-rpm PKG_RELEASE=${{ github.run_number }}
+      - name: Persist Core package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-pkgs
+          path: |
+            target/artifacts/packages/core
+
+  minion-packages:
+    if: "!contains(github.event.commits[0].message, '[skip minion-packages]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-minion
+          path: opennms-assemblies/minion/target
+      - name: Install fpm
+        run: sudo gem install fpm
+      - name: Build Minion Debian packages
+        run: make minion-pkg-deb PKG_RELEASE=${{ github.run_number }}
+      - name: Build Minion RPM packages
+        run: |
+          sudo apt-get update && sudo apt-get install -y rpm
+          make minion-pkg-rpm PKG_RELEASE=${{ github.run_number }}
+      - name: Persist Minion package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: minion-pkgs
+          path: |
+            target/artifacts/packages/minion
+
+  sentinel-packages:
+    if: "!contains(github.event.commits[0].message, '[skip sentinel-packages]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-sentinel
+          path: opennms-assemblies/sentinel/target
+      - name: Install fpm
+        run: sudo gem install fpm
+      - name: Build Sentinel Debian packages
+        run: make sentinel-pkg-deb PKG_RELEASE=${{ github.run_number }}
+      - name: Build Sentinel RPM packages
+        run: |
+          sudo apt-get update && sudo apt-get install -y rpm
+          make sentinel-pkg-rpm PKG_RELEASE=${{ github.run_number }}
+      - name: Persist Sentinel package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sentinel-pkgs
+          path: |
+            target/artifacts/packages/sentinel
+
+  core-oci:
+    if: "!contains(github.event.commits[0].message, '[skip core-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          cache-image: false
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-core
+          path: opennms-full-assembly/target
+      - name: Extract Core tarball for container build
+        run: |
+          mkdir -p opennms-container/core/tarball-root
+          tar xzf opennms-full-assembly/target/opennms-full-assembly-*-core.tar.gz -C opennms-container/core/tarball-root
+          rm -rf opennms-full-assembly/target
+      - name: Get the release version for the OCI tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "TARGET=horizon" >> ${GITHUB_ENV}
+          REF_NAME=${{ github.ref_name }}
+          VERSION=${REF_NAME#v}
+          VERSION=${VERSION#delta-v-}
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+      - name: Prepare
+        run: |
+          echo "OCI_REPOSITORY=${TARGET:-horizon-snapshot}" >> ${GITHUB_ENV}
+          echo "SHORT_GIT_SHA=$(git rev-parse --short HEAD)" >> ${GITHUB_ENV}
+          echo "GIT_SHA=$(git rev-parse HEAD)" >> ${GITHUB_ENV}
+          echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> ${GITHUB_ENV}
+          echo "TAG=${VERSION:-$(git rev-parse --short HEAD)}" >> ${GITHUB_ENV}
+      - name: Build and push Core container image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./opennms-container/core
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            RELEASE_BRANCH=${{ github.ref_name }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
+            VERSION=${{ env.TAG }}
+            REVISION=${{ env.GIT_SHA }}
+            SOURCE=${{ github.server_url }}/${{ github.repository }}/tree/${{ env.GIT_SHA }}/opennms-container/core
+            BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            BUILD_JOB_ID=${{ github.run_id }}
+          tags: ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest
+
+  minion-oci:
+    if: "!contains(github.event.commits[0].message, '[skip minion-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          cache-image: false
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-minion
+          path: opennms-assemblies/minion/target
+      - name: Extract Minion tarball for container build
+        run: |
+          mkdir -p opennms-container/minion/tarball-root
+          tar xzf opennms-assemblies/minion/target/org.opennms.assemblies.minion-*-minion.tar.gz --strip-component 1 -C opennms-container/minion/tarball-root
+      - name: Generate minion-config-schema
+        working-directory: opennms-container/minion
+        run: |
+          cat minion-config-schema.yml.in | sed -e 's,@VERSION@,${{ github.sha }},' \
+          -e 's,@REVISION@,${{ github.sha }},' \
+          -e 's,@BRANCH@,${{ github.ref_name }},' \
+          -e 's,@BUILD_NUMBER@,${{ github.run_id }},' > minion-config-schema.yml
+      - name: Get the release version for the OCI tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "TARGET=minion" >> ${GITHUB_ENV}
+          REF_NAME=${{ github.ref_name }}
+          VERSION=${REF_NAME#v}
+          VERSION=${VERSION#delta-v-}
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+      - name: Prepare
+        run: |
+          echo "OCI_REPOSITORY=${TARGET:-minion-snapshot}" >> ${GITHUB_ENV}
+          echo "SHORT_GIT_SHA=$(git rev-parse --short HEAD)" >> ${GITHUB_ENV}
+          echo "GIT_SHA=$(git rev-parse HEAD)" >> ${GITHUB_ENV}
+          echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> ${GITHUB_ENV}
+          echo "TAG=${VERSION:-$(git rev-parse --short HEAD)}" >> ${GITHUB_ENV}
+      - name: Build and push Minion container image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./opennms-container/minion
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            RELEASE_BRANCH=${{ github.ref_name }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
+            VERSION=${{ env.TAG }}
+            REVISION=${{ env.GIT_SHA }}
+            SOURCE=${{ github.server_url }}/${{ github.repository }}/tree/${{ env.GIT_SHA }}/opennms-container/minion
+            BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            BUILD_JOB_ID=${{ github.run_id }}
+          tags: ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest
+
+  sentinel-oci:
+    if: "!contains(github.event.commits[0].message, '[skip sentinel-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          cache-image: false
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-sentinel
+          path: opennms-assemblies/sentinel/target
+      - name: Extract Sentinel tarball for container build
+        run: |
+          mkdir -p opennms-container/sentinel/tarball-root
+          tar xzf opennms-assemblies/sentinel/target/org.opennms.assemblies.sentinel-*-sentinel.tar.gz --strip-component 1 -C opennms-container/sentinel/tarball-root
+      - name: Get the release version for the OCI tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "TARGET=sentinel" >> ${GITHUB_ENV}
+          REF_NAME=${{ github.ref_name }}
+          VERSION=${REF_NAME#v}
+          VERSION=${VERSION#delta-v-}
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+      - name: Prepare
+        run: |
+          echo "OCI_REPOSITORY=${TARGET:-sentinel-snapshot}" >> ${GITHUB_ENV}
+          echo "SHORT_GIT_SHA=$(git rev-parse --short HEAD)" >> ${GITHUB_ENV}
+          echo "GIT_SHA=$(git rev-parse HEAD)" >> ${GITHUB_ENV}
+          echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> ${GITHUB_ENV}
+          echo "TAG=${VERSION:-$(git rev-parse --short HEAD)}" >> ${GITHUB_ENV}
+      - name: Build and push Sentinel container image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./opennms-container/sentinel
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            RELEASE_BRANCH=${{ github.ref_name }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
+            VERSION=${{ env.TAG }}
+            REVISION=${{ env.GIT_SHA }}
+            SOURCE=${{ github.server_url }}/${{ github.repository }}/tree/${{ env.GIT_SHA }}/opennms-container/sentinel
+            BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            BUILD_JOB_ID=${{ github.run_id }}
+          tags: ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest
+
+  daemon-oci:
+    if: "!contains(github.event.commits[0].message, '[skip daemon-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          cache-image: false
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-daemon
+          path: opennms-assemblies/daemon/target
+      - name: Extract Daemon tarball for container build
+        run: |
+          mkdir -p opennms-container/daemon/tarball-root
+          tar xzf opennms-assemblies/daemon/target/*daemon*.tar.gz --strip-components 1 -C opennms-container/daemon/tarball-root
+      - name: Get the release version for the OCI tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "TARGET=daemon" >> ${GITHUB_ENV}
+          REF_NAME=${{ github.ref_name }}
+          VERSION=${REF_NAME#v}
+          VERSION=${VERSION#delta-v-}
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+      - name: Prepare
+        run: |
+          echo "OCI_REPOSITORY=${TARGET:-daemon-snapshot}" >> ${GITHUB_ENV}
+          echo "SHORT_GIT_SHA=$(git rev-parse --short HEAD)" >> ${GITHUB_ENV}
+          echo "GIT_SHA=$(git rev-parse HEAD)" >> ${GITHUB_ENV}
+          echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> ${GITHUB_ENV}
+          echo "TAG=${VERSION:-$(git rev-parse --short HEAD)}" >> ${GITHUB_ENV}
+      - name: Build and push Daemon container image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./opennms-container/daemon
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            RELEASE_BRANCH=${{ github.ref_name }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
+            VERSION=${{ env.TAG }}
+            REVISION=${{ env.GIT_SHA }}
+            SOURCE=${{ github.server_url }}/${{ github.repository }}/tree/${{ env.GIT_SHA }}/opennms-container/daemon
+            BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            BUILD_JOB_ID=${{ github.run_id }}
+          tags: ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest
+
+  alarmd-oci:
+    if: "!contains(github.event.commits[0].message, '[skip alarmd-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          cache-image: false
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-alarmd
+          path: opennms-assemblies/alarmd/target
+      - name: Extract Alarmd tarball for container build
+        run: |
+          mkdir -p opennms-container/alarmd/tarball-root
+          tar xzf opennms-assemblies/alarmd/target/*alarmd*.tar.gz --strip-components 1 -C opennms-container/alarmd/tarball-root
+      - name: Get the release version for the OCI tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "TARGET=alarmd" >> ${GITHUB_ENV}
+          REF_NAME=${{ github.ref_name }}
+          VERSION=${REF_NAME#v}
+          VERSION=${VERSION#delta-v-}
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+      - name: Prepare
+        run: |
+          echo "OCI_REPOSITORY=${TARGET:-alarmd-snapshot}" >> ${GITHUB_ENV}
+          echo "SHORT_GIT_SHA=$(git rev-parse --short HEAD)" >> ${GITHUB_ENV}
+          echo "GIT_SHA=$(git rev-parse HEAD)" >> ${GITHUB_ENV}
+          echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> ${GITHUB_ENV}
+          echo "TAG=${VERSION:-$(git rev-parse --short HEAD)}" >> ${GITHUB_ENV}
+      - name: Build and push Alarmd container image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./opennms-container/alarmd
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            RELEASE_BRANCH=${{ github.ref_name }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
+            VERSION=${{ env.TAG }}
+            REVISION=${{ env.GIT_SHA }}
+            SOURCE=${{ github.server_url }}/${{ github.repository }}/tree/${{ env.GIT_SHA }}/opennms-container/alarmd
+            BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            BUILD_JOB_ID=${{ github.run_id }}
+          tags: ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest
+
+  create-github-release:
+    needs:
+      - core-packages
+      - minion-packages
+      - sentinel-packages
+      - daemon-oci
+      - alarmd-oci
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-core
+          path: opennms-full-assembly/target
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-minion
+          path: opennms-assemblies/minion/target
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-sentinel
+          path: opennms-assemblies/sentinel/target
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-daemon
+          path: opennms-assemblies/daemon/target
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-alarmd
+          path: opennms-assemblies/alarmd/target
+      - uses: actions/download-artifact@v4
+        with:
+          name: core-pkgs
+          path: target/artifacts/packages/core
+      - uses: actions/download-artifact@v4
+        with:
+          name: minion-pkgs
+          path: target/artifacts/packages/minion
+      - uses: actions/download-artifact@v4
+        with:
+          name: sentinel-pkgs
+          path: target/artifacts/packages/sentinel
+      - name: Release ${{ github.ref_name }}
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            opennms-full-assembly/target/*.tar.gz
+            opennms-assemblies/minion/target/*.tar.gz
+            opennms-assemblies/sentinel/target/*.tar.gz
+            opennms-assemblies/daemon/target/*daemon*.tar.gz
+            opennms-assemblies/alarmd/target/*alarmd*.tar.gz
+            target/artifacts/packages/core/*.deb
+            target/artifacts/packages/core/*.rpm
+            target/artifacts/packages/minion/*.deb
+            target/artifacts/packages/minion/*.rpm
+            target/artifacts/packages/sentinel/*.deb
+            target/artifacts/packages/sentinel/*.rpm

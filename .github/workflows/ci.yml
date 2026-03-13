@@ -1,0 +1,45 @@
+---
+name: Delta-V CI
+run-name: "Delta-V CI: Build, Test, Package, and Publish"
+
+on:
+  push:
+    branches:
+      - 'develop'
+      - 'release-*'
+      - 'ci/*'
+      - 'development/*'
+    tags:
+      - 'v*'
+      - 'delta-v-*'
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions: write-all
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    permissions: write-all
+
+  unit-tests:
+    needs: build
+    uses: ./.github/workflows/test-unit.yml
+    permissions: write-all
+
+  integration-tests:
+    needs: unit-tests
+    uses: ./.github/workflows/test-integration.yml
+    permissions: write-all
+
+  e2e-tests:
+    needs: unit-tests
+    uses: ./.github/workflows/test-e2e.yml
+    permissions: write-all
+
+  package-publish:
+    needs: [integration-tests, e2e-tests]
+    uses: ./.github/workflows/package-publish.yml
+    permissions: write-all
+    secrets: inherit
