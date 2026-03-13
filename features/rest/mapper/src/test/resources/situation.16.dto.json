@@ -18,11 +18,6 @@
 	"logMessage": "Interface 10.8.0.30 is down.",
 	"suppressedUntil": 1503412443118,
 	"suppressedTime": 1503412443118,
-	"parameters" : [ {
-		"name" : "test",
-		"value" : "testVal",
-		"type" : "string"
-	} ],
 	"lastEventTime": 1503412443118,
 	"x733ProbableCause": 0,
 	"ifIndex": null,

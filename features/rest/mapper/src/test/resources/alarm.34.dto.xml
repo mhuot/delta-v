@@ -17,9 +17,6 @@
   <troubleTicketLink>https://issues.opennms.org/browse/NMS-9587</troubleTicketLink>
   <suppressedUntil>##DATE##</suppressedUntil>
   <suppressedTime>##DATE##</suppressedTime>
-  <parameters>
-    <parameter name="test" value="testVal" type="string"/>
-  </parameters>
   <lastEventTime>##DATE##</lastEventTime>
   <x733ProbableCause>0</x733ProbableCause>
   <affectedNodeCount>1</affectedNodeCount>

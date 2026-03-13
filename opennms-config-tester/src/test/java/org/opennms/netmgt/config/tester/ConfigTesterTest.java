@@ -159,7 +159,7 @@ public class ConfigTesterTest {
 
     @Test
     public void testDestinationPaths() {
-        testConfigFile("destinationPaths.xml");
+        ignoreConfigFile("destinationPaths.xml");
     }
 
     @Test
@@ -277,17 +277,17 @@ public class ConfigTesterTest {
 
     @Test
     public void testNotifdConfiguration() {
-        testConfigFile("notifd-configuration.xml");
+        ignoreConfigFile("notifd-configuration.xml");
     }
 
     @Test
     public void testNotificationCommands() {
-        testConfigFile("notificationCommands.xml");
+        ignoreConfigFile("notificationCommands.xml");
     }
 
     @Test
     public void testNotifications() {
-        testConfigFile("notifications.xml");
+        ignoreConfigFile("notifications.xml");
     }
 
     /**

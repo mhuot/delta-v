@@ -14,9 +14,6 @@
   <logMessage>Interface 10.8.0.30 is down.</logMessage>
   <suppressedUntil>##DATE##</suppressedUntil>
   <suppressedTime>##DATE##</suppressedTime>
-  <parameters>
-    <parameter name="test" value="testVal" type="string"/>
-  </parameters>
   <lastEventTime>##DATE##</lastEventTime>
   <x733ProbableCause>0</x733ProbableCause>
    <relatedAlarms id="32" type="2" severity="MAJOR">
