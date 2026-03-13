@@ -8,11 +8,45 @@ org.opennms.netmgt.provision.detector.PercDetectorTest
 org.opennms.netmgt.provision.detector.SnmpDetectorTest
 org.opennms.netmgt.provision.detector.SnmpDetectorWithProfilesTest
 org.opennms.netmgt.provision.detector.Win32ServiceDetectorTest
+# Requires jrrd2 native library (not available on GitHub-hosted runners)
 org.opennms.netmgt.dao.support.DefaultRrdDaoIntegrationTest
 org.opennms.netmgt.dao.support.FilesystemResourceStorageDaoTest
-org.opennms.netmgt.model.OnmsOutageTest
-org.opennms.netmgt.vmmgr.InvokerTest
 org.opennms.netmgt.dao.support.DefaultResourceDaoTest
+org.opennms.netmgt.dao.support.FindTopLevelResourcesTest
+org.opennms.netmgt.dao.support.DefaultRrdDaoTest
+org.opennms.netmgt.dao.support.GenericIndexResourceTypeTest
+org.opennms.netmgt.dao.support.NodeSnmpResourceTypeTest
+org.opennms.netmgt.collection.persistence.rrd.BasePersisterTest
+org.opennms.netmgt.collectd.RrdPersistOperationBuilderTest
+org.opennms.netmgt.collectd.SnmpAttributeTest
+org.opennms.netmgt.collectd.CollectableServiceTest
+org.opennms.netmgt.poller.pollables.LatencyStoringServiceMonitorAdaptorPersistenceTest
+org.opennms.netmgt.poller.pollables.StatusStoringServiceMonitorAdaptorPersistenceTest
+org.opennms.netmgt.rrd.tcp.TcpRrdStrategyTest
+org.opennms.protocols.xml.collector.NodeLevelDataOnMultipleNodesTest
+org.opennms.protocols.xml.collector.NodeLevelDataWithRrdtoolTest
+org.opennms.protocols.xml.vtdxml.XmlCollector3GPPTest
+org.opennms.protocols.xml.vtdxml.XmlCollectorSolarisZonesTest
+# Requires opennms-base-assembly directory (config files in etc/)
+org.opennms.netmgt.vmmgr.InvokerTest
 org.opennms.netmgt.config.AmiPeerFactoryTest
 org.opennms.netmgt.config.UserFactoryTest
+org.opennms.netmgt.config.ConfigureSnmpTest
+org.opennms.netmgt.config.EventConfDataTest
+org.opennms.netmgt.config.EventdConfigManagerTest
+org.opennms.netmgt.config.SnmpDataCollectionTest
+org.opennms.netmgt.config.SnmpInterfacePollerConfigFactoryTest
+org.opennms.netmgt.config.tester.ConfigTesterTest
+org.opennms.netmgt.config.mock.RolesTest
+org.opennms.netmgt.config.mock.UserGroupManagerTest
+org.opennms.netmgt.dao.jaxb.AbstractJaxbConfigDaoTest
+org.opennms.netmgt.syslogd.BufferParserTest
+org.opennms.netmgt.syslogd.ConvertToEventTest
+org.opennms.netmgt.syslogd.SyslogMessageTest
+org.opennms.netmgt.discovery.NewSuspectLocationTest
+org.opennms.install.InstallerTest
+org.opennms.netmgt.provision.detector.dhcp.DhcpDetectorTest
+# Stale after notifications module removal
+org.opennms.netmgt.model.OnmsOutageTest
+# Timeout on GitHub-hosted runners
 org.opennms.core.ipc.sink.offheap.QueueFileOffHeapDispatchQueueTest
