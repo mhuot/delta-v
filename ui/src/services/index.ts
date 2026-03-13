@@ -66,6 +66,15 @@ import {
   addZenithRegistration,
   getZenithRegistrations
 } from './zenithConnectService'
+import {
+  getConfigNames,
+  getConfigSchema,
+  getConfigIds,
+  getConfig,
+  createConfig,
+  updateConfig,
+  deleteConfig
+} from './adminConfigService'
 
 export default {
   search,
@@ -118,5 +127,12 @@ export default {
   setUsageStatisticsStatus,
   addZenithRegistration,
   getZenithRegistrations,
-  performLogout
+  performLogout,
+  getConfigNames,
+  getConfigSchema,
+  getConfigIds,
+  getConfig,
+  createConfig,
+  updateConfig,
+  deleteConfig
 }
