@@ -39,3 +39,4 @@ org.opennms.core.ipc.sink.offheap.DataBlocksOffHeapQueueTest
 org.opennms.features.telemetry.protocols.openconfig.OpenConfigLocationPublisherTest
 # Delta-V: eventParametersCollection is empty after event model denormalization
 org.opennms.netmgt.alarmd.northbounder.snmptrap.SnmpTrapNorthbounderTest
+org.opennms.netmgt.alarmd.northbounder.snmptrap.SnmpTrapNorthbounderConfigDaoTest
