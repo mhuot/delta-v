@@ -258,7 +258,7 @@ test-lists: maven-structure-graph
 
 .PHONY: compile
 compile: maven-structure-graph
-	$(MAVEN_BIN) install $(MAVEN_ARGS) -DskipTests=true -Dbuild.profile=default -Droot.dir=$(WORKING_DIRECTORY) -Dbuild.skip.tarball=false -Prun-expensive-tasks -Psmoke -Dbuild.type=production -Dbuild.sbom=true -pl '!core/db-init,!core/upgrade' -P'!jspc' 2>&1 | tee $(ARTIFACTS_DIR)/mvn.compile.log
+	$(MAVEN_BIN) install $(MAVEN_ARGS) -DskipTests=true -Dbuild.profile=default -Droot.dir=$(WORKING_DIRECTORY) -Dbuild.skip.tarball=false -Prun-expensive-tasks -Psmoke -Dbuild.type=production -Dbuild.sbom=true -pl '!core/db-init' -P'!jspc' 2>&1 | tee $(ARTIFACTS_DIR)/mvn.compile.log
 
 .PHONY: compile-ui
 compile-ui:
@@ -274,7 +274,7 @@ quick-build: quick-compile quick-assemble
 
 .PHONY: quick-compile
 quick-compile: maven-structure-graph
-	$(MAVEN_BIN) install $(MAVEN_ARGS) -T 1C -DskipTests=true -Dbuild.profile=default -Droot.dir=$(WORKING_DIRECTORY) -Dcyclonedx.skip=true -pl '!core/db-init,!core/upgrade' -P'!jspc' 2>&1 | tee $(ARTIFACTS_DIR)/mvn.quick-compile.log
+	$(MAVEN_BIN) install $(MAVEN_ARGS) -T 1C -DskipTests=true -Dbuild.profile=default -Droot.dir=$(WORKING_DIRECTORY) -Dcyclonedx.skip=true -pl '!core/db-init' -P'!jspc' 2>&1 | tee $(ARTIFACTS_DIR)/mvn.quick-compile.log
 
 .PHONY: quick-assemble
 quick-assemble: deps-build show-info
