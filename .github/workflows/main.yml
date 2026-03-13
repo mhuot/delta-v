@@ -35,9 +35,9 @@ jobs:
         run: |
           ulimit -n 65536
           make validate
-      - name: Build Web UI with pnpm
+      - name: Build Web UI
         run: |
-          make compile-ui SKIP_UI_TESTS=true
+          make compile-ui
       - name: Build and assemble from source without expensive tasks
         run: |
           make
