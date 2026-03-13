@@ -5,7 +5,6 @@ run-name: "Delta-V CI: Build, Test, Package, and Publish"
 on:
   push:
     branches:
-      - 'develop'
       - 'release-*'
       - 'ci/*'
       - 'development/*'
