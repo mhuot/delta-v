@@ -9,7 +9,7 @@ permissions: write-all
 
 jobs:
   core-packages:
-    if: "!contains(github.event.commits[0].message, '[skip core-packages]')"
+    if: "!contains(github.event.head_commit.message || '', '[skip core-packages]')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,7 +33,7 @@ jobs:
             target/artifacts/packages/core
 
   minion-packages:
-    if: "!contains(github.event.commits[0].message, '[skip minion-packages]')"
+    if: "!contains(github.event.head_commit.message || '', '[skip minion-packages]')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -57,7 +57,7 @@ jobs:
             target/artifacts/packages/minion
 
   sentinel-packages:
-    if: "!contains(github.event.commits[0].message, '[skip sentinel-packages]')"
+    if: "!contains(github.event.head_commit.message || '', '[skip sentinel-packages]')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -81,7 +81,7 @@ jobs:
             target/artifacts/packages/sentinel
 
   core-oci:
-    if: "!contains(github.event.commits[0].message, '[skip core-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
+    if: "!contains(github.event.head_commit.message || '', '[skip core-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -138,7 +138,7 @@ jobs:
           tags: ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest
 
   minion-oci:
-    if: "!contains(github.event.commits[0].message, '[skip minion-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
+    if: "!contains(github.event.head_commit.message || '', '[skip minion-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -201,7 +201,7 @@ jobs:
           tags: ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest
 
   sentinel-oci:
-    if: "!contains(github.event.commits[0].message, '[skip sentinel-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
+    if: "!contains(github.event.head_commit.message || '', '[skip sentinel-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -257,7 +257,7 @@ jobs:
           tags: ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest
 
   daemon-oci:
-    if: "!contains(github.event.commits[0].message, '[skip daemon-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
+    if: "!contains(github.event.head_commit.message || '', '[skip daemon-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -313,7 +313,7 @@ jobs:
           tags: ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest
 
   alarmd-oci:
-    if: "!contains(github.event.commits[0].message, '[skip alarmd-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
+    if: "!contains(github.event.head_commit.message || '', '[skip alarmd-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -32,15 +32,6 @@
      <constructor-arg ref="thresholdingContext" />
    </bean>
    
-   <bean id="notifdContext" class="org.springframework.context.support.ClassPathXmlApplicationContext">
-     <constructor-arg>
-       <list>
-         <value>META-INF/opennms/applicationContext-notifd.xml</value>
-       </list>
-     </constructor-arg>
-     <constructor-arg ref="pollerConfigContext" />
-   </bean>
-
    <bean id="pollerdContext" class="org.springframework.context.support.ClassPathXmlApplicationContext">
      <constructor-arg>
        <list>

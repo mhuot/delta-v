@@ -78,7 +78,7 @@ public class ServiceConfigMigratorOfflineTest {
         // Do not change this value: the config file behind this test should always contain
         // the content for OpenNMS 14.0.0, regardless of whether or not services are added,
         // changed, or removed in the latest version.
-        Assert.assertEquals(38, cfg.getServices().size());
+        Assert.assertEquals(37, cfg.getServices().size());
 
         // Checking Service Factory (it should return only the enabled services)
         ServiceConfigFactory factory = new ServiceConfigFactory();

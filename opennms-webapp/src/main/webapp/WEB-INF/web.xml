@@ -662,12 +662,6 @@
   </servlet>
 
 
-  <!-- Servlet for updating the notification status -->
-  <servlet>
-    <servlet-name>updateNotificationStatus</servlet-name>
-    <servlet-class>org.opennms.web.admin.notification.UpdateNotifdStatusServlet</servlet-class>
-  </servlet>
-
   <!-- Servlet for building destination paths from a wizard -->
   <servlet>
     <servlet-name>destinationWizard</servlet-name>
@@ -901,12 +895,6 @@
   <servlet-mapping>
     <servlet-name>queryAlarm</servlet-name>
     <url-pattern>/alarm/query</url-pattern>
-  </servlet-mapping>
-
-  <!--servlet mapping for update notification status servlet -->
-  <servlet-mapping>
-    <servlet-name>updateNotificationStatus</servlet-name>
-    <url-pattern>/admin/updateNotificationStatus</url-pattern>
   </servlet-mapping>
 
   <!-- servlet mapping for the destination wizard servlet -->
