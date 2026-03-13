@@ -352,7 +352,8 @@ public abstract class ConfigurationTestUtils extends Assert {
 
     private static File findTopProjectDirectory(File currentDirectory) {
         File buildFile = new File(currentDirectory, "compile.pl");
-        if (buildFile.exists()) {
+        File makeFile = new File(currentDirectory, "Makefile");
+        if (buildFile.exists() || makeFile.exists()) {
             File pomFile = new File(currentDirectory, POM_FILE);
             assertTrue("pom.xml in top level directory should exist: " + pomFile.getAbsolutePath(), pomFile.exists());
             
