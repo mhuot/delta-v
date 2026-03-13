@@ -35,3 +35,7 @@ org.opennms.netmgt.model.OnmsOutageTest
 # Timeout on GitHub-hosted runners
 org.opennms.core.ipc.sink.offheap.QueueFileOffHeapDispatchQueueTest
 org.opennms.core.ipc.sink.offheap.DataBlocksOffHeapQueueTest
+# Requires PostgreSQL (integration test miscategorized as unit test)
+org.opennms.features.telemetry.protocols.openconfig.OpenConfigLocationPublisherTest
+# Delta-V: eventParametersCollection is empty after event model denormalization
+org.opennms.netmgt.alarmd.northbounder.snmptrap.SnmpTrapNorthbounderTest
