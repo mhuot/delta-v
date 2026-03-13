@@ -1008,11 +1008,6 @@
     </dependency>
     <dependency>
       <groupId>org.opennms.core</groupId>
-      <artifactId>org.opennms.core.daemon-loader-notifd</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms.core</groupId>
       <artifactId>org.opennms.core.daemon-loader-discovery</artifactId>
       <version>${project.version}</version>
     </dependency>
