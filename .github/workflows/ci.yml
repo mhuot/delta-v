@@ -18,6 +18,10 @@ on:
 
 permissions: write-all
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     uses: ./.github/workflows/build.yml
