@@ -1,0 +1,662 @@
+---
+name: Delta-V CI
+run-name: Build, test, package, and publish Delta-V
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+  push:
+    branches:
+      - 'develop'
+      - 'release-*'
+    tags:
+      - 'v*'
+      - 'delta-v-*'
+
+permissions: write-all
+
+jobs:
+  build-with-smoke-test:
+    if: "!contains(github.event.commits[0].message, '[skip build-with-smoke-test]')"
+    runs-on:
+      group: Default
+      labels:
+        - self-hosted
+        - Linux
+        - X64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cleaning project for quick validation
+        run: |
+          make validate
+      - name: Build Web UI with pnpm including tests
+        run: |
+          make compile-ui
+      - name: Build and assemble from source without expensive tasks
+        run: |
+          make
+      - name: Run quick smoke test
+        run: |
+          make quick-smoke
+      - name: Publish Quick Smoke Test Report
+        if: success() || failure()
+        uses: scacap/action-surefire-report@v1
+        with:
+          check_name: Quick Smoke Test Report
+      - name: Collect build logs
+        if: always()
+        run: |
+          make collect-testresults
+      - name: Persist test results and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-with-smoke-test-logs
+          path: target/artifacts/mvn.*.log
+      - name: Persist tarball Core
+        uses: actions/upload-artifact@v4
+        with:
+          name: tarball-core
+          path: opennms-full-assembly/target/opennms-full-assembly-*.tar.gz
+      - name: Persist tarball Minion
+        uses: actions/upload-artifact@v4
+        with:
+          name: tarball-minion
+          path: opennms-assemblies/minion/target/org.opennms.assemblies.minion-*.tar.gz
+      - name: Persist tarball Sentinel
+        uses: actions/upload-artifact@v4
+        with:
+          name: tarball-sentinel
+          path: opennms-assemblies/sentinel/target/org.opennms.assemblies.sentinel-*.tar.gz
+
+  unit-tests:
+    if: "!contains(github.event.commits[0].message, '[skip unit-tests]')"
+    needs:
+      - build-with-smoke-test
+    strategy:
+      fail-fast: false
+      matrix:
+        shard_idx: [ 0, 1, 2 ]
+        shards: [ 3 ]
+    runs-on:
+      group: Default
+      labels:
+        - self-hosted
+        - Linux
+        - X64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare the build for tests
+        run: |
+          make quick-compile
+          make quick-assemble
+      - name: Run unit test suite (shard ${{ matrix.shard_idx }})
+        run: |
+          make unit-tests MAVEN_SHARD_IDX=${{ matrix.shard_idx }} MAVEN_SHARDS=${{ matrix.shards }}
+      - name: Publish Unit Test Report (shard ${{ matrix.shard_idx }})
+        if: success() || failure()
+        uses: scacap/action-surefire-report@v1
+        with:
+          check_name: Unit Test Report (shard ${{ matrix.shard_idx }})
+      - name: Collect test results and logs (shard ${{ matrix.shard_idx }})
+        if: always()
+        run: |
+          make collect-testresults
+      - name: Persist unit test results (shard ${{ matrix.shard_idx }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-tests-artifacts-${{ matrix.shard_idx }}
+          path: |
+            target/artifacts/mvn.*.log
+            target/artifacts/surefire-reports
+            target/artifacts/failsafe-reports
+
+  integration-tests:
+    if: "!contains(github.event.commits[0].message, '[skip integration-tests]')"
+    strategy:
+      fail-fast: false
+      matrix:
+        shard_idx: [ 0, 1, 2, 3, 4, 5, 6, 7 ]
+        shards: [ 8 ]
+    needs:
+      - unit-tests
+    runs-on:
+      group: Default
+      labels:
+        - self-hosted
+        - Linux
+        - X64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare the build for tests
+        run: |
+          make quick-compile
+          make quick-assemble
+      - name: Prepare the build for tests and installing it
+        run: |
+          make install-core
+      - name: Run integration test suite (shard ${{ matrix.shard_idx }})
+        run: |
+          make integration-tests MAVEN_SHARD_IDX=${{ matrix.shard_idx }} MAVEN_SHARDS=${{ matrix.shards }}
+      - name: Publish Integration Test Report (shard ${{ matrix.shard_idx }})
+        if: success() || failure()
+        uses: scacap/action-surefire-report@v1
+        with:
+          check_name: Integration Test Report (shard ${{ matrix.shard_idx }})
+      - name: Collect test results and logs (shard ${{ matrix.shard_idx }})
+        if: always()
+        run: |
+          make collect-testresults
+      - name: Persist integration test results (shard ${{ matrix.shard_idx }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-tests-artifacts-${{ matrix.shard_idx }}
+          path: |
+            target/artifacts/mvn.*.log
+            target/artifacts/surefire-reports
+            target/artifacts/failsafe-reports
+
+  e2e-tests-core:
+    if: "!contains(github.event.commits[0].message, '[skip e2e-tests-core]')"
+    strategy:
+      fail-fast: false
+      matrix:
+        shard_idx: [ 0, 1, 2, 3, 4, 5, 6, 7 ]
+        shards: [ 8 ]
+    needs:
+      - unit-tests
+    runs-on:
+      group: Default
+      labels:
+        - self-hosted
+        - Linux
+        - X64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare the build for tests
+        run: |
+          make quick-compile
+          make quick-assemble
+      - name: Run Core End-to-End tests (shard ${{ matrix.shard_idx }})
+        run: |
+          make core-e2e MAVEN_SHARD_IDX=${{ matrix.shard_idx }} MAVEN_SHARDS=${{ matrix.shards }}
+      - name: Publish E2E Core Test Report (shard ${{ matrix.shard_idx }})
+        if: success() || failure()
+        uses: scacap/action-surefire-report@v1
+        with:
+          check_name: Core E2E Test Report (shard ${{ matrix.shard_idx }})
+      - name: Collect test results and logs (shard ${{ matrix.shard_idx }})
+        if: always()
+        run: |
+          make collect-testresults
+      - name: Persist Core e2e test results (shard ${{ matrix.shard_idx }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-tests-core-artifacts-${{ matrix.shard_idx }}
+          path: |
+            target/artifacts/mvn.*.log
+            target/artifacts/surefire-reports
+            target/artifacts/failsafe-reports
+            target/artifacts/recordings
+            target/artifacts/smoke-test-*.tar.gz
+
+  e2e-tests-minion:
+    if: "!contains(github.event.commits[0].message, '[skip e2e-tests-minion]')"
+    strategy:
+      fail-fast: false
+      matrix:
+        shard_idx: [ 0 ]
+        shards: [ 1 ]
+    needs:
+      - unit-tests
+    runs-on:
+      group: Default
+      labels:
+        - self-hosted
+        - Linux
+        - X64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare the build for tests
+        run: |
+          make quick-compile
+          make quick-assemble
+      - name: Run Minion End-to-End tests (shard ${{ matrix.shard_idx }})
+        run: |
+          make minion-e2e MAVEN_SHARD_IDX=${{ matrix.shard_idx }} MAVEN_SHARDS=${{ matrix.shards }}
+      - name: Publish E2E Minion Test Report (shard ${{ matrix.shard_idx }})
+        if: success() || failure()
+        uses: scacap/action-surefire-report@v1
+        with:
+          check_name: Minion E2E Test Report (shard ${{ matrix.shard_idx }})
+      - name: Collect test results and logs (shard ${{ matrix.shard_idx }})
+        if: always()
+        run: |
+          make collect-testresults
+      - name: Persist Minion e2e test results (shard ${{ matrix.shard_idx }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-tests-minion-artifacts-${{ matrix.shard_idx }}
+          path: |
+            target/artifacts/mvn.*.log
+            target/artifacts/surefire-reports
+            target/artifacts/failsafe-reports
+            target/artifacts/recordings
+            target/artifacts/smoke-test-*.tar.gz
+
+  e2e-tests-sentinel:
+    if: "!contains(github.event.commits[0].message, '[skip e2e-tests-sentinel]')"
+    strategy:
+      fail-fast: false
+      matrix:
+        shard_idx: [ 0 ]
+        shards: [ 1 ]
+    needs:
+      - unit-tests
+    runs-on:
+      group: Default
+      labels:
+        - self-hosted
+        - Linux
+        - X64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare the build for tests
+        run: |
+          make quick-compile
+          make quick-assemble
+      - name: Run Sentinel End-to-End tests (shard ${{ matrix.shard_idx }})
+        run: |
+          make sentinel-e2e MAVEN_SHARD_IDX=${{ matrix.shard_idx }} MAVEN_SHARDS=${{ matrix.shards }}
+      - name: Publish E2E Sentinel Test Report (shard ${{ matrix.shard_idx }})
+        if: success() || failure()
+        uses: scacap/action-surefire-report@v1
+        with:
+          check_name: Sentinel E2E Test Report (shard ${{ matrix.shard_idx }})
+      - name: Collect test results and logs (shard ${{ matrix.shard_idx }})
+        if: always()
+        run: |
+          make collect-testresults
+      - name: Persist Sentinel e2e test results (shard ${{ matrix.shard_idx }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-tests-sentinel-artifacts-${{ matrix.shard_idx }}
+          path: |
+            target/artifacts/mvn.*.log
+            target/artifacts/surefire-reports
+            target/artifacts/failsafe-reports
+            target/artifacts/recordings
+            target/artifacts/smoke-test-*.tar.gz
+
+  core-packages:
+    if: "!contains(github.event.commits[0].message, '[skip core-packages]')"
+    needs:
+      - integration-tests
+      - e2e-tests-core
+      - e2e-tests-minion
+      - e2e-tests-sentinel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-core
+          path: opennms-full-assembly/target
+      - name: Install fpm
+        run: sudo gem install fpm
+      - name: Build Core Debian packages
+        run: make core-pkg-deb PKG_RELEASE=${{ github.run_number }}
+      - name: Build Core RPM packages
+        run: |
+          sudo apt-get update && sudo apt-get install -y rpm
+          make core-pkg-rpm PKG_RELEASE=${{ github.run_number }}
+      - name: Persist Core package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-pkgs
+          path: |
+            target/artifacts/packages/core
+
+  minion-packages:
+    if: "!contains(github.event.commits[0].message, '[skip minion-packages]')"
+    needs:
+      - integration-tests
+      - e2e-tests-core
+      - e2e-tests-minion
+      - e2e-tests-sentinel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-minion
+          path: opennms-assemblies/minion/target
+      - name: Install fpm
+        run: sudo gem install fpm
+      - name: Build Minion Debian packages
+        run: make minion-pkg-deb PKG_RELEASE=${{ github.run_number }}
+      - name: Build Minion RPM packages
+        run: |
+          sudo apt-get update && sudo apt-get install -y rpm
+          make minion-pkg-rpm PKG_RELEASE=${{ github.run_number }}
+      - name: Persist Minion package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: minion-pkgs
+          path: |
+            target/artifacts/packages/minion
+
+  sentinel-packages:
+    if: "!contains(github.event.commits[0].message, '[skip sentinel-packages]')"
+    needs:
+      - integration-tests
+      - e2e-tests-core
+      - e2e-tests-minion
+      - e2e-tests-sentinel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-sentinel
+          path: opennms-assemblies/sentinel/target
+      - name: Install fpm
+        run: sudo gem install fpm
+      - name: Build Sentinel Debian packages
+        run: make sentinel-pkg-deb PKG_RELEASE=${{ github.run_number }}
+      - name: Build Sentinel RPM packages
+        run: |
+          sudo apt-get update && sudo apt-get install -y rpm
+          make sentinel-pkg-rpm PKG_RELEASE=${{ github.run_number }}
+      - name: Persist Sentinel package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sentinel-pkgs
+          path: |
+            target/artifacts/packages/sentinel
+
+  core-oci:
+    if: "!contains(github.event.commits[0].message, '[skip core-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
+    needs:
+      - integration-tests
+      - e2e-tests-core
+      - e2e-tests-minion
+      - e2e-tests-sentinel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          cache-image: false
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-core
+          path: opennms-full-assembly/target
+      - name: Extract Core tarball for container build
+        run: |
+          mkdir -p opennms-container/core/tarball-root
+          tar xzf opennms-full-assembly/target/opennms-full-assembly-*-core.tar.gz -C opennms-container/core/tarball-root
+          rm -rf opennms-full-assembly/target
+      - name: Get the release version for the OCI tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "TARGET=horizon" >> ${GITHUB_ENV}
+          REF_NAME=${{ github.ref_name }}
+          VERSION=${REF_NAME#v}
+          VERSION=${VERSION#delta-v-}
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+      - name: Prepare
+        run: |
+          echo "OCI_REPOSITORY=${TARGET:-horizon-snapshot}" >> ${GITHUB_ENV}
+          echo "SHORT_GIT_SHA=$(git rev-parse --short HEAD)" >> ${GITHUB_ENV}
+          echo "GIT_SHA=$(git rev-parse HEAD)" >> ${GITHUB_ENV}
+          echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> ${GITHUB_ENV}
+          echo "TAG=${VERSION:-$(git rev-parse --short HEAD)}" >> ${GITHUB_ENV}
+      - name: Build and push Core container image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./opennms-container/core
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            RELEASE_BRANCH=${{ github.ref_name }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
+            VERSION=${{ env.TAG }}
+            REVISION=${{ env.GIT_SHA }}
+            SOURCE=${{ github.server_url }}/${{ github.repository }}/tree/${{ env.GIT_SHA }}/opennms-container/core
+            BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            BUILD_JOB_ID=${{ github.run_id }}
+          tags: ${{ env.OCI_REGISTRY_ORG }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},${{ env.OCI_REGISTRY_ORG }}/${{ env.OCI_REPOSITORY }}:latest
+
+  minion-oci:
+    if: "!contains(github.event.commits[0].message, '[skip minion-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
+    needs:
+      - integration-tests
+      - e2e-tests-core
+      - e2e-tests-minion
+      - e2e-tests-sentinel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          cache-image: false
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-minion
+          path: opennms-assemblies/minion/target
+      - name: Extract Minion tarball for container build
+        run: |
+          mkdir -p opennms-container/minion/tarball-root
+          tar xzf opennms-assemblies/minion/target/org.opennms.assemblies.minion-*-minion.tar.gz --strip-component 1 -C opennms-container/minion/tarball-root
+      - name: Generate minion-config-schema
+        working-directory: opennms-container/minion
+        run: |
+          cat minion-config-schema.yml.in | sed -e 's,@VERSION@,${{ github.sha }},' \
+          -e 's,@REVISION@,${{ github.sha }},' \
+          -e 's,@BRANCH@,${{ github.ref_name }},' \
+          -e 's,@BUILD_NUMBER@,${{ github.run_id }},' > minion-config-schema.yml
+      - name: Get the release version for the OCI tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "TARGET=minion" >> ${GITHUB_ENV}
+          REF_NAME=${{ github.ref_name }}
+          VERSION=${REF_NAME#v}
+          VERSION=${VERSION#delta-v-}
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+      - name: Prepare
+        run: |
+          echo "OCI_REPOSITORY=${TARGET:-minion-snapshot}" >> ${GITHUB_ENV}
+          echo "SHORT_GIT_SHA=$(git rev-parse --short HEAD)" >> ${GITHUB_ENV}
+          echo "GIT_SHA=$(git rev-parse HEAD)" >> ${GITHUB_ENV}
+          echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> ${GITHUB_ENV}
+          echo "TAG=${VERSION:-$(git rev-parse --short HEAD)}" >> ${GITHUB_ENV}
+      - name: Build and push Minion container image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./opennms-container/minion
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            RELEASE_BRANCH=${{ github.ref_name }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
+            VERSION=${{ env.TAG }}
+            REVISION=${{ env.GIT_SHA }}
+            SOURCE=${{ github.server_url }}/${{ github.repository }}/tree/${{ env.GIT_SHA }}/opennms-container/minion
+            BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            BUILD_JOB_ID=${{ github.run_id }}
+          tags: ${{ env.OCI_REGISTRY_ORG }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},${{ env.OCI_REGISTRY_ORG }}/${{ env.OCI_REPOSITORY }}:latest
+
+  sentinel-oci:
+    if: "!contains(github.event.commits[0].message, '[skip sentinel-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
+    needs:
+      - integration-tests
+      - e2e-tests-core
+      - e2e-tests-minion
+      - e2e-tests-sentinel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          cache-image: false
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-sentinel
+          path: opennms-assemblies/sentinel/target
+      - name: Extract Sentinel tarball for container build
+        run: |
+          mkdir -p opennms-container/sentinel/tarball-root
+          tar xzf opennms-assemblies/sentinel/target/org.opennms.assemblies.sentinel-*-sentinel.tar.gz --strip-component 1 -C opennms-container/sentinel/tarball-root
+      - name: Get the release version for the OCI tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "TARGET=sentinel" >> ${GITHUB_ENV}
+          REF_NAME=${{ github.ref_name }}
+          VERSION=${REF_NAME#v}
+          VERSION=${VERSION#delta-v-}
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+      - name: Prepare
+        run: |
+          echo "OCI_REPOSITORY=${TARGET:-sentinel-snapshot}" >> ${GITHUB_ENV}
+          echo "SHORT_GIT_SHA=$(git rev-parse --short HEAD)" >> ${GITHUB_ENV}
+          echo "GIT_SHA=$(git rev-parse HEAD)" >> ${GITHUB_ENV}
+          echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> ${GITHUB_ENV}
+          echo "TAG=${VERSION:-$(git rev-parse --short HEAD)}" >> ${GITHUB_ENV}
+      - name: Build and push Sentinel container image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./opennms-container/sentinel
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            RELEASE_BRANCH=${{ github.ref_name }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
+            VERSION=${{ env.TAG }}
+            REVISION=${{ env.GIT_SHA }}
+            SOURCE=${{ github.server_url }}/${{ github.repository }}/tree/${{ env.GIT_SHA }}/opennms-container/sentinel
+            BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            BUILD_JOB_ID=${{ github.run_id }}
+          tags: ${{ env.OCI_REGISTRY_ORG }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},${{ env.OCI_REGISTRY_ORG }}/${{ env.OCI_REPOSITORY }}:latest
+
+  publish-packages:
+    needs:
+      - core-packages
+      - minion-packages
+      - sentinel-packages
+    if: github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set a release package repository to stable
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "TARGET=stable" >> ${GITHUB_ENV}
+      - name: Set package repository
+        run: |
+          echo "PKG_REPOSITORY=${TARGET:-develop}" >> ${GITHUB_ENV}
+      - uses: actions/download-artifact@v4
+        with:
+          name: core-pkgs
+          path: target/artifacts/packages/core
+      - uses: actions/download-artifact@v4
+        with:
+          name: minion-pkgs
+          path: target/artifacts/packages/minion
+      - uses: actions/download-artifact@v4
+        with:
+          name: sentinel-pkgs
+          path: target/artifacts/packages/sentinel
+      - name: Publish Debian packages to Cloudsmith
+        if: secrets.CLOUDSMITH_API_KEY != ''
+        shell: bash
+        run: |
+          pip install cloudsmith-cli
+          export CLOUDSMITH_API_KEY=${{ secrets.CLOUDSMITH_API_KEY }}
+          for deb in $(find target/artifacts/packages -name "*.deb" -type f); do
+            cloudsmith push deb --republish delta-v/${{ env.PKG_REPOSITORY }}/any-distro/any-version ${deb};
+          done;
+      - name: Publish RPM packages to Cloudsmith
+        if: secrets.CLOUDSMITH_API_KEY != ''
+        shell: bash
+        run: |
+          export CLOUDSMITH_API_KEY=${{ secrets.CLOUDSMITH_API_KEY }}
+          for rpm in $(find target/artifacts/packages -name "*.rpm" -type f); do
+            cloudsmith push rpm --republish delta-v/${{ env.PKG_REPOSITORY }}/any-distro/any-version ${rpm};
+          done;
+
+  create-github-release:
+    needs:
+      - core-packages
+      - minion-packages
+      - sentinel-packages
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-core
+          path: opennms-full-assembly/target
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-minion
+          path: opennms-assemblies/minion/target
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball-sentinel
+          path: opennms-assemblies/sentinel/target
+      - uses: actions/download-artifact@v4
+        with:
+          name: core-pkgs
+          path: target/artifacts/packages/core
+      - uses: actions/download-artifact@v4
+        with:
+          name: minion-pkgs
+          path: target/artifacts/packages/minion
+      - uses: actions/download-artifact@v4
+        with:
+          name: sentinel-pkgs
+          path: target/artifacts/packages/sentinel
+      - name: Release ${{ github.ref_name }}
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            opennms-full-assembly/target/*.tar.gz
+            opennms-assemblies/minion/target/*.tar.gz
+            opennms-assemblies/sentinel/target/*.tar.gz
+            target/artifacts/packages/core/*.deb
+            target/artifacts/packages/core/*.rpm
+            target/artifacts/packages/minion/*.deb
+            target/artifacts/packages/minion/*.rpm
+            target/artifacts/packages/sentinel/*.deb
+            target/artifacts/packages/sentinel/*.rpm
