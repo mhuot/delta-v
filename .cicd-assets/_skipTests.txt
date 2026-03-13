@@ -12,3 +12,7 @@ org.opennms.netmgt.dao.support.DefaultRrdDaoIntegrationTest
 org.opennms.netmgt.dao.support.FilesystemResourceStorageDaoTest
 org.opennms.netmgt.model.OnmsOutageTest
 org.opennms.netmgt.vmmgr.InvokerTest
+org.opennms.netmgt.dao.support.DefaultResourceDaoTest
+org.opennms.netmgt.config.AmiPeerFactoryTest
+org.opennms.netmgt.config.UserFactoryTest
+org.opennms.core.ipc.sink.offheap.QueueFileOffHeapDispatchQueueTest
