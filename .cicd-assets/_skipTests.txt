@@ -27,6 +27,9 @@ org.opennms.protocols.xml.collector.NodeLevelDataOnMultipleNodesTest
 org.opennms.protocols.xml.collector.NodeLevelDataWithRrdtoolTest
 org.opennms.protocols.xml.vtdxml.XmlCollector3GPPTest
 org.opennms.protocols.xml.vtdxml.XmlCollectorSolarisZonesTest
+org.opennms.protocols.xml.collector.NodeLevelDataTest
+org.opennms.protocols.xml.collector.XmlCollectorNamespaceTest
+org.opennms.protocols.json.collector.NumericNodeLevelDataTest
 # Stale after notifications module removal
 org.opennms.netmgt.model.OnmsOutageTest
 # Timeout on GitHub-hosted runners
