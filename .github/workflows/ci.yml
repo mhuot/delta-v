@@ -15,8 +15,18 @@ on:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
 
+# Workflow-level permissions define the ceiling for all calling jobs.
+# For reusable workflow calls, job-level permissions cannot exceed these.
+# Individual jobs below further restrict their own scope as needed.
+# contents: write  - package-publish needs this to create GitHub releases
+# packages: write  - package-publish needs this to push OCI images to GHCR
+# checks: write    - test jobs need this to publish JUnit check reports
+# actions: write   - all jobs need this for artifact upload/download
 permissions:
-  contents: read
+  contents: write
+  packages: write
+  checks: write
+  actions: write
 
 concurrency:
   group: ci-${{ github.ref }}
