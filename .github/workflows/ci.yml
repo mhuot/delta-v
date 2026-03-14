@@ -15,7 +15,8 @@ on:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
 
-permissions: write-all
+permissions:
+  contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -24,25 +25,39 @@ concurrency:
 jobs:
   build:
     uses: ./.github/workflows/build.yml
-    permissions: write-all
+    permissions:
+      contents: read
+      actions: write
 
   unit-tests:
     needs: build
     uses: ./.github/workflows/test-unit.yml
-    permissions: write-all
+    permissions:
+      contents: read
+      checks: write
+      actions: write
 
   integration-tests:
     needs: unit-tests
     uses: ./.github/workflows/test-integration.yml
-    permissions: write-all
+    permissions:
+      contents: read
+      checks: write
+      actions: write
 
   e2e-tests:
     needs: unit-tests
     uses: ./.github/workflows/test-e2e.yml
-    permissions: write-all
+    permissions:
+      contents: read
+      checks: write
+      actions: write
 
   package-publish:
     needs: [integration-tests, e2e-tests]
     uses: ./.github/workflows/package-publish.yml
-    permissions: write-all
+    permissions:
+      contents: write
+      packages: write
+      actions: write
     secrets: inherit

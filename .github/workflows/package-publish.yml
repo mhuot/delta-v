@@ -5,12 +5,16 @@ on:
   workflow_call:
   workflow_dispatch:
 
-permissions: write-all
+permissions:
+  contents: write
+  packages: write
+  actions: write
 
 jobs:
   core-packages:
     if: "!contains(github.event.head_commit.message || '', '[skip core-packages]')"
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -35,6 +39,7 @@ jobs:
   minion-packages:
     if: "!contains(github.event.head_commit.message || '', '[skip minion-packages]')"
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -59,6 +64,7 @@ jobs:
   sentinel-packages:
     if: "!contains(github.event.head_commit.message || '', '[skip sentinel-packages]')"
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -83,6 +89,7 @@ jobs:
   core-oci:
     if: "!contains(github.event.head_commit.message || '', '[skip core-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Set up QEMU
@@ -121,6 +128,14 @@ jobs:
           echo "GIT_SHA=$(git rev-parse HEAD)" >> ${GITHUB_ENV}
           echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> ${GITHUB_ENV}
           echo "TAG=${VERSION:-$(git rev-parse --short HEAD)}" >> ${GITHUB_ENV}
+      - name: Determine tags
+        id: tags
+        run: |
+          TAGS="ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }}"
+          if [[ "${{ github.ref }}" == refs/tags/* ]] || [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            TAGS="${TAGS},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest"
+          fi
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
       - name: Build and push Core container image
         uses: docker/build-push-action@v6
         with:
@@ -135,11 +150,12 @@ jobs:
             SOURCE=${{ github.server_url }}/${{ github.repository }}/tree/${{ env.GIT_SHA }}/opennms-container/core
             BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             BUILD_JOB_ID=${{ github.run_id }}
-          tags: ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest
+          tags: ${{ steps.tags.outputs.tags }}
 
   minion-oci:
     if: "!contains(github.event.head_commit.message || '', '[skip minion-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Set up QEMU
@@ -184,6 +200,14 @@ jobs:
           echo "GIT_SHA=$(git rev-parse HEAD)" >> ${GITHUB_ENV}
           echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> ${GITHUB_ENV}
           echo "TAG=${VERSION:-$(git rev-parse --short HEAD)}" >> ${GITHUB_ENV}
+      - name: Determine tags
+        id: tags
+        run: |
+          TAGS="ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }}"
+          if [[ "${{ github.ref }}" == refs/tags/* ]] || [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            TAGS="${TAGS},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest"
+          fi
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
       - name: Build and push Minion container image
         uses: docker/build-push-action@v6
         with:
@@ -198,11 +222,12 @@ jobs:
             SOURCE=${{ github.server_url }}/${{ github.repository }}/tree/${{ env.GIT_SHA }}/opennms-container/minion
             BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             BUILD_JOB_ID=${{ github.run_id }}
-          tags: ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest
+          tags: ${{ steps.tags.outputs.tags }}
 
   sentinel-oci:
     if: "!contains(github.event.head_commit.message || '', '[skip sentinel-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Set up QEMU
@@ -240,6 +265,14 @@ jobs:
           echo "GIT_SHA=$(git rev-parse HEAD)" >> ${GITHUB_ENV}
           echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> ${GITHUB_ENV}
           echo "TAG=${VERSION:-$(git rev-parse --short HEAD)}" >> ${GITHUB_ENV}
+      - name: Determine tags
+        id: tags
+        run: |
+          TAGS="ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }}"
+          if [[ "${{ github.ref }}" == refs/tags/* ]] || [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            TAGS="${TAGS},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest"
+          fi
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
       - name: Build and push Sentinel container image
         uses: docker/build-push-action@v6
         with:
@@ -254,11 +287,12 @@ jobs:
             SOURCE=${{ github.server_url }}/${{ github.repository }}/tree/${{ env.GIT_SHA }}/opennms-container/sentinel
             BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             BUILD_JOB_ID=${{ github.run_id }}
-          tags: ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest
+          tags: ${{ steps.tags.outputs.tags }}
 
   daemon-oci:
     if: "!contains(github.event.head_commit.message || '', '[skip daemon-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Set up QEMU
@@ -296,6 +330,14 @@ jobs:
           echo "GIT_SHA=$(git rev-parse HEAD)" >> ${GITHUB_ENV}
           echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> ${GITHUB_ENV}
           echo "TAG=${VERSION:-$(git rev-parse --short HEAD)}" >> ${GITHUB_ENV}
+      - name: Determine tags
+        id: tags
+        run: |
+          TAGS="ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }}"
+          if [[ "${{ github.ref }}" == refs/tags/* ]] || [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            TAGS="${TAGS},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest"
+          fi
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
       - name: Build and push Daemon container image
         uses: docker/build-push-action@v6
         with:
@@ -310,11 +352,12 @@ jobs:
             SOURCE=${{ github.server_url }}/${{ github.repository }}/tree/${{ env.GIT_SHA }}/opennms-container/daemon
             BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             BUILD_JOB_ID=${{ github.run_id }}
-          tags: ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest
+          tags: ${{ steps.tags.outputs.tags }}
 
   alarmd-oci:
     if: "!contains(github.event.head_commit.message || '', '[skip alarmd-oci]') || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Set up QEMU
@@ -352,6 +395,14 @@ jobs:
           echo "GIT_SHA=$(git rev-parse HEAD)" >> ${GITHUB_ENV}
           echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> ${GITHUB_ENV}
           echo "TAG=${VERSION:-$(git rev-parse --short HEAD)}" >> ${GITHUB_ENV}
+      - name: Determine tags
+        id: tags
+        run: |
+          TAGS="ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }}"
+          if [[ "${{ github.ref }}" == refs/tags/* ]] || [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            TAGS="${TAGS},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest"
+          fi
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
       - name: Build and push Alarmd container image
         uses: docker/build-push-action@v6
         with:
@@ -366,16 +417,20 @@ jobs:
             SOURCE=${{ github.server_url }}/${{ github.repository }}/tree/${{ env.GIT_SHA }}/opennms-container/alarmd
             BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             BUILD_JOB_ID=${{ github.run_id }}
-          tags: ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:${{ env.TAG }},ghcr.io/${{ github.repository_owner }}/${{ env.OCI_REPOSITORY }}:latest
+          tags: ${{ steps.tags.outputs.tags }}
 
   create-github-release:
     needs:
       - core-packages
       - minion-packages
       - sentinel-packages
+      - core-oci
+      - minion-oci
+      - sentinel-oci
       - daemon-oci
       - alarmd-oci
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
       contents: write

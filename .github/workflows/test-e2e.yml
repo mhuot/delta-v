@@ -6,7 +6,10 @@ on:
   workflow_call:
   workflow_dispatch:
 
-permissions: write-all
+permissions:
+  contents: read
+  checks: write
+  actions: write
 
 jobs:
   e2e-core:
@@ -17,6 +20,7 @@ jobs:
         shard_idx: [0, 1, 2, 3, 4, 5, 6, 7]
         shards: [8]
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 17
@@ -42,9 +46,10 @@ jobs:
           make core-e2e MAVEN_SHARD_IDX=${{ matrix.shard_idx }} MAVEN_SHARDS=${{ matrix.shards }}
       - name: Publish Core E2E Test Report (shard ${{ matrix.shard_idx }})
         if: success() || failure()
-        uses: scacap/action-surefire-report@v1
+        uses: mikepenz/action-junit-report@v4
         with:
           check_name: "Core E2E Test Report (shard ${{ matrix.shard_idx }})"
+          report_paths: '**/target/failsafe-reports/TEST-*.xml,**/target/surefire-reports/TEST-*.xml'
       - name: Collect test results and logs
         if: always()
         run: |
@@ -69,6 +74,7 @@ jobs:
         shard_idx: [0]
         shards: [1]
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 17
@@ -94,9 +100,10 @@ jobs:
           make minion-e2e MAVEN_SHARD_IDX=${{ matrix.shard_idx }} MAVEN_SHARDS=${{ matrix.shards }}
       - name: Publish Minion E2E Test Report (shard ${{ matrix.shard_idx }})
         if: success() || failure()
-        uses: scacap/action-surefire-report@v1
+        uses: mikepenz/action-junit-report@v4
         with:
           check_name: "Minion E2E Test Report (shard ${{ matrix.shard_idx }})"
+          report_paths: '**/target/failsafe-reports/TEST-*.xml,**/target/surefire-reports/TEST-*.xml'
       - name: Collect test results and logs
         if: always()
         run: |
@@ -121,6 +128,7 @@ jobs:
         shard_idx: [0]
         shards: [1]
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 17
@@ -146,9 +154,10 @@ jobs:
           make sentinel-e2e MAVEN_SHARD_IDX=${{ matrix.shard_idx }} MAVEN_SHARDS=${{ matrix.shards }}
       - name: Publish Sentinel E2E Test Report (shard ${{ matrix.shard_idx }})
         if: success() || failure()
-        uses: scacap/action-surefire-report@v1
+        uses: mikepenz/action-junit-report@v4
         with:
           check_name: "Sentinel E2E Test Report (shard ${{ matrix.shard_idx }})"
+          report_paths: '**/target/failsafe-reports/TEST-*.xml,**/target/surefire-reports/TEST-*.xml'
       - name: Collect test results and logs
         if: always()
         run: |

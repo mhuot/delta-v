@@ -6,12 +6,16 @@ on:
   workflow_call:
   workflow_dispatch:
 
-permissions: write-all
+permissions:
+  contents: read
+  checks: write
+  actions: write
 
 jobs:
   unit-tests:
     if: "!contains(github.event.head_commit.message || '', '[skip unit-tests]')"
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -45,9 +49,10 @@ jobs:
 
       - name: Publish Unit Test Report (shard ${{ matrix.shard_idx }})
         if: success() || failure()
-        uses: scacap/action-surefire-report@v1
+        uses: mikepenz/action-junit-report@v4
         with:
           check_name: Unit Test Report (shard ${{ matrix.shard_idx }})
+          report_paths: '**/target/surefire-reports/TEST-*.xml'
 
       - name: Collect test results and logs (shard ${{ matrix.shard_idx }})
         if: always()
