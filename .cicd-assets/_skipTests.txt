@@ -1,3 +1,18 @@
+# =============================================================================
+# Skipped Tests for Delta-V CI
+# =============================================================================
+# Each entry has a category tag for tracking:
+#   [env]       - Environment/runner limitation (native libs, network, disk)
+#   [delta-v]   - Delta-V model/architecture divergence from upstream OpenNMS
+#   [miscat]    - Miscategorized test (e.g., integration test in unit suite)
+#   [flaky]     - Non-deterministic failure on CI runners
+#   [removed]   - Tests for removed functionality
+#
+# Review periodically: tests tagged [delta-v] may need real fixes as the
+# codebase stabilizes. Tests tagged [env] may be fixable with runner changes.
+# =============================================================================
+
+# [env] SNMP detector tests - require SNMP agent/native libs not on GH runners
 org.opennms.netmgt.provision.detector.BgpSessionDetectorTest
 org.opennms.netmgt.provision.detector.CiscoIpSlaDetectorTest
 org.opennms.netmgt.provision.detector.DiskUsageDetectorTest
@@ -8,7 +23,8 @@ org.opennms.netmgt.provision.detector.PercDetectorTest
 org.opennms.netmgt.provision.detector.SnmpDetectorTest
 org.opennms.netmgt.provision.detector.SnmpDetectorWithProfilesTest
 org.opennms.netmgt.provision.detector.Win32ServiceDetectorTest
-# Requires jrrd2 native library (not available on GitHub-hosted runners)
+
+# [env] Requires jrrd2 native library (not available on GitHub-hosted runners)
 org.opennms.netmgt.dao.support.DefaultRrdDaoIntegrationTest
 org.opennms.netmgt.dao.support.FilesystemResourceStorageDaoTest
 org.opennms.netmgt.dao.support.DefaultResourceDaoTest
@@ -23,6 +39,8 @@ org.opennms.netmgt.collectd.CollectableServiceTest
 org.opennms.netmgt.poller.pollables.LatencyStoringServiceMonitorAdaptorPersistenceTest
 org.opennms.netmgt.poller.pollables.StatusStoringServiceMonitorAdaptorPersistenceTest
 org.opennms.netmgt.rrd.tcp.TcpRrdStrategyTest
+
+# [env] Requires jrrd2 - XML/JSON collector tests
 org.opennms.protocols.xml.collector.NodeLevelDataOnMultipleNodesTest
 org.opennms.protocols.xml.collector.NodeLevelDataWithRrdtoolTest
 org.opennms.protocols.xml.vtdxml.XmlCollector3GPPTest
@@ -30,15 +48,20 @@ org.opennms.protocols.xml.vtdxml.XmlCollectorSolarisZonesTest
 org.opennms.protocols.xml.collector.NodeLevelDataTest
 org.opennms.protocols.xml.collector.XmlCollectorNamespaceTest
 org.opennms.protocols.json.collector.NumericNodeLevelDataTest
-# Stale after notifications module removal
+
+# [removed] Stale after notifications module removal
 org.opennms.netmgt.model.OnmsOutageTest
-# Timeout on GitHub-hosted runners
+
+# [flaky] Timeout on GitHub-hosted runners
 org.opennms.core.ipc.sink.offheap.QueueFileOffHeapDispatchQueueTest
 org.opennms.core.ipc.sink.offheap.DataBlocksOffHeapQueueTest
-# Requires PostgreSQL (integration test miscategorized as unit test)
+
+# [miscat] Requires PostgreSQL (integration test miscategorized as unit test)
 org.opennms.features.telemetry.protocols.openconfig.OpenConfigLocationPublisherTest
-# Delta-V: eventParametersCollection is empty after event model denormalization
+
+# [delta-v] eventParametersCollection is empty after event model denormalization
 org.opennms.netmgt.alarmd.northbounder.snmptrap.SnmpTrapNorthbounderTest
 org.opennms.netmgt.alarmd.northbounder.snmptrap.SnmpTrapNorthbounderConfigDaoTest
-# Flaky HTTPS detector test on GitHub-hosted runners
+
+# [flaky] HTTPS detector test unreliable on GitHub-hosted runners
 org.opennms.netmgt.provision.detector.HttpsDetectorTest
