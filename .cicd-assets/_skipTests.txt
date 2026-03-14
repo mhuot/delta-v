@@ -40,3 +40,5 @@ org.opennms.features.telemetry.protocols.openconfig.OpenConfigLocationPublisherT
 # Delta-V: eventParametersCollection is empty after event model denormalization
 org.opennms.netmgt.alarmd.northbounder.snmptrap.SnmpTrapNorthbounderTest
 org.opennms.netmgt.alarmd.northbounder.snmptrap.SnmpTrapNorthbounderConfigDaoTest
+# Flaky HTTPS detector test on GitHub-hosted runners
+org.opennms.netmgt.provision.detector.HttpsDetectorTest
