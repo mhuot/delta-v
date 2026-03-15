@@ -29,6 +29,7 @@ import org.opennms.netmgt.alarmd.AlarmPersisterImpl;
 import org.opennms.netmgt.alarmd.NorthbounderManager;
 import org.opennms.netmgt.events.api.AnnotationBasedEventListenerAdapter;
 import org.opennms.netmgt.events.api.EventSubscriptionService;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -48,6 +49,7 @@ import org.springframework.context.annotation.Configuration;
  * registering Alarmd as an event listener during {@code afterPropertiesSet()}.</p>
  */
 @Configuration
+@EntityScan(basePackages = "org.opennms.netmgt.model")
 public class AlarmdConfiguration {
 
     @Bean

@@ -123,6 +123,13 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Jakarta entity classes and JPA DAOs -->
+        <dependency>
+            <groupId>org.opennms.core</groupId>
+            <artifactId>org.opennms.core.model-jakarta</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Alarmd implementation -->
         <dependency>
             <groupId>org.opennms</groupId>
@@ -176,42 +183,6 @@
                 <exclusion><groupId>org.slf4j</groupId><artifactId>jcl-over-slf4j</artifactId></exclusion>
                 <exclusion><groupId>org.slf4j</groupId><artifactId>log4j-over-slf4j</artifactId></exclusion>
             </exclusions>
-        </dependency>
-
-        <!-- DAOs -->
-        <dependency>
-            <groupId>org.opennms</groupId>
-            <artifactId>opennms-dao-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.opennms</groupId>
-            <artifactId>opennms-model</artifactId>
-            <version>${project.version}</version>
-            <exclusions>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-core</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-tx</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-orm</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-jdbc</artifactId></exclusion>
-                <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
-                <exclusion><groupId>org.hibernate.javax.persistence</groupId><artifactId>hibernate-jpa-2.0-api</artifactId></exclusion>
-                <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion>
-                <exclusion><groupId>org.slf4j</groupId><artifactId>log4j-over-slf4j</artifactId></exclusion>
-                <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-log4j2</artifactId></exclusion>
-                <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
-                <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
-            </exclusions>
-        </dependency>
-
-        <!-- javax.persistence API — needed at runtime for class scanning of legacy
-             OpenNMS entities that use javax.persistence annotations. Hibernate 7
-             won't process these as JPA annotations, but needs the classes loadable. -->
-        <dependency>
-            <groupId>javax.persistence</groupId>
-            <artifactId>javax.persistence-api</artifactId>
-            <version>2.2</version>
         </dependency>
 
         <!-- Jakarta XML Bind — needed by Hibernate 7 for XML mapping support -->
