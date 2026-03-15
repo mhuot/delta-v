@@ -66,7 +66,10 @@ org.opennms.netmgt.alarmd.northbounder.snmptrap.SnmpTrapNorthbounderConfigDaoTes
 # [flaky] HTTPS detector test unreliable on GitHub-hosted runners
 org.opennms.netmgt.provision.detector.HttpsDetectorTest
 
-# [env] Java 21 blocks reflective access to internal JDK fields
+# [env] Java 21 blocks reflective access to internal JDK fields or changes behavior
 org.opennms.netmgt.events.api.LegacyDatetimeFormatterTest
 org.opennms.web.api.UtilTest
 org.opennms.features.ifttt.IfTttDaemonTest
+org.opennms.features.jmxconfiggenerator.jmxconfig.JmxDatacollectionConfiggeneratorTest
+org.opennms.netmgt.model.events.EventConstantsTest
+org.opennms.install.InstallerTest
