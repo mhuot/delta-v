@@ -41,6 +41,7 @@ import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Transient;
 
 import org.hibernate.annotations.DiscriminatorOptions;
 
@@ -199,8 +200,7 @@ public class OnmsMonitoringSystem implements Serializable {
         m_lastUpdated = lastUpdated;
     }
 
-    @Column(name="last_checked_in")
-    @Temporal(TemporalType.TIMESTAMP)
+    @Transient
     public Date getLastCheckedIn() {
         return m_lastCheckedIn;
     }

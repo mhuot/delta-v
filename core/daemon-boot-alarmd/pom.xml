@@ -260,6 +260,15 @@
             <artifactId>jakarta.inject-api</artifactId>
         </dependency>
 
+        <!-- javax.xml.bind API — needed at runtime for legacy Event XML unmarshalling
+             in KafkaEventSubscriptionService (events use JAXB javax.xml.bind annotations) -->
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.3.1</version>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- javax.persistence API — needed at runtime so that Spring's class scanner
              can read legacy entity bytecodes without NoClassDefFoundError.
              The legacy opennms-model classes reference javax.persistence annotations
