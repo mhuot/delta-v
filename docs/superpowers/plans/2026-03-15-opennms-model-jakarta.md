@@ -294,7 +294,7 @@ class InetAddressConverterTest {
     private final InetAddressConverter converter = new InetAddressConverter();
 
     @Test
-    void convertToDatabaseColumn_ipv4() {
+    void convertToDatabaseColumn_ipv4() throws Exception {
         InetAddress addr = InetAddress.getByName("192.168.1.1");
         assertThat(converter.convertToDatabaseColumn(addr)).isEqualTo("192.168.1.1");
     }
@@ -316,7 +316,7 @@ class InetAddressConverterTest {
     }
 
     @Test
-    void roundTrip() {
+    void roundTrip() throws Exception {
         InetAddress original = InetAddress.getByName("::1");
         String db = converter.convertToDatabaseColumn(original);
         InetAddress result = converter.convertToEntityAttribute(db);
@@ -614,10 +614,10 @@ import java.util.Map;
 
 import org.opennms.core.daemon.common.AbstractDaoJpa;
 import org.opennms.netmgt.dao.api.AlarmDao;
-import org.opennms.netmgt.model.AlarmSummary;
+import org.opennms.netmgt.model.alarm.AlarmSummary;
+import org.opennms.netmgt.model.alarm.SituationSummary;
 import org.opennms.netmgt.model.HeatMapElement;
 import org.opennms.netmgt.model.OnmsAlarm;
-import org.opennms.netmgt.model.SituationSummary;
 import org.opennms.netmgt.model.OnmsCriteria;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
