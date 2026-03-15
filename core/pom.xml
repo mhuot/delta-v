@@ -35,6 +35,7 @@
     <module>daemon</module>
     <module>daemon-common</module>
     <module>daemon-boot-alarmd</module>
+    <module>opennms-model-jakarta</module>
     <module>db</module>
     <module>db-install</module>
     <module>health</module>
