@@ -2201,24 +2201,6 @@
         <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-shared/36.0.0-SNAPSHOT</bundle>
     </feature>
 
-    <!-- Karaf-only Rtcd: loads RTCManager daemon without Manager/Eventd -->
-    <feature name="opennms-daemon-rtcd" version="36.0.0-SNAPSHOT"
-             description="OpenNMS :: Daemon Loader :: Rtcd">
-        <!-- Spring DM Extender (processes Spring-Context manifest headers) -->
-        <feature>opennms-spring-extender</feature>
-        <!-- Event transport (Kafka-based, replaces Eventd) -->
-        <feature>opennms-event-forwarder-kafka</feature>
-        <!-- DAO infrastructure -->
-        <feature>opennms-distributed-core-impl</feature>
-        <feature>opennms-persistence</feature>
-        <!-- RTC config -->
-        <feature>opennms-config</feature>
-        <!-- RTC daemon classes -->
-        <bundle>mvn:org.opennms/opennms-services/36.0.0-SNAPSHOT</bundle>
-        <!-- Daemon loader (creates RTCManager, starts it) -->
-        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-rtcd/36.0.0-SNAPSHOT</bundle>
-    </feature>
-
 
     <!-- Karaf-only Discovery: loads Discovery daemon without Manager/Eventd -->
     <feature name="opennms-daemon-discovery" version="36.0.0-SNAPSHOT"
@@ -2414,28 +2396,6 @@
         <bundle>mvn:org.opennms.features.bsm/org.opennms.features.bsm.daemon/36.0.0-SNAPSHOT</bundle>
         <!-- Daemon loader (creates Bsmd, starts it) -->
         <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-bsmd/36.0.0-SNAPSHOT</bundle>
-    </feature>
-
-    <!-- Karaf-only Alarmd: loads Alarmd daemon without Manager/Eventd.
-         Receives events from Kafka and persists alarms to PostgreSQL.
-         NOTE: Drools rules engine not yet available (jars not OSGi-ready). -->
-    <feature name="opennms-daemon-alarmd" version="36.0.0-SNAPSHOT"
-             description="OpenNMS :: Daemon Loader :: Alarmd">
-        <!-- Spring DM Extender (processes Spring-Context manifest headers) -->
-        <feature>opennms-spring-extender</feature>
-        <!-- Event transport (Kafka-based, replaces Eventd) -->
-        <feature>opennms-event-forwarder-kafka</feature>
-        <!-- DAO infrastructure -->
-        <feature>opennms-distributed-core-impl</feature>
-        <feature>opennms-persistence</feature>
-        <!-- Alarm API -->
-        <bundle>mvn:org.opennms/opennms-alarm-api/36.0.0-SNAPSHOT</bundle>
-        <!-- Alarmd daemon classes -->
-        <bundle>mvn:org.opennms/opennms-alarmd/36.0.0-SNAPSHOT</bundle>
-        <!-- Event daemon (provides EventUtilDaoImpl, used by AlarmPersisterImpl) -->
-        <bundle>mvn:org.opennms.features.events/org.opennms.features.events.daemon/36.0.0-SNAPSHOT</bundle>
-        <!-- Daemon loader (creates Alarmd, starts it) -->
-        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-alarmd/36.0.0-SNAPSHOT</bundle>
     </feature>
 
     <!-- Karaf-only Telemetryd: loads Telemetryd daemon without Manager/Eventd.

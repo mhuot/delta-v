@@ -33,6 +33,8 @@
     <module>config</module>
     <module>criteria</module>
     <module>daemon</module>
+    <module>daemon-common</module>
+    <module>daemon-boot-alarmd</module>
     <module>db</module>
     <module>db-install</module>
     <module>health</module>
@@ -63,12 +65,10 @@
     <module>grpc</module>
     <module>encrypt-util</module>
     <module>daemon-loader-shared</module>
-    <module>daemon-loader-alarmd</module>
     <module>daemon-loader-collectd</module>
     <module>daemon-loader-discovery</module>
     <module>daemon-loader-eventtranslator</module>
     <module>daemon-loader-pollerd</module>
-    <module>daemon-loader-rtcd</module>
     <module>daemon-loader-syslogd</module>
     <module>daemon-loader-ticketer</module>
     <module>daemon-loader-trapd</module>
