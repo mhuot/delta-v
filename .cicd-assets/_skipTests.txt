@@ -70,6 +70,7 @@ org.opennms.netmgt.provision.detector.HttpsDetectorTest
 org.opennms.netmgt.events.api.LegacyDatetimeFormatterTest
 org.opennms.web.api.UtilTest
 org.opennms.features.ifttt.IfTttDaemonTest
+org.opennms.features.ifttt.helper.IfTttTriggerTest
 org.opennms.features.jmxconfiggenerator.jmxconfig.JmxDatacollectionConfiggeneratorTest
 org.opennms.netmgt.model.events.EventConstantsTest
 org.opennms.install.InstallerTest
