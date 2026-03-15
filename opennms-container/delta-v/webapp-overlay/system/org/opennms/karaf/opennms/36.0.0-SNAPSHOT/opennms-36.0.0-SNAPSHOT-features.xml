@@ -959,7 +959,6 @@
 
     <feature name="opennms-alarm-history-rest" description="OpenNMS :: Features :: Alarms :: History :: REST" version="36.0.0-SNAPSHOT">
         <feature>jax-rs-connector</feature>
-        <feature>pax-http</feature>
         <feature>opennms-alarm-history-api</feature>
         <feature>opennms-es-rest</feature>
         <bundle>mvn:org.opennms.features.alarms.history.rest/org.opennms.features.alarms.history.rest.api/36.0.0-SNAPSHOT</bundle>
