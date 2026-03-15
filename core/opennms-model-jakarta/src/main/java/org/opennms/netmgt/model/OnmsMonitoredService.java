@@ -334,9 +334,9 @@ public class OnmsMonitoredService extends OnmsEntity implements Serializable, Co
         m_notify = notify;
     }
 
+    // OnmsMetaData is not yet migrated to Jakarta Persistence (@Embeddable).
+    @Transient
     @JsonIgnore
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name="ifServices_metadata", joinColumns = @JoinColumn(name = "id"))
     public List<OnmsMetaData> getMetaData() {
         return m_metaData;
     }
@@ -521,8 +521,9 @@ public class OnmsMonitoredService extends OnmsEntity implements Serializable, Co
      *
      * @return a {@link java.util.Set} object.
      */
-    @OneToMany(mappedBy="monitoredService", fetch=FetchType.LAZY)
-    @SQLRestriction("ifRegainedService is null")
+    // OnmsOutage is not yet migrated to Jakarta Persistence.
+    // Marked @Transient until a Jakarta OnmsOutage entity is available.
+    @Transient
     @JsonIgnore
     public Set<OnmsOutage> getCurrentOutages() {
         return m_currentOutages;
@@ -542,14 +543,9 @@ public class OnmsMonitoredService extends OnmsEntity implements Serializable, Co
      *
      * @return a {@link java.util.Set} object.
      */
-    @ManyToMany(
-                cascade={CascadeType.PERSIST, CascadeType.MERGE}
-    )
-    @JoinTable(
-               name="application_service_map",
-               joinColumns={@JoinColumn(name="ifserviceid")},
-               inverseJoinColumns={@JoinColumn(name="appid")}
-    )
+    // OnmsApplication is not yet migrated to Jakarta Persistence.
+    // Marked @Transient until a Jakarta OnmsApplication entity is available.
+    @Transient
     @JsonIgnore
     public Set<OnmsApplication> getApplications() {
         return m_applications;

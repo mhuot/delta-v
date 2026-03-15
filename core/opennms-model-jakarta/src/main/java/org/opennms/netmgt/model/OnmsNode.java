@@ -772,7 +772,8 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
      *
      * @return a {@link org.opennms.netmgt.model.OnmsAssetRecord} object.
      */
-    @OneToOne(mappedBy="node", cascade = CascadeType.ALL, fetch=FetchType.LAZY)
+    // OnmsAssetRecord is not yet migrated to Jakarta Persistence.
+    @Transient
     public OnmsAssetRecord getAssetRecord() {
         return m_assetRecord;
     }
@@ -795,11 +796,8 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
      * @return a {@link org.opennms.netmgt.model.PathElement} object.
      */
     @JsonIgnore
-    @Embedded
-    @AttributeOverrides({
-        @AttributeOverride(name="ipAddress", column=@Column(name="criticalPathIp", table="pathOutage")),
-        @AttributeOverride(name="serviceName", column=@Column(name="criticalPathServiceName", table="pathOutage"))
-    })
+    // PathElement is not yet migrated to Jakarta Persistence (@Embeddable).
+    @Transient
     public PathElement getPathElement() {
         return m_pathElement;
     }
@@ -947,8 +945,8 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
     }
 
     @JsonIgnore
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name="node_metadata", joinColumns = @JoinColumn(name = "id"))
+    // OnmsMetaData is not yet migrated to Jakarta Persistence (@Embeddable).
+    @Transient
     public List<OnmsMetaData> getMetaData() {
         return m_metaData;
     }

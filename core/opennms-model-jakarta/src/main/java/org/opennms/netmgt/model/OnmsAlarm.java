@@ -56,7 +56,9 @@ import jakarta.persistence.Transient;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.ParamDef;
 import org.opennms.netmgt.model.jakarta.converter.InetAddressConverter;
 import org.opennms.netmgt.model.jakarta.converter.OnmsSeverityConverter;
 import com.google.common.base.MoreObjects;
@@ -66,6 +68,8 @@ import com.google.common.base.MoreObjects;
  */
 @Entity
 @Table(name="alarms")
+@FilterDef(name = FilterManager.AUTH_FILTER_NAME,
+    parameters = @ParamDef(name = "userGroups", type = String.class))
 @Filter(name=FilterManager.AUTH_FILTER_NAME, condition="exists (select distinct x.nodeid from node x join category_node cn on x.nodeid = cn.nodeid join category_group cg on cn.categoryId = cg.categoryId where x.nodeid = nodeid and cg.groupId in (:userGroups))")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class OnmsAlarm implements Acknowledgeable, Serializable {
