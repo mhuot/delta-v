@@ -50,6 +50,39 @@
                 <artifactId>logback-core</artifactId>
                 <version>1.5.32</version>
             </dependency>
+            <!-- Pin Jackson 2.19.4 — parent POM manages 2.16.2 which lacks JsonFormat$Shape.POJO
+                 required by Spring Boot 4.0.3. Explicit entries here override the parent's
+                 managed versions even though the Spring Boot BOM is imported first. -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>2.19.4</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>2.19.4</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>2.19.4</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jsr310</artifactId>
+                <version>2.19.4</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jdk8</artifactId>
+                <version>2.19.4</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.module</groupId>
+                <artifactId>jackson-module-parameter-names</artifactId>
+                <version>2.19.4</version>
+            </dependency>
             <!-- Pin JUnit to 5.12.2 / Platform 1.12.2 which is the latest
                  version supported by maven-surefire-plugin 3.5.5.
                  Must be explicit entries (not BOM import) to override

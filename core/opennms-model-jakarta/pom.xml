@@ -47,6 +47,24 @@
                 <artifactId>logback-core</artifactId>
                 <version>1.5.32</version>
             </dependency>
+            <!-- Pin Jackson 2.19.4 — parent POM manages 2.16.2 which lacks JsonFormat$Shape.POJO
+                 required by Spring Boot 4.0.3. Explicit entries here override the parent's
+                 managed versions even though the Spring Boot BOM is imported first. -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>2.19.4</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>2.19.4</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>2.19.4</version>
+            </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter</artifactId>
