@@ -26,7 +26,6 @@ Only entities in Alarmd's transitive dependency graph:
 | Entity | Table | Why Alarmd Needs It |
 |--------|-------|-------------------|
 | `OnmsAlarm` | `alarms` | Primary — Alarmd creates/updates/clears alarms |
-| `OnmsEvent` | `events` | Every alarm references its triggering event |
 | `OnmsNode` | `node` | Alarms reference the node they belong to |
 | `OnmsMonitoringSystem` | `monitoringSystems` | Alarms reference the monitoring system |
 | `OnmsDistPoller` | `monitoringSystems` | Single-table inheritance subclass of OnmsMonitoringSystem |
@@ -35,26 +34,39 @@ Only entities in Alarmd's transitive dependency graph:
 | `OnmsIpInterface` | `ipInterface` | OnmsNode cascades to interfaces; OnmsAlarm has FK to node |
 | `OnmsSnmpInterface` | `snmpInterface` | Referenced by OnmsIpInterface |
 | `OnmsMonitoredService` | `ifServices` | Referenced by OnmsAlarm directly |
+| `AlarmAssociation` | `alarm_situations` | OnmsAlarm.m_associatedAlarms (situation/correlated alarm support) |
+| `OnmsMemo` | `memos` | OnmsAlarm.m_stickyMemo (single-table inheritance parent) |
+| `OnmsReductionKeyMemo` | `memos` | OnmsAlarm.m_reductionKeyMemo (extends OnmsMemo) |
+
+**Note:** `OnmsEvent` does not exist as a JPA entity in the codebase. OnmsAlarm stores denormalized event fields directly (eventUei, eventSource, etc.) — there is no FK to an events table.
 
 Enums (`OnmsSeverity`, `NodeType`, `NodeLabelSource`, `PrimaryType`) and utility classes (`InetAddressUtils`) are **referenced from existing modules**, not copied.
+
+### Package Strategy
+
+Entity classes use the **same package** `org.opennms.netmgt.model` as the legacy `opennms-model`. This is critical: DAO interfaces in `opennms-dao-api` are parameterized with `org.opennms.netmgt.model.OnmsAlarm`, etc. Using a different package would make it impossible for `AlarmDaoJpa` to implement `AlarmDao` without forking the DAO interfaces.
+
+The entities live in a different Maven module (`opennms-model-jakarta`) but the same Java package. At runtime, only one module is on the classpath — the legacy `opennms-model` for Karaf daemons, or `opennms-model-jakarta` for Spring Boot daemons. No split-package conflict.
 
 ## Module Structure
 
 ```
 core/opennms-model-jakarta/
   pom.xml
+  src/main/java/org/opennms/netmgt/model/
+    OnmsAlarm.java
+    OnmsNode.java
+    OnmsMonitoringSystem.java
+    OnmsDistPoller.java
+    OnmsServiceType.java
+    OnmsCategory.java
+    OnmsIpInterface.java
+    OnmsSnmpInterface.java
+    OnmsMonitoredService.java
+    AlarmAssociation.java
+    OnmsMemo.java
+    OnmsReductionKeyMemo.java
   src/main/java/org/opennms/netmgt/model/jakarta/
-    entity/
-      OnmsAlarm.java
-      OnmsEvent.java
-      OnmsNode.java
-      OnmsMonitoringSystem.java
-      OnmsDistPoller.java
-      OnmsServiceType.java
-      OnmsCategory.java
-      OnmsIpInterface.java
-      OnmsSnmpInterface.java
-      OnmsMonitoredService.java
     converter/
       InetAddressConverter.java
       OnmsSeverityConverter.java
@@ -63,9 +75,8 @@ core/opennms-model-jakarta/
       NodeLabelSourceConverter.java
     dao/
       AlarmDaoJpa.java
-      EventDaoJpa.java
       NodeDaoJpa.java
-      MonitoringSystemDaoJpa.java
+      DistPollerDaoJpa.java
       ServiceTypeDaoJpa.java
   src/test/java/org/opennms/netmgt/model/jakarta/
     converter/
@@ -75,6 +86,8 @@ core/opennms-model-jakarta/
       NodeTypeConverterTest.java
       NodeLabelSourceConverterTest.java
 ```
+
+Entity classes are in `org.opennms.netmgt.model` (same package as legacy). Converters and DAOs are in `org.opennms.netmgt.model.jakarta.*` subpackages since they are new classes with no legacy counterpart.
 
 ## AttributeConverter Design
 
@@ -144,8 +157,11 @@ These annotations are valid in Hibernate 7 and remain unchanged:
 - `@Filter(name=..., condition="...")` — row-level security
 - `@FilterDef(name=...)` — filter definitions
 - `@Formula(value="(SELECT ...)")` — read-only computed properties
-- `@DiscriminatorOptions(force=true)` — single-table inheritance
-- `@Where(clause="...")` — collection filtering (if present)
+
+### Hibernate Annotations Migrated
+
+- `@Where(clause="...")` → `@SQLRestriction("...")` — `@Where` was removed in Hibernate 7; `@SQLRestriction` is the replacement. Used in `OnmsMonitoredService`.
+- `@DiscriminatorOptions(force=true)` — verify availability in Hibernate 7; if removed, omit (standard JPA discriminator handling suffices for `OnmsMonitoringSystem`/`OnmsMemo` hierarchies)
 
 ### Single-Table Inheritance
 
@@ -171,17 +187,33 @@ Retained on `java.util.Date` fields for explicitness, though Hibernate 7 infers 
 
 ## DAO Design
 
-Each DAO extends `AbstractDaoJpa<T, K>` (from `daemon-common`) and implements the corresponding interface from `opennms-dao-api`.
+### Interface Hierarchy
 
-| DAO Class | Entity | Interface | Key Queries |
-|-----------|--------|-----------|-------------|
-| `AlarmDaoJpa` | `OnmsAlarm` | `AlarmDao` | `findByReductionKey(String)`, `findByAlarm(OnmsAlarm)` |
-| `EventDaoJpa` | `OnmsEvent` | `EventDao` | `findByEventId(Integer)` |
-| `NodeDaoJpa` | `OnmsNode` | `NodeDao` | `get(Integer)`, `findByLabel(String)` |
-| `MonitoringSystemDaoJpa` | `OnmsMonitoringSystem` | `MonitoringSystemDao` | `get(String)` |
+The DAO interfaces in `opennms-dao-api` follow this hierarchy:
+
+```
+OnmsDao<T, K>                    ← base (16 methods: get, save, delete, findAll, countAll, etc.)
+  └─ LegacyOnmsDao<T, K>        ← adds findMatching(OnmsCriteria), countMatching(OnmsCriteria)
+       └─ AlarmDao               ← adds 8 custom methods (findByReductionKey, getNodeAlarmSummaries, etc.)
+       └─ NodeDao                ← adds many custom methods
+       └─ DistPollerDao          ← adds whoami(), etc.
+       └─ ServiceTypeDao         ← adds findByName()
+```
+
+`AbstractDaoJpa` implements `OnmsDao<T, K>`. Each JPA DAO must additionally satisfy `LegacyOnmsDao` (throw `UnsupportedOperationException` for `OnmsCriteria` methods) and implement all custom methods declared by the specific DAO interface.
+
+### DAO Table
+
+| DAO Class | Entity | Interface | Key Custom Methods |
+|-----------|--------|-----------|-------------------|
+| `AlarmDaoJpa` | `OnmsAlarm` | `AlarmDao` | `findByReductionKey(String)`, `getNodeAlarmSummaries()`, `getSituationSummaries()`, `getNodeAlarmSummariesIncludeAcknowledgedOnes(List)`, `getHeatMapItemsForEntity(...)`, `getAlarmsForEventParameters(Map)`, `getNumSituations()`, `getNumAlarmsLastHours(int)` |
+| `NodeDaoJpa` | `OnmsNode` | `NodeDao` | `get(Integer)`, `findByLabel(String)` — implement only methods Alarmd calls; others throw `UnsupportedOperationException` |
+| `DistPollerDaoJpa` | `OnmsDistPoller` | `DistPollerDao` | `whoami()` — returns the local monitoring system |
 | `ServiceTypeDaoJpa` | `OnmsServiceType` | `ServiceTypeDao` | `findByName(String)` |
 
-DAOs use HQL via `AbstractDaoJpa.find()` and `findUnique()` helpers. `findMatching(Criteria)` and `countMatching(Criteria)` remain `UnsupportedOperationException` — Alarmd does not use the OpenNMS Criteria API.
+**Note:** No `EventDao` or `EventDaoJpa` — `OnmsEvent` does not exist as a JPA entity. Alarmd receives events via Kafka and stores denormalized event fields on `OnmsAlarm`.
+
+DAOs use HQL via `AbstractDaoJpa.find()` and `findUnique()` helpers. `findMatching(OnmsCriteria)` and `countMatching(OnmsCriteria)` from `LegacyOnmsDao` throw `UnsupportedOperationException` — Alarmd does not use the legacy Criteria API.
 
 DAOs are annotated with `@Repository` for Spring auto-detection and `@Transactional` where needed.
 
@@ -254,16 +286,40 @@ The module inherits Spring Boot 4.0.3 BOM from `daemon-common`'s dependency mana
 
 ### EntityScan Update
 
-`DaemonDataSourceConfiguration` in `daemon-common` currently scans `org.opennms.netmgt.model`. For Alarmd, this changes to `org.opennms.netmgt.model.jakarta.entity`. This is configured in the Alarmd boot module, not in daemon-common (daemon-common should not hardcode entity packages).
+`DaemonDataSourceConfiguration` in `daemon-common` currently hardcodes `@EntityScan(basePackages = "org.opennms.netmgt.model")`. This annotation must be **removed from daemon-common** and placed on each boot application's configuration instead. For Alarmd:
+
+```java
+@Configuration
+@EntityScan(basePackages = "org.opennms.netmgt.model")
+public class AlarmdConfiguration { ... }
+```
+
+The package stays `org.opennms.netmgt.model` because the Jakarta entities use the same package as the legacy entities (different module, same package).
 
 ### AlarmdConfiguration Bean Wiring
 
-The JPA DAOs are auto-discovered via `@Repository` + component scanning of `org.opennms.netmgt.model.jakarta.dao`. They implement the same DAO interfaces (`AlarmDao`, `NodeDao`, etc.) that `AlarmPersisterImpl` and other Alarmd classes inject — no changes to Alarmd source code needed.
+The JPA DAOs are auto-discovered via `@Repository` + component scanning of `org.opennms.netmgt.model.jakarta.dao`. They implement the same DAO interfaces (`AlarmDao`, `NodeDao`, `DistPollerDao`, `ServiceTypeDao`) that `AlarmPersisterImpl` and other Alarmd classes inject — no changes to Alarmd source code needed.
+
+### AlarmPersisterImpl Dependencies
+
+`AlarmPersisterImpl` uses `@Autowired` field injection for 7 dependencies:
+
+| Dependency | Provided By |
+|-----------|-------------|
+| `AlarmDao` | `AlarmDaoJpa` (from opennms-model-jakarta) |
+| `NodeDao` | `NodeDaoJpa` (from opennms-model-jakarta) |
+| `DistPollerDao` | `DistPollerDaoJpa` (from opennms-model-jakarta) |
+| `ServiceTypeDao` | `ServiceTypeDaoJpa` (from opennms-model-jakarta) |
+| `EventUtil` | Bean defined in `AlarmdConfiguration` |
+| `TransactionOperations` | Spring Boot auto-config (from `PlatformTransactionManager`) |
+| `AlarmEntityNotifier` | `AlarmEntityNotifierImpl` bean in `AlarmdConfiguration` |
+
+`EventUtil` is a stateful service with its own dependencies — it must be wired as a bean in `AlarmdConfiguration`. Field injection in `AlarmPersisterImpl` is left as-is for now (refactoring to constructor injection is out of scope for this migration step).
 
 ### Integration Test
 
 `AlarmdApplicationIT` will be enabled with:
-- Testcontainers PostgreSQL (schema loaded via Liquibase or SQL script)
+- Testcontainers PostgreSQL with schema loaded via a simplified DDL script (not Liquibase — the full Liquibase changelog has ~800 changesets with complex migration history; a flat DDL of the current schema is simpler and faster for tests)
 - Testcontainers Kafka
 - Verify: Spring context loads → Alarmd starts → send test event via Kafka → alarm created in PostgreSQL → alarm queryable via `AlarmDaoJpa`
 
@@ -276,3 +332,5 @@ The JPA DAOs are auto-discovered via `@Repository` + component scanning of `org.
 | Enum/utility class imports from `opennms-model` pull in javax transitives | Classpath conflicts | Careful `<exclusions>` in POM; only enum classes and `InetAddressUtils` needed |
 | `opennms-dao-api` DAO interfaces reference `org.opennms.core.criteria.Criteria` | DAOs must implement or throw | Already handled: `AbstractDaoJpa` throws `UnsupportedOperationException`; Alarmd doesn't use Criteria API |
 | HQL queries from legacy DAOs use positional parameters differently | Query failures at runtime | Integration test with real PostgreSQL validates all DAO queries |
+| `opennms-model` on classpath alongside `opennms-model-jakarta` causes split-package | Class loading ambiguity | `daemon-boot-alarmd` depends on `opennms-model-jakarta` only; `opennms-model` excluded transitively via `<exclusions>` on any dependency that pulls it in |
+| `EventUtil` has complex dependency tree | Context fails to load | Wire `EventUtil` explicitly in `AlarmdConfiguration`; stub unavailable dependencies if needed |
