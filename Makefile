@@ -40,7 +40,7 @@ OK                    := "[ OK ]"
 FAILED                := "[ FAILED ]"
 SKIP                  := "[ SKIP ]"
 SKIP_UI_TESTS         := true
-JAVA_MAJOR_VERSION    := 17
+JAVA_MAJOR_VERSION    := 21
 
 # Package requirements
 PKG_CORE_HOME         := /opt/opennms
