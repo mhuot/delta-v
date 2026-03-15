@@ -46,6 +46,7 @@ COPY staging/daemon/daemon-loader-telemetryd.jar \
 
 # Spring Boot fat JARs (migrated daemons — run directly with java -jar)
 COPY staging/daemon/daemon-boot-alarmd.jar /opt/daemon-boot-alarmd.jar
+COPY staging/daemon/daemon-boot-eventtranslator.jar /opt/daemon-boot-eventtranslator.jar
 
 # ── Special JARs (service-specific but harmless to include in all) ──
 # EventTranslator: split-package fix for opennms-config + opennms-util

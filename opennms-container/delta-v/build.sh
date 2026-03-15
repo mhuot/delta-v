@@ -146,6 +146,7 @@ do_stage_daemon_jars() {
         "core/daemon-loader-telemetryd/target/daemon-loader-telemetryd-$VERSION.jar:daemon-loader-telemetryd.jar"
         # Spring Boot fat JARs (migrated daemons)
         "core/daemon-boot-alarmd/target/org.opennms.core.daemon-boot-alarmd-$VERSION-boot.jar:daemon-boot-alarmd.jar"
+        "core/daemon-boot-eventtranslator/target/org.opennms.core.daemon-boot-eventtranslator-$VERSION-boot.jar:daemon-boot-eventtranslator.jar"
         # Special JARs (EventTranslator split-package fix, Alarmd, Passive status)
         "opennms-config/target/opennms-config-$VERSION.jar:opennms-config.jar"
         "opennms-util/target/opennms-util-$VERSION.jar:opennms-util.jar"
