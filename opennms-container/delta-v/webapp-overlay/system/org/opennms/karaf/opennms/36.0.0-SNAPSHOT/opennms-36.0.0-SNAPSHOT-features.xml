@@ -783,14 +783,7 @@
         <feature>opennms-core-ipc-twin-common</feature>
         <bundle>mvn:org.opennms.features.events/org.opennms.features.events.traps/36.0.0-SNAPSHOT</bundle>
     </feature>
-    <feature name="tsrm-troubleticketer" version="36.0.0-SNAPSHOT" description="OpenNMS :: Features :: Ticketing :: Tivoli Service Request Manager (TSRM)">
-        <feature version="3.6.8">cxf-jaxws</feature>
-        <feature>javax.servlet</feature>
-        <!-- early start-level to override jettison version in 3rd-party feature files -->
-        <bundle start-level="60">mvn:org.codehaus.jettison/jettison/1.5.4</bundle>
-        <bundle>mvn:org.opennms.features.ticketing/org.opennms.features.ticketing.api/36.0.0-SNAPSHOT</bundle>
-        <bundle>mvn:org.opennms.features/opennms-integration-tsrm/36.0.0-SNAPSHOT</bundle>
-    </feature>
+
     <feature name="eif-adapter" version="36.0.0-SNAPSHOT" description="OpenNMS :: Features :: EIF Adapter">
         <feature>camel-core</feature>
         <feature>camel-blueprint</feature>
@@ -1567,18 +1560,7 @@
         <bundle>mvn:org.opennms.features.vaadin-components/core/36.0.0-SNAPSHOT</bundle>
         <bundle>mvn:org.opennms.features.vaadin-components/widgetset/36.0.0-SNAPSHOT</bundle>
     </feature>
-    <feature name="jira-troubleticketer" version="36.0.0-SNAPSHOT" description="OpenNMS :: Features :: Ticketing :: JIRA">
-        <details>OpenNMS is the world's first enterprise grade network management platform developed under the open source model. It consists of a community supported open-source project as well as a commercial services, training and support organization.</details>
-        <bundle>mvn:org.opennms.features/jira-troubleticketer/36.0.0-SNAPSHOT</bundle>
-        <bundle>mvn:org.opennms.features.ticketing/org.opennms.features.ticketing.api/36.0.0-SNAPSHOT</bundle>
-        <bundle>mvn:org.opennms.core/org.opennms.core.lib/36.0.0-SNAPSHOT</bundle>
-        <bundle>mvn:joda-time/joda-time/2.12.5</bundle>
-        <bundle>mvn:org.opennms.features/jira-client/36.0.0-SNAPSHOT</bundle>
-    </feature>
-    <feature name="opennms-inmemory-ticketer" version="36.0.0-SNAPSHOT" description="OpenNMS :: Features :: Ticketing :: InMemory">
-        <bundle>mvn:org.opennms.features.ticketing/org.opennms.features.ticketing.inmemory/36.0.0-SNAPSHOT</bundle>
-        <bundle>mvn:org.opennms.features.ticketing/org.opennms.features.ticketing.api/36.0.0-SNAPSHOT</bundle>
-    </feature>
+
     <feature name="datachoices" version="36.0.0-SNAPSHOT" description="OpenNMS :: Features :: Data Choices">
         <details>OpenNMS is the world's first enterprise grade network management platform developed under the open source model. It consists of a community supported open-source project as well as a commercial services, training and support organization.</details>
         <feature prerequisite="true">shell-compat</feature>
@@ -2222,18 +2204,7 @@
         <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-syslogd/36.0.0-SNAPSHOT</bundle>
     </feature>
 
-    <!-- Karaf-only TroubleTicketer: loads TroubleTicketer daemon without Manager/Eventd -->
-    <feature name="opennms-daemon-ticketer" version="36.0.0-SNAPSHOT"
-             description="OpenNMS :: Daemon Loader :: TroubleTicketer">
-        <feature>opennms-spring-extender</feature>
-        <feature>opennms-event-forwarder-kafka</feature>
-        <feature>opennms-distributed-core-impl</feature>
-        <feature>opennms-persistence</feature>
-        <!-- API bundle for ticketing plugin interface (onmsgi:reference proxy) -->
-        <bundle>mvn:org.opennms.features.ticketing/org.opennms.features.ticketing.api/36.0.0-SNAPSHOT</bundle>
-        <bundle>mvn:org.opennms.features.ticketing/org.opennms.features.ticketing.daemon/36.0.0-SNAPSHOT</bundle>
-        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-ticketer/36.0.0-SNAPSHOT</bundle>
-    </feature>
+
 
     <!-- Karaf-only EventTranslator: loads EventTranslator daemon without Manager/Eventd -->
     <feature name="opennms-daemon-eventtranslator" version="36.0.0-SNAPSHOT"

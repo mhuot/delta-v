@@ -499,24 +499,7 @@
       <groupId>org.opennms</groupId>
       <artifactId>opennms-services</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.opennms.features.ticketing</groupId>
-      <artifactId>org.opennms.features.ticketing.api</artifactId>
-      <version>${project.version}</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms.features.ticketing</groupId>
-      <artifactId>org.opennms.features.ticketing.daemon</artifactId>
-      <version>${project.version}</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms.features.ticketing</groupId>
-      <artifactId>org.opennms.features.ticketing.drools-integration</artifactId>
-      <version>${project.version}</version>
-      <scope>compile</scope>
-    </dependency>
+
     <dependency>
       <groupId>org.opennms.features</groupId>
       <artifactId>newts-repository-converter</artifactId>

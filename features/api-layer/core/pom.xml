@@ -83,10 +83,7 @@
             <artifactId>opennms-alarm-api</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.opennms.features.ticketing</groupId>
-            <artifactId>org.opennms.features.ticketing.api</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>org.opennms.features.topology</groupId>
             <artifactId>org.opennms.features.topology.api</artifactId>

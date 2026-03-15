@@ -2876,11 +2876,7 @@
         <artifactId>org.opennms.features.springframework-security</artifactId>
         <version>${project.version}</version>
       </dependency>
-      <dependency>
-        <groupId>org.opennms.features.ticketing</groupId>
-        <artifactId>org.opennms.features.ticketing.api</artifactId>
-        <version>${project.version}</version>
-      </dependency>
+
       <dependency>
         <groupId>org.opennms.features.provisioning</groupId>
         <artifactId>org.opennms.features.provisioning.api</artifactId>

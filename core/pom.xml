@@ -71,7 +71,6 @@
     <module>daemon-loader-eventtranslator</module>
     <module>daemon-loader-pollerd</module>
     <module>daemon-loader-syslogd</module>
-    <module>daemon-loader-ticketer</module>
     <module>daemon-loader-trapd</module>
     <module>daemon-loader-enlinkd</module>
     <module>daemon-loader-provisiond</module>
