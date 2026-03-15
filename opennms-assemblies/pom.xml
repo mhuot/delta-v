@@ -27,7 +27,6 @@
     <module>minion</module>
     <module>sentinel</module>
     <module>version</module>
-    <module>webapp-full</module>
     <module>xsds</module>
   </modules>
 

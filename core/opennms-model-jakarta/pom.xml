@@ -12,24 +12,24 @@
     </parent>
 
     <groupId>org.opennms.core</groupId>
-    <artifactId>org.opennms.core.daemon-common</artifactId>
+    <artifactId>org.opennms.core.model-jakarta</artifactId>
     <packaging>jar</packaging>
-    <name>OpenNMS :: Core :: Daemon Common</name>
+    <name>OpenNMS :: Core :: Model Jakarta</name>
+    <description>
+        Jakarta Persistence entity classes for Spring Boot 4 daemons.
+        Same package (org.opennms.netmgt.model) as legacy opennms-model,
+        different module. Only one should be on the classpath at runtime.
+    </description>
 
     <properties>
         <java.version>21</java.version>
         <spring-boot.version>4.0.3</spring-boot.version>
-        <!-- Skip enforcer: this module uses Spring Boot 4 / Spring 7
-             which the parent POM's banned-dependencies rules reject -->
         <enforcer-skip-banned-dependencies>true</enforcer-skip-banned-dependencies>
         <enforcer-skip-dependency-convergence>true</enforcer-skip-dependency-convergence>
     </properties>
 
     <dependencyManagement>
         <dependencies>
-            <!-- Import Spring Boot BOM for version management.
-                 Listed FIRST so it takes precedence over the parent POM's
-                 managed versions for JUnit, Spring, etc. -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -37,9 +37,6 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <!-- Pin logback to match Spring Boot 4's requirements.
-                 Parent POM manages logback-classic at 1.2.13 which is
-                 incompatible with Spring Boot 4's Configurator API. -->
             <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
@@ -60,33 +57,14 @@
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
                 <version>2.19.4</version>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson.datatype</groupId>
-                <artifactId>jackson-datatype-jsr310</artifactId>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
                 <version>2.19.4</version>
             </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.datatype</groupId>
-                <artifactId>jackson-datatype-jdk8</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.module</groupId>
-                <artifactId>jackson-module-parameter-names</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <!-- Pin JUnit to 5.12.2 / Platform 1.12.2 which is the latest
-                 version supported by maven-surefire-plugin 3.5.5.
-                 Must be explicit entries (not BOM import) to override
-                 the parent POM's managed versions at 5.9.2 / 1.9.2. -->
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter</artifactId>
@@ -100,11 +78,6 @@
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-engine</artifactId>
-                <version>5.12.2</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-params</artifactId>
                 <version>5.12.2</version>
             </dependency>
             <dependency>
@@ -126,52 +99,62 @@
     </dependencyManagement>
 
     <dependencies>
-        <!-- Spring Boot -->
+        <!-- Jakarta Persistence API (from Spring Boot 4 BOM) -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
         </dependency>
 
-        <!-- Database -->
+        <!-- Hibernate 7 core — for @Filter, @Formula, @SQLRestriction annotations -->
         <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-core</artifactId>
         </dependency>
 
-        <!-- Kafka -->
+        <!-- AbstractDaoJpa base class -->
         <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka-clients</artifactId>
+            <groupId>org.opennms.core</groupId>
+            <artifactId>org.opennms.core.daemon-common</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
-        <!-- OpenNMS APIs (consumed as-is during hybrid period) -->
+        <!-- DAO interfaces (AlarmDao, NodeDao, DistPollerDao, ServiceTypeDao) -->
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-dao-api</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
+                <exclusion><groupId>org.hibernate.javax.persistence</groupId><artifactId>hibernate-jpa-2.0-api</artifactId></exclusion>
+            </exclusions>
         </dependency>
+
+        <!-- Shared enums and utilities (OnmsSeverity, InetAddressUtils, NodeType, etc.) -->
         <dependency>
-            <groupId>org.opennms.core</groupId>
-            <artifactId>org.opennms.core.daemon</artifactId>
+            <groupId>org.opennms</groupId>
+            <artifactId>opennms-model</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
+                <exclusion><groupId>org.hibernate.javax.persistence</groupId><artifactId>hibernate-jpa-2.0-api</artifactId></exclusion>
+                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
+                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
+                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-core</artifactId></exclusion>
+                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-tx</artifactId></exclusion>
+                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-orm</artifactId></exclusion>
+                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-jdbc</artifactId></exclusion>
+                <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion>
+                <exclusion><groupId>org.slf4j</groupId><artifactId>log4j-over-slf4j</artifactId></exclusion>
+                <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-log4j2</artifactId></exclusion>
+                <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
+                <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
+            </exclusions>
         </dependency>
+
+        <!-- Jackson for @JsonIgnoreProperties -->
         <dependency>
-            <groupId>org.opennms.features.events</groupId>
-            <artifactId>org.opennms.features.events.api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.opennms.core</groupId>
-            <artifactId>org.opennms.core.event-forwarder-kafka</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
         </dependency>
 
         <!-- Test -->
@@ -180,8 +163,6 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
             <exclusions>
-                <!-- Exclude vintage engine to avoid classpath conflict
-                     with the JUnit 4 vintage engine from the parent POM -->
                 <exclusion>
                     <groupId>org.junit.vintage</groupId>
                     <artifactId>junit-vintage-engine</artifactId>
@@ -189,58 +170,6 @@
             </exclusions>
         </dependency>
     </dependencies>
-
-    <profiles>
-        <!--
-            jakarta-transform profile: produces a secondary JAR artifact
-            with classifier "jakarta" where all javax.* bytecode references
-            are rewritten to jakarta.* using the Eclipse Transformer.
-
-            This is the bridge mechanism for the Spring Boot 4 migration:
-            - Shared modules (opennms-model, opennms-dao, etc.) keep javax.*
-              in source so Karaf / Hibernate 3.6 consumers are unaffected.
-            - Spring Boot daemon fat JARs activate this profile to get
-              jakarta.* bytecode that Hibernate 6.x / Spring 7 require.
-
-            Usage:
-              mvn package -Pjakarta-transform
-
-            The consuming daemon module (daemon-boot-alarmd) activates this
-            profile and uses the transformer-maven-plugin on its fat JAR to
-            rewrite embedded javax.* classes in one pass.
-        -->
-        <profile>
-            <id>jakarta-transform</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.eclipse.transformer</groupId>
-                        <artifactId>transformer-maven-plugin</artifactId>
-                        <version>0.5.0</version>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <rules>
-                                <jakartaDefaults>true</jakartaDefaults>
-                                <renames>${project.basedir}/src/main/resources/META-INF/jakarta-rename.properties</renames>
-                            </rules>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>transform-jar</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                                <configuration>
-                                    <classifier>jakarta</classifier>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
     <build>
         <plugins>
@@ -256,12 +185,8 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <!-- Override to 3.5.5 which supports JUnit Platform 1.12.2
-                     required by Spring Boot 4 -->
                 <version>3.5.5</version>
                 <configuration>
-                    <!-- Only use JUnit Jupiter; the vintage engine from the parent
-                         is incompatible with JUnit Platform 1.12+ from Spring Boot 4 -->
                     <includeJUnit5Engines>
                         <includeJUnit5Engine>junit-jupiter</includeJUnit5Engine>
                     </includeJUnit5Engines>
