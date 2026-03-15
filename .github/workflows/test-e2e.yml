@@ -10,7 +10,7 @@ permissions: write-all
 
 jobs:
   e2e-core:
-    if: "!contains(github.event.head_commit.message || '', '[skip e2e-tests-core]')"
+    if: false  # Disabled: core container is being replaced by Spring Boot microservices
     strategy:
       fail-fast: false
       matrix:
