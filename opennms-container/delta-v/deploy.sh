@@ -32,8 +32,8 @@ declare -A KARAF_PORTS=(
 do_up() {
     log "Starting Delta-V (version $VERSION)..."
 
-    # Check images exist
-    for img in "opennms/horizon:$VERSION" "opennms/daemon:$VERSION" "opennms/minion:$VERSION"; do
+    # Check images exist (Delta-V layered images, not base images)
+    for img in "opennms/daemon-deltav:$VERSION" "opennms/minion-deltav:$VERSION"; do
         docker image inspect "$img" >/dev/null 2>&1 || err "Image $img not found. Run ./build.sh first."
     done
 
@@ -58,7 +58,14 @@ do_down() {
 
 do_reset() {
     log "Stopping Delta-V and removing all data volumes..."
-    docker compose down -v
+    docker compose down --remove-orphans 2>/dev/null || true
+    # docker compose down -v only removes volumes for active profile services.
+    # Explicitly remove ALL delta-v volumes to ensure clean Karaf bundle caches.
+    local stale_vols
+    stale_vols=$(docker volume ls --format '{{.Name}}' | grep "^delta-v_" || true)
+    if [ -n "$stale_vols" ]; then
+        echo "$stale_vols" | xargs docker volume rm 2>/dev/null || true
+    fi
     log "Clean slate. Run './deploy.sh up' to start fresh."
 }
 

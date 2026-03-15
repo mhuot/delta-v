@@ -13,7 +13,7 @@
 #   DOCKER_REGISTRY   Docker registry (default: docker.io)
 #   DOCKER_ORG        Docker org/user (default: opennms)
 #   SKIP_TESTS        Set to "false" to run tests (default: true)
-#   JAVA_HOME         JDK 17 path (auto-detected if unset)
+#   JAVA_HOME         JDK 21 path (auto-detected if unset)
 #
 set -euo pipefail
 
@@ -33,14 +33,18 @@ check_prereqs() {
     command -v docker >/dev/null 2>&1 || err "docker not found"
     command -v make >/dev/null 2>&1   || err "make not found (needed for build)"
 
-    # Verify Java 17
+    # Verify Java 21
     if [ -z "${JAVA_HOME:-}" ]; then
-        if [ -d "/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home" ]; then
-            export JAVA_HOME="/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home"
+        if [ -d "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home" ]; then
+            export JAVA_HOME="/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home"
         fi
     fi
-    java_version=$(java -version 2>&1 | head -1 | sed 's/.*"\([0-9]*\)\..*/\1/')
-    [ "$java_version" = "17" ] || err "Java 17 required (found: $java_version)"
+    if [ -z "${JAVA_HOME:-}" ]; then
+        err "JAVA_HOME not set and temurin-21 not found. Set JAVA_HOME to a JDK 21 installation."
+    fi
+    java_version=$("${JAVA_HOME}/bin/java" -version 2>&1 | head -1 | sed 's/.*"\([0-9]*\)\..*/\1/')
+    [ "$java_version" = "21" ] || err "Java 21 required (JAVA_HOME=$JAVA_HOME reports: $java_version)"
+    export PATH="${JAVA_HOME}/bin:${PATH}"
 
     # Ensure Docker buildx uses the "default" builder instance.
     # Docker Desktop sets the active builder to "desktop-linux", which the
@@ -59,37 +63,46 @@ do_compile() {
     local test_flag=""
     [ "$SKIP_TESTS" = "true" ] && test_flag="-DskipTests"
     cd "$REPO_ROOT"
-    # Exclude core/db-init (requires Java 21) — built separately in do_db_init_image()
-    ./compile.pl $test_flag -pl '!core/db-init'
+    ./compile.pl $test_flag
 }
 
 do_assemble() {
-    log "Assembling Horizon distribution..."
-    cd "$REPO_ROOT"
-    ./assemble.pl -Dopennms.home=/opt/opennms -DskipTests -p dir
+    log "Assembling Horizon distribution (webapp — skipped, use Java 17 if needed)..."
+    # NOTE: assemble.pl builds opennms-full-assembly which is the webapp container.
+    # The webapp stays on Java 17 and is out of scope for the Java 21 daemon upgrade.
+    # Build it separately with Java 17 if needed: JAVA_HOME=<jdk17> ./assemble.pl -p dir -DskipTests
+    # cd "$REPO_ROOT"
+    # ./assemble.pl -Dopennms.home=/opt/opennms -DskipTests -p dir
 
-    log "Building container/features module..."
+    log "Building Karaf container modules (shared + karaf + features)..."
     cd "$REPO_ROOT"
-    JAVA_HOME="${JAVA_HOME:-}" ./maven/bin/mvn -DskipTests -pl container/features install
+    ./maven/bin/mvn -DskipTests -pl container/shared,container/karaf,container/features clean install
 
-    log "Building Sentinel features module..."
+    log "Building Sentinel and Minion features modules..."
     cd "$REPO_ROOT"
-    JAVA_HOME="${JAVA_HOME:-}" ./maven/bin/mvn -DskipTests -pl features/container/sentinel install
+    ./maven/bin/mvn -DskipTests -pl features/container/sentinel,features/container/minion,features/minion/core/repository,features/minion/repository clean install
+
+    log "Building Sentinel assembly..."
+    cd "$REPO_ROOT/opennms-assemblies/sentinel"
+    ../../maven/bin/mvn -DskipTests clean install
+
+    log "Building Minion assembly..."
+    cd "$REPO_ROOT/opennms-assemblies/minion"
+    ../../maven/bin/mvn -DskipTests clean install
 
     log "Building Daemon assembly..."
     cd "$REPO_ROOT/opennms-assemblies/daemon"
-    ../../maven/bin/mvn -DskipTests install
+    ../../maven/bin/mvn -DskipTests clean install
 
     log "Building Alarmd assembly..."
     cd "$REPO_ROOT/opennms-assemblies/alarmd"
-    ../../maven/bin/mvn -DskipTests install
+    ../../maven/bin/mvn -DskipTests clean install
 }
 
 do_db_init_image() {
     log "Building db-init image (opennms/db-init:$VERSION)..."
     cd "$REPO_ROOT"
-    JAVA_HOME="${JAVA_HOME_21:-/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home}" \
-        ./maven/bin/mvn -f core/db-init/pom.xml -DskipTests package
+    ./maven/bin/mvn -f core/db-init/pom.xml -DskipTests package
     cd "$REPO_ROOT/core/db-init"
     docker build -t "opennms/db-init:$VERSION" -t "opennms/db-init:latest" .
 }
@@ -98,9 +111,15 @@ do_images() {
     local make_args="DOCKER_REGISTRY=$DOCKER_REGISTRY DOCKER_ORG=$DOCKER_ORG"
     [ "${1:-}" = "push" ] && make_args="$make_args DOCKER_FLAGS=--push"
 
-    log "Building Horizon image (opennms/horizon:$VERSION)..."
-    cd "$REPO_ROOT/opennms-container/core"
-    make image $make_args
+    # NOTE: Horizon image (webapp) requires full assembly built with Java 17.
+    # Build separately if needed: JAVA_HOME=<jdk17> ./assemble.pl -p dir && make -C opennms-container/core image
+    if [ -f "$REPO_ROOT/opennms-full-assembly/target/opennms-full-assembly-$VERSION-core.tar.gz" ]; then
+        log "Building Horizon image (opennms/horizon:$VERSION)..."
+        cd "$REPO_ROOT/opennms-container/core"
+        make image $make_args
+    else
+        log "Skipping Horizon image (no full assembly found — build with Java 17 if needed)"
+    fi
 
     # The sentinel Makefile tags as opennms/sentinel, but the Delta-V
     # docker-compose expects opennms/daemon. Build then re-tag.
@@ -110,10 +129,15 @@ do_images() {
     docker image tag "opennms/sentinel:$VERSION" "opennms/daemon:$VERSION"
     docker image tag "opennms/sentinel:$VERSION" "opennms/daemon:latest"
 
+    # Build Minion base image
+    log "Building Minion image (opennms/minion:$VERSION)..."
+    cd "$REPO_ROOT/opennms-container/minion"
+    make image $make_args
+
     do_db_init_image
 
     log "Docker images built:"
-    docker images --format "  {{.Repository}}:{{.Tag}}\t{{.Size}}" | grep -E "(horizon|daemon|sentinel|db-init)" | head -15
+    docker images --format "  {{.Repository}}:{{.Tag}}\t{{.Size}}" | grep -E "(horizon|daemon|sentinel|minion|db-init)" | head -20
 }
 
 do_stage_daemon_jars() {
@@ -130,17 +154,29 @@ do_stage_daemon_jars() {
         "core/event-forwarder-kafka/target/org.opennms.core.event-forwarder-kafka-$VERSION.jar:event-forwarder-kafka.jar"
         "features/events/daemon/target/org.opennms.features.events.daemon-$VERSION.jar:events.daemon.jar"
         # Daemon-loader JARs
+        "core/daemon-loader-pollerd/target/org.opennms.core.daemon-loader-pollerd-$VERSION.jar:daemon-loader-pollerd.jar"
         "core/daemon-loader-trapd/target/org.opennms.core.daemon-loader-trapd-$VERSION.jar:daemon-loader-trapd.jar"
         "core/daemon-loader-syslogd/target/org.opennms.core.daemon-loader-syslogd-$VERSION.jar:daemon-loader-syslogd.jar"
         "core/daemon-loader-provisiond/target/org.opennms.core.daemon-loader-provisiond-$VERSION.jar:daemon-loader-provisiond.jar"
         "core/daemon-loader-bsmd/target/org.opennms.core.daemon-loader-bsmd-$VERSION.jar:daemon-loader-bsmd.jar"
         "core/daemon-loader-perspectivepoller/target/org.opennms.core.daemon-loader-perspectivepoller-$VERSION.jar:daemon-loader-perspectivepoller.jar"
-        "core/daemon-loader-alarmd/target/org.opennms.core.daemon-loader-alarmd-$VERSION.jar:daemon-loader-alarmd.jar"
         "core/daemon-loader-telemetryd/target/daemon-loader-telemetryd-$VERSION.jar:daemon-loader-telemetryd.jar"
-        # Special JARs (EventTranslator split-package fix, Alarmd)
+        # Spring Boot fat JARs (migrated daemons)
+        "core/daemon-boot-alarmd/target/org.opennms.core.daemon-boot-alarmd-$VERSION.jar:daemon-boot-alarmd.jar"
+        # Special JARs (EventTranslator split-package fix, Alarmd, Passive status)
         "opennms-config/target/opennms-config-$VERSION.jar:opennms-config.jar"
         "opennms-util/target/opennms-util-$VERSION.jar:opennms-util.jar"
         "opennms-alarms/daemon/target/opennms-alarmd-$VERSION.jar:opennms-alarmd.jar"
+        "opennms-services/target/opennms-services-$VERSION.jar:opennms-services.jar"
+        "opennms-provision/opennms-provisiond/target/opennms-provisiond-$VERSION.jar:opennms-provisiond.jar"
+        "features/minion/core/impl/target/core-impl-$VERSION.jar:minion-core-impl.jar"
+        "features/poller/api/target/org.opennms.features.poller.api-$VERSION.jar:poller-api.jar"
+        "core/ipc/twin/common/target/org.opennms.core.ipc.twin.common-$VERSION.jar:twin-common.jar"
+        "core/ipc/twin/kafka/common/target/org.opennms.core.ipc.twin.kafka.common-$VERSION.jar:twin-kafka-common.jar"
+        "core/ipc/twin/kafka/publisher/target/org.opennms.core.ipc.twin.kafka.publisher-$VERSION.jar:twin-kafka-publisher.jar"
+        "core/ipc/common/kafka/target/org.opennms.core.ipc.common.kafka-$VERSION.jar:ipc-common-kafka.jar"
+        "features/distributed/opennms-identity/target/org.opennms.features.distributed.opennms-identity-$VERSION.jar:opennms-identity.jar"
+        "features/poller/client-rpc/target/org.opennms.features.poller.client-rpc-$VERSION.jar:poller-client-rpc.jar"
     )
 
     local missing=0
@@ -156,7 +192,9 @@ do_stage_daemon_jars() {
     done
 
     log "Staged $(ls "$staging" | wc -l | tr -d ' ') files ($missing missing)"
-    [ "$missing" -gt 0 ] && [ "$missing" -gt 3 ] && err "Too many missing JARs — run './build.sh compile' first"
+    if [ "$missing" -gt 3 ]; then
+        err "Too many missing JARs ($missing) — run './build.sh compile' first"
+    fi
 }
 
 do_deltav_images() {
@@ -172,15 +210,6 @@ do_deltav_images() {
         -f Dockerfile.daemon \
         -t "opennms/daemon-deltav:$VERSION" \
         -t "opennms/daemon-deltav:latest" \
-        .
-
-    # Webapp image
-    log "Building opennms/horizon-deltav:$VERSION..."
-    docker build \
-        --build-arg "VERSION=$VERSION" \
-        -f Dockerfile.webapp \
-        -t "opennms/horizon-deltav:$VERSION" \
-        -t "opennms/horizon-deltav:latest" \
         .
 
     # Minion image
@@ -247,7 +276,7 @@ Environment variables:
   DOCKER_REGISTRY   Registry (default: docker.io)
   DOCKER_ORG        Organization (default: opennms)
   SKIP_TESTS        Skip tests (default: true)
-  JAVA_HOME         JDK 17 path
+  JAVA_HOME         JDK 21 path
 
 Examples:
   ./build.sh                                    # Full build
