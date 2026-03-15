@@ -24,6 +24,9 @@ package org.opennms.netmgt.alarmd.boot;
 import java.util.List;
 
 import org.opennms.core.daemon.common.DaemonSmartLifecycle;
+import org.opennms.netmgt.dao.api.AlarmEntityNotifier;
+import org.opennms.netmgt.eventd.EventUtil;
+import org.opennms.netmgt.model.OnmsSeverity;
 import org.opennms.netmgt.alarmd.Alarmd;
 import org.opennms.netmgt.alarmd.AlarmLifecycleListenerManager;
 import org.opennms.netmgt.alarmd.AlarmPersister;
@@ -49,6 +52,7 @@ import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.orm.jpa.persistenceunit.PersistenceManagedTypes;
+import org.springframework.transaction.support.TransactionOperations;
 
 /**
  * Spring Boot @Configuration that wires all Alarmd beans.
@@ -109,6 +113,97 @@ public class AlarmdConfiguration {
         );
     }
 
+    /**
+     * SessionUtils implementation backed by Spring's TransactionTemplate.
+     * Replaces the OSGi-era SessionUtils that was used to bridge Hibernate
+     * sessions across OSGi bundles.
+     */
+    @Bean
+    public org.opennms.netmgt.dao.api.SessionUtils sessionUtils(
+            org.springframework.transaction.PlatformTransactionManager txManager) {
+        var txTemplate = new org.springframework.transaction.support.TransactionTemplate(txManager);
+        var readOnlyTxTemplate = new org.springframework.transaction.support.TransactionTemplate(txManager);
+        readOnlyTxTemplate.setReadOnly(true);
+        return new org.opennms.netmgt.dao.api.SessionUtils() {
+            @Override
+            public <V> V withTransaction(java.util.function.Supplier<V> supplier) {
+                return txTemplate.execute(status -> supplier.get());
+            }
+            @Override
+            public <V> V withReadOnlyTransaction(java.util.function.Supplier<V> supplier) {
+                return readOnlyTxTemplate.execute(status -> supplier.get());
+            }
+            @Override
+            public <V> V withManualFlush(java.util.function.Supplier<V> supplier) {
+                return supplier.get();
+            }
+        };
+    }
+
+    /**
+     * Provides TransactionOperations for AlarmPersisterImpl.
+     * Spring Boot auto-creates a PlatformTransactionManager; we wrap it
+     * in a TransactionTemplate for the @Autowired TransactionOperations field.
+     */
+    @Bean
+    public TransactionOperations transactionOperations(
+            org.springframework.transaction.PlatformTransactionManager txManager) {
+        return new org.springframework.transaction.support.TransactionTemplate(txManager);
+    }
+
+    /**
+     * No-op AlarmEntityNotifier — alarm lifecycle notifications are not needed
+     * until REST API or BSMd integration is added.
+     */
+    @Bean
+    public AlarmEntityNotifier alarmEntityNotifier() {
+        return new AlarmEntityNotifier() {
+            @Override public void didCreateAlarm(OnmsAlarm alarm) {}
+            @Override public void didUpdateAlarmWithReducedEvent(OnmsAlarm alarm) {}
+            @Override public void didAcknowledgeAlarm(OnmsAlarm alarm, String u, java.util.Date d) {}
+            @Override public void didUnacknowledgeAlarm(OnmsAlarm alarm, String u, java.util.Date d) {}
+            @Override public void didUpdateAlarmSeverity(OnmsAlarm alarm, OnmsSeverity s) {}
+            @Override public void didArchiveAlarm(OnmsAlarm alarm, String k) {}
+            @Override public void didDeleteAlarm(OnmsAlarm alarm) {}
+            @Override public void didUpdateStickyMemo(OnmsAlarm a, String b, String au, java.util.Date d) {}
+            @Override public void didUpdateReductionKeyMemo(OnmsAlarm a, String b, String au, java.util.Date d) {}
+            @Override public void didDeleteStickyMemo(OnmsAlarm a, OnmsMemo m) {}
+            @Override public void didDeleteReductionKeyMemo(OnmsAlarm a, OnmsReductionKeyMemo m) {}
+            @Override public void didUpdateLastAutomationTime(OnmsAlarm a, java.util.Date d) {}
+            @Override public void didUpdateRelatedAlarms(OnmsAlarm a, java.util.Set<OnmsAlarm> s) {}
+            @Override public void didChangeTicketStateForAlarm(OnmsAlarm a, org.opennms.netmgt.model.TroubleTicketState s) {}
+        };
+    }
+
+    /**
+     * Minimal EventUtil implementation for alarm parameter expansion.
+     * The full EventUtilDaoImpl depends on the legacy Hibernate DAO layer.
+     * This pass-through implementation handles the expandParms() calls that
+     * AlarmPersisterImpl makes — returning the input unchanged when no
+     * database-backed token resolution is available.
+     */
+    @Bean
+    public EventUtil eventUtil() {
+        return new EventUtil() {
+            @Override public String expandParms(String inp, org.opennms.netmgt.xml.event.Event event) { return inp; }
+            @Override public String expandParms(String inp, org.opennms.netmgt.xml.event.Event event, java.util.Map<String, java.util.Map<String, String>> decode) { return inp; }
+            @Override public String getNamedParmValue(String string, org.opennms.netmgt.xml.event.Event event) { return ""; }
+            @Override public void expandMapValues(java.util.Map<String, String> parmMap, org.opennms.netmgt.xml.event.Event event) {}
+            @Override public String getHardwareFieldValue(String parm, long nodeId) { return ""; }
+            @Override public String getHostName(int nodeId, String hostip) { return hostip; }
+            @Override public String getEventHost(org.opennms.netmgt.xml.event.Event event) { return ""; }
+            @Override public String getIfAlias(long nodeId, String ipAddr) { return ""; }
+            @Override public String getAssetFieldValue(String parm, long nodeId) { return ""; }
+            @Override public String getForeignId(long nodeId) { return ""; }
+            @Override public String getForeignSource(long nodeId) { return ""; }
+            @Override public String getNodeLabel(long nodeId) { return ""; }
+            @Override public String getNodeLocation(long nodeId) { return ""; }
+            @Override public org.opennms.netmgt.eventd.processor.expandable.ExpandableParameterResolver getResolver(String token) { return null; }
+            @Override public java.util.Date decodeSnmpV2TcDateAndTime(java.math.BigInteger value) { return new java.util.Date(); }
+            @Override public String getPrimaryInterface(long nodeId) { return ""; }
+        };
+    }
+
     @Bean
     public AlarmPersisterImpl alarmPersister() {
         return new AlarmPersisterImpl();
@@ -117,6 +212,18 @@ public class AlarmdConfiguration {
     @Bean
     public AlarmLifecycleListenerManager alarmLifecycleListenerManager() {
         return new AlarmLifecycleListenerManager();
+    }
+
+    /**
+     * No-op EventProxy — Alarmd's NorthbounderManager uses this to send events
+     * for northbound interface state changes. Not needed until NBI integration.
+     */
+    @Bean(name = "eventProxy")
+    public org.opennms.netmgt.events.api.EventProxy eventProxy() {
+        return new org.opennms.netmgt.events.api.EventProxy() {
+            @Override public void send(org.opennms.netmgt.xml.event.Event event) {}
+            @Override public void send(org.opennms.netmgt.xml.event.Log eventLog) {}
+        };
     }
 
     @Bean
@@ -134,6 +241,7 @@ public class AlarmdConfiguration {
     @Bean
     public AnnotationBasedEventListenerAdapter alarmdEventListenerAdapter(
             Alarmd alarmd,
+            @org.springframework.beans.factory.annotation.Qualifier("kafkaEventSubscriptionService")
             EventSubscriptionService eventSubscriptionService) {
         var adapter = new AnnotationBasedEventListenerAdapter();
         adapter.setAnnotatedListener(alarmd);

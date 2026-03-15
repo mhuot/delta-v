@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication(scanBasePackages = {
     "org.opennms.core.daemon.common",
-    "org.opennms.netmgt.alarmd",
+    "org.opennms.netmgt.alarmd.boot",
     "org.opennms.netmgt.model.jakarta.dao"
 })
 public class AlarmdApplication {
