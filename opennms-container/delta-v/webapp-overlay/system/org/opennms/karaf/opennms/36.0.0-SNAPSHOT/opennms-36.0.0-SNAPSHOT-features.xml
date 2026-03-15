@@ -2171,8 +2171,6 @@
         <feature>opennms-config</feature>
         <!-- RTC daemon classes -->
         <bundle>mvn:org.opennms/opennms-services/36.0.0-SNAPSHOT</bundle>
-        <!-- Daemon loader (creates RTCManager, starts it) -->
-        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-rtcd/36.0.0-SNAPSHOT</bundle>
     </feature>
 
 
@@ -2367,8 +2365,6 @@
         <bundle>mvn:org.opennms/opennms-alarmd/36.0.0-SNAPSHOT</bundle>
         <!-- Event daemon (provides EventUtilDaoImpl, used by AlarmPersisterImpl) -->
         <bundle>mvn:org.opennms.features.events/org.opennms.features.events.daemon/36.0.0-SNAPSHOT</bundle>
-        <!-- Daemon loader (creates Alarmd, starts it) -->
-        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-alarmd/36.0.0-SNAPSHOT</bundle>
     </feature>
 
 </features>
