@@ -2,6 +2,18 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## CRITICAL: Git Remote Rules
+
+**NEVER create pull requests against any `OpenNMS/*` repository.** This is a fork (`pbrane/delta-v`). Always use `--repo pbrane/delta-v` with `gh pr create`. The `gh` CLI defaults to the fork parent (`OpenNMS/opennms`) which is wrong.
+
+```bash
+# CORRECT
+gh pr create --repo pbrane/delta-v --base develop ...
+
+# WRONG — DO NOT DO THIS
+gh pr create ...  # defaults to OpenNMS/opennms
+```
+
 ## Project Overview
 
 OpenNMS Horizon is an enterprise-grade open-source network monitoring platform. Version 36.0.0-SNAPSHOT, licensed under AGPL v3. Java 17 required (enforced range `[17,18)`).
