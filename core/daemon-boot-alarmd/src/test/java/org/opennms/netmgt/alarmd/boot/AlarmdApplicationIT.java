@@ -1,101 +1,183 @@
+/*
+ * Licensed to The OpenNMS Group, Inc (TOG) under one or more
+ * contributor license agreements.  See the LICENSE.md file
+ * distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * TOG licenses this file to You under the GNU Affero General
+ * Public License Version 3 (the "License") or (at your option)
+ * any later version.  You may not use this file except in
+ * compliance with the License.  You may obtain a copy of the
+ * License at:
+ *
+ *      https://www.gnu.org/licenses/agpl-3.0.txt
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied.  See the License for the specific
+ * language governing permissions and limitations under the
+ * License.
+ */
 package org.opennms.netmgt.alarmd.boot;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+
+import java.util.Date;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.opennms.netmgt.dao.api.AlarmEntityNotifier;
+import org.opennms.netmgt.dao.api.AlarmDao;
+import org.opennms.netmgt.dao.api.DistPollerDao;
+import org.opennms.netmgt.dao.api.NodeDao;
+import org.opennms.netmgt.events.api.EventSubscriptionService;
+import org.opennms.netmgt.model.OnmsAlarm;
+import org.opennms.netmgt.model.OnmsDistPoller;
+import org.opennms.netmgt.model.OnmsSeverity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionOperations;
+import org.springframework.transaction.support.TransactionTemplate;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
- * Smoke test for the Alarmd Spring Boot application.
+ * Integration test for the Alarmd Spring Boot application.
  *
- * <p>This is a prototype-level integration test. The full flow (send event,
- * verify alarm created) cannot work yet because:
- * <ul>
- *   <li>DAO beans (AlarmDao, NodeDao, etc.) have no JPA implementations</li>
- *   <li>The database schema (Liquibase/db-init) is not available in tests</li>
- *   <li>EventUtilDaoImpl requires DAOs that lack JPA backing</li>
- * </ul>
- *
- * <p>A {@code @SpringBootTest} variant is included but {@code @Disabled} until
- * the DAO layer is migrated. See the inline comments for what is needed.
+ * <p>Starts a full Spring Boot context backed by Testcontainers PostgreSQL
+ * (with schema.sql). Verifies that JPA DAOs are functional and can
+ * persist/retrieve alarms.</p>
  */
+@SpringBootTest(classes = AlarmdApplication.class)
+@Testcontainers
+@Import(AlarmdApplicationIT.TestConfig.class)
 class AlarmdApplicationIT {
 
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
+            .withDatabaseName("opennms")
+            .withUsername("opennms")
+            .withPassword("opennms")
+            .withInitScript("schema.sql");
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("opennms.kafka.bootstrap-servers", () -> "localhost:9092");
+    }
+
+    /**
+     * Provides mock beans for services that Alarmd requires but that are
+     * not part of the JPA/DAO layer being tested.
+     */
+    @TestConfiguration
+    static class TestConfig {
+        @Bean
+        @Primary
+        public EventSubscriptionService eventSubscriptionService() {
+            return mock(EventSubscriptionService.class);
+        }
+
+        @Bean
+        public AlarmEntityNotifier alarmEntityNotifier() {
+            return mock(AlarmEntityNotifier.class);
+        }
+
+        @Bean
+        public org.opennms.netmgt.eventd.EventUtil eventUtil() {
+            return mock(org.opennms.netmgt.eventd.EventUtil.class);
+        }
+
+        @Bean
+        public TransactionOperations transactionOperations(PlatformTransactionManager txManager) {
+            return new TransactionTemplate(txManager);
+        }
+
+        @Bean
+        public org.opennms.netmgt.dao.api.SessionUtils sessionUtils() {
+            return mock(org.opennms.netmgt.dao.api.SessionUtils.class);
+        }
+
+        @Bean(name = "eventProxy")
+        public org.opennms.netmgt.events.api.EventProxy eventProxy() {
+            return mock(org.opennms.netmgt.events.api.EventProxy.class);
+        }
+
+    }
+
+    @Autowired
+    private AlarmDao alarmDao;
+
+    @Autowired
+    private DistPollerDao distPollerDao;
+
+    @Autowired
+    private NodeDao nodeDao;
+
     @Test
-    void applicationClassExists() {
-        assertThat(AlarmdApplication.class).isNotNull();
+    void contextLoads() {
+        assertThat(alarmDao).isNotNull();
+        assertThat(distPollerDao).isNotNull();
+        assertThat(nodeDao).isNotNull();
     }
 
     @Test
-    void hasSpringBootApplicationAnnotation() {
-        assertThat(AlarmdApplication.class.isAnnotationPresent(SpringBootApplication.class))
-                .as("AlarmdApplication must be annotated with @SpringBootApplication")
-                .isTrue();
+    void canPersistAndRetrieveAlarm() {
+        OnmsDistPoller distPoller = distPollerDao.whoami();
+        assertThat(distPoller).isNotNull();
+
+        OnmsAlarm alarm = new OnmsAlarm();
+        alarm.setUei("uei.opennms.org/test/alarm");
+        alarm.setDistPoller(distPoller);
+        alarm.setCounter(1);
+        alarm.setSeverity(OnmsSeverity.MAJOR);
+        alarm.setReductionKey("uei.opennms.org/test/alarm::1");
+        alarm.setFirstEventTime(new Date());
+        alarm.setLastEventTime(new Date());
+        alarm.setLogMsg("Test alarm");
+
+        alarmDao.save(alarm);
+        alarmDao.flush();
+
+        assertThat(alarm.getId()).isNotNull();
+
+        OnmsAlarm retrieved = alarmDao.get(alarm.getId());
+        assertThat(retrieved).isNotNull();
+        assertThat(retrieved.getUei()).isEqualTo("uei.opennms.org/test/alarm");
+        assertThat(retrieved.getSeverity()).isEqualTo(OnmsSeverity.MAJOR);
+        assertThat(retrieved.getCounter()).isEqualTo(1);
     }
 
     @Test
-    void scanBasePackagesIncludeAlarmd() {
-        SpringBootApplication annotation =
-                AlarmdApplication.class.getAnnotation(SpringBootApplication.class);
-        assertThat(annotation.scanBasePackages())
-                .as("Scan packages must include the alarmd package")
-                .contains("org.opennms.netmgt.alarmd");
-    }
+    void findByReductionKey() {
+        OnmsDistPoller distPoller = distPollerDao.whoami();
 
-    @Test
-    void scanBasePackagesIncludeDaemonCommon() {
-        SpringBootApplication annotation =
-                AlarmdApplication.class.getAnnotation(SpringBootApplication.class);
-        assertThat(annotation.scanBasePackages())
-                .as("Scan packages must include daemon-common infrastructure")
-                .contains("org.opennms.core.daemon.common");
-    }
+        OnmsAlarm alarm = new OnmsAlarm();
+        alarm.setUei("uei.opennms.org/test/findByKey");
+        alarm.setDistPoller(distPoller);
+        alarm.setCounter(1);
+        alarm.setSeverity(OnmsSeverity.WARNING);
+        alarm.setReductionKey("uei.opennms.org/test/findByKey::unique");
+        alarm.setFirstEventTime(new Date());
+        alarm.setLastEventTime(new Date());
+        alarm.setLogMsg("Test find by key");
 
-    @Test
-    void mainMethodExists() throws NoSuchMethodException {
-        var method = AlarmdApplication.class.getMethod("main", String[].class);
-        assertThat(method).isNotNull();
-        assertThat(java.lang.reflect.Modifier.isStatic(method.getModifiers()))
-                .as("main() must be static")
-                .isTrue();
-    }
+        alarmDao.save(alarm);
+        alarmDao.flush();
 
-    // -----------------------------------------------------------------------
-    // Full context-load test — @Disabled until DAO layer is migrated.
-    //
-    // To enable this test, the following must be in place:
-    //   1. JPA-backed implementations of AlarmDao, NodeDao, EventDao, etc.
-    //   2. A Liquibase changelog or Flyway migration that creates the OpenNMS
-    //      schema inside the Testcontainers PostgreSQL instance.
-    //   3. spring-boot-starter-data-jpa on the classpath.
-    //   4. Testcontainers PostgreSQL + Kafka dependencies in test scope.
-    //
-    // Once those are available, uncomment and adapt:
-    //
-    // @org.springframework.boot.test.context.SpringBootTest
-    // @org.testcontainers.junit.jupiter.Testcontainers
-    // class FullContextTest {
-    //
-    //     @org.testcontainers.junit.jupiter.Container
-    //     static PostgreSQLContainer<?> postgres =
-    //             new PostgreSQLContainer<>("postgres:16-alpine");
-    //
-    //     @org.testcontainers.junit.jupiter.Container
-    //     static KafkaContainer kafka =
-    //             new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.6.0"));
-    //
-    //     @org.springframework.test.context.DynamicPropertySource
-    //     static void configureProperties(DynamicPropertyRegistry registry) {
-    //         registry.add("spring.datasource.url", postgres::getJdbcUrl);
-    //         registry.add("spring.datasource.username", postgres::getUsername);
-    //         registry.add("spring.datasource.password", postgres::getPassword);
-    //         registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
-    //     }
-    //
-    //     @Test
-    //     void contextLoads() {
-    //         // If we get here, the Spring Boot context started successfully
-    //     }
-    // }
-    // -----------------------------------------------------------------------
+        OnmsAlarm found = alarmDao.findByReductionKey("uei.opennms.org/test/findByKey::unique");
+        assertThat(found).isNotNull();
+        assertThat(found.getId()).isEqualTo(alarm.getId());
+    }
 }

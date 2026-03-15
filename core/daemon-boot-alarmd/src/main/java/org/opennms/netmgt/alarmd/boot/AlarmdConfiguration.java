@@ -21,6 +21,8 @@
  */
 package org.opennms.netmgt.alarmd.boot;
 
+import java.util.List;
+
 import org.opennms.core.daemon.common.DaemonSmartLifecycle;
 import org.opennms.netmgt.alarmd.Alarmd;
 import org.opennms.netmgt.alarmd.AlarmLifecycleListenerManager;
@@ -29,10 +31,23 @@ import org.opennms.netmgt.alarmd.AlarmPersisterImpl;
 import org.opennms.netmgt.alarmd.NorthbounderManager;
 import org.opennms.netmgt.events.api.AnnotationBasedEventListenerAdapter;
 import org.opennms.netmgt.events.api.EventSubscriptionService;
-import org.springframework.boot.persistence.autoconfigure.EntityScan;
+import org.opennms.netmgt.model.AlarmAssociation;
+import org.opennms.netmgt.model.OnmsAlarm;
+import org.opennms.netmgt.model.OnmsCategory;
+import org.opennms.netmgt.model.OnmsDistPoller;
+import org.opennms.netmgt.model.OnmsIpInterface;
+import org.opennms.netmgt.model.OnmsMemo;
+import org.opennms.netmgt.model.OnmsMonitoredService;
+import org.opennms.netmgt.model.OnmsMonitoringSystem;
+import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.model.OnmsReductionKeyMemo;
+import org.opennms.netmgt.model.OnmsServiceType;
+import org.opennms.netmgt.model.OnmsSnmpInterface;
+import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.orm.jpa.persistenceunit.PersistenceManagedTypes;
 
 /**
  * Spring Boot @Configuration that wires all Alarmd beans.
@@ -47,10 +62,40 @@ import org.springframework.context.annotation.Configuration;
  * <p>The {@link AnnotationBasedEventListenerAdapter} bridges Alarmd's
  * {@code @EventHandler}-annotated methods to the {@link EventSubscriptionService},
  * registering Alarmd as an event listener during {@code afterPropertiesSet()}.</p>
+ *
+ * <p>Entity classes are listed explicitly via a custom {@link PersistenceManagedTypes}
+ * bean instead of using package-based {@code @EntityScan} because the legacy
+ * opennms-model module shares the same package ({@code org.opennms.netmgt.model})
+ * and contains classes with incompatible javax.persistence / Hibernate 3.x
+ * annotations that cause scanning failures with Hibernate 7.</p>
  */
 @Configuration
-@EntityScan(basePackages = "org.opennms.netmgt.model")
 public class AlarmdConfiguration {
+
+    /**
+     * Explicitly lists the Jakarta entity classes to register with Hibernate 7.
+     * This replaces {@code @EntityScan(basePackages = "org.opennms.netmgt.model")}
+     * which would scan ALL classes in the package, including legacy entities
+     * with incompatible javax.persistence annotations.
+     */
+    @Bean
+    public PersistenceManagedTypes persistenceManagedTypes() {
+        return PersistenceManagedTypes.of(
+            OnmsAlarm.class.getName(),
+            AlarmAssociation.class.getName(),
+            OnmsCategory.class.getName(),
+            OnmsDistPoller.class.getName(),
+            OnmsIpInterface.class.getName(),
+            OnmsMemo.class.getName(),
+            OnmsMonitoredService.class.getName(),
+            OnmsMonitoringSystem.class.getName(),
+            OnmsNode.class.getName(),
+            OnmsReductionKeyMemo.class.getName(),
+            OnmsServiceType.class.getName(),
+            OnmsSnmpInterface.class.getName(),
+            OnmsMonitoringLocation.class.getName()
+        );
+    }
 
     @Bean
     public AlarmPersisterImpl alarmPersister() {
