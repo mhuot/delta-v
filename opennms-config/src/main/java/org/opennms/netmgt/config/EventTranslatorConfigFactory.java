@@ -140,7 +140,7 @@ public final class EventTranslatorConfigFactory implements EventTranslatorConfig
     }
 
     private synchronized void unmarshall(InputStream stream) throws IOException {
-        unmarshall(stream, null);
+        unmarshall(stream, m_dbConnFactory);
     }
 
     /**
