@@ -239,7 +239,7 @@ public class OnmsAlarm implements Acknowledgeable, Serializable {
      * @return a {@link java.lang.Integer} object.
      */
     @Id
-    @SequenceGenerator(name="alarmSequence", sequenceName="alarmsNxtId")
+    @SequenceGenerator(name="alarmSequence", sequenceName="alarmsNxtId", allocationSize = 1)
     @GeneratedValue(generator="alarmSequence")
     @Column(name="alarmId", nullable=false)
     public Integer getId() {

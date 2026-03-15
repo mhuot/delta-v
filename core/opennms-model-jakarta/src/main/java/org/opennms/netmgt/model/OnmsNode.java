@@ -225,7 +225,7 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
      */
     @Id
     @Column(name="nodeId", nullable=false)
-    @SequenceGenerator(name="nodeSequence", sequenceName="nodeNxtId")
+    @SequenceGenerator(name="nodeSequence", sequenceName="nodeNxtId", allocationSize = 1)
     @GeneratedValue(generator="nodeSequence")
     @JsonIgnore
     public Integer getId() {
