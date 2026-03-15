@@ -123,7 +123,7 @@ package org.opennms.netmgt.translator.boot;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
+import org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration;
 import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
 
 @SpringBootApplication(
@@ -133,7 +133,7 @@ import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfigur
     },
     exclude = {
         HibernateJpaAutoConfiguration.class,
-        JpaRepositoriesAutoConfiguration.class
+        DataJpaRepositoriesAutoConfiguration.class
     }
 )
 public class EventTranslatorApplication {
@@ -167,18 +167,9 @@ import org.springframework.context.annotation.Configuration;
 public class EventTranslatorBootConfiguration {
 
     /**
-     * Initialize DataSourceFactory with Spring-managed DataSource so that
-     * EventTranslatorConfigFactory.init() can find it via DataSourceFactory.getInstance().
-     */
-    @Bean
-    public DataSourceFactory dataSourceFactoryInit(DataSource dataSource) {
-        DataSourceFactory.setInstance(dataSource);
-        return null; // factory method side-effect only
-    }
-
-    /**
      * Load translation rules from ${opennms.home}/etc/translator-configuration.xml.
-     * Uses the Spring-managed DataSource for SQL value specs.
+     * Sets DataSourceFactory singleton so EventTranslatorConfigFactory.init() can find it,
+     * then initializes the config factory which reads the XML and sets up translation specs.
      */
     @Bean
     public EventTranslatorConfigFactory eventTranslatorConfig(DataSource dataSource) throws Exception {
@@ -239,7 +230,7 @@ spring:
   autoconfigure:
     exclude:
       - org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration
+      - org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration
 
 server:
   port: 8080
