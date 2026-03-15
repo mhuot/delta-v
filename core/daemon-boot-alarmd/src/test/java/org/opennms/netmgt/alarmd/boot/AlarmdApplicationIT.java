@@ -43,6 +43,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionOperations;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -60,6 +61,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @SpringBootTest(classes = AlarmdApplication.class)
 @Testcontainers
 @Import(AlarmdApplicationIT.TestConfig.class)
+@Transactional
 class AlarmdApplicationIT {
 
     @Container

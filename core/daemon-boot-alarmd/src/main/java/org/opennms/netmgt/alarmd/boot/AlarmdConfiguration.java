@@ -44,6 +44,7 @@ import org.opennms.netmgt.model.OnmsReductionKeyMemo;
 import org.opennms.netmgt.model.OnmsServiceType;
 import org.opennms.netmgt.model.OnmsSnmpInterface;
 import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -71,6 +72,17 @@ import org.springframework.orm.jpa.persistenceunit.PersistenceManagedTypes;
  */
 @Configuration
 public class AlarmdConfiguration {
+
+    /**
+     * Use standard JPA naming — table/column names from @Table/@Column annotations
+     * are used as-is, without Spring Boot's default CamelCase→snake_case conversion.
+     * This is required because the OpenNMS schema uses camelCase table names
+     * (e.g., monitoringSystems, ipInterface, ifServices).
+     */
+    @Bean
+    public PhysicalNamingStrategyStandardImpl physicalNamingStrategy() {
+        return new PhysicalNamingStrategyStandardImpl();
+    }
 
     /**
      * Explicitly lists the Jakarta entity classes to register with Hibernate 7.
