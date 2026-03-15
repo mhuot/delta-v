@@ -295,7 +295,10 @@ services:
       SPRING_DATASOURCE_USERNAME: opennms
       SPRING_DATASOURCE_PASSWORD: opennms
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_CONSUMER_GROUP: opennms-eventtranslator
       OPENNMS_HOME: /opt/sentinel
+    volumes:
+      - ./eventtranslator-overlay/etc:/opt/sentinel/etc:ro
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
       interval: 15s
@@ -482,6 +485,7 @@ services:
       SPRING_DATASOURCE_USERNAME: opennms
       SPRING_DATASOURCE_PASSWORD: opennms
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_CONSUMER_GROUP: opennms-alarmd
       OPENNMS_HOME: /opt/sentinel
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
