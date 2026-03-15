@@ -193,14 +193,14 @@ The DAO interfaces in `opennms-dao-api` follow this hierarchy:
 
 ```
 OnmsDao<T, K>                    ← base (16 methods: get, save, delete, findAll, countAll, etc.)
-  └─ LegacyOnmsDao<T, K>        ← adds findMatching(OnmsCriteria), countMatching(OnmsCriteria)
-       └─ AlarmDao               ← adds 8 custom methods (findByReductionKey, getNodeAlarmSummaries, etc.)
-       └─ NodeDao                ← adds many custom methods
-       └─ DistPollerDao          ← adds whoami(), etc.
-       └─ ServiceTypeDao         ← adds findByName()
+  ├─ LegacyOnmsDao<T, K>        ← adds findMatching(OnmsCriteria), countMatching(OnmsCriteria)
+  │    ├─ AlarmDao               ← adds 8 custom methods (findByReductionKey, getNodeAlarmSummaries, etc.)
+  │    └─ NodeDao                ← adds many custom methods
+  ├─ DistPollerDao               ← extends OnmsDao directly; adds whoami(), etc.
+  └─ ServiceTypeDao              ← extends OnmsDao directly; adds findByName()
 ```
 
-`AbstractDaoJpa` implements `OnmsDao<T, K>`. Each JPA DAO must additionally satisfy `LegacyOnmsDao` (throw `UnsupportedOperationException` for `OnmsCriteria` methods) and implement all custom methods declared by the specific DAO interface.
+`AbstractDaoJpa` implements `OnmsDao<T, K>` (including throwing `UnsupportedOperationException` for `findMatching(Criteria)`). `AlarmDaoJpa` and `NodeDaoJpa` must additionally implement `LegacyOnmsDao`'s `findMatching(OnmsCriteria)` and `countMatching(OnmsCriteria)` methods (throw `UnsupportedOperationException`), since `AbstractDaoJpa` does not cover those. `DistPollerDaoJpa` and `ServiceTypeDaoJpa` extend `OnmsDao` directly and do not need `LegacyOnmsDao` methods.
 
 ### DAO Table
 
@@ -213,7 +213,7 @@ OnmsDao<T, K>                    ← base (16 methods: get, save, delete, findAl
 
 **Note:** No `EventDao` or `EventDaoJpa` — `OnmsEvent` does not exist as a JPA entity. Alarmd receives events via Kafka and stores denormalized event fields on `OnmsAlarm`.
 
-DAOs use HQL via `AbstractDaoJpa.find()` and `findUnique()` helpers. `findMatching(OnmsCriteria)` and `countMatching(OnmsCriteria)` from `LegacyOnmsDao` throw `UnsupportedOperationException` — Alarmd does not use the legacy Criteria API.
+DAOs use HQL via `AbstractDaoJpa.find()` and `findUnique()` helpers. `AlarmDaoJpa` and `NodeDaoJpa` implement `LegacyOnmsDao`'s `findMatching(OnmsCriteria)` and `countMatching(OnmsCriteria)` by throwing `UnsupportedOperationException` — Alarmd does not use the legacy Criteria API. `DistPollerDaoJpa` and `ServiceTypeDaoJpa` extend `OnmsDao` directly and do not have these methods.
 
 DAOs are annotated with `@Repository` for Spring auto-detection and `@Transactional` where needed.
 
