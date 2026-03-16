@@ -30,6 +30,7 @@ Shared Kafka Sink bridge infrastructure extracted from `core/daemon-loader-trapd
   - `KAFKA_BOOTSTRAP_SERVERS` — Kafka broker addresses
   - `KAFKA_CONSUMER_GROUP` — per-daemon consumer group ID
   - Additional Kafka consumer properties via `KAFKA_SINK_*` prefix
+  - Note: replaces legacy `org.opennms.core.ipc.sink.kafka.*` system properties with Spring-style env vars for consistency with the Boot 4 approach
 
 - **`LocalMessageConsumerManager`** — Extends `AbstractMessageConsumerManager`. Routes deserialized messages to registered `MessageConsumer` implementations. No remote transport — all in-process dispatch.
 
@@ -60,7 +61,7 @@ Spring Boot 4.0.3 Trapd application.
 
 - **`TrapdConfiguration`** — Loads `trapd-configuration.xml` via `TrapdConfigFactory`, creates `TrapdConfigBean`. Creates `TrapSinkModule` bean (with `DistPollerDao` for system ID/location). Instantiates `TrapSinkConsumer` as a `@Bean` with constructor injection of all 6 dependencies (replacing `@Autowired` field injection). The `TrapSinkConsumer` class in `features/events/traps/` is NOT modified — instead, the `@Bean` method sets fields via setters or constructs a subclass. Creates `EventCreator` (with `InterfaceToNodeCache` and `EventConfDao`).
 
-- **`JdbcEventConfDao`** — JDBC-based implementation of `EventConfDao` (new class in daemon-boot-trapd). Loads event definitions from the `event_conf_event` table in PostgreSQL on startup. Implements `findByEvent(Event)` for UEI matching, severity, alarm-data, logmsg lookup. Refreshed periodically via `@Scheduled`. This replaces the monolith's `DefaultEventConfDao` which depends on the full config system. Same approach as `EventConfEnrichmentService` but implements the `EventConfDao` interface that `EventCreator` and `TrapSinkConsumer` require.
+- **`JdbcEventConfDao`** — JDBC-based implementation of `EventConfDao` (new class in daemon-boot-trapd). Loads event definitions from the `eventconf_events` table in PostgreSQL on startup. Implements `findByEvent(Event)` for UEI matching, severity, alarm-data, logmsg lookup. Refreshed periodically via `@Scheduled`. This replaces the monolith's `DefaultEventConfDao` which depends on the full config system. Same approach as `EventConfEnrichmentService` but implements the `EventConfDao` interface that `EventCreator` and `TrapSinkConsumer` require.
 
 - **`JdbcInterfaceToNodeCache`** — JDBC-based cache implementation:
   - Startup query (JOINs through node for location):
