@@ -37,6 +37,8 @@
     <module>daemon-sink-kafka</module>
     <module>daemon-boot-alarmd</module>
     <module>daemon-boot-trapd</module>
+    <module>daemon-boot-eventtranslator</module>
+    <module>opennms-model-jakarta</module>
     <module>db</module>
     <module>db-install</module>
     <module>health</module>
@@ -69,10 +71,8 @@
     <module>daemon-loader-shared</module>
     <module>daemon-loader-collectd</module>
     <module>daemon-loader-discovery</module>
-    <module>daemon-loader-eventtranslator</module>
     <module>daemon-loader-pollerd</module>
     <module>daemon-loader-syslogd</module>
-    <module>daemon-loader-ticketer</module>
     <module>daemon-loader-enlinkd</module>
     <module>daemon-loader-provisiond</module>
     <module>daemon-loader-scriptd</module>

@@ -273,67 +273,34 @@ services:
       retries: 20
       start_period: 60s
 
-  ticketer:
-    profiles: [full]
-    image: opennms/daemon-deltav:${VERSION}
-    container_name: delta-v-ticketer
-    hostname: ticketer
-    depends_on:
-      db-init:
-        condition: service_completed_successfully
-      kafka:
-        condition: service_healthy
-    environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_USER: opennms
-      POSTGRES_PASSWORD: opennms
-      POSTGRES_DB: opennms
-      JAVA_OPTS: >-
-        -Xms256m -Xmx512m
-        -XX:MaxMetaspaceSize=256m
-        -Djava.security.egd=file:/dev/./urandom
-        -Dorg.opennms.tsid.node-id=12
-    volumes:
-      - ticketer-data:/opt/sentinel/data
-      - ./ticketer-overlay/etc:/opt/sentinel-etc-overlay:ro
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf -u admin:admin http://localhost:8181/sentinel/rest/health/probe || exit 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 20
-      start_period: 60s
 
   eventtranslator:
     profiles: [passive, full]
     image: opennms/daemon-deltav:${VERSION}
     container_name: delta-v-eventtranslator
     hostname: eventtranslator
+    entrypoint: []
+    command: ["java", "-Xms256m", "-Xmx512m", "-jar", "/opt/daemon-boot-eventtranslator.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
       kafka:
         condition: service_healthy
     environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_USER: opennms
-      POSTGRES_PASSWORD: opennms
-      POSTGRES_DB: opennms
-      JAVA_OPTS: >-
-        -Xms256m -Xmx512m
-        -XX:MaxMetaspaceSize=256m
-        -Djava.security.egd=file:/dev/./urandom
-        -Dorg.opennms.tsid.node-id=13
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
+      SPRING_DATASOURCE_USERNAME: opennms
+      SPRING_DATASOURCE_PASSWORD: opennms
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_CONSUMER_GROUP: opennms-eventtranslator
+      OPENNMS_HOME: /opt/sentinel
     volumes:
-      - eventtranslator-data:/opt/sentinel/data
-      - ./eventtranslator-overlay/etc:/opt/sentinel-etc-overlay:ro
+      - ./eventtranslator-overlay/etc:/opt/sentinel/etc:ro
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf -u admin:admin http://localhost:8181/sentinel/rest/health/probe || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 20
-      start_period: 60s
+      start_period: 30s
 
   enlinkd:
     profiles: [full]
@@ -514,6 +481,7 @@ services:
       SPRING_DATASOURCE_USERNAME: opennms
       SPRING_DATASOURCE_PASSWORD: opennms
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_CONSUMER_GROUP: opennms-alarmd
       OPENNMS_HOME: /opt/sentinel
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
@@ -563,8 +531,7 @@ volumes:
   collectd-data:
   discovery-data:
   syslogd-data:
-  ticketer-data:
-  eventtranslator-data:
+
   enlinkd-data:
   scriptd-data:
   provisiond-data:

@@ -126,8 +126,6 @@
     <module>opennms-correlation</module>
     <module>opennms-web-api</module>
     <module>opennms-web-dependencies</module>
-    <module>opennms-webapp</module>
-    <module>opennms-webapp-rest</module>
     <module>opennms-wmi</module>
     <module>opennms-asterisk</module>
     <module>opennms-config-dao</module>
@@ -2350,13 +2348,11 @@
     <profile>
       <id>assemblies</id>
       <modules>
-        <module>opennms-full-assembly</module>
       </modules>
     </profile>
     <profile>
       <id>build-bamboo</id>
       <modules>
-        <module>opennms-full-assembly</module>
       </modules>
     </profile>
     <profile>
@@ -2880,11 +2876,7 @@
         <artifactId>org.opennms.features.springframework-security</artifactId>
         <version>${project.version}</version>
       </dependency>
-      <dependency>
-        <groupId>org.opennms.features.ticketing</groupId>
-        <artifactId>org.opennms.features.ticketing.api</artifactId>
-        <version>${project.version}</version>
-      </dependency>
+
       <dependency>
         <groupId>org.opennms.features.provisioning</groupId>
         <artifactId>org.opennms.features.provisioning.api</artifactId>

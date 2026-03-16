@@ -72,7 +72,7 @@
     <module>../features/telemetry/api</module>
     <module>../features/telemetry/config/api</module>
     <module>../features/telemetry/protocols/bmp/persistence/api</module>
-    <module>../features/ticketing/api</module>
+
     <module>../features/timeformat/api</module>
     <module>../features/topologies/service/api</module>
     <module>../features/topology-map/org.opennms.features.topology.api</module>

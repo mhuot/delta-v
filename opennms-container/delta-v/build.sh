@@ -23,8 +23,8 @@ SKIP_TESTS="${SKIP_TESTS:-true}"
 DOCKER_REGISTRY="${DOCKER_REGISTRY:-docker.io}"
 DOCKER_ORG="${DOCKER_ORG:-opennms}"
 
-# Detect version from POM
-VERSION="$("$REPO_ROOT/.circleci/scripts/pom2version.sh" "$REPO_ROOT/pom.xml")"
+# Detect version from POM (extract <version> from root pom.xml)
+VERSION="$(grep -m1 '<version>' "$REPO_ROOT/pom.xml" | sed 's/.*<version>\(.*\)<\/version>.*/\1/')"
 
 log() { echo "==> $*"; }
 err() { echo "ERROR: $*" >&2; exit 1; }
@@ -67,13 +67,6 @@ do_compile() {
 }
 
 do_assemble() {
-    log "Assembling Horizon distribution (webapp — skipped, use Java 17 if needed)..."
-    # NOTE: assemble.pl builds opennms-full-assembly which is the webapp container.
-    # The webapp stays on Java 17 and is out of scope for the Java 21 daemon upgrade.
-    # Build it separately with Java 17 if needed: JAVA_HOME=<jdk17> ./assemble.pl -p dir -DskipTests
-    # cd "$REPO_ROOT"
-    # ./assemble.pl -Dopennms.home=/opt/opennms -DskipTests -p dir
-
     log "Building Karaf container modules (shared + karaf + features)..."
     cd "$REPO_ROOT"
     ./maven/bin/mvn -DskipTests -pl container/shared,container/karaf,container/features clean install
@@ -111,15 +104,8 @@ do_images() {
     local make_args="DOCKER_REGISTRY=$DOCKER_REGISTRY DOCKER_ORG=$DOCKER_ORG"
     [ "${1:-}" = "push" ] && make_args="$make_args DOCKER_FLAGS=--push"
 
-    # NOTE: Horizon image (webapp) requires full assembly built with Java 17.
-    # Build separately if needed: JAVA_HOME=<jdk17> ./assemble.pl -p dir && make -C opennms-container/core image
-    if [ -f "$REPO_ROOT/opennms-full-assembly/target/opennms-full-assembly-$VERSION-core.tar.gz" ]; then
-        log "Building Horizon image (opennms/horizon:$VERSION)..."
-        cd "$REPO_ROOT/opennms-container/core"
-        make image $make_args
-    else
-        log "Skipping Horizon image (no full assembly found — build with Java 17 if needed)"
-    fi
+    # The legacy Horizon webapp image (opennms-full-assembly) is not built by Delta-V.
+    # Delta-V uses Spring Boot daemons, not the monolithic Karaf webapp.
 
     # The sentinel Makefile tags as opennms/sentinel, but the Delta-V
     # docker-compose expects opennms/daemon. Build then re-tag.
@@ -147,9 +133,6 @@ do_stage_daemon_jars() {
     mkdir -p "$staging"
 
     # Common JARs (all daemon containers)
-    # NOTE: features.xml is copied directly from webapp-overlay/ in Dockerfile.daemon,
-    # not staged here. The patched features.xml must come from the image extraction,
-    # not from container/features/target/classes/features.xml (which is only one input).
     local pairs=(
         "core/event-forwarder-kafka/target/org.opennms.core.event-forwarder-kafka-$VERSION.jar:event-forwarder-kafka.jar"
         "features/events/daemon/target/org.opennms.features.events.daemon-$VERSION.jar:events.daemon.jar"
@@ -162,7 +145,8 @@ do_stage_daemon_jars() {
         "core/daemon-loader-perspectivepoller/target/org.opennms.core.daemon-loader-perspectivepoller-$VERSION.jar:daemon-loader-perspectivepoller.jar"
         "core/daemon-loader-telemetryd/target/daemon-loader-telemetryd-$VERSION.jar:daemon-loader-telemetryd.jar"
         # Spring Boot fat JARs (migrated daemons)
-        "core/daemon-boot-alarmd/target/org.opennms.core.daemon-boot-alarmd-$VERSION.jar:daemon-boot-alarmd.jar"
+        "core/daemon-boot-alarmd/target/org.opennms.core.daemon-boot-alarmd-$VERSION-boot.jar:daemon-boot-alarmd.jar"
+        "core/daemon-boot-eventtranslator/target/org.opennms.core.daemon-boot-eventtranslator-$VERSION-boot.jar:daemon-boot-eventtranslator.jar"
         # Special JARs (EventTranslator split-package fix, Alarmd, Passive status)
         "opennms-config/target/opennms-config-$VERSION.jar:opennms-config.jar"
         "opennms-util/target/opennms-util-$VERSION.jar:opennms-util.jar"
@@ -228,34 +212,6 @@ do_deltav_images() {
     docker images --format "  {{.Repository}}:{{.Tag}}\t{{.Size}}" | grep -E "deltav" | head -10
 }
 
-do_webapp_overlay() {
-    log "Preparing webapp overlay..."
-    local overlay_dir="$SCRIPT_DIR/webapp-jetty-webinf-overlay"
-    mkdir -p "$overlay_dir/lib" "$overlay_dir/menu"
-
-    # Copy updated webapp JARs.
-    # opennms-webapp produces a WAR — the JAR is inside the exploded WAR.
-    local webapp_jar="$REPO_ROOT/opennms-webapp/target/opennms-webapp-$VERSION/WEB-INF/lib/opennms-webapp-$VERSION.jar"
-    local rest_jar="$REPO_ROOT/opennms-webapp-rest/target/opennms-webapp-rest-$VERSION.jar"
-    if [ -f "$webapp_jar" ]; then
-        cp "$webapp_jar" "$overlay_dir/lib/"
-    else
-        log "WARNING: webapp JAR not found at $webapp_jar — run './build.sh compile' first"
-    fi
-    [ -f "$rest_jar" ] && cp "$rest_jar" "$overlay_dir/lib/"
-
-    # Copy dispatcher-servlet.xml
-    local servlet_xml="$REPO_ROOT/opennms-webapp/src/main/webapp/WEB-INF/dispatcher-servlet.xml"
-    [ -f "$servlet_xml" ] && cp "$servlet_xml" "$overlay_dir/"
-
-    # Copy menu templates
-    local menu_src="$REPO_ROOT/ui/src/menu/dist-menu"
-    if [ -d "$menu_src" ]; then
-        cp "$menu_src"/menu-template*.json "$overlay_dir/menu/" 2>/dev/null || true
-    fi
-
-    log "Webapp overlay prepared at $overlay_dir"
-}
 
 usage() {
     cat <<'USAGE'
@@ -264,10 +220,9 @@ Usage: ./build.sh [command]
 Commands:
   (none)    Full build: compile + assemble + images + deltav
   compile   Compile only (Maven)
-  assemble  Assemble distributions (Horizon + Daemon + Alarmd)
+  assemble  Assemble distributions (Daemon + Alarmd + Minion + Sentinel)
   images    Build base Docker images only (requires prior assembly)
   deltav    Build Delta-V layered images (stages JARs into derived images)
-  overlay   Prepare webapp overlay files
   push      Build and push images to registry
   clean     Remove named Docker volumes (fresh start)
   help      Show this help
@@ -300,7 +255,6 @@ main() {
         all)
             do_compile
             do_assemble
-            do_webapp_overlay
             do_images
             do_deltav_images
             log "Build complete! Run: cd $SCRIPT_DIR && docker compose up -d"
@@ -317,13 +271,9 @@ main() {
         deltav)
             do_deltav_images
             ;;
-        overlay)
-            do_webapp_overlay
-            ;;
         push)
             do_compile
             do_assemble
-            do_webapp_overlay
             do_images push
             do_deltav_images
             ;;

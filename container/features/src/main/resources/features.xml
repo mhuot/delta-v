@@ -783,14 +783,7 @@
         <feature>opennms-core-ipc-twin-common</feature>
         <bundle>mvn:org.opennms.features.events/org.opennms.features.events.traps/${project.version}</bundle>
     </feature>
-    <feature name="tsrm-troubleticketer" version="${project.version}" description="OpenNMS :: Features :: Ticketing :: Tivoli Service Request Manager (TSRM)">
-        <feature version="${cxfVersion}">cxf-jaxws</feature>
-        <feature>javax.servlet</feature>
-        <!-- early start-level to override jettison version in 3rd-party feature files -->
-        <bundle start-level="${earlyStartLevel}">mvn:org.codehaus.jettison/jettison/${jettisonVersion}</bundle>
-        <bundle>mvn:org.opennms.features.ticketing/org.opennms.features.ticketing.api/${project.version}</bundle>
-        <bundle>mvn:org.opennms.features/opennms-integration-tsrm/${project.version}</bundle>
-    </feature>
+
     <feature name="eif-adapter" version="${project.version}" description="OpenNMS :: Features :: EIF Adapter">
         <feature>camel-core</feature>
         <feature>camel-blueprint</feature>
@@ -1559,18 +1552,7 @@
         <bundle>mvn:org.opennms.features.vaadin-components/core/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.vaadin-components/widgetset/${project.version}</bundle>
     </feature>
-    <feature name="jira-troubleticketer" version="${project.version}" description="OpenNMS :: Features :: Ticketing :: JIRA">
-        <details>OpenNMS is the world's first enterprise grade network management platform developed under the open source model. It consists of a community supported open-source project as well as a commercial services, training and support organization.</details>
-        <bundle>mvn:org.opennms.features/jira-troubleticketer/${project.version}</bundle>
-        <bundle>mvn:org.opennms.features.ticketing/org.opennms.features.ticketing.api/${project.version}</bundle>
-        <bundle>mvn:org.opennms.core/org.opennms.core.lib/${project.version}</bundle>
-        <bundle>mvn:joda-time/joda-time/${jodaTimeVersion}</bundle>
-        <bundle>mvn:org.opennms.features/jira-client/${project.version}</bundle>
-    </feature>
-    <feature name="opennms-inmemory-ticketer" version="${project.version}" description="OpenNMS :: Features :: Ticketing :: InMemory">
-        <bundle>mvn:org.opennms.features.ticketing/org.opennms.features.ticketing.inmemory/${project.version}</bundle>
-        <bundle>mvn:org.opennms.features.ticketing/org.opennms.features.ticketing.api/${project.version}</bundle>
-    </feature>
+
     <feature name="datachoices" version="${project.version}" description="OpenNMS :: Features :: Data Choices">
         <details>OpenNMS is the world's first enterprise grade network management platform developed under the open source model. It consists of a community supported open-source project as well as a commercial services, training and support organization.</details>
         <feature prerequisite="true">shell-compat</feature>
@@ -2240,30 +2222,6 @@
         <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-syslogd/${project.version}</bundle>
     </feature>
 
-    <!-- Karaf-only TroubleTicketer: loads TroubleTicketer daemon without Manager/Eventd -->
-    <feature name="opennms-daemon-ticketer" version="${project.version}"
-             description="OpenNMS :: Daemon Loader :: TroubleTicketer">
-        <feature>opennms-spring-extender</feature>
-        <feature>opennms-event-forwarder-kafka</feature>
-        <feature>opennms-distributed-core-impl</feature>
-        <feature>opennms-persistence</feature>
-        <!-- API bundle for ticketing plugin interface (onmsgi:reference proxy) -->
-        <bundle>mvn:org.opennms.features.ticketing/org.opennms.features.ticketing.api/${project.version}</bundle>
-        <bundle>mvn:org.opennms.features.ticketing/org.opennms.features.ticketing.daemon/${project.version}</bundle>
-        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-ticketer/${project.version}</bundle>
-    </feature>
-
-    <!-- Karaf-only EventTranslator: loads EventTranslator daemon without Manager/Eventd -->
-    <feature name="opennms-daemon-eventtranslator" version="${project.version}"
-             description="OpenNMS :: Daemon Loader :: EventTranslator">
-        <feature>opennms-spring-extender</feature>
-        <feature>opennms-event-forwarder-kafka</feature>
-        <feature>opennms-distributed-core-impl</feature>
-        <feature>opennms-persistence</feature>
-        <feature>opennms-config</feature>
-        <bundle>mvn:org.opennms/opennms-services/${project.version}</bundle>
-        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-eventtranslator/${project.version}</bundle>
-    </feature>
 
     <!-- Karaf-only Enlinkd: loads EnhancedLinkd daemon without Manager/Eventd.
          Discovers network topology (LLDP, CDP, OSPF, IS-IS, Bridge) via SNMP. -->
