@@ -21,7 +21,11 @@ management:
       show-details: always
 
 opennms:
-  home: ${OPENNMS_HOME:/opt/opennms}
+  home: ${OPENNMS_HOME:/opt/deltav}
+  instance:
+    id: ${OPENNMS_INSTANCE_ID:OpenNMS}
+  tsid:
+    node-id: ${OPENNMS_TSID_NODE_ID:0}
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
     event-topic: ${KAFKA_EVENT_TOPIC:opennms-fault-events}
@@ -30,6 +34,8 @@ opennms:
   rpc:
     kafka:
       enabled: ${RPC_KAFKA_ENABLED:true}
+      bootstrap-servers: ${RPC_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+      force-remote: ${RPC_KAFKA_FORCE_REMOTE:true}
   daemon:
     interface-to-node-cache:
       refresh-interval-ms: ${INTERFACE_NODE_CACHE_REFRESH_MS:300000}

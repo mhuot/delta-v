@@ -12,6 +12,7 @@ import org.opennms.netmgt.dao.api.DistPollerDao;
 import org.opennms.netmgt.dao.api.InterfaceToNodeCache;
 import org.opennms.netmgt.provision.LocationAwareDnsLookupClient;
 import org.opennms.netmgt.syslogd.SyslogSinkConsumer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -26,6 +27,9 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class SyslogdConfiguration {
+
+    @Value("${opennms.syslogd.dnscache.config:maximumSize=1000,expireAfterWrite=8h}")
+    private String dnsCacheConfig;
 
     @Bean
     public SyslogdConfig syslogdConfig() throws Exception {
@@ -57,6 +61,9 @@ public class SyslogdConfiguration {
 
     @Bean
     public SyslogSinkConsumer syslogSinkConsumer(MetricRegistry metricRegistry) {
+        // Bridge DNS cache config for SyslogSinkConsumer constructor
+        System.setProperty("org.opennms.netmgt.syslogd.dnscache.config", dnsCacheConfig);
+
         // SyslogSinkConsumer implements InitializingBean -- Spring calls
         // afterPropertiesSet() after @Autowired injection completes.
         // afterPropertiesSet() registers consumer with MessageConsumerManager,

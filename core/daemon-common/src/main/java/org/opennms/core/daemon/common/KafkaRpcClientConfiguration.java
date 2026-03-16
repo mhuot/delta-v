@@ -27,6 +27,9 @@ import org.opennms.core.ipc.rpc.kafka.KafkaRpcClientFactory;
 import org.opennms.core.rpc.utils.RpcTargetHelper;
 import org.opennms.core.tracing.api.TracerRegistry;
 import org.opennms.netmgt.dao.api.DistPollerDao;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,17 +40,22 @@ import org.springframework.context.annotation.Configuration;
  * <p>Shared by all daemons that send Kafka RPC requests to Minions:
  * Discovery, Pollerd, Collectd, Enlinkd, PerspectivePoller, Provisiond.</p>
  *
- * <p>Replaces the shared {@code kafka-rpc-client-factory.xml} used by
- * Karaf daemon loaders.</p>
- *
- * <p>{@code KafkaRpcClientFactory} reads bootstrap servers from the system
- * property {@code org.opennms.core.ipc.rpc.kafka.bootstrap.servers}.
- * The Docker command must include
- * {@code -Dorg.opennms.core.ipc.rpc.kafka.bootstrap.servers=kafka:9092}.</p>
+ * <p>Bridges Spring properties to system properties for legacy
+ * {@code KafkaRpcClientFactory} which reads configuration via
+ * {@code OnmsKafkaConfigProvider} (system property scan) and
+ * {@code Boolean.getBoolean()} calls.</p>
  */
 @Configuration
 @ConditionalOnProperty(name = "opennms.rpc.kafka.enabled", havingValue = "true", matchIfMissing = false)
 public class KafkaRpcClientConfiguration {
+
+    private static final Logger LOG = LoggerFactory.getLogger(KafkaRpcClientConfiguration.class);
+
+    @Value("${opennms.rpc.kafka.bootstrap-servers:kafka:9092}")
+    private String rpcBootstrapServers;
+
+    @Value("${opennms.rpc.kafka.force-remote:true}")
+    private String forceRemote;
 
     @Bean
     public TracerRegistry tracerRegistry() {
@@ -64,16 +72,14 @@ public class KafkaRpcClientConfiguration {
         return new RpcTargetHelper();
     }
 
-    /**
-     * Conditional on {@code opennms.rpc.kafka.enabled=true} to avoid breaking
-     * daemons that don't use RPC (Trapd, Syslogd). Without the system property
-     * {@code org.opennms.core.ipc.rpc.kafka.bootstrap.servers}, the
-     * KafkaProducer constructor in {@code start()} will throw.
-     */
     @Bean(initMethod = "start", destroyMethod = "stop")
     @ConditionalOnProperty(name = "opennms.rpc.kafka.enabled", havingValue = "true", matchIfMissing = false)
     public KafkaRpcClientFactory rpcClientFactory(DistPollerDao distPollerDao,
                                                    MetricRegistry kafkaRpcMetricRegistry) {
+        System.setProperty("org.opennms.core.ipc.rpc.kafka.bootstrap.servers", rpcBootstrapServers);
+        System.setProperty("org.opennms.core.ipc.rpc.force-remote", forceRemote);
+        LOG.info("Bridged RPC Kafka bootstrap.servers={}, force-remote={}", rpcBootstrapServers, forceRemote);
+
         var factory = new KafkaRpcClientFactory();
         factory.setLocation(distPollerDao.whoami().getLocation());
         factory.setMetrics(kafkaRpcMetricRegistry);
