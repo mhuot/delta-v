@@ -39,6 +39,7 @@
     <module>daemon-boot-trapd</module>
     <module>daemon-boot-syslogd</module>
     <module>daemon-boot-eventtranslator</module>
+    <module>daemon-boot-discovery</module>
     <module>opennms-model-jakarta</module>
     <module>db</module>
     <module>db-install</module>
@@ -71,7 +72,6 @@
     <module>encrypt-util</module>
     <module>daemon-loader-shared</module>
     <module>daemon-loader-collectd</module>
-    <module>daemon-loader-discovery</module>
     <module>daemon-loader-pollerd</module>
     <module>daemon-loader-enlinkd</module>
     <module>daemon-loader-provisiond</module>
