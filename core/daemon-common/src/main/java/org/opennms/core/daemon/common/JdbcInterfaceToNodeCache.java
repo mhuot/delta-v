@@ -70,6 +70,9 @@ public class JdbcInterfaceToNodeCache implements InterfaceToNodeCache {
 
     @Override
     public Optional<Entry> getFirst(String location, InetAddress addr) {
+        if (location == null || addr == null) {
+            return Optional.empty();
+        }
         return Optional.ofNullable(cache.get(new LocationIpKey(location, addr)));
     }
 
