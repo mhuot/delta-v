@@ -183,9 +183,7 @@ services:
     container_name: delta-v-discovery
     hostname: discovery
     entrypoint: []
-    command: ["java", "-Xms256m", "-Xmx512m", "-Dopennms.home=/opt/sentinel",
-              "-Dorg.opennms.core.ipc.rpc.kafka.bootstrap.servers=kafka:9092",
-              "-jar", "/opt/daemon-boot-discovery.jar"]
+    command: ["java", "-Xms256m", "-Xmx512m", "-jar", "/opt/daemon-boot-discovery.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
@@ -196,10 +194,14 @@ services:
       SPRING_DATASOURCE_USERNAME: opennms
       SPRING_DATASOURCE_PASSWORD: opennms
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      OPENNMS_HOME: /opt/sentinel
+      OPENNMS_HOME: /opt/deltav
       INTERFACE_NODE_CACHE_REFRESH_MS: "15000"
+      OPENNMS_INSTANCE_ID: OpenNMS
+      OPENNMS_TSID_NODE_ID: "24"
+      RPC_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      RPC_KAFKA_FORCE_REMOTE: "true"
     volumes:
-      - ./discovery-overlay/etc:/opt/sentinel/etc:ro
+      - ./discovery-overlay/etc:/opt/deltav/etc:ro
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
       interval: 15s
@@ -228,6 +230,8 @@ services:
       KAFKA_SINK_CONSUMER_GROUP: opennms-trapd-sink
       OPENNMS_HOME: /opt/deltav
       INTERFACE_NODE_CACHE_REFRESH_MS: "15000"
+      OPENNMS_INSTANCE_ID: OpenNMS
+      OPENNMS_TSID_NODE_ID: "20"
     volumes:
       - ./trapd-overlay/etc:/opt/deltav/etc:ro
     healthcheck:
@@ -258,6 +262,8 @@ services:
       KAFKA_SINK_CONSUMER_GROUP: opennms-syslogd-sink
       OPENNMS_HOME: /opt/deltav
       INTERFACE_NODE_CACHE_REFRESH_MS: "15000"
+      OPENNMS_INSTANCE_ID: OpenNMS
+      OPENNMS_TSID_NODE_ID: "21"
     volumes:
       - ./syslogd-overlay/etc:/opt/deltav/etc:ro
     healthcheck:
@@ -287,6 +293,8 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_CONSUMER_GROUP: opennms-eventtranslator
       OPENNMS_HOME: /opt/deltav
+      OPENNMS_INSTANCE_ID: OpenNMS
+      OPENNMS_TSID_NODE_ID: "22"
     volumes:
       - ./eventtranslator-overlay/etc:/opt/deltav/etc:ro
     healthcheck:
@@ -477,6 +485,8 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_CONSUMER_GROUP: opennms-alarmd
       OPENNMS_HOME: /opt/deltav
+      OPENNMS_INSTANCE_ID: OpenNMS
+      OPENNMS_TSID_NODE_ID: "23"
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
       interval: 15s
