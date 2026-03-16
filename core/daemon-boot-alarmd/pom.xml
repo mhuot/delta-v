@@ -269,55 +269,9 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- opennms-config — provides DefaultEventConfDao for alarm-data enrichment.
-             opennms-config-model is intentionally NOT excluded because DefaultEventConfDao
-             and its eventconf.* bindings (Event, AlarmData, etc.) live in that module.
-             opennms-config-model only contains JAXB eventconf classes, not javax.persistence
-             entities, so it does not conflict with Hibernate 7. -->
-        <dependency>
-            <groupId>org.opennms</groupId>
-            <artifactId>opennms-config</artifactId>
-            <version>${project.version}</version>
-            <exclusions>
-                <!-- Exclude ALL old ServiceMix Spring 4.2.x bundles — Spring Boot 4 provides Spring 7.
-                     The servicemix spring-webmvc jar references ThemeSource which was removed in
-                     Spring 6, causing NoClassDefFoundError at startup. -->
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-aop</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-aspects</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context-support</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-core</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-expression</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-instrument</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-jdbc</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-jms</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-messaging</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-orm</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-oxm</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-tx</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-web</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-webmvc</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-security-core</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-security-config</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-security-web</artifactId></exclusion>
-                <!-- Exclude old SLF4J — Spring Boot 4 provides SLF4J 2.x -->
-                <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion>
-                <exclusion><groupId>org.slf4j</groupId><artifactId>jcl-over-slf4j</artifactId></exclusion>
-                <exclusion><groupId>org.slf4j</groupId><artifactId>log4j-over-slf4j</artifactId></exclusion>
-                <!-- Exclude old Hibernate 3.x -->
-                <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
-                <!-- Exclude Karaf/OSGi logging -->
-                <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-log4j2</artifactId></exclusion>
-                <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
-                <!-- Exclude commons-logging — Spring Boot uses jcl-over-slf4j -->
-                <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
-                <!-- Exclude opennms-model — only needed by opennms-config for Hibernate DAOs,
-                     not needed for DefaultEventConfDao alone, and the legacy javax.persistence
-                     entities in opennms-model can be a source of scanner conflicts -->
-                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
-            </exclusions>
-        </dependency>
+        <!-- opennms-config is provided transitively via daemon-common which owns
+             EventConfEnrichmentService and declares the opennms-config dependency
+             with appropriate exclusions. No direct dep needed here. -->
 
         <!-- javax.persistence API — needed at runtime so that Spring's class scanner
              can read legacy entity bytecodes without NoClassDefFoundError.
