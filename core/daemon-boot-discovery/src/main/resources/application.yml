@@ -1,0 +1,40 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/opennms}
+    username: ${SPRING_DATASOURCE_USERNAME:opennms}
+    password: ${SPRING_DATASOURCE_PASSWORD:opennms}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+
+opennms:
+  home: ${OPENNMS_HOME:/opt/opennms}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    event-topic: ${KAFKA_EVENT_TOPIC:opennms-fault-events}
+    consumer-group: ${KAFKA_CONSUMER_GROUP:opennms-discovery}
+    poll-timeout-ms: ${KAFKA_POLL_TIMEOUT_MS:100}
+  rpc:
+    kafka:
+      enabled: ${RPC_KAFKA_ENABLED:true}
+  daemon:
+    interface-to-node-cache:
+      refresh-interval-ms: ${INTERFACE_NODE_CACHE_REFRESH_MS:300000}
+
+logging:
+  level:
+    org.opennms: INFO
+    org.opennms.netmgt.discovery: INFO

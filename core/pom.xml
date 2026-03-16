@@ -39,6 +39,7 @@
     <module>daemon-boot-trapd</module>
     <module>daemon-boot-syslogd</module>
     <module>daemon-boot-eventtranslator</module>
+    <module>daemon-boot-discovery</module>
     <module>opennms-model-jakarta</module>
     <module>db</module>
     <module>db-install</module>
