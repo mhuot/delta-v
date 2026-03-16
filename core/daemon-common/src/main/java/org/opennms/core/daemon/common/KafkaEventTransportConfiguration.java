@@ -82,6 +82,7 @@ public class KafkaEventTransportConfiguration {
     }
 
     @Bean
+    @org.springframework.context.annotation.Primary
     public EventIpcManager eventIpcManager(KafkaEventForwarder forwarder,
                                            KafkaEventSubscriptionService subscriptionService) {
         return new KafkaEventIpcManagerAdapter(forwarder, subscriptionService);
