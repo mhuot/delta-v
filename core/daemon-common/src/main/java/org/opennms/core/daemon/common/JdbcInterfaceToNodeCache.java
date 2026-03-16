@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.trapd.boot;
+package org.opennms.core.daemon.common;
 
 import java.net.InetAddress;
 import java.util.Objects;
@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.sql.DataSource;
 
+import org.opennms.netmgt.dao.api.AbstractInterfaceToNodeCache;
 import org.opennms.netmgt.dao.api.InterfaceToNodeCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,7 +105,7 @@ public class JdbcInterfaceToNodeCache implements InterfaceToNodeCache {
         return cache.size();
     }
 
-    @Scheduled(fixedDelayString = "${opennms.trapd.interface-to-node-cache.refresh-interval-ms:300000}",
+    @Scheduled(fixedDelayString = "${opennms.daemon.interface-to-node-cache.refresh-interval-ms:300000}",
                initialDelayString = "0")
     public void refresh() {
         if (jdbc == null) return;
@@ -129,6 +130,7 @@ public class JdbcInterfaceToNodeCache implements InterfaceToNodeCache {
 
         cache.clear();
         cache.putAll(newCache);
+        AbstractInterfaceToNodeCache.setInstance(this);
         LOG.info("InterfaceToNodeCache refreshed: {} entries in {} ms",
                 cache.size(), System.currentTimeMillis() - start);
     }

@@ -29,7 +29,7 @@ opennms:
     poll-timeout-ms: ${KAFKA_POLL_TIMEOUT_MS:100}
     sink:
       consumer-group: ${KAFKA_SINK_CONSUMER_GROUP:opennms-trapd-sink}
-  trapd:
+  daemon:
     interface-to-node-cache:
       refresh-interval-ms: ${INTERFACE_NODE_CACHE_REFRESH_MS:300000}
 
