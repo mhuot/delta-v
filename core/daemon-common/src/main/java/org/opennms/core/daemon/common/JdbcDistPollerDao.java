@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.trapd.boot;
+package org.opennms.core.daemon.common;
 
 import java.util.List;
 
@@ -30,9 +30,7 @@ import org.opennms.netmgt.dao.api.DistPollerDao;
 import org.opennms.netmgt.model.OnmsDistPoller;
 import org.opennms.netmgt.model.OnmsMonitoringSystem;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
 
-@Component
 public class JdbcDistPollerDao implements DistPollerDao {
 
     private final JdbcTemplate jdbc;
@@ -63,7 +61,7 @@ public class JdbcDistPollerDao implements DistPollerDao {
         return localPoller;
     }
 
-    // Remaining DAO methods — not needed by Trapd, throw UnsupportedOperationException
+    // Remaining DAO methods — not needed by Spring Boot daemons, throw UnsupportedOperationException
     @Override public OnmsDistPoller get(String id) { throw new UnsupportedOperationException(); }
     @Override public OnmsDistPoller load(String id) { throw new UnsupportedOperationException(); }
     @Override public String save(OnmsDistPoller entity) { throw new UnsupportedOperationException(); }

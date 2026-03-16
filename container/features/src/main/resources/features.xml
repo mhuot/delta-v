@@ -2207,21 +2207,6 @@
         <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-shared/${project.version}</bundle>
     </feature>
 
-    <!-- Karaf-only Syslogd: loads Syslogd daemon (UDP :10514) without Manager/Eventd -->
-    <feature name="opennms-daemon-syslogd" version="${project.version}"
-             description="OpenNMS :: Daemon Loader :: Syslogd">
-        <feature>opennms-spring-extender</feature>
-        <feature>opennms-event-forwarder-kafka</feature>
-        <feature>opennms-distributed-core-impl</feature>
-        <feature>opennms-persistence</feature>
-        <feature>opennms-config</feature>
-        <!-- API bundles needed by syslog bundle imports and onmsgi:reference proxies -->
-        <bundle>mvn:org.opennms/opennms-provision-api/${project.version}</bundle>
-        <bundle>mvn:org.opennms.core.ipc.sink/org.opennms.core.ipc.sink.api/${project.version}</bundle>
-        <bundle>mvn:org.opennms.features.events/org.opennms.features.events.syslog/${project.version}</bundle>
-        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-syslogd/${project.version}</bundle>
-    </feature>
-
 
     <!-- Karaf-only Enlinkd: loads EnhancedLinkd daemon without Manager/Eventd.
          Discovers network topology (LLDP, CDP, OSPF, IS-IS, Bridge) via SNMP. -->

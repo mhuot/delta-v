@@ -15,7 +15,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,prometheus
+        include: health
   endpoint:
     health:
       show-details: always
@@ -25,10 +25,10 @@ opennms:
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
     event-topic: ${KAFKA_EVENT_TOPIC:opennms-fault-events}
-    consumer-group: ${KAFKA_CONSUMER_GROUP:opennms-trapd}
+    consumer-group: ${KAFKA_CONSUMER_GROUP:opennms-syslogd}
     poll-timeout-ms: ${KAFKA_POLL_TIMEOUT_MS:100}
     sink:
-      consumer-group: ${KAFKA_SINK_CONSUMER_GROUP:opennms-trapd-sink}
+      consumer-group: ${KAFKA_SINK_CONSUMER_GROUP:opennms-syslogd-sink}
   daemon:
     interface-to-node-cache:
       refresh-interval-ms: ${INTERFACE_NODE_CACHE_REFRESH_MS:300000}

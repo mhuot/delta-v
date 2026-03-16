@@ -41,8 +41,13 @@ public class TrapdConfiguration {
     }
 
     @Bean
+    public DistPollerDao distPollerDao(DataSource dataSource) {
+        return new org.opennms.core.daemon.common.JdbcDistPollerDao(dataSource);
+    }
+
+    @Bean
     public InterfaceToNodeCache interfaceToNodeCache(DataSource dataSource) {
-        return new JdbcInterfaceToNodeCache(dataSource);
+        return new org.opennms.core.daemon.common.JdbcInterfaceToNodeCache(dataSource);
     }
 
     @Bean
