@@ -50,12 +50,19 @@ public class TrapdConfiguration {
         return new TrapSinkModule(config, distPollerDao.whoami());
     }
 
-    @Bean
+    /**
+     * Creates the TrapSinkConsumer bean.
+     *
+     * <p>TrapSinkConsumer uses {@code @Autowired} field injection — Spring's
+     * {@code AutowiredAnnotationBeanPostProcessor} handles this.</p>
+     *
+     * <p>IMPORTANT: TrapSinkConsumer uses {@code javax.annotation.PostConstruct}
+     * which Spring Boot 4 (Spring 7 / Jakarta EE) does NOT recognize. Spring 7
+     * only processes {@code jakarta.annotation.PostConstruct}. We use
+     * {@code initMethod} to explicitly trigger {@code init()} after field injection.</p>
+     */
+    @Bean(initMethod = "init")
     public TrapSinkConsumer trapSinkConsumer() {
-        // TrapSinkConsumer uses @Autowired field injection for its 6 dependencies.
-        // Spring's AutowiredAnnotationBeanPostProcessor injects them after construction.
-        // @PostConstruct init() runs after injection, registering with MessageConsumerManager,
-        // which notifies KafkaSinkBridge.setModule(), starting Kafka polling.
         return new TrapSinkConsumer();
     }
 }
