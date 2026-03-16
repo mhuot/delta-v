@@ -13,7 +13,7 @@ Migrate Syslogd to a Spring Boot 4.0.3 microservice. Syslogd consumes syslog mes
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | Kafka Sink bridge | Reuse `daemon-sink-kafka` | Already built and tested during Trapd migration |
-| JDBC infrastructure | Extract to `daemon-common` | `JdbcDistPollerDao`, `JdbcInterfaceToNodeCache`, `JdbcEventConfLoader` needed by both Trapd and Syslogd |
+| JDBC infrastructure | Extract to `daemon-common` | `JdbcDistPollerDao` and `JdbcInterfaceToNodeCache` needed by both Trapd and Syslogd. `JdbcEventConfLoader` stays in Trapd (Syslogd does not use `EventConfDao`). |
 | DNS resolution | Local `InetAddress.getHostName()` | Real `LocationAwareDnsLookupClientRpcImpl` requires full Kafka RPC stack. Local is wrong for private IPs from remote Minion networks — deferred item to have Minion include resolved hostname in Kafka Sink message envelope. |
 | Metrics | Real Dropwizard `MetricRegistry` | `SyslogSinkConsumer` constructor requires it. One-line bean. |
 | UDP listener | Remove | Minion-only ingestion via Kafka Sink |
@@ -26,15 +26,20 @@ Migrate Syslogd to a Spring Boot 4.0.3 microservice. Syslogd consumes syslog mes
 
 Extract from `daemon-boot-trapd` into `daemon-common`:
 - `JdbcDistPollerDao` — reads system identity from `monitoringsystems` table
-- `JdbcInterfaceToNodeCache` — caches (location, IP) → Entry(nodeId, interfaceId) with periodic refresh
-- `JdbcEventConfLoader` — loads eventconf XML from `eventconf_events` + `eventconf_sources` tables into `DefaultEventConfDao`
+- `JdbcInterfaceToNodeCache` — caches (location, IP) → Entry(nodeId, interfaceId) with periodic refresh. Must call `AbstractInterfaceToNodeCache.setInstance(this)` on initialization so that `ConvertToEvent` (which uses the static singleton `AbstractInterfaceToNodeCache.getInstance()`) can resolve node IDs.
 - `JdbcInterfaceToNodeCacheTest` — unit tests move with the class
 
-These classes move from package `org.opennms.netmgt.trapd.boot` to `org.opennms.core.daemon.common`.
+`JdbcEventConfLoader` stays in `daemon-boot-trapd` — Syslogd does not use `EventConfDao` (it matches UEIs via `SyslogdConfig.getUeiList()` directly).
+
+These classes move from package `org.opennms.netmgt.trapd.boot` to `org.opennms.core.daemon.common`. The `@Component` annotation is removed; each daemon wires them via explicit `@Bean` methods in its own `@Configuration` class.
+
+**`@Scheduled` property name generalization:** The `JdbcInterfaceToNodeCache` refresh interval property changes from `opennms.trapd.interface-to-node-cache.refresh-interval-ms` to `opennms.daemon.interface-to-node-cache.refresh-interval-ms`. Both Trapd and Syslogd `application.yml` files must be updated to use the new property name.
 
 ### daemon-boot-trapd (modified)
 
-- Remove `JdbcDistPollerDao.java`, `JdbcInterfaceToNodeCache.java`, `JdbcEventConfLoader.java`, `JdbcInterfaceToNodeCacheTest.java`
+- Remove `JdbcDistPollerDao.java`, `JdbcInterfaceToNodeCache.java`, `JdbcInterfaceToNodeCacheTest.java`
+- `JdbcEventConfLoader` stays (Trapd-specific)
+- Update `JdbcEventConfLoader` `@Scheduled` property from `opennms.trapd.eventconf-refresh-interval-ms` to `opennms.trapd.eventconf-refresh-interval-ms` (no change — this one is correctly Trapd-specific)
 - `TrapdConfiguration` imports from `daemon-common` instead of local classes
 - Verify compilation and tests still pass
 
@@ -50,16 +55,17 @@ Spring Boot 4.0.3 Syslogd application.
 **Configuration classes:**
 
 - **`SyslogdConfiguration`** — wires all Syslogd beans:
-  - `SyslogdConfig` via `SyslogdConfigFactory` (no-arg constructor)
+  - `SyslogdConfig` via `SyslogdConfigFactory` (no-arg constructor, requires `-Dopennms.home` to find `syslogd-configuration.xml`). The overlay must provide `syslogd-configuration.xml` with UEI matching rules.
   - `MetricRegistry` bean (Dropwizard `com.codahale.metrics.MetricRegistry`)
   - `SyslogSinkModule` (with config + distPollerDao)
   - `SyslogSinkConsumer` (constructor takes `MetricRegistry`; `@Autowired` handles remaining 4 fields; `InitializingBean.afterPropertiesSet()` registers with `MessageConsumerManager` — no `initMethod` needed unlike Trapd)
-  - `EventConfDao` via `DefaultEventConfDao` (no-arg constructor)
-  - `InterfaceToNodeCache` via `JdbcInterfaceToNodeCache` (from daemon-common)
+  - `InterfaceToNodeCache` via `JdbcInterfaceToNodeCache` (from daemon-common). **Must call `AbstractInterfaceToNodeCache.setInstance(cache)` after creating the bean** — `ConvertToEvent` at line 162 uses the static singleton `AbstractInterfaceToNodeCache.getInstance()` for node ID resolution. Without this, all syslog events will have no node ID.
 
-- **`LocalDnsLookupClient`** — implements `LocationAwareDnsLookupClient`:
-  - `lookup(hostname, location)` → `CompletableFuture.completedFuture(InetAddress.getByName(hostname).getHostAddress())`
-  - `reverseLookup(ipAddress, location)` → `CompletableFuture.completedFuture(ipAddress.getCanonicalHostName())`
+- **`LocalDnsLookupClient`** — implements `LocationAwareDnsLookupClient` (all 4 methods):
+  - `lookup(String hostname, String location)` → delegates to 3-arg version
+  - `lookup(String hostname, String location, String systemId)` → `CompletableFuture.completedFuture(InetAddress.getByName(hostname).getHostAddress())`
+  - `reverseLookup(InetAddress ipAddress, String location)` → delegates to 3-arg version
+  - `reverseLookup(InetAddress ipAddress, String location, String systemId)` → `CompletableFuture.completedFuture(ipAddress.getCanonicalHostName())`
   - Location and systemId parameters ignored (local resolution only)
   - Known limitation: wrong answers for private IPs from remote Minion networks
 
@@ -93,8 +99,9 @@ Syslogd Spring Boot microservice:
         → for each SyslogMessageDTO:
             → ConvertToEvent (RFC 3164/5424 parsing)
                 → LocalDnsLookupClient.reverseLookup(sourceAddr)
+                → AbstractInterfaceToNodeCache.getInstance() → node ID resolution
                 → SyslogdConfig UEI matching rules
-            → Event with UEI, severity, parameters
+            → Event with UEI, severity, nodeId, parameters
         → EventForwarder.sendNowSync(eventLog)
     → KafkaEventForwarder → opennms-fault-events topic
 ```
@@ -178,6 +185,10 @@ Same established patterns (mandatory):
 - Run Syslogd + Kafka + PostgreSQL + Minion
 - Send syslog via `logger` or `nc` to Minion UDP port
 - Verify event appears on `opennms-fault-events`
+
+## Metrics
+
+`SyslogSinkConsumer` uses Dropwizard `MetricRegistry` for timers (`consumerTimer`, `toEventTimer`, `broadcastTimer`) and DNS cache stats. These are kept as-is via the injected `MetricRegistry` bean. Micrometer/Actuator bridging (to expose via `/actuator/prometheus`) is a future enhancement — not required for initial migration.
 
 ## Deferred Items
 
