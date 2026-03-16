@@ -213,7 +213,7 @@ services:
     container_name: delta-v-trapd
     hostname: trapd
     entrypoint: []
-    command: ["java", "-Xms256m", "-Xmx512m", "-Dopennms.home=/opt/sentinel", "-jar", "/opt/daemon-boot-trapd.jar"]
+    command: ["java", "-Xms256m", "-Xmx512m", "-jar", "/opt/daemon-boot-trapd.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
@@ -226,10 +226,10 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_CONSUMER_GROUP: opennms-trapd
       KAFKA_SINK_CONSUMER_GROUP: opennms-trapd-sink
-      OPENNMS_HOME: /opt/sentinel
+      OPENNMS_HOME: /opt/deltav
       INTERFACE_NODE_CACHE_REFRESH_MS: "15000"
     volumes:
-      - ./trapd-overlay/etc:/opt/sentinel/etc:ro
+      - ./trapd-overlay/etc:/opt/deltav/etc:ro
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
       interval: 15s
@@ -243,7 +243,7 @@ services:
     container_name: delta-v-syslogd
     hostname: syslogd
     entrypoint: []
-    command: ["java", "-Xms256m", "-Xmx512m", "-Dopennms.home=/opt/sentinel", "-jar", "/opt/daemon-boot-syslogd.jar"]
+    command: ["java", "-Xms256m", "-Xmx512m", "-jar", "/opt/daemon-boot-syslogd.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
@@ -256,10 +256,10 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_CONSUMER_GROUP: opennms-syslogd
       KAFKA_SINK_CONSUMER_GROUP: opennms-syslogd-sink
-      OPENNMS_HOME: /opt/sentinel
+      OPENNMS_HOME: /opt/deltav
       INTERFACE_NODE_CACHE_REFRESH_MS: "15000"
     volumes:
-      - ./syslogd-overlay/etc:/opt/sentinel/etc:ro
+      - ./syslogd-overlay/etc:/opt/deltav/etc:ro
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
       interval: 15s
@@ -286,9 +286,9 @@ services:
       SPRING_DATASOURCE_PASSWORD: opennms
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_CONSUMER_GROUP: opennms-eventtranslator
-      OPENNMS_HOME: /opt/sentinel
+      OPENNMS_HOME: /opt/deltav
     volumes:
-      - ./eventtranslator-overlay/etc:/opt/sentinel/etc:ro
+      - ./eventtranslator-overlay/etc:/opt/deltav/etc:ro
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
       interval: 15s
@@ -476,7 +476,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: opennms
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_CONSUMER_GROUP: opennms-alarmd
-      OPENNMS_HOME: /opt/sentinel
+      OPENNMS_HOME: /opt/deltav
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
       interval: 15s

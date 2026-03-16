@@ -31,7 +31,7 @@ management:
       show-details: always
 
 opennms:
-  home: ${OPENNMS_HOME:/opt/opennms}
+  home: ${OPENNMS_HOME:/opt/deltav}
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
     event-topic: ${KAFKA_EVENT_TOPIC:opennms-fault-events}

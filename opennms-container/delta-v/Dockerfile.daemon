@@ -46,6 +46,9 @@ COPY staging/daemon/daemon-boot-alarmd.jar /opt/daemon-boot-alarmd.jar
 COPY staging/daemon/daemon-boot-trapd.jar /opt/daemon-boot-trapd.jar
 COPY staging/daemon/daemon-boot-eventtranslator.jar /opt/daemon-boot-eventtranslator.jar
 
+# Config directory for Spring Boot daemons (distinct from Sentinel's /opt/sentinel/etc)
+RUN mkdir -p /opt/deltav/etc
+
 # ── Special JARs (service-specific but harmless to include in all) ──
 # EventTranslator: split-package fix for opennms-config + opennms-util
 COPY staging/daemon/opennms-config.jar \
