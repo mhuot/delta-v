@@ -39,10 +39,6 @@ public class EventTranslatorBootConfiguration {
 
     @Bean
     public EventTranslatorConfigFactory eventTranslatorConfig(DataSource dataSource) throws Exception {
-        String opennmsHome = System.getProperty("opennms.home",
-                System.getenv().getOrDefault("OPENNMS_HOME", "/opt/sentinel"));
-        System.setProperty("opennms.home", opennmsHome);
-
         DataSourceFactory.setInstance(dataSource);
         EventTranslatorConfigFactory.init();
         return (EventTranslatorConfigFactory) EventTranslatorConfigFactory.getInstance();
