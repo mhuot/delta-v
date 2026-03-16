@@ -49,6 +49,11 @@ public class KafkaSinkBridge implements InitializingBean, DisposableBean {
     }
 
     public void setModule(SinkModule<?, Message> module) {
+        if (this.module != null) {
+            throw new IllegalStateException(
+                "KafkaSinkBridge already bound to module " + this.module.getId()
+                + "; cannot rebind to " + module.getId());
+        }
         this.module = module;
     }
 
@@ -124,6 +129,11 @@ public class KafkaSinkBridge implements InitializingBean, DisposableBean {
         closed.set(true);
         if (consumerThread != null) {
             consumerThread.interrupt();
+            try {
+                consumerThread.join(5000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 }

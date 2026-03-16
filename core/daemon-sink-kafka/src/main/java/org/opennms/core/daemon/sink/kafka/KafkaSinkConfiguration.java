@@ -18,7 +18,7 @@ public class KafkaSinkConfiguration {
         return new LocalMessageConsumerManager();
     }
 
-    @Bean(initMethod = "afterPropertiesSet", destroyMethod = "destroy")
+    @Bean
     public KafkaSinkBridge kafkaSinkBridge(LocalMessageConsumerManager consumerManager) {
         var bridge = new KafkaSinkBridge(consumerManager, bootstrapServers, sinkConsumerGroup);
         consumerManager.setKafkaSinkBridge(bridge);
