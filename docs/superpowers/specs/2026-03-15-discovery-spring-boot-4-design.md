@@ -14,7 +14,7 @@ Migrate Discovery to a Spring Boot 4.0.3 microservice. Discovery periodically sc
 |----------|--------|-----------|
 | RPC client location | Add `KafkaRpcClientConfiguration` to `daemon-common` | 6 daemons share this infrastructure (Discovery, Pollerd, Collectd, Enlinkd, PerspectivePoller, Provisiond). RPC deps are lightweight (no new module needed). |
 | EntityScopeProvider (MATE) | No-op implementation | MATE variable interpolation in discovery detector configs is rare. Deferred to future work. |
-| Service detectors | Empty `ServiceDetectorRegistry` | Ping sweeps work; `<detector>` elements silently ignored. Real detector support deferred. |
+| Service detectors | Reuse `LocalServiceDetectorRegistry` (from `daemon-loader-shared`) | Returns no detectors when none registered. Ping sweeps work; `<detector>` elements silently ignored. Real detector support deferred. |
 | JPA | Excluded | JDBC-only, same as Trapd/Syslogd |
 | Kafka Sink bridge | Not used | Discovery is an active scanner, not a passive consumer. No `daemon-sink-kafka` dependency. |
 | Discovery daemon class | Used with `DaemonSmartLifecycle` | Unlike Trapd/Syslogd, Discovery has real lifecycle (Timer for periodic scans, init/start/stop). |
@@ -25,7 +25,7 @@ Migrate Discovery to a Spring Boot 4.0.3 microservice. Discovery periodically sc
 
 Spring `@Configuration` class that replaces the shared `kafka-rpc-client-factory.xml` used by 6 Karaf daemon loaders. Provides:
 
-- **`KafkaRpcClientFactory`** — creates Kafka RPC clients for sending requests to Minions. Reads bootstrap servers from system property `org.opennms.core.ipc.rpc.kafka.bootstrap.servers`. Has `start()`/`stop()` lifecycle.
+- **`KafkaRpcClientFactory`** — creates Kafka RPC clients for sending requests to Minions. Reads bootstrap servers from system property `org.opennms.core.ipc.rpc.kafka.bootstrap.servers`. Declared with `@Bean(initMethod = "start", destroyMethod = "stop")`. The `location` and `metrics` properties must be set before `start()` is called — the `@Bean` method sets them via setters, then Spring calls `start()` via `initMethod`.
 - **`RpcTargetHelper`** — routes RPC calls to the correct Minion location.
 - **`NoOpTracerRegistry`** — satisfies `KafkaRpcClientFactory`'s `@Autowired TracerRegistry` without pulling in tracing infrastructure.
 
@@ -35,9 +35,9 @@ Configuration is via JVM system property (not Spring environment) because `Kafka
 
 Implements `EntityScopeProvider` with empty scope resolution. Satisfies `LocationAwareDetectorClientRpcImpl`'s dependency. Discovery-specific (not shared) since other daemons may need real MATE support.
 
-### EmptyServiceDetectorRegistry (in daemon-boot-discovery)
+### LocalServiceDetectorRegistry (from daemon-loader-shared)
 
-Implements `ServiceDetectorRegistry` returning no detectors. Discovery-specific. Ping sweeps work normally; `<detector>` elements in config are silently ignored since no matching detectors are registered.
+Already exists at `core/daemon-loader-shared/`. Returns no detectors when none are registered on the classpath. Ping sweeps work normally; `<detector>` elements in config are silently ignored since no matching detector factories are found.
 
 ## Module Changes
 
@@ -67,18 +67,23 @@ Spring Boot 4.0.3 Discovery application.
 
 - **`DiscoveryBootConfiguration`** — wires all Discovery beans:
   - `DiscoveryConfigFactory` (no-arg constructor, reads `discovery-configuration.xml` from `opennms.home/etc/`)
-  - `UnmanagedInterfaceFilter` (wraps `InterfaceToNodeCache`)
-  - `RangeChunker` (with `UnmanagedInterfaceFilter`)
-  - `LocationAwarePingClientImpl` (uses `KafkaRpcClientFactory` from daemon-common)
-  - `LocationAwareDetectorClientRpcImpl` (uses `KafkaRpcClientFactory`, `NoOpEntityScopeProvider`, `EmptyServiceDetectorRegistry`)
-  - `PingSweepRpcModule` and `PingProxyRpcModule` (RPC module beans)
-  - `DetectorClientRpcModule` (RPC module bean)
+  - `UnmanagedInterfaceFilter` (wraps `InterfaceToNodeCache`, implements `IpAddressFilter`)
+  - `RangeChunker` (constructor takes `IpAddressFilter` — pass the `UnmanagedInterfaceFilter`)
+  - `PingerFactory` via `BestMatchPingerFactory` — required by `PingSweepRpcModule` and `PingProxyRpcModule` (`@Autowired PingerFactory`). These modules only execute locally if location matches; in production all pings go to Minion. But Spring still autowires the field at startup.
+  - `PingSweepRpcModule` and `PingProxyRpcModule` (RPC module beans, `@Autowired PingerFactory`)
+  - `LocationAwarePingClientImpl` — uses `KafkaRpcClientFactory` from daemon-common. **Must use `@Bean(initMethod = "init")`** because it has `javax.annotation.PostConstruct` which Spring 7 does not recognize. The `init()` method calls `rpcClientFactory.getClient()` to create RPC delegates.
+  - `scanExecutor` — `@Bean(name = "scanExecutor")` providing `Executors.newCachedThreadPool()`. Required by `DetectorClientRpcModule` (`@Autowired @Qualifier("scanExecutor") Executor`).
+  - `DetectorClientRpcModule` (RPC module bean, needs `scanExecutor`)
+  - `LocalServiceDetectorRegistry` (from `daemon-loader-shared`, returns no detectors)
+  - `LocationAwareDetectorClientRpcImpl` — uses `KafkaRpcClientFactory`, `NoOpEntityScopeProvider`, `LocalServiceDetectorRegistry`. Implements `InitializingBean` (Spring 7 handles natively, no `initMethod` needed).
   - `DiscoveryTaskExecutorImpl` (core orchestrator)
   - `Discovery` daemon (main daemon class)
   - `DaemonSmartLifecycle` wrapping `Discovery` (timer-based scheduling via init/start/stop)
-  - `AnnotationBasedEventListenerAdapter` (for config reload events)
+  - `AnnotationBasedEventListenerAdapter` (routes `RELOAD_DAEMON_CONFIG_UEI` events to `Discovery`)
   - `InterfaceToNodeCache` via `JdbcInterfaceToNodeCache` (from daemon-common)
   - `DistPollerDao` via `JdbcDistPollerDao` (from daemon-common)
+
+**`DiscoveryTaskExecutorImpl.getLocationAwareDetectorClient()` fallback risk:** If the `LocationAwareDetectorClient` bean is `null` (it's `@Autowired(required = false)`), the code falls back to `BeanUtils.getBean("provisiondContext", ...)` which will throw in Spring Boot (no `provisiondContext`). The `@Bean` for `LocationAwareDetectorClientRpcImpl` in `DiscoveryBootConfiguration` prevents this — the bean will always be non-null.
 
 **Lifecycle:**
 - `DaemonSmartLifecycle` wraps `Discovery` daemon
@@ -93,13 +98,17 @@ Spring Boot 4.0.3 Discovery application.
 - `DiscoveryTaskExecutor discoveryTaskExecutor` — from `DiscoveryBootConfiguration`
 - `EventForwarder eventForwarder` — `EventIpcManager` from `KafkaEventTransportConfiguration` (marked `@Primary`)
 
-**DiscoveryTaskExecutorImpl dependencies (constructor/setter):**
-- `LocationAwarePingClient` — from `DiscoveryBootConfiguration`
-- `LocationAwareDetectorClient` — from `DiscoveryBootConfiguration`
-- `RangeChunker` — from `DiscoveryBootConfiguration`
-- `DistPollerDao` — from daemon-common
+**DiscoveryTaskExecutorImpl `@Autowired` fields:**
+- `LocationAwarePingClient locationAwarePingClient` — from `DiscoveryBootConfiguration`
+- `LocationAwareDetectorClient locationAwareDetectorClient` (`required = false`) — from `DiscoveryBootConfiguration`
+- `EventForwarder eventForwarder` — from `KafkaEventTransportConfiguration` via `@Primary`. Used at line 163 to send NEW_SUSPECT events directly. Both `Discovery` and `DiscoveryTaskExecutorImpl` autowire `EventForwarder` — Discovery uses `@Qualifier("eventIpcManager")`, the task executor does not. Both resolve to the same `@Primary` bean.
+- `RangeChunker rangeChunker` — from `DiscoveryBootConfiguration`
 
-**Note on `javax.annotation.PostConstruct`:** Check if `Discovery` or `DiscoveryTaskExecutorImpl` use `javax.annotation.PostConstruct`. If so, use `@Bean(initMethod=...)` as with Trapd. If they use `InitializingBean`, Spring 7 handles it natively.
+**`javax.annotation.PostConstruct` status:**
+- `Discovery` — does NOT use `@PostConstruct` or `InitializingBean`. Lifecycle managed by `DaemonSmartLifecycle` (calls `init()`/`start()`/`stop()`).
+- `DiscoveryTaskExecutorImpl` — does NOT use `@PostConstruct` or `InitializingBean`. Pure `@Autowired` field injection.
+- `LocationAwarePingClientImpl` — **uses `@PostConstruct init()`**. Must use `@Bean(initMethod = "init")`.
+- `LocationAwareDetectorClientRpcImpl` — uses `InitializingBean.afterPropertiesSet()`. Spring 7 handles natively.
 
 ## Data Flow
 
@@ -155,7 +164,6 @@ discovery:
     SPRING_DATASOURCE_USERNAME: opennms
     SPRING_DATASOURCE_PASSWORD: opennms
     KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-    KAFKA_CONSUMER_GROUP: opennms-discovery
     OPENNMS_HOME: /opt/sentinel
     INTERFACE_NODE_CACHE_REFRESH_MS: "15000"
   volumes:
@@ -192,7 +200,6 @@ Discovery daemon uses Java `Timer` for scheduling, not Micrometer. `KafkaRpcClie
 
 **Unit tests:**
 - `NoOpEntityScopeProvider`: returns empty scopes
-- `EmptyServiceDetectorRegistry`: returns empty list
 
 **Build verification:**
 - Compile daemon-common (with new RPC configuration)
@@ -206,7 +213,7 @@ Discovery daemon uses Java `Timer` for scheduling, not Micrometer. `KafkaRpcClie
 
 ## Deferred Items
 
-- **Service detector support:** Empty `ServiceDetectorRegistry` — `<detector>` elements in discovery config silently ignored. Need to wire real detector implementations (SNMP, SSH, HTTP) and ensure Minion-side compatibility. Tracked in `project_future_features.md`.
+- **Service detector support:** `LocalServiceDetectorRegistry` has no registered detectors — `<detector>` elements in discovery config silently ignored. Need to register real detector factories (SNMP, SSH, HTTP) and ensure Minion-side compatibility. Tracked in `project_future_features.md`.
 - **MATE EntityScopeProvider:** No-op implementation — variable interpolation (`${requisition:username}`) disabled in detector configs. Tracked in `project_future_features.md`.
 
 ## Future Work
