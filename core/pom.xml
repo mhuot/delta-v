@@ -72,7 +72,6 @@
     <module>encrypt-util</module>
     <module>daemon-loader-shared</module>
     <module>daemon-loader-collectd</module>
-    <module>daemon-loader-discovery</module>
     <module>daemon-loader-pollerd</module>
     <module>daemon-loader-enlinkd</module>
     <module>daemon-loader-provisiond</module>

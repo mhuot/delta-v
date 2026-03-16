@@ -2182,31 +2182,6 @@
     </feature>
 
 
-    <!-- Karaf-only Discovery: loads Discovery daemon without Manager/Eventd -->
-    <feature name="opennms-daemon-discovery" version="${project.version}"
-             description="OpenNMS :: Daemon Loader :: Discovery">
-        <feature>opennms-spring-extender</feature>
-        <feature>opennms-event-forwarder-kafka</feature>
-        <feature>opennms-distributed-core-impl</feature>
-        <feature>opennms-persistence</feature>
-        <feature>opennms-config</feature>
-        <feature>opennms-core-tracing</feature>
-        <!-- API bundles needed by onmsgi:reference proxies -->
-        <bundle>mvn:org.opennms/opennms-icmp-api/${project.version}</bundle>
-        <bundle>mvn:org.opennms/opennms-provision-api/${project.version}</bundle>
-        <bundle>mvn:org.opennms.features/org.opennms.features.discovery/${project.version}</bundle>
-        <!-- RPC implementation bundles (ICMP proxy, detector client, ICMP pinger) -->
-        <bundle>mvn:org.opennms/org.opennms.icmp.proxy.rpc-impl/${project.version}</bundle>
-        <bundle>mvn:org.opennms/opennms-icmp-best/${project.version}</bundle>
-        <bundle>mvn:org.opennms/opennms-detectorclient-rpc/${project.version}</bundle>
-        <bundle>mvn:org.opennms/opennms-detector-registry/${project.version}</bundle>
-        <bundle>mvn:org.opennms.core.snmp/org.opennms.core.snmp.api/${project.version}</bundle>
-        <bundle>mvn:org.opennms.core.tracing/org.opennms.core.tracing.api/${project.version}</bundle>
-        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-discovery/${project.version}</bundle>
-        <feature>opennms-core-ipc-rpc-kafka</feature>
-        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-shared/${project.version}</bundle>
-    </feature>
-
 
     <!-- Karaf-only Enlinkd: loads EnhancedLinkd daemon without Manager/Eventd.
          Discovers network topology (LLDP, CDP, OSPF, IS-IS, Bridge) via SNMP. -->
