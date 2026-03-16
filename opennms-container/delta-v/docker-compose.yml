@@ -215,34 +215,30 @@ services:
     image: opennms/daemon-deltav:${VERSION}
     container_name: delta-v-trapd
     hostname: trapd
+    entrypoint: []
+    command: ["java", "-Xms256m", "-Xmx512m", "-Dopennms.home=/opt/sentinel", "-jar", "/opt/daemon-boot-trapd.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
       kafka:
         condition: service_healthy
     environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_USER: opennms
-      POSTGRES_PASSWORD: opennms
-      POSTGRES_DB: opennms
-      JAVA_OPTS: >-
-        -Xms256m -Xmx512m
-        -XX:MaxMetaspaceSize=256m
-        -Djava.security.egd=file:/dev/./urandom
-        -Dorg.opennms.tsid.node-id=10
-        -Dorg.opennms.interface-node-cache.refresh-timer=15000
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
+      SPRING_DATASOURCE_USERNAME: opennms
+      SPRING_DATASOURCE_PASSWORD: opennms
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_CONSUMER_GROUP: opennms-trapd
+      KAFKA_SINK_CONSUMER_GROUP: opennms-trapd-sink
+      OPENNMS_HOME: /opt/sentinel
+      INTERFACE_NODE_CACHE_REFRESH_MS: "15000"
     volumes:
-      - trapd-data:/opt/sentinel/data
-      - ./trapd-overlay/etc:/opt/sentinel-etc-overlay:ro
-    ports:
-      - "1162:10162/udp"
+      - ./trapd-overlay/etc:/opt/sentinel/etc:ro
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf -u admin:admin http://localhost:8181/sentinel/rest/health/probe || exit 1"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 20
-      start_period: 60s
+      start_period: 30s
 
   syslogd:
     profiles: [passive, full]
@@ -566,7 +562,6 @@ volumes:
   pollerd-data:
   collectd-data:
   discovery-data:
-  trapd-data:
   syslogd-data:
   ticketer-data:
   eventtranslator-data:
