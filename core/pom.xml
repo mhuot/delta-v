@@ -37,6 +37,7 @@
     <module>daemon-sink-kafka</module>
     <module>daemon-boot-alarmd</module>
     <module>daemon-boot-trapd</module>
+    <module>daemon-boot-syslogd</module>
     <module>daemon-boot-eventtranslator</module>
     <module>opennms-model-jakarta</module>
     <module>db</module>
