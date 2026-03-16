@@ -34,7 +34,9 @@
     <module>criteria</module>
     <module>daemon</module>
     <module>daemon-common</module>
+    <module>daemon-sink-kafka</module>
     <module>daemon-boot-alarmd</module>
+    <module>daemon-boot-trapd</module>
     <module>daemon-boot-eventtranslator</module>
     <module>opennms-model-jakarta</module>
     <module>db</module>
@@ -71,7 +73,6 @@
     <module>daemon-loader-discovery</module>
     <module>daemon-loader-pollerd</module>
     <module>daemon-loader-syslogd</module>
-    <module>daemon-loader-trapd</module>
     <module>daemon-loader-enlinkd</module>
     <module>daemon-loader-provisiond</module>
     <module>daemon-loader-scriptd</module>
