@@ -4,14 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## CRITICAL: Git Remote Rules
 
-**NEVER create pull requests against any `OpenNMS/*` repository.** This is a fork (`pbrane/delta-v`). Always use `--repo pbrane/delta-v` with `gh pr create`. The `gh` CLI defaults to the fork parent (`OpenNMS/opennms`) which is wrong.
+**NEVER create pull requests against `OpenNMS/*` or `pbrane/delta-v` repositories.** This is a fork (`mhuot/delta-v`). Always use `--repo mhuot/delta-v` with `gh pr create`. The `gh` CLI defaults to the fork parent which is wrong.
 
 ```bash
 # CORRECT
-gh pr create --repo pbrane/delta-v --base develop ...
+gh pr create --repo mhuot/delta-v --base develop ...
 
 # WRONG — DO NOT DO THIS
-gh pr create ...  # defaults to OpenNMS/opennms
+gh pr create ...                          # defaults to upstream
+gh pr create --repo pbrane/delta-v ...    # wrong fork
+gh pr create --repo OpenNMS/opennms ...   # upstream
 ```
 
 ## Project Overview
