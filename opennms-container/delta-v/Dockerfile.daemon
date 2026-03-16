@@ -26,8 +26,7 @@ COPY staging/daemon/events.daemon.jar \
 COPY staging/daemon/daemon-loader-pollerd.jar \
      /opt/sentinel/system/org/opennms/core/org.opennms.core.daemon-loader-pollerd/${VERSION}/org.opennms.core.daemon-loader-pollerd-${VERSION}.jar
 
-COPY staging/daemon/daemon-loader-syslogd.jar \
-     /opt/sentinel/system/org/opennms/core/org.opennms.core.daemon-loader-syslogd/${VERSION}/org.opennms.core.daemon-loader-syslogd-${VERSION}.jar
+COPY staging/daemon/daemon-boot-syslogd.jar /opt/daemon-boot-syslogd.jar
 
 COPY staging/daemon/daemon-loader-provisiond.jar \
      /opt/sentinel/system/org/opennms/core/org.opennms.core.daemon-loader-provisiond/${VERSION}/org.opennms.core.daemon-loader-provisiond-${VERSION}.jar
