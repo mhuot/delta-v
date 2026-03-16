@@ -1,0 +1,14 @@
+#!/bin/bash
+# Block pushes to OpenNMS upstream
+remote="$1"
+url="$2"
+
+if echo "$url" | grep -qi "opennms"; then
+    echo ""
+    echo "BLOCKED: You're trying to push to OpenNMS upstream."
+    echo "Remote: $remote"
+    echo "URL: $url"
+    echo ""
+    echo "If you actually need to do this, remove .githooks/pre-push"
+    exit 1
+fi
