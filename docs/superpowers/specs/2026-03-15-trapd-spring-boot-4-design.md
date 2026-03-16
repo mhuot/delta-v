@@ -26,7 +26,7 @@ Shared Kafka Sink bridge infrastructure extracted from `core/daemon-loader-trapd
 
 **Classes:**
 
-- **`KafkaSinkBridge<T>`** — Generic Kafka consumer that polls a Sink topic (`OpenNMS.Sink.{moduleId}`), deserializes protobuf `SinkMessage`, calls `SinkModule.unmarshal()`, and dispatches to `LocalMessageConsumerManager`. Parameterized by the SinkModule type. Configuration via environment variables:
+- **`KafkaSinkBridge`** — Kafka consumer that polls a Sink topic (`OpenNMS.Sink.{moduleId}`), deserializes protobuf `SinkMessage`, calls `SinkModule.unmarshal()`, and dispatches to `LocalMessageConsumerManager`. Works with raw `SinkModule<?, Message>` via `setModule()` callback (same non-generic design as existing code). Configuration via Spring environment properties (mapped from env vars, consistent with `KafkaEventTransportConfiguration` pattern):
   - `KAFKA_BOOTSTRAP_SERVERS` — Kafka broker addresses
   - `KAFKA_CONSUMER_GROUP` — per-daemon consumer group ID
   - Additional Kafka consumer properties via `KAFKA_SINK_*` prefix
@@ -38,8 +38,8 @@ Shared Kafka Sink bridge infrastructure extracted from `core/daemon-loader-trapd
 **Not included** (removed from daemon-loader-trapd, not needed):
 - `LocalMessageDispatcherFactory` — no local UDP dispatch path
 - `NoOpTwinPublisher` — not needed without Twin API
-- `DaemonLifecycleManager` — replaced by `DaemonSmartLifecycle` in daemon-common
-- `EventConfInitializer` — replaced by `EventConfEnrichmentService` in daemon-common
+- `DaemonLifecycleManager` — not needed; Spring Boot manages lifecycle natively
+- `EventConfInitializer` — replaced by JDBC-based `EventConfDao` in daemon-boot-trapd (see below)
 
 **Dependencies:**
 - `org.opennms:opennms-ipc-sink-api` — SinkModule, MessageConsumer interfaces
@@ -58,24 +58,36 @@ Spring Boot 4.0.3 Trapd application.
 
 **Configuration classes:**
 
-- **`TrapdConfiguration`** — Loads `trapd-configuration.xml` via `TrapdConfigFactory`, creates `TrapdConfigBean`. Creates `TrapSinkModule` bean (with `DistPollerDao` for system ID/location). Creates `TrapSinkConsumer` bean. Creates `EventCreator` (with `InterfaceToNodeCache` and `EventConfDao`).
+- **`TrapdConfiguration`** — Loads `trapd-configuration.xml` via `TrapdConfigFactory`, creates `TrapdConfigBean`. Creates `TrapSinkModule` bean (with `DistPollerDao` for system ID/location). Instantiates `TrapSinkConsumer` as a `@Bean` with constructor injection of all 6 dependencies (replacing `@Autowired` field injection). The `TrapSinkConsumer` class in `features/events/traps/` is NOT modified — instead, the `@Bean` method sets fields via setters or constructs a subclass. Creates `EventCreator` (with `InterfaceToNodeCache` and `EventConfDao`).
 
-- **`InterfaceToNodeCacheConfiguration`** — JDBC-based cache implementation:
-  - Startup: queries `SELECT nodeid, ipaddr, location FROM ipinterface WHERE issnmpprimary = 'P'`
+- **`JdbcEventConfDao`** — JDBC-based implementation of `EventConfDao` (new class in daemon-boot-trapd). Loads event definitions from the `event_conf_event` table in PostgreSQL on startup. Implements `findByEvent(Event)` for UEI matching, severity, alarm-data, logmsg lookup. Refreshed periodically via `@Scheduled`. This replaces the monolith's `DefaultEventConfDao` which depends on the full config system. Same approach as `EventConfEnrichmentService` but implements the `EventConfDao` interface that `EventCreator` and `TrapSinkConsumer` require.
+
+- **`JdbcInterfaceToNodeCache`** — JDBC-based cache implementation:
+  - Startup query (JOINs through node for location):
+    ```sql
+    SELECT ip.nodeid, ip.ipaddr, ip.issnmpprimary, ip.id AS interfaceid,
+           n.location
+    FROM ipinterface ip
+    JOIN node n ON ip.nodeid = n.nodeid
+    WHERE n.nodetype != 'D' AND ip.ismanaged != 'D'
+    ```
   - Stores `ConcurrentHashMap<LocationIpKey, Integer>` for O(1) lookups
+  - Implements `InterfaceToNodeCache` interface (returns `Entry` with nodeId + interfaceId)
   - Periodic refresh via `@Scheduled` (configurable interval, default 5 minutes)
-  - Exposes `getFirstNodeId(String location, InetAddress addr) → Optional<Integer>`
 
 - **Imported configurations:**
   - `DaemonDataSourceConfiguration` (from daemon-common) — PostgreSQL DataSource
   - `KafkaEventTransportConfiguration` (from daemon-common) — event forwarding to `opennms-fault-events`
   - `KafkaSinkConfiguration` (from daemon-sink-kafka) — Sink bridge consuming from `OpenNMS.Sink.Trap`
-  - `EventConfEnrichmentService` (from daemon-common) — eventconf loading from PostgreSQL
 
-**Lifecycle:**
-- `DaemonSmartLifecycle` wraps `TrapSinkConsumer` registration with `LocalMessageConsumerManager`
-- On start: consumer registers → `KafkaSinkBridge.setModule()` → Kafka polling begins
-- On stop: Kafka consumer closes, consumer deregisters
+**Lifecycle (Spring-managed, no DaemonSmartLifecycle):**
+- The `Trapd` class (`AbstractServiceDaemon`) is NOT used — its responsibilities (TrapListener, Twin, SCV) are all removed. No daemon wrapper needed.
+- `TrapSinkConsumer` is a Spring `@Bean`. Its `@PostConstruct init()` calls `messageConsumerManager.registerConsumer(this)`, which triggers `LocalMessageConsumerManager.startConsumingForModule()`, which calls `kafkaSinkBridge.setModule()` → Kafka polling begins.
+- On Spring context shutdown: `@PreDestroy` on consumer deregisters from manager, `KafkaSinkBridge` closes its Kafka consumer.
+- This is purely Spring lifecycle — no `SmartLifecycle` or `AbstractServiceDaemon` involved.
+
+**newSuspect event handling:**
+- `TrapSinkConsumer` sends `NEW_SUSPECT_INTERFACE_EVENT_UEI` for unknown IPs when `newSuspectOnTrap=true`. These events go through `KafkaEventForwarder` to `opennms-fault-events`. Provisiond (when migrated) will consume from this topic. Until then, new-suspect events are published but not consumed — this is acceptable as the feature is opt-in via config.
 
 **DistPollerDao:**
 - JDBC-based, reads from `monitoringsystems` table for local system ID and location
@@ -148,8 +160,8 @@ trapd:
 Follows established Spring Boot 4 migration patterns (mandatory):
 
 - Spring Boot 4.0.3 BOM first in `dependencyManagement`
-- Jackson 2.19.4 pins
-- JUnit 6.0.3 pins
+- Jackson pins (version managed by Spring Boot BOM; pin explicitly only if conflicts arise with XML event serialization)
+- JUnit 5.12.2 pins (Spring Boot 4 requires JUnit Jupiter 5.12.x)
 - Logback 1.5.32 pins
 - `javax.persistence-api:2.2` runtime (legacy class loading)
 - `javax.xml.bind:jaxb-api:2.3.1` runtime (Kafka event XML)
@@ -171,6 +183,10 @@ Follows established Spring Boot 4 migration patterns (mandatory):
 **E2E (Docker Compose):**
 - Run Trapd + Alarmd + Kafka + PostgreSQL
 - Publish trap via Sink topic → verify alarm created in database
+
+## Metrics
+
+The existing `TrapdInstrumentation` exposes JMX counters (traps received, discarded, errored). In the Spring Boot microservice, these are replaced by Micrometer counters exposed via `/actuator/prometheus`. The `TrapSinkConsumer` increment calls (`incTrapsReceivedCount`, etc.) are adapted to Micrometer `Counter` beans. Spring Boot Actuator auto-configures the metrics endpoint.
 
 ## Future Work
 
