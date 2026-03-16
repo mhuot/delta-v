@@ -12,9 +12,9 @@
     </parent>
 
     <groupId>org.opennms.core</groupId>
-    <artifactId>org.opennms.core.daemon-common</artifactId>
+    <artifactId>org.opennms.core.daemon-boot-eventtranslator</artifactId>
     <packaging>jar</packaging>
-    <name>OpenNMS :: Core :: Daemon Common</name>
+    <name>OpenNMS :: Core :: Daemon Boot :: EventTranslator</name>
 
     <properties>
         <java.version>21</java.version>
@@ -50,6 +50,29 @@
                 <artifactId>logback-core</artifactId>
                 <version>1.5.32</version>
             </dependency>
+            <!-- Pin jboss-logging — Hibernate 7.2.4 requires 3.6+ for MethodHandles$Lookup API -->
+            <dependency>
+                <groupId>org.jboss.logging</groupId>
+                <artifactId>jboss-logging</artifactId>
+                <version>3.6.1.Final</version>
+            </dependency>
+            <!-- Pin Jakarta XML Bind 4.x — parent POM manages 2.3.3, Hibernate 7 needs 4.0+ -->
+            <dependency>
+                <groupId>jakarta.xml.bind</groupId>
+                <artifactId>jakarta.xml.bind-api</artifactId>
+                <version>4.0.2</version>
+            </dependency>
+            <!-- Pin SLF4J 2.x — parent POM manages 1.7.36 which is incompatible with logback 1.5 -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>2.0.17</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>jcl-over-slf4j</artifactId>
+                <version>2.0.17</version>
+            </dependency>
             <!-- Pin Jackson 2.19.4 — parent POM manages 2.16.2 which lacks JsonFormat$Shape.POJO
                  required by Spring Boot 4.0.3. Explicit entries here override the parent's
                  managed versions even though the Spring Boot BOM is imported first. -->
@@ -83,86 +106,71 @@
                 <artifactId>jackson-module-parameter-names</artifactId>
                 <version>2.19.4</version>
             </dependency>
-            <!-- Pin JUnit to 5.12.2 / Platform 1.12.2 which is the latest
+            <!-- Pin JUnit to 6.0.3 / Platform 6.0.3 which is the latest
                  version supported by maven-surefire-plugin 3.5.5.
                  Must be explicit entries (not BOM import) to override
                  the parent POM's managed versions at 5.9.2 / 1.9.2. -->
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter</artifactId>
-                <version>5.12.2</version>
+                <version>6.0.3</version>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-api</artifactId>
-                <version>5.12.2</version>
+                <version>6.0.3</version>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-engine</artifactId>
-                <version>5.12.2</version>
+                <version>6.0.3</version>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-params</artifactId>
-                <version>5.12.2</version>
+                <version>6.0.3</version>
             </dependency>
             <dependency>
                 <groupId>org.junit.platform</groupId>
                 <artifactId>junit-platform-commons</artifactId>
-                <version>1.12.2</version>
+                <version>6.0.3</version>
             </dependency>
             <dependency>
                 <groupId>org.junit.platform</groupId>
                 <artifactId>junit-platform-engine</artifactId>
-                <version>1.12.2</version>
+                <version>6.0.3</version>
             </dependency>
             <dependency>
                 <groupId>org.junit.platform</groupId>
                 <artifactId>junit-platform-launcher</artifactId>
-                <version>1.12.2</version>
+                <version>6.0.3</version>
+            </dependency>
+            <!-- Testcontainers — use 2.0.3 to align with Spring Boot 4.0.3's managed version -->
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>2.0.3</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
-        <!-- Spring Boot -->
+        <!-- Shared daemon infrastructure -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <groupId>org.opennms.core</groupId>
+            <artifactId>org.opennms.core.daemon-common</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
-        <!-- Database -->
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-        </dependency>
-
-        <!-- Kafka -->
-        <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka-clients</artifactId>
-        </dependency>
-
-        <!-- opennms-config — provides DefaultEventConfDao for event-conf enrichment.
-             opennms-config-model is NOT excluded because DefaultEventConfDao and its
-             eventconf.* bindings (Event, AlarmData, etc.) live in that module.
-             opennms-config-model only contains JAXB eventconf classes, not
-             javax.persistence entities, so it does not conflict with Hibernate 7. -->
+        <!-- EventTranslator implementation (via opennms-services) -->
         <dependency>
             <groupId>org.opennms</groupId>
-            <artifactId>opennms-config</artifactId>
+            <artifactId>opennms-services</artifactId>
             <version>${project.version}</version>
             <exclusions>
-                <!-- Exclude ALL old ServiceMix Spring 4.2.x bundles — Spring Boot 4 provides Spring 7 -->
+                <!-- Exclude ALL ServiceMix Spring 4.2.x bundles — Spring Boot 4 provides Spring 7 -->
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-aop</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-aspects</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
@@ -179,47 +187,77 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-tx</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-web</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-webmvc</artifactId></exclusion>
+                <!-- Exclude old Spring Security that conflicts -->
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-security-core</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-security-config</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-security-web</artifactId></exclusion>
-                <!-- Exclude old SLF4J — Spring Boot 4 provides SLF4J 2.x -->
+                <!-- Exclude old Hibernate 3.x -->
+                <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
+                <!-- Exclude old SLF4J 1.7.x — Spring Boot 4 provides SLF4J 2.x -->
                 <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion>
                 <exclusion><groupId>org.slf4j</groupId><artifactId>jcl-over-slf4j</artifactId></exclusion>
                 <exclusion><groupId>org.slf4j</groupId><artifactId>log4j-over-slf4j</artifactId></exclusion>
-                <!-- Exclude old Hibernate 3.x -->
-                <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
-                <!-- Exclude Karaf/OSGi logging -->
+                <!-- Exclude old javax.persistence API — Spring Boot 4 uses jakarta.persistence -->
+                <exclusion><groupId>org.hibernate.javax.persistence</groupId><artifactId>hibernate-jpa-2.0-api</artifactId></exclusion>
+                <!-- Exclude Karaf/OSGi logging — not needed in Spring Boot -->
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-log4j2</artifactId></exclusion>
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
                 <!-- Exclude commons-logging — Spring Boot uses jcl-over-slf4j -->
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
-                <!-- Exclude opennms-model — only needed for Hibernate DAOs, not for
-                     DefaultEventConfDao; the legacy javax.persistence entities in
-                     opennms-model can cause scanner conflicts -->
-                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+                <!-- Exclude config-model which contains legacy OnmsMonitoringLocation with
+                     javax.persistence annotations — not needed here (no JPA) -->
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-config-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
-        <!-- OpenNMS APIs (consumed as-is during hybrid period) -->
+        <!-- javax.persistence API — needed at runtime so legacy opennms-model classes
+             on the classpath don't cause ClassNotFoundException when Spring's classpath
+             scanner encounters them. -->
         <dependency>
-            <groupId>org.opennms</groupId>
-            <artifactId>opennms-dao-api</artifactId>
-            <version>${project.version}</version>
+            <groupId>javax.persistence</groupId>
+            <artifactId>javax.persistence-api</artifactId>
+            <version>2.2</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- javax.xml.bind API — needed at runtime for legacy Event XML unmarshalling -->
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.3.1</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Jakarta XML Bind — needed by Hibernate 7 for XML mapping support -->
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.opennms.core</groupId>
-            <artifactId>org.opennms.core.daemon</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+        </dependency>
+
+        <!-- Jakarta Inject — needed by Hibernate 7 -->
+        <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+        </dependency>
+
+        <!-- SLF4J 2.x — must be explicit to override old 1.7.x from transitive deps -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.opennms.features.events</groupId>
-            <artifactId>org.opennms.features.events.api</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
         </dependency>
+
+        <!-- Spring Boot -->
         <dependency>
-            <groupId>org.opennms.core</groupId>
-            <artifactId>org.opennms.core.event-forwarder-kafka</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
         <!-- Test -->
@@ -236,59 +274,33 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <!-- JUnit Platform Launcher — must be explicit test dep so that
+             surefire/failsafe pick up the correct version from the classpath
+             rather than resolving their own (older) transitive version -->
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Testcontainers 2.x (artifact IDs have testcontainers- prefix) -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
-
-    <profiles>
-        <!--
-            jakarta-transform profile: produces a secondary JAR artifact
-            with classifier "jakarta" where all javax.* bytecode references
-            are rewritten to jakarta.* using the Eclipse Transformer.
-
-            This is the bridge mechanism for the Spring Boot 4 migration:
-            - Shared modules (opennms-model, opennms-dao, etc.) keep javax.*
-              in source so Karaf / Hibernate 3.6 consumers are unaffected.
-            - Spring Boot daemon fat JARs activate this profile to get
-              jakarta.* bytecode that Hibernate 6.x / Spring 7 require.
-
-            Usage:
-              mvn package -Pjakarta-transform
-
-            The consuming daemon module (daemon-boot-alarmd) activates this
-            profile and uses the transformer-maven-plugin on its fat JAR to
-            rewrite embedded javax.* classes in one pass.
-        -->
-        <profile>
-            <id>jakarta-transform</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.eclipse.transformer</groupId>
-                        <artifactId>transformer-maven-plugin</artifactId>
-                        <version>0.5.0</version>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <rules>
-                                <jakartaDefaults>true</jakartaDefaults>
-                                <renames>${project.basedir}/src/main/resources/META-INF/jakarta-rename.properties</renames>
-                            </rules>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>transform-jar</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                                <configuration>
-                                    <classifier>jakarta</classifier>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
     <build>
         <plugins>
@@ -302,9 +314,26 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring-boot.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                        <configuration>
+                            <!-- Use a classifier so the original JAR stays available
+                                 for failsafe integration tests (which need plain classes) -->
+                            <classifier>boot</classifier>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <!-- Override to 3.5.5 which supports JUnit Platform 1.12.2
+                <!-- Override to 3.5.5 which supports JUnit Platform 6.0.3
                      required by Spring Boot 4 -->
                 <version>3.5.5</version>
                 <configuration>
@@ -318,12 +347,54 @@
                     <dependency>
                         <groupId>org.junit.jupiter</groupId>
                         <artifactId>junit-jupiter-engine</artifactId>
-                        <version>5.12.2</version>
+                        <version>6.0.3</version>
                     </dependency>
                     <dependency>
                         <groupId>org.junit.platform</groupId>
                         <artifactId>junit-platform-launcher</artifactId>
-                        <version>1.12.2</version>
+                        <version>6.0.3</version>
+                    </dependency>
+                    <!-- Override parent's vintage engine (5.9.2) to align versions -->
+                    <dependency>
+                        <groupId>org.junit.vintage</groupId>
+                        <artifactId>junit-vintage-engine</artifactId>
+                        <version>6.0.3</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.5.5</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <includeJUnit5Engines>
+                        <includeJUnit5Engine>junit-jupiter</includeJUnit5Engine>
+                    </includeJUnit5Engines>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.junit.jupiter</groupId>
+                        <artifactId>junit-jupiter-engine</artifactId>
+                        <version>6.0.3</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.junit.platform</groupId>
+                        <artifactId>junit-platform-launcher</artifactId>
+                        <version>6.0.3</version>
+                    </dependency>
+                    <!-- Override parent's vintage engine (5.9.2) to align versions -->
+                    <dependency>
+                        <groupId>org.junit.vintage</groupId>
+                        <artifactId>junit-vintage-engine</artifactId>
+                        <version>6.0.3</version>
                     </dependency>
                 </dependencies>
             </plugin>

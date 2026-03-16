@@ -35,6 +35,7 @@
     <module>daemon</module>
     <module>daemon-common</module>
     <module>daemon-boot-alarmd</module>
+    <module>daemon-boot-eventtranslator</module>
     <module>opennms-model-jakarta</module>
     <module>db</module>
     <module>db-install</module>
@@ -68,7 +69,6 @@
     <module>daemon-loader-shared</module>
     <module>daemon-loader-collectd</module>
     <module>daemon-loader-discovery</module>
-    <module>daemon-loader-eventtranslator</module>
     <module>daemon-loader-pollerd</module>
     <module>daemon-loader-syslogd</module>
     <module>daemon-loader-trapd</module>

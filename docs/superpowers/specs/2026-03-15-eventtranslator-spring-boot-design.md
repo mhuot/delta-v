@@ -76,7 +76,7 @@ public class EventTranslatorConfiguration {
     },
     exclude = {
         HibernateJpaAutoConfiguration.class,
-        JpaRepositoriesAutoConfiguration.class
+        DataJpaRepositoriesAutoConfiguration.class
     }
 )
 public class EventTranslatorApplication { ... }

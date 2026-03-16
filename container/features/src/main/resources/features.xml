@@ -2239,18 +2239,6 @@
     </feature>
 
 
-    <!-- Karaf-only EventTranslator: loads EventTranslator daemon without Manager/Eventd -->
-    <feature name="opennms-daemon-eventtranslator" version="${project.version}"
-             description="OpenNMS :: Daemon Loader :: EventTranslator">
-        <feature>opennms-spring-extender</feature>
-        <feature>opennms-event-forwarder-kafka</feature>
-        <feature>opennms-distributed-core-impl</feature>
-        <feature>opennms-persistence</feature>
-        <feature>opennms-config</feature>
-        <bundle>mvn:org.opennms/opennms-services/${project.version}</bundle>
-        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-eventtranslator/${project.version}</bundle>
-    </feature>
-
     <!-- Karaf-only Enlinkd: loads EnhancedLinkd daemon without Manager/Eventd.
          Discovers network topology (LLDP, CDP, OSPF, IS-IS, Bridge) via SNMP. -->
     <feature name="opennms-daemon-enlinkd" version="${project.version}"
