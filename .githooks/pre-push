@@ -1,11 +1,11 @@
 #!/bin/bash
-# Block pushes to OpenNMS upstream
+# Block pushes to upstream remotes (OpenNMS and pbrane/delta-v)
 remote="$1"
 url="$2"
 
-if echo "$url" | grep -qi "opennms"; then
+if echo "$url" | grep -qiE "opennms|pbrane/delta-v"; then
     echo ""
-    echo "BLOCKED: You're trying to push to OpenNMS upstream."
+    echo "BLOCKED: You're trying to push to an upstream remote."
     echo "Remote: $remote"
     echo "URL: $url"
     echo ""
