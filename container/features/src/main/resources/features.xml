@@ -2225,22 +2225,6 @@
         <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-shared/${project.version}</bundle>
     </feature>
 
-    <!-- Karaf-only Trapd: loads Trapd daemon (UDP :1162) without Manager/Eventd -->
-    <feature name="opennms-daemon-trapd" version="${project.version}"
-             description="OpenNMS :: Daemon Loader :: Trapd">
-        <feature>opennms-spring-extender</feature>
-        <feature>opennms-event-forwarder-kafka</feature>
-        <feature>opennms-distributed-core-impl</feature>
-        <feature>opennms-persistence</feature>
-        <feature>opennms-config</feature>
-        <!-- API bundles needed by onmsgi:reference proxies and traps bundle imports -->
-        <bundle>mvn:org.opennms.core.ipc.twin/org.opennms.core.ipc.twin.api/${project.version}</bundle>
-        <bundle>mvn:org.opennms.core.ipc.sink/org.opennms.core.ipc.sink.api/${project.version}</bundle>
-        <bundle>mvn:org.opennms.features.scv/org.opennms.features.scv.api/${project.version}</bundle>
-        <bundle>mvn:org.opennms.features.events/org.opennms.features.events.traps/${project.version}</bundle>
-        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-trapd/${project.version}</bundle>
-    </feature>
-
     <!-- Karaf-only Syslogd: loads Syslogd daemon (UDP :10514) without Manager/Eventd -->
     <feature name="opennms-daemon-syslogd" version="${project.version}"
              description="OpenNMS :: Daemon Loader :: Syslogd">
