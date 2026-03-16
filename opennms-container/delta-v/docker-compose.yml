@@ -178,37 +178,34 @@ services:
       start_period: 60s
 
   discovery:
-    profiles: [lite, full]
+    profiles: [passive, full]
     image: opennms/daemon-deltav:${VERSION}
     container_name: delta-v-discovery
     hostname: discovery
+    entrypoint: []
+    command: ["java", "-Xms256m", "-Xmx512m", "-Dopennms.home=/opt/sentinel",
+              "-Dorg.opennms.core.ipc.rpc.kafka.bootstrap.servers=kafka:9092",
+              "-jar", "/opt/daemon-boot-discovery.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
       kafka:
         condition: service_healthy
     environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_USER: opennms
-      POSTGRES_PASSWORD: opennms
-      POSTGRES_DB: opennms
-      JAVA_OPTS: >-
-        -Xms256m -Xmx512m
-        -XX:MaxMetaspaceSize=256m
-        -Djava.security.egd=file:/dev/./urandom
-        -Dorg.opennms.tsid.node-id=9
-        -Dorg.opennms.core.ipc.rpc.kafka.bootstrap.servers=kafka:9092
-        -Dorg.opennms.core.ipc.rpc.force-remote=true
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
+      SPRING_DATASOURCE_USERNAME: opennms
+      SPRING_DATASOURCE_PASSWORD: opennms
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      OPENNMS_HOME: /opt/sentinel
+      INTERFACE_NODE_CACHE_REFRESH_MS: "15000"
     volumes:
-      - discovery-data:/opt/sentinel/data
-      - ./discovery-overlay/etc:/opt/sentinel-etc-overlay:ro
+      - ./discovery-overlay/etc:/opt/sentinel/etc:ro
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf -u admin:admin http://localhost:8181/sentinel/rest/health/probe || exit 1"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 20
-      start_period: 60s
+      start_period: 30s
 
   trapd:
     profiles: [passive, full]
@@ -526,9 +523,6 @@ volumes:
   minion-data:
   pollerd-data:
   collectd-data:
-  discovery-data:
-
-
   enlinkd-data:
   scriptd-data:
   provisiond-data:
