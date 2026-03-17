@@ -41,7 +41,6 @@ import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
-import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.dao.api.CategoryDao;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
@@ -97,10 +96,7 @@ import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.Resource;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -118,7 +114,6 @@ import io.opentracing.util.GlobalTracer;
  * @author brozow
  * @version $Id: $
  */
-@Service
 public class DefaultProvisionService implements ProvisionService, InitializingBean {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultProvisionService.class);
 
@@ -141,70 +136,69 @@ public class DefaultProvisionService implements ProvisionService, InitializingBe
         }
     }
 
-    @Autowired
-    private MonitoringLocationDao m_monitoringLocationDao;
-
-    @Autowired
-    private NodeDao m_nodeDao;
-
-    @Autowired
-    private IpInterfaceDao m_ipInterfaceDao;
-
-    @Autowired
-    private SnmpInterfaceDao m_snmpInterfaceDao;
-
-    @Autowired
-    private MonitoredServiceDao m_monitoredServiceDao;
-
-    @Autowired
-    private ServiceTypeDao m_serviceTypeDao;
-
-    @Autowired
-    private CategoryDao m_categoryDao;
-
-    @Autowired
+    private final MonitoringLocationDao m_monitoringLocationDao;
+    private final NodeDao m_nodeDao;
+    private final IpInterfaceDao m_ipInterfaceDao;
+    private final SnmpInterfaceDao m_snmpInterfaceDao;
+    private final MonitoredServiceDao m_monitoredServiceDao;
+    private final ServiceTypeDao m_serviceTypeDao;
+    private final CategoryDao m_categoryDao;
     private RequisitionedCategoryAssociationDao m_categoryAssociationDao;
-
-    @Autowired
-    @Qualifier("transactionAware")
-    private EventForwarder m_eventForwarder;
-
-    @Autowired
-    @Qualifier("fastFused")
+    private final EventForwarder m_eventForwarder;
     private ForeignSourceRepository m_foreignSourceRepository;
-
-    @Autowired
-    @Qualifier("fastFilePending")
-    private ForeignSourceRepository m_pendingForeignSourceRepository;
-
-    @Autowired
-    private PluginRegistry m_pluginRegistry;
-
-    @Autowired
-    private PlatformTransactionManager m_transactionManager;
-
-    private HostnameResolver m_hostnameResolver;
-
-    @Autowired
-    private LocationAwareDetectorClient m_locationAwareDetectorClient;
-
-    @Autowired
-    private LocationAwareDnsLookupClient m_locationAwareDnsLookuClient;
-
-    @Autowired
-    private LocationAwareSnmpClient m_locationAwareSnmpClient;
-
-    @Autowired
+    private final ForeignSourceRepository m_pendingForeignSourceRepository;
+    private final PluginRegistry m_pluginRegistry;
+    private final PlatformTransactionManager m_transactionManager;
+    private final LocationAwareDetectorClient m_locationAwareDetectorClient;
+    private final LocationAwareDnsLookupClient m_locationAwareDnsLookuClient;
+    private final LocationAwareSnmpClient m_locationAwareSnmpClient;
     private SnmpProfileMapper m_snmpProfileMapper;
 
+    private HostnameResolver m_hostnameResolver;
     private Tracer m_tracer;
+
+    public DefaultProvisionService(
+            MonitoringLocationDao monitoringLocationDao,
+            NodeDao nodeDao,
+            IpInterfaceDao ipInterfaceDao,
+            SnmpInterfaceDao snmpInterfaceDao,
+            MonitoredServiceDao monitoredServiceDao,
+            ServiceTypeDao serviceTypeDao,
+            CategoryDao categoryDao,
+            RequisitionedCategoryAssociationDao categoryAssociationDao,
+            EventForwarder eventForwarder,
+            ForeignSourceRepository foreignSourceRepository,
+            ForeignSourceRepository pendingForeignSourceRepository,
+            PluginRegistry pluginRegistry,
+            PlatformTransactionManager transactionManager,
+            LocationAwareDetectorClient locationAwareDetectorClient,
+            LocationAwareDnsLookupClient locationAwareDnsLookupClient,
+            LocationAwareSnmpClient locationAwareSnmpClient,
+            SnmpProfileMapper snmpProfileMapper) {
+        m_monitoringLocationDao = monitoringLocationDao;
+        m_nodeDao = nodeDao;
+        m_ipInterfaceDao = ipInterfaceDao;
+        m_snmpInterfaceDao = snmpInterfaceDao;
+        m_monitoredServiceDao = monitoredServiceDao;
+        m_serviceTypeDao = serviceTypeDao;
+        m_categoryDao = categoryDao;
+        m_categoryAssociationDao = categoryAssociationDao;
+        m_eventForwarder = eventForwarder;
+        m_foreignSourceRepository = foreignSourceRepository;
+        m_pendingForeignSourceRepository = pendingForeignSourceRepository;
+        m_pluginRegistry = pluginRegistry;
+        m_transactionManager = transactionManager;
+        m_locationAwareDetectorClient = locationAwareDetectorClient;
+        m_locationAwareDnsLookuClient = locationAwareDnsLookupClient;
+        m_locationAwareSnmpClient = locationAwareSnmpClient;
+        m_snmpProfileMapper = snmpProfileMapper;
+    }
 
     private final ThreadLocal<Map<String, OnmsServiceType>> m_typeCache = new ThreadLocal<Map<String, OnmsServiceType>>();
     private final ThreadLocal<Map<String, OnmsCategory>> m_categoryCache = new ThreadLocal<Map<String, OnmsCategory>>();
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        BeanUtils.assertAutowiring(this);
         RequisitionFileUtils.deleteAllSnapshots(m_pendingForeignSourceRepository);
         m_hostnameResolver = new DefaultHostnameResolver(m_locationAwareDnsLookuClient);
     }
@@ -1459,33 +1453,6 @@ public class DefaultProvisionService implements ProvisionService, InitializingBe
         return m_locationAwareDnsLookuClient;
     }
 
-    public void setMonitoringLocationDao(final MonitoringLocationDao dao) {
-        m_monitoringLocationDao = dao;
-    }
-
-    public void setNodeDao(final NodeDao dao) {
-        m_nodeDao = dao;
-    }
-
-    public void setIpInterfaceDao(final IpInterfaceDao dao) {
-        m_ipInterfaceDao = dao;
-    }
-
-    public void setSnmpInterfaceDao(final SnmpInterfaceDao dao) {
-        m_snmpInterfaceDao = dao;
-    }
-
-    public void setMonitoredServiceDao(final MonitoredServiceDao dao) {
-        m_monitoredServiceDao = dao;
-    }
-
-    public void setServiceTypeDao(final ServiceTypeDao dao) {
-        m_serviceTypeDao = dao;
-    }
-
-    public void setEventForwarder(final EventForwarder eventForwarder) {
-        m_eventForwarder = eventForwarder;
-    }
 
     public Span buildAndStartSpan(String name, SpanContext spanContext) {
         if(m_tracer == null) {
@@ -1502,14 +1469,6 @@ public class DefaultProvisionService implements ProvisionService, InitializingBe
         if ((!Strings.isNullOrEmpty(name)) && (!Strings.isNullOrEmpty(value))) {
             span.setTag(name, value);
         }
-    }
-
-    public void setCategoryDao(CategoryDao categoryDao) {
-        this.m_categoryDao = categoryDao;
-    }
-
-    public void setTransactionManager(PlatformTransactionManager transactionManager) {
-        this.m_transactionManager = transactionManager;
     }
 
     public void setCategoryAssociationDao(RequisitionedCategoryAssociationDao requisitionedCategoryAssociationDao) {

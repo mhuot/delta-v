@@ -54,9 +54,11 @@ import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsServiceType;
 import org.opennms.netmgt.model.RequisitionedCategoryAssociation;
 import org.opennms.netmgt.provision.persist.ForeignSourceRepository;
+import org.opennms.netmgt.provision.service.PluginRegistry;
 import org.opennms.netmgt.provision.persist.OnmsNodeRequisition;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
+import org.opennms.netmgt.snmp.SnmpProfileMapper;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.PlatformTransactionManager;
 
@@ -69,30 +71,36 @@ public class DefaultProvisionServiceTest {
     final SnmpInterfaceDao m_snmpInterfaceDao = mock(SnmpInterfaceDao.class);
     final MonitoredServiceDao m_monitoredServiceDao = mock(MonitoredServiceDao.class);
     final ServiceTypeDao m_serviceTypeDao = mock(ServiceTypeDao.class);
+    final CategoryDao m_categoryDao = mock(CategoryDao.class);
+    final PlatformTransactionManager m_transactionManager = mock(PlatformTransactionManager.class);
+    final ForeignSourceRepository m_foreignSourceRepository = mock(ForeignSourceRepository.class);
+    final ForeignSourceRepository m_pendingForeignSourceRepository = mock(ForeignSourceRepository.class);
 
     final MockEventIpcManager m_eventIpcManager = new MockEventIpcManager();
 
-    final DefaultProvisionService m_provisionService = new DefaultProvisionService();
-
-    private PlatformTransactionManager m_transactionManager = mock(PlatformTransactionManager.class);
-
-    private CategoryDao m_categoryDao = mock(CategoryDao.class);
+    final DefaultProvisionService m_provisionService = new DefaultProvisionService(
+            m_monitoringLocationDao,
+            m_nodeDao,
+            m_ipInterfaceDao,
+            m_snmpInterfaceDao,
+            m_monitoredServiceDao,
+            m_serviceTypeDao,
+            m_categoryDao,
+            mock(RequisitionedCategoryAssociationDao.class),
+            m_eventIpcManager,
+            m_foreignSourceRepository,
+            m_pendingForeignSourceRepository,
+            mock(PluginRegistry.class),
+            m_transactionManager,
+            mock(org.opennms.netmgt.provision.LocationAwareDetectorClient.class),
+            mock(org.opennms.netmgt.provision.LocationAwareDnsLookupClient.class),
+            mock(org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient.class),
+            mock(SnmpProfileMapper.class)
+    );
 
     @Before
     public void setUp() throws Exception {
         MockLogAppender.setupLogging();
-
-        m_provisionService.setMonitoringLocationDao(m_monitoringLocationDao);
-        m_provisionService.setNodeDao(m_nodeDao);
-        m_provisionService.setIpInterfaceDao(m_ipInterfaceDao);
-        m_provisionService.setSnmpInterfaceDao(m_snmpInterfaceDao);
-        m_provisionService.setMonitoredServiceDao(m_monitoredServiceDao);
-        m_provisionService.setServiceTypeDao(m_serviceTypeDao);
-
-        m_provisionService.setEventForwarder(m_eventIpcManager);
-
-        m_provisionService.setCategoryDao(m_categoryDao);
-        m_provisionService.setTransactionManager(m_transactionManager);
     }
 
     @Test
