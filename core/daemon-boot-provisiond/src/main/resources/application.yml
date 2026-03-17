@@ -1,0 +1,58 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/opennms}
+    username: ${SPRING_DATASOURCE_USERNAME:opennms}
+    password: ${SPRING_DATASOURCE_PASSWORD:opennms}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 3
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
+    properties:
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+      hibernate.archive.autodetection: none
+    open-in-view: false
+
+  quartz:
+    job-store-type: memory
+    scheduler-name: provisiond
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+opennms:
+  home: ${OPENNMS_HOME:/opt/deltav}
+  instance:
+    id: ${OPENNMS_INSTANCE_ID:OpenNMS}
+  tsid:
+    node-id: ${OPENNMS_TSID_NODE_ID:25}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    event-topic: ${KAFKA_EVENT_TOPIC:opennms-fault-events}
+    consumer-group: ${KAFKA_CONSUMER_GROUP:opennms-provisiond}
+    poll-timeout-ms: ${KAFKA_POLL_TIMEOUT_MS:100}
+  rpc:
+    kafka:
+      enabled: ${RPC_KAFKA_ENABLED:true}
+      bootstrap-servers: ${RPC_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+      force-remote: ${RPC_KAFKA_FORCE_REMOTE:true}
+
+logging:
+  level:
+    org.opennms: INFO
+    org.opennms.netmgt.provision: DEBUG
