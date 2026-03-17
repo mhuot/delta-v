@@ -151,6 +151,15 @@
             </exclusions>
         </dependency>
 
+        <!-- Old Hibernate 3.x — compile-only for CategoryDao's Criterion type reference.
+             Not on runtime classpath; Hibernate 7 (org.hibernate.orm) is the runtime ORM. -->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>${hibernateVersion}</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- Jackson for @JsonIgnoreProperties -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
