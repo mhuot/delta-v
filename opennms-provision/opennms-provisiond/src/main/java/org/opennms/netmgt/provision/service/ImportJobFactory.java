@@ -21,6 +21,8 @@
  */
 package org.opennms.netmgt.provision.service;
 
+import java.util.Objects;
+
 import org.opennms.core.mate.api.EntityScopeProvider;
 import org.quartz.Job;
 import org.quartz.JobDetail;
@@ -28,7 +30,6 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.spi.JobFactory;
 import org.quartz.spi.TriggerFiredBundle;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * <p>ImportJobFactory class.</p>
@@ -38,13 +39,16 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class ImportJobFactory implements JobFactory {
 
+    private final MonitorHolder monitorHolder;
+    private final EntityScopeProvider entityScopeProvider;
+
+    // Circular dependency: set via setter after construction
     private Provisioner provisioner;
 
-    @Autowired
-    private MonitorHolder monitorHolder;
-
-    @Autowired
-    private EntityScopeProvider entityScopeProvider;
+    public ImportJobFactory(MonitorHolder monitorHolder, EntityScopeProvider entityScopeProvider) {
+        this.monitorHolder = Objects.requireNonNull(monitorHolder);
+        this.entityScopeProvider = Objects.requireNonNull(entityScopeProvider);
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -52,9 +56,9 @@ public class ImportJobFactory implements JobFactory {
 
         JobDetail jobDetail = bundle.getJobDetail();
         Class<ImportJob> jobClass = getJobClass(jobDetail);
-        
+
         ImportJob job = null;
-        
+
         try {
             job = jobClass.getDeclaredConstructor().newInstance();
             job.setProvisioner(getProvisioner());
@@ -81,9 +85,8 @@ public class ImportJobFactory implements JobFactory {
     public void setProvisioner(Provisioner provisioner) {
         this.provisioner = provisioner;
     }
-    
+
     private Provisioner getProvisioner() {
         return provisioner;
     }
 }
-

@@ -31,18 +31,24 @@ import static org.mockito.Mockito.when;
 
 import java.net.InetAddress;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.After;
 import org.junit.Test;
+import org.opennms.core.tasks.TaskCoordinator;
 import org.opennms.core.test.MockLogAppender;
+import org.opennms.core.tracing.api.TracerRegistry;
 import org.opennms.core.utils.InetAddressUtils;
+import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 import org.opennms.netmgt.dao.api.MonitoringLocationDao;
 import org.opennms.netmgt.dao.api.MonitoringSystemDao;
 import org.opennms.netmgt.events.api.EventConstants;
+import org.opennms.netmgt.events.api.EventForwarder;
 import org.opennms.netmgt.events.api.model.ImmutableMapper;
 import org.opennms.netmgt.model.events.EventBuilder;
+import org.opennms.netmgt.provision.service.lifecycle.LifeCycleRepository;
 import org.opennms.netmgt.xml.event.Event;
 
 public class ProvisionerTest {
@@ -66,13 +72,48 @@ public class ProvisionerTest {
         assertThat(Provisioner.stripCredentials(resourceUrl), equalTo("vmware://vcenter.yourdomain.com/VCenterImport?_OpenNMSImport=true;username=***;importHostOnly=true;password=***"));
     }
 
+    private Provisioner createTestProvisioner(ProvisionService provisionService, MonitoringSystemDao monitoringSystemDao) {
+        return new Provisioner(
+                provisionService,
+                mock(EventForwarder.class),
+                mock(LifeCycleRepository.class),
+                Executors.newSingleThreadScheduledExecutor(),
+                mock(ImportScheduler.class),
+                mock(CoreImportActivities.class),
+                mock(TaskCoordinator.class),
+                mock(SnmpAgentConfigFactory.class),
+                mock(ProvisioningAdapterManager.class),
+                monitoringSystemDao,
+                mock(TracerRegistry.class),
+                mock(MonitorHolder.class)
+        );
+    }
+
     @Test
     public void canTriggerNewSuspectScanWhenMonitoringSystemIsNotFound() throws InterruptedException {
+        // Mock the necessary facilities
+        ProvisionService provisionService = mock(ProvisionService.class);
+        when(provisionService.isDiscoveryEnabled()).thenReturn(true);
+        MonitoringSystemDao monitoringSystemDao = mock(MonitoringSystemDao.class);
+
         // Build a provisioner that overrides the 'createNewSuspectScan' call and saves the arguments from the last call
         final AtomicReference<InetAddress> ipAddressRef = new AtomicReference<>();
         final AtomicReference<String> foreignSourceRef = new AtomicReference<>();
         final AtomicReference<String> locationRef = new AtomicReference<>();
-        final Provisioner provisioner = new Provisioner() {
+        final Provisioner provisioner = new Provisioner(
+                provisionService,
+                mock(EventForwarder.class),
+                mock(LifeCycleRepository.class),
+                Executors.newSingleThreadScheduledExecutor(),
+                mock(ImportScheduler.class),
+                mock(CoreImportActivities.class),
+                mock(TaskCoordinator.class),
+                mock(SnmpAgentConfigFactory.class),
+                mock(ProvisioningAdapterManager.class),
+                monitoringSystemDao,
+                mock(TracerRegistry.class),
+                mock(MonitorHolder.class)
+        ) {
             @Override
             public NewSuspectScan createNewSuspectScan(InetAddress ipAddress, String foreignSource, String location, String monitorKey) {
                 ipAddressRef.set(ipAddress);
@@ -81,14 +122,6 @@ public class ProvisionerTest {
                 return mock(NewSuspectScan.class, RETURNS_DEEP_STUBS);
             }
         };
-
-        // Mock the necessary facilities
-        ProvisionService provisionService = mock(ProvisionService.class);
-        when(provisionService.isDiscoveryEnabled()).thenReturn(true);
-        provisioner.setProvisionService(provisionService);
-
-        MonitoringSystemDao monitoringSystemDao = mock(MonitoringSystemDao.class);
-        provisioner.setMonitoringSystemDao(monitoringSystemDao);
 
         // Create the newSuspect event
         Event newSuspectEvent = new EventBuilder(EventConstants.NEW_SUSPECT_INTERFACE_EVENT_UEI, "test")
@@ -116,14 +149,10 @@ public class ProvisionerTest {
 
     @Test
     public void testHandleDeleteServiceKeepUnmanaged() {
-        final Provisioner provisioner = new Provisioner();
-
         ProvisionService provisionService = mock(ProvisionService.class);
         when(provisionService.isDiscoveryEnabled()).thenReturn(true);
-        provisioner.setProvisionService(provisionService);
-
         MonitoringSystemDao monitoringSystemDao = mock(MonitoringSystemDao.class);
-        provisioner.setMonitoringSystemDao(monitoringSystemDao);
+        final Provisioner provisioner = createTestProvisioner(provisionService, monitoringSystemDao);
 
         final Event event = new EventBuilder(EventConstants.DELETE_SERVICE_EVENT_UEI, "Test")
             .setNodeid(1)
@@ -137,14 +166,10 @@ public class ProvisionerTest {
 
     @Test
     public void testHandleDeleteServiceIgnoreUnmanaged() {
-        final Provisioner provisioner = new Provisioner();
-
         ProvisionService provisionService = mock(ProvisionService.class);
         when(provisionService.isDiscoveryEnabled()).thenReturn(true);
-        provisioner.setProvisionService(provisionService);
-
         MonitoringSystemDao monitoringSystemDao = mock(MonitoringSystemDao.class);
-        provisioner.setMonitoringSystemDao(monitoringSystemDao);
+        final Provisioner provisioner = createTestProvisioner(provisionService, monitoringSystemDao);
 
         final Event event = new EventBuilder(EventConstants.DELETE_SERVICE_EVENT_UEI, "Test")
             .setNodeid(1)

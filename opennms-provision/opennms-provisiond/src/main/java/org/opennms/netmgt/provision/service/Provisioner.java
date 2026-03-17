@@ -42,7 +42,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.tasks.DefaultTaskCoordinator;
 import org.opennms.core.tasks.Task;
 import org.opennms.core.tasks.TaskCoordinator;
@@ -74,7 +73,6 @@ import org.opennms.netmgt.provision.service.operations.RequisitionImport;
 import org.opennms.netmgt.xml.event.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -99,43 +97,53 @@ public class Provisioner implements SpringServiceDaemon {
     /** Constant <code>NAME="Provisiond"</code> */
     public static final String NAME = "Provisiond";
 
-    private TaskCoordinator m_taskCoordinator;
-    private CoreImportActivities m_importActivities;
-    private LifeCycleRepository m_lifeCycleRepository;
-    private ProvisionService m_provisionService;
-    private ScheduledExecutorService m_scheduledExecutor;
+    private final TaskCoordinator m_taskCoordinator;
+    private final CoreImportActivities m_importActivities;
+    private final LifeCycleRepository m_lifeCycleRepository;
+    private final ProvisionService m_provisionService;
+    private final ScheduledExecutorService m_scheduledExecutor;
     private final Map<Integer, ScheduledFuture<?>> m_scheduledNodes = new ConcurrentHashMap<Integer, ScheduledFuture<?>>();
-    private volatile EventForwarder m_eventForwarder;
-    private SnmpAgentConfigFactory m_agentConfigFactory;
+    private final EventForwarder m_eventForwarder;
+    private volatile SnmpAgentConfigFactory m_agentConfigFactory;
 
     private final ThreadFactory newSuspectThreadFactory = new ThreadFactoryBuilder()
             .setNameFormat("newSuspectExecutor")
             .build();
     private ExecutorService m_newSuspectExecutor = Executors.newSingleThreadExecutor(newSuspectThreadFactory);
 
-    @Autowired
-    private ProvisioningAdapterManager m_manager;
+    private final ProvisioningAdapterManager m_manager;
+    private final MonitoringSystemDao monitoringSystemDao;
+    private final ImportScheduler m_importSchedule;
+    private final TracerRegistry m_tracerRegistry;
+    private final MonitorHolder monitorHolder;
 
-    @Autowired
-    private MonitoringSystemDao monitoringSystemDao;
-    
-    private ImportScheduler m_importSchedule;
+    public Provisioner(
+            ProvisionService provisionService,
+            EventForwarder eventForwarder,
+            LifeCycleRepository lifeCycleRepository,
+            ScheduledExecutorService scheduledExecutor,
+            ImportScheduler importSchedule,
+            CoreImportActivities importActivities,
+            TaskCoordinator taskCoordinator,
+            SnmpAgentConfigFactory agentConfigFactory,
+            ProvisioningAdapterManager manager,
+            MonitoringSystemDao monitoringSystemDao,
+            TracerRegistry tracerRegistry,
+            MonitorHolder monitorHolder) {
+        this.m_provisionService = Objects.requireNonNull(provisionService);
+        this.m_eventForwarder = Objects.requireNonNull(eventForwarder);
+        this.m_lifeCycleRepository = Objects.requireNonNull(lifeCycleRepository);
+        this.m_scheduledExecutor = Objects.requireNonNull(scheduledExecutor);
+        this.m_importSchedule = Objects.requireNonNull(importSchedule);
+        this.m_importActivities = Objects.requireNonNull(importActivities);
+        this.m_taskCoordinator = Objects.requireNonNull(taskCoordinator);
+        this.m_agentConfigFactory = Objects.requireNonNull(agentConfigFactory);
+        this.m_manager = Objects.requireNonNull(manager);
+        this.monitoringSystemDao = Objects.requireNonNull(monitoringSystemDao);
+        this.m_tracerRegistry = Objects.requireNonNull(tracerRegistry);
+        this.monitorHolder = Objects.requireNonNull(monitorHolder);
+    }
 
-    @Autowired
-    private TracerRegistry m_tracerRegistry;
-
-    @Autowired
-    private MonitorHolder monitorHolder;
-
-    /**
-     * <p>setProvisionService</p>
-     *
-     * @param provisionService a {@link org.opennms.netmgt.provision.service.ProvisionService} object.
-     */
-    public void setProvisionService(ProvisionService provisionService) {
-	    m_provisionService = provisionService;
-	}
-	
 	/**
 	 * <p>getProvisionService</p>
 	 *
@@ -144,68 +152,9 @@ public class Provisioner implements SpringServiceDaemon {
 	public ProvisionService getProvisionService() {
 	    return m_provisionService;
 	}
-	
-	/**
-	 * <p>setScheduledExecutor</p>
-	 *
-	 * @param scheduledExecutor a {@link java.util.concurrent.ScheduledExecutorService} object.
-	 */
-	public void setScheduledExecutor(ScheduledExecutorService scheduledExecutor) {
-	    m_scheduledExecutor = scheduledExecutor;
-	}
 
     public ExecutorService getScheduledExecutor() {
         return m_scheduledExecutor;
-    }
-
-    /**
-     * <p>setLifeCycleRepository</p>
-     *
-     * @param lifeCycleRepository a {@link org.opennms.netmgt.provision.service.lifecycle.LifeCycleRepository} object.
-     */
-    public void setLifeCycleRepository(LifeCycleRepository lifeCycleRepository) {
-	    m_lifeCycleRepository = lifeCycleRepository;
-	}
-
-	/**
-	 * <p>setImportSchedule</p>
-	 *
-	 * @param schedule a {@link org.opennms.netmgt.provision.service.ImportScheduler} object.
-	 */
-	public void setImportSchedule(ImportScheduler schedule) {
-        m_importSchedule = schedule;
-    }
-
-    /**
-     * <p>setImportActivities</p>
-     *
-     * @param importActivities the importActivities to set
-     */
-    public void setImportActivities(CoreImportActivities importActivities) {
-        m_importActivities = importActivities;
-    }
-
-    /**
-     * <p>setTaskCoordinator</p>
-     *
-     * @param taskCoordinator the taskCoordinator to set
-     */
-    public void setTaskCoordinator(TaskCoordinator taskCoordinator) {
-        m_taskCoordinator = taskCoordinator;
-    }
-    
-
-    public ExecutorService getTaskCoordinatorExecutorService(final String name) {
-        return (ScheduledExecutorService)((DefaultTaskCoordinator)m_taskCoordinator).getExecutor(name);
-    }
-
-    /**
-     * <p>setAgentConfigFactory</p>
-     *
-     * @param agentConfigFactory the agentConfigFactory to set
-     */
-    public void setAgentConfigFactory(SnmpAgentConfigFactory agentConfigFactory) {
-        m_agentConfigFactory = agentConfigFactory;
     }
 
     /**
@@ -221,12 +170,17 @@ public class Provisioner implements SpringServiceDaemon {
         return monitoringSystemDao;
     }
 
-    public void setMonitoringSystemDao(MonitoringSystemDao monitoringSystemDao) {
-        this.monitoringSystemDao = monitoringSystemDao;
+    /**
+     * Allows tests to override the agent config factory on an already-constructed instance.
+     *
+     * @param agentConfigFactory the agentConfigFactory to set
+     */
+    public void setAgentConfigFactory(SnmpAgentConfigFactory agentConfigFactory) {
+        m_agentConfigFactory = agentConfigFactory;
     }
 
-    public void setTracerRegistry(TracerRegistry tracerRegistry) {
-        m_tracerRegistry = tracerRegistry;
+    public ExecutorService getTaskCoordinatorExecutorService(final String name) {
+        return (ScheduledExecutorService)((DefaultTaskCoordinator)m_taskCoordinator).getExecutor(name);
     }
 
     /**
@@ -271,18 +225,17 @@ public class Provisioner implements SpringServiceDaemon {
      */
     @Override
     public void afterPropertiesSet() throws Exception {
-        BeanUtils.assertAutowiring(this);
         GenericURLFactory.initialize();
     }
-    
+
     /**
      * <p>scheduleRescanForExistingNodes</p>
      */
     protected void scheduleRescanForExistingNodes(String monitorKey) {
         List<NodeScanSchedule> schedules = m_provisionService.getScheduleForNodes(monitorKey);
-        
+
         checkNodeListForRemovals(schedules);
-        
+
         for(final NodeScanSchedule schedule : schedules) {
             if (schedule.getScanInterval().getMillis() < 0) {
                 continue;
@@ -291,11 +244,11 @@ public class Provisioner implements SpringServiceDaemon {
                 addToScheduleQueue(schedule);
             }else {
                 updateNodeScheduleInQueue(schedule);
-            }            
+            }
         }
-        
+
     }
-    
+
     /**
      * <p>createNodeScan</p>
      *
@@ -343,7 +296,7 @@ public class Provisioner implements SpringServiceDaemon {
         LOG.warn("addToScheduleQueue future = {}", future);
         m_scheduledNodes.put(schedule.getNodeId(), future);
     }
-    
+
 
     /**
      * <p>updateNodeScheduleInQueue</p>
@@ -352,7 +305,7 @@ public class Provisioner implements SpringServiceDaemon {
      */
     protected void updateNodeScheduleInQueue(NodeScanSchedule schedule) {
         ScheduledFuture<?> scheduledFuture = getScheduledFutureForNode(schedule.getNodeId());
-        
+
         if(!scheduledFuture.isDone() && !scheduledFuture.isCancelled()) {
             scheduledFuture.cancel(true);
             scheduledFuture = scheduleNodeScan(schedule);
@@ -375,7 +328,7 @@ public class Provisioner implements SpringServiceDaemon {
     public ScheduledFuture<?> getScheduledFutureForNode(int nodeId) {
     	return m_scheduledNodes.get(nodeId);
     }
-    
+
     /**
      * <p>removeNodeFromScheduleQueue</p>
      *
@@ -383,13 +336,13 @@ public class Provisioner implements SpringServiceDaemon {
      */
     protected void removeNodeFromScheduleQueue(Integer nodeId) {
         ScheduledFuture<?> scheduledFuture = m_scheduledNodes.remove(nodeId);
-        
+
         if(scheduledFuture != null && !scheduledFuture.isDone()) {
             scheduledFuture.cancel(true);
         }
-        
+
     }
-    
+
     /**
      * <p>removeFromScheduleQueue</p>
      *
@@ -400,7 +353,7 @@ public class Provisioner implements SpringServiceDaemon {
             removeNodeFromScheduleQueue(nodeId);
         }
     }
-    
+
     /**
      * <p>checkNodeListForRemovals</p>
      *
@@ -408,25 +361,25 @@ public class Provisioner implements SpringServiceDaemon {
      */
     protected void checkNodeListForRemovals(List<NodeScanSchedule> schedules) {
         Set<Integer> keySet = m_scheduledNodes.keySet();
-        List<Integer> markedForDelete = new ArrayList<Integer>(); 
-        
+        List<Integer> markedForDelete = new ArrayList<Integer>();
+
         for(int nodeId : keySet) {
             boolean isDirty = false;
-            
+
             for(NodeScanSchedule schedule : schedules) {
                 if(schedule.getNodeId() == nodeId) {
                     isDirty = true;
                 }
             }
-            
+
             if(!isDirty) {
                 markedForDelete.add(nodeId);
             }
         }
-        
+
         removeFromScheduleQueue(markedForDelete);
     }
-   
+
 
     /**
      * <p>getScheduleLength</p>
@@ -437,7 +390,7 @@ public class Provisioner implements SpringServiceDaemon {
         return m_scheduledNodes.size();
     }
     //^ Helper functions for the schedule
-    
+
     /**
      * <p>importModelFromResource</p>
      *
@@ -482,15 +435,6 @@ public class Provisioner implements SpringServiceDaemon {
     }
 
     /**
-     * <p>setEventForwarder</p>
-     *
-     * @param eventForwarder a {@link org.opennms.netmgt.events.api.EventForwarder} object.
-     */
-    public void setEventForwarder(EventForwarder eventForwarder) {
-        m_eventForwarder = eventForwarder;
-    }
-
-    /**
      * <p>getEventForwarder</p>
      *
      * @return a {@link org.opennms.netmgt.events.api.EventForwarder} object.
@@ -530,7 +474,7 @@ public class Provisioner implements SpringServiceDaemon {
     public void doImport(final String url, final String rescanExisting, ProvisionMonitor monitor) {
         Objects.requireNonNull(monitor);
         try {
-            
+
             LOG.info("doImport: importing from url: {}, rescanExisting ? {}", url, rescanExisting);
             monitor.beginImporting();
             ProvisionOverallMonitor overallMonitor = monitorHolder.createOverallMonitor(url);
@@ -569,9 +513,9 @@ public class Provisioner implements SpringServiceDaemon {
                 overallMonitor.end();
             }
             LOG.info("Finished Importing: {}", monitor);
-    
+
             send(importSuccessEvent(monitor, url, rescanExisting, foreignSource), monitor);
-    
+
         } catch (Exception e) {
             final String msg = "Exception importing "+url;
             LOG.error("Exception importing {} using rescanExisting={}", url, rescanExisting, e);
@@ -591,8 +535,8 @@ public class Provisioner implements SpringServiceDaemon {
         LOG.warn("node added event ({})", System.currentTimeMillis());
         try {
             /* we don't force a scan on node added so new suspect doesn't cause 2 simultaneous node scans
-             * New nodes that are created another way shouldn't have a 'lastCapsPoll' timestamp set 
-             */ 
+             * New nodes that are created another way shouldn't have a 'lastCapsPoll' timestamp set
+             */
             scheduleForNode = getProvisionService().getScheduleForNode(e.getNodeid().intValue(), false, getMonitorKey(e));
         } catch (Throwable t) {
             LOG.error("getScheduleForNode fails", t);
@@ -603,7 +547,7 @@ public class Provisioner implements SpringServiceDaemon {
         }
 
     }
-    
+
     /**
      * <p>handleForceRescan</p>
      *
@@ -635,7 +579,7 @@ public class Provisioner implements SpringServiceDaemon {
         };
         m_scheduledExecutor.execute(r);
     }
-    
+
     @EventHandler(uei = EventConstants.NEW_SUSPECT_INTERFACE_EVENT_UEI)
     public void handleNewSuspectEvent(IEvent event) {
         final String uei = event.getUei();
@@ -693,9 +637,9 @@ public class Provisioner implements SpringServiceDaemon {
         };
         // Run new suspect events in a single thread executor so that only one node will be scanned at a given time.
         m_newSuspectExecutor.execute(r);
-        
+
     }
-    
+
     /**
      * <p>handleNodeUpdated</p>
      * A re-import has occurred, attempt a rescan now.
@@ -705,7 +649,7 @@ public class Provisioner implements SpringServiceDaemon {
     @EventHandler(uei = EventConstants.NODE_UPDATED_EVENT_UEI)
     public void handleNodeUpdated(IEvent e) {
     	LOG.debug("Node updated event received: {}", e);
-    	
+
         if (!Boolean.valueOf(System.getProperty(SCHEDULE_RESCAN_FOR_UPDATED_NODES, "true"))) {
         	LOG.debug("Rescanning updated nodes is disabled via property: {}", SCHEDULE_RESCAN_FOR_UPDATED_NODES);
         	return;
@@ -724,13 +668,13 @@ public class Provisioner implements SpringServiceDaemon {
             LOG.debug("Rescanning updated nodes is disabled via event parameter: {}", EventConstants.PARM_RESCAN_EXISTING);
             return;
         }
-        
+
         removeNodeFromScheduleQueue(new Long(e.getNodeid()).intValue());
         NodeScanSchedule scheduleForNode = getProvisionService().getScheduleForNode(e.getNodeid().intValue(), true, monitorKey);
         if (scheduleForNode != null) {
             addToScheduleQueue(scheduleForNode);
         }
-        
+
     }
 
     /**
@@ -741,52 +685,52 @@ public class Provisioner implements SpringServiceDaemon {
     @EventHandler(uei = EventConstants.NODE_DELETED_EVENT_UEI)
     public void handleNodeDeletedEvent(IEvent e) {
         removeNodeFromScheduleQueue(e.getNodeid().intValue());
-        
+
     }
-    
+
     /**
      * <p>handleReloadConfigEvent</p>
      *
      * @param e a {@link org.opennms.netmgt.events.api.model.IEvent} object.
      */
     public void handleReloadConfigEvent(IEvent e) {
-        
+
         if (isReloadConfigEventTarget(e)) {
             LOG.info("handleReloadConfigEvent: reloading configuration...");
             EventBuilder ebldr = null;
 
             try {
                 LOG.debug("handleReloadConfigEvent: lock acquired, unscheduling current reports...");
-                
+
                 m_importSchedule.rebuildImportSchedule();
-                
+
                 LOG.debug("handleRelodConfigEvent: reports rescheduled.");
-                
+
                 ebldr = new EventBuilder(EventConstants.RELOAD_DAEMON_CONFIG_SUCCESSFUL_UEI, "Provisiond");
                 ebldr.addParam(EventConstants.PARM_DAEMON_NAME, "Provisiond");
-                
+
             } catch (Throwable exception) {
-                
+
                 LOG.error("handleReloadConfigurationEvent: Error reloading configuration", exception);
                 ebldr = new EventBuilder(EventConstants.RELOAD_DAEMON_CONFIG_FAILED_UEI, "Provisiond");
                 ebldr.addParam(EventConstants.PARM_DAEMON_NAME, "Provisiond");
                 ebldr.addParam(EventConstants.PARM_REASON, exception.getLocalizedMessage().substring(1, 128));
-                
+
             }
-            
+
             if (ebldr != null) {
                 m_eventForwarder.sendNow(ebldr.getEvent());
             }
             LOG.info("handleReloadConfigEvent: configuration reloaded.");
         }
-        
+
     }
-    
+
     private boolean isReloadConfigEventTarget(IEvent event) {
         boolean isTarget = false;
-        
+
         List<IParm> parmCollection = event.getParmCollection();
-        
+
 
         for (IParm parm : parmCollection) {
             if (EventConstants.PARM_DAEMON_NAME.equals(parm.getParmName()) && "Provisiond".equalsIgnoreCase(parm.getValue().getContent())) {
@@ -794,7 +738,7 @@ public class Provisioner implements SpringServiceDaemon {
                 break;
             }
         }
-        
+
         LOG.debug("isReloadConfigEventTarget: Provisiond was target of reload event: {}", isTarget);
         return isTarget;
     }
@@ -845,7 +789,7 @@ public class Provisioner implements SpringServiceDaemon {
             LOG.error("Unexpected exception processing event: {}", event.getUei(), e);
         }
     }
-    
+
     private void doDeleteInterface(long nodeId, String ipAddr) {
         m_provisionService.deleteInterface((int)nodeId, ipAddr);
     }
@@ -863,7 +807,7 @@ public class Provisioner implements SpringServiceDaemon {
             LOG.error("Unexpected exception processing event: {}", event.getUei(), e);
         }
     }
-    
+
     private void doDeleteNode(long nodeId) {
         m_provisionService.deleteNode((int)nodeId);
     }
@@ -886,7 +830,7 @@ public class Provisioner implements SpringServiceDaemon {
             LOG.error("Unexpected exception processing event: {}", event.getUei(), e);
         }
     }
-    
+
     private void doDeleteService(final long nodeId, final InetAddress addr, final String service, final boolean ignoreUnmanaged) {
         m_provisionService.deleteService((int)nodeId, addr, service, ignoreUnmanaged);
     }
@@ -897,12 +841,12 @@ public class Provisioner implements SpringServiceDaemon {
 
     private String getEventRescanExistingOnImport(final IEvent event) {
         final String rescanExisting = EventUtils.getParm(event, EventConstants.PARM_IMPORT_RESCAN_EXISTING);
-        
+
         if (rescanExisting == null) {
             final String enabled = System.getProperty(SCHEDULE_RESCAN_FOR_UPDATED_NODES, "true");
             return enabled;
         }
-        
+
         return rescanExisting;
     }
 
@@ -922,7 +866,7 @@ public class Provisioner implements SpringServiceDaemon {
     }
 
     private Event importSuccessEvent(final ProvisionMonitor stats, final String url, final String rescanExisting, final String foreignSource) {
-    
+
         return new EventBuilder( EventConstants.IMPORT_SUCCESSFUL_UEI, NAME )
             .addParam( EventConstants.PARM_IMPORT_RESOURCE, stripCredentials(url) )
             .addParam( EventConstants.PARM_IMPORT_RESCAN_EXISTING, rescanExisting )
@@ -938,7 +882,7 @@ public class Provisioner implements SpringServiceDaemon {
     }
 
     private Event importFailedEvent(final String msg, final String url, final String rescanExisting) {
-    
+
         return new EventBuilder( EventConstants.IMPORT_FAILED_UEI, NAME )
             .addParam( EventConstants.PARM_IMPORT_RESOURCE, stripCredentials(url) )
             .addParam( EventConstants.PARM_IMPORT_RESCAN_EXISTING, rescanExisting)
@@ -947,7 +891,7 @@ public class Provisioner implements SpringServiceDaemon {
     }
 
     private Event importStartedEvent(final Resource resource, final String rescanExisting) {
-    
+
         return new EventBuilder( EventConstants.IMPORT_STARTED_UEI, NAME )
             .addParam( EventConstants.PARM_IMPORT_RESOURCE, stripCredentials(resource.toString()) )
             .addParam( EventConstants.PARM_IMPORT_RESCAN_EXISTING, rescanExisting )

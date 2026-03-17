@@ -23,14 +23,15 @@ package org.opennms.netmgt.provision.service;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.validation.Valid;
 
 import org.opennms.core.soa.ServiceRegistry;
-import org.opennms.core.spring.BeanUtils;
 import org.opennms.netmgt.provision.IpInterfacePolicy;
 import org.opennms.netmgt.provision.NodePolicy;
 import org.opennms.netmgt.provision.OnmsPolicy;
@@ -43,7 +44,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -55,29 +55,32 @@ import org.springframework.context.ApplicationContext;
 public class DefaultPluginRegistry implements PluginRegistry, InitializingBean {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultPluginRegistry.class);
 
-    @Autowired(required=false)
-    Set<NodePolicy> m_nodePolicies;
-    
-    @Autowired(required=false)
-    Set<IpInterfacePolicy> m_ipInterfacePolicies;
-    
-    @Autowired(required=false)
-    Set<SnmpInterfacePolicy> m_snmpInterfacePolicies;
+    private final Set<NodePolicy> m_nodePolicies;
+    private final Set<IpInterfacePolicy> m_ipInterfacePolicies;
+    private final Set<SnmpInterfacePolicy> m_snmpInterfacePolicies;
+    private final ServiceRegistry m_serviceRegistry;
+    private final ApplicationContext m_applicationContext;
 
-    @Autowired
-    ServiceRegistry m_serviceRegistry;
-
-    @Autowired
-    private ApplicationContext m_applicationContext;
+    public DefaultPluginRegistry(
+            ServiceRegistry serviceRegistry,
+            ApplicationContext applicationContext,
+            Set<NodePolicy> nodePolicies,
+            Set<IpInterfacePolicy> ipInterfacePolicies,
+            Set<SnmpInterfacePolicy> snmpInterfacePolicies) {
+        this.m_serviceRegistry = Objects.requireNonNull(serviceRegistry);
+        this.m_applicationContext = Objects.requireNonNull(applicationContext);
+        this.m_nodePolicies = nodePolicies != null ? nodePolicies : Collections.emptySet();
+        this.m_ipInterfacePolicies = ipInterfacePolicies != null ? ipInterfacePolicies : Collections.emptySet();
+        this.m_snmpInterfacePolicies = snmpInterfacePolicies != null ? snmpInterfacePolicies : Collections.emptySet();
+    }
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        BeanUtils.assertAutowiring(this);
         addAllExtensions(m_nodePolicies, NodePolicy.class, OnmsPolicy.class);
         addAllExtensions(m_ipInterfacePolicies, IpInterfacePolicy.class, OnmsPolicy.class);
         addAllExtensions(m_snmpInterfacePolicies, SnmpInterfacePolicy.class, OnmsPolicy.class);
     }
-    
+
     private static void trace(String format, Object... args) {
         LOG.trace(format, args);
     }
@@ -97,7 +100,7 @@ public class DefaultPluginRegistry implements PluginRegistry, InitializingBean {
             LOG.error(format, args, cause);
         }
     }
-    
+
     private <T> void addAllExtensions(Collection<T> extensions, Class<?>... extensionPoints) {
         if (extensions == null || extensions.isEmpty()) {
             info("Found NO Extensions for ExtensionPoints {}", Arrays.toString(extensionPoints));
@@ -114,7 +117,7 @@ public class DefaultPluginRegistry implements PluginRegistry, InitializingBean {
     public <T> Collection<T> getAllPlugins(Class<T> pluginClass) {
         return beansOfType(pluginClass).values();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public <T> T getPluginInstance(Class<T> pluginClass, @Valid PluginConfig pluginConfig) {
@@ -122,7 +125,7 @@ public class DefaultPluginRegistry implements PluginRegistry, InitializingBean {
         if (pluginInstance == null) {
             return null;
         }
-        
+
         Map<String, String> parameters = new HashMap<>(pluginConfig.getParameterMap());
 
 
@@ -132,14 +135,14 @@ public class DefaultPluginRegistry implements PluginRegistry, InitializingBean {
         } catch (BeansException e) {
             error(e, "Could not set properties on report definition: {}", e.getMessage());
         }
-        
+
         return pluginInstance;
     }
 
     private <T> Map<String, T> beansOfType(Class<T> pluginClass) {
         return BeanFactoryUtils.beansOfTypeIncludingAncestors(m_applicationContext, pluginClass, true, true);
     }
-    
+
     private <T> T beanWithNameOfType(String beanName, Class<T> pluginClass) {
         Map<String, T> beans = beansOfType(pluginClass);
         T bean = beans.get(beanName);
@@ -159,5 +162,5 @@ public class DefaultPluginRegistry implements PluginRegistry, InitializingBean {
         }
         return bean;
     }
-    
+
 }
