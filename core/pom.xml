@@ -75,7 +75,6 @@
     <module>daemon-loader-collectd</module>
     <module>daemon-loader-pollerd</module>
     <module>daemon-loader-enlinkd</module>
-    <module>daemon-loader-provisiond</module>
     <module>daemon-loader-scriptd</module>
     <module>daemon-loader-bsmd</module>
     <module>daemon-loader-perspectivepoller</module>
