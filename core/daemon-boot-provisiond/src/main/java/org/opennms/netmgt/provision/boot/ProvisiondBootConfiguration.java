@@ -8,6 +8,16 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import javax.sql.DataSource;
 
+import org.opennms.netmgt.config.DefaultSnmpHwInventoryAdapterConfigDao;
+import org.opennms.netmgt.config.SnmpAssetAdapterConfig;
+import org.opennms.netmgt.config.SnmpAssetAdapterConfigFactory;
+import org.opennms.netmgt.config.snmpmetadata.SnmpMetadataConfigDao;
+import org.opennms.netmgt.dao.api.HwEntityAttributeTypeDao;
+import org.opennms.netmgt.dao.api.HwEntityDao;
+import org.opennms.netmgt.provision.SnmpAssetProvisioningAdapter;
+import org.opennms.netmgt.provision.SnmpHardwareInventoryProvisioningAdapter;
+import org.opennms.netmgt.provision.SnmpMetadataProvisioningAdapter;
+
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.opennms.core.concurrent.PausibleScheduledThreadPoolExecutor;
 import org.opennms.core.daemon.common.JdbcDistPollerDao;
@@ -81,6 +91,7 @@ import org.quartz.Scheduler;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -400,7 +411,7 @@ public class ProvisiondBootConfiguration {
             ApplicationContext applicationContext) {
         return new DefaultPluginRegistry(
             serviceRegistry, applicationContext,
-            null, null, null);
+            Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
     }
 
     @Bean
@@ -414,8 +425,8 @@ public class ProvisiondBootConfiguration {
             CategoryDao categoryDao,
             RequisitionedCategoryAssociationDao categoryAssociationDao,
             @Qualifier("transactionAware") EventForwarder eventForwarder,
-            @Qualifier("fused") ForeignSourceRepository fusedRepo,
-            @Qualifier("filePending") ForeignSourceRepository pendingRepo,
+            @Qualifier("fastFused") ForeignSourceRepository fusedRepo,
+            @Qualifier("fastFilePending") ForeignSourceRepository pendingRepo,
             DefaultPluginRegistry pluginRegistry,
             PlatformTransactionManager transactionManager,
             LocationAwareDetectorClient locationAwareDetectorClient,
@@ -441,9 +452,12 @@ public class ProvisiondBootConfiguration {
     }
 
     @Bean
-    public ProvisioningAdapterManager adapterManager(DefaultPluginRegistry pluginRegistry) {
+    public ProvisioningAdapterManager adapterManager(
+            DefaultPluginRegistry pluginRegistry,
+            EventForwarder eventForwarder) {
         var manager = new ProvisioningAdapterManager();
         manager.setPluginRegistry(pluginRegistry);
+        manager.setEventForwarder(eventForwarder);
         return manager;
     }
 
@@ -571,5 +585,134 @@ public class ProvisiondBootConfiguration {
         adapter.setAnnotatedListener(adapterManager);
         adapter.setEventSubscriptionService(eventSubscriptionService);
         return adapter;
+    }
+
+    // ===================================================================
+    // Section 17: SNMP Hardware Inventory Provisioning Adapter
+    // ===================================================================
+
+    @Bean
+    public DefaultSnmpHwInventoryAdapterConfigDao snmpHwInventoryAdapterConfigDao() {
+        var dao = new DefaultSnmpHwInventoryAdapterConfigDao();
+        dao.setConfigResource(
+            new FileSystemResource(opennmsHome + "/etc/snmp-hardware-inventory-adapter-configuration.xml"));
+        dao.afterPropertiesSet();
+        return dao;
+    }
+
+    @Bean
+    public SnmpHardwareInventoryProvisioningAdapter snmpHardwareInventoryProvisioningAdapter(
+            NodeDao nodeDao,
+            HwEntityDao hwEntityDao,
+            HwEntityAttributeTypeDao hwEntityAttributeTypeDao,
+            EventForwarder eventForwarder,
+            SnmpAgentConfigFactory snmpPeerFactory,
+            DefaultSnmpHwInventoryAdapterConfigDao hwInventoryConfigDao,
+            LocationAwareSnmpClient locationAwareSnmpClient,
+            TransactionTemplate transactionTemplate) {
+        var adapter = new SnmpHardwareInventoryProvisioningAdapter();
+        adapter.setNodeDao(nodeDao);
+        adapter.setHwEntityDao(hwEntityDao);
+        adapter.setHwEntityAttributeTypeDao(hwEntityAttributeTypeDao);
+        adapter.setEventForwarder(eventForwarder);
+        adapter.setSnmpPeerFactory(snmpPeerFactory);
+        adapter.setHwInventoryAdapterConfigDao(hwInventoryConfigDao);
+        adapter.setLocationAwareSnmpClient(locationAwareSnmpClient);
+        adapter.setTemplate(transactionTemplate);
+        return adapter;
+    }
+
+    @Bean
+    public AnnotationBasedEventListenerAdapter snmpHwInventoryEventListener(
+            SnmpHardwareInventoryProvisioningAdapter adapter,
+            @Qualifier("kafkaEventSubscriptionService") EventSubscriptionService eventSubscriptionService) {
+        var listener = new AnnotationBasedEventListenerAdapter();
+        listener.setAnnotatedListener(adapter);
+        listener.setEventSubscriptionService(eventSubscriptionService);
+        return listener;
+    }
+
+    // ===================================================================
+    // Section 18: SNMP Asset Provisioning Adapter
+    // ===================================================================
+
+    @Bean
+    public SnmpAssetAdapterConfigFactory snmpAssetAdapterConfigFactory() throws IOException {
+        return new SnmpAssetAdapterConfigFactory();
+    }
+
+    @Bean
+    public SnmpAssetAdapterConfig snmpAssetAdapterConfig(
+            SnmpAssetAdapterConfigFactory factory) {
+        return factory.getInstance();
+    }
+
+    @Bean
+    public SnmpAssetProvisioningAdapter snmpAssetProvisioningAdapter(
+            NodeDao nodeDao,
+            EventForwarder eventForwarder,
+            SnmpAssetAdapterConfig snmpAssetConfig,
+            SnmpAgentConfigFactory snmpPeerFactory,
+            LocationAwareSnmpClient locationAwareSnmpClient,
+            TransactionTemplate transactionTemplate) {
+        var adapter = new SnmpAssetProvisioningAdapter();
+        adapter.setNodeDao(nodeDao);
+        adapter.setEventForwarder(eventForwarder);
+        adapter.setSnmpAssetAdapterConfig(snmpAssetConfig);
+        adapter.setSnmpPeerFactory(snmpPeerFactory);
+        adapter.setLocationAwareSnmpClient(locationAwareSnmpClient);
+        adapter.setTemplate(transactionTemplate);
+        return adapter;
+    }
+
+    @Bean
+    public AnnotationBasedEventListenerAdapter snmpAssetEventListener(
+            SnmpAssetProvisioningAdapter adapter,
+            @Qualifier("kafkaEventSubscriptionService") EventSubscriptionService eventSubscriptionService) {
+        var listener = new AnnotationBasedEventListenerAdapter();
+        listener.setAnnotatedListener(adapter);
+        listener.setEventSubscriptionService(eventSubscriptionService);
+        return listener;
+    }
+
+    // ===================================================================
+    // Section 19: SNMP Metadata Provisioning Adapter
+    // ===================================================================
+
+    @Bean
+    public SnmpMetadataConfigDao snmpMetadataConfigDao() {
+        var dao = new SnmpMetadataConfigDao();
+        dao.setConfigResource(
+            new FileSystemResource(opennmsHome + "/etc/snmp-metadata-adapter-configuration.xml"));
+        dao.afterPropertiesSet();
+        return dao;
+    }
+
+    @Bean
+    public SnmpMetadataProvisioningAdapter snmpMetadataProvisioningAdapter(
+            NodeDao nodeDao,
+            SnmpAgentConfigFactory snmpPeerFactory,
+            LocationAwareSnmpClient locationAwareSnmpClient,
+            EventForwarder eventForwarder,
+            SnmpMetadataConfigDao snmpMetadataConfigDao,
+            TransactionTemplate transactionTemplate) {
+        var adapter = new SnmpMetadataProvisioningAdapter();
+        adapter.setNodeDao(nodeDao);
+        adapter.setSnmpConfigDao(snmpPeerFactory);
+        adapter.setLocationAwareSnmpClient(locationAwareSnmpClient);
+        adapter.setEventForwarder(eventForwarder);
+        adapter.setSnmpMetadataAdapterConfigDao(snmpMetadataConfigDao);
+        adapter.setTemplate(transactionTemplate);
+        return adapter;
+    }
+
+    @Bean
+    public AnnotationBasedEventListenerAdapter snmpMetadataEventListener(
+            SnmpMetadataProvisioningAdapter adapter,
+            @Qualifier("kafkaEventSubscriptionService") EventSubscriptionService eventSubscriptionService) {
+        var listener = new AnnotationBasedEventListenerAdapter();
+        listener.setAnnotatedListener(adapter);
+        listener.setEventSubscriptionService(eventSubscriptionService);
+        return listener;
     }
 }
