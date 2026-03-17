@@ -214,6 +214,15 @@ public class NodeDaoJpa extends AbstractDaoJpa<OnmsNode, Integer> implements Nod
 
     @Override
     public void deleteObsoleteInterfaces(Integer nodeId, Date scanStamp) {
+        // Delete monitored services on obsolete interfaces first (FK constraint)
+        entityManager().createQuery(
+                "delete from OnmsMonitoredService ms where ms.ipInterface.node.id = ?1 " +
+                "and ms.ipInterface.snmpPrimary != 'P' " +
+                "and (ms.ipInterface.ipLastCapsdPoll is null or ms.ipInterface.ipLastCapsdPoll < ?2)")
+                .setParameter(1, nodeId)
+                .setParameter(2, scanStamp)
+                .executeUpdate();
+        // Then delete the IP interfaces
         entityManager().createQuery(
                 "delete from OnmsIpInterface iface where iface.node.id = ?1 " +
                 "and iface.snmpPrimary != 'P' " +
@@ -221,6 +230,7 @@ public class NodeDaoJpa extends AbstractDaoJpa<OnmsNode, Integer> implements Nod
                 .setParameter(1, nodeId)
                 .setParameter(2, scanStamp)
                 .executeUpdate();
+        // Finally delete the SNMP interfaces
         entityManager().createQuery(
                 "delete from OnmsSnmpInterface snmp where snmp.node.id = ?1 " +
                 "and (snmp.lastCapsdPoll is null or snmp.lastCapsdPoll < ?2)")

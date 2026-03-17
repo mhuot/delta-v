@@ -119,6 +119,12 @@
         </dependency>
 
         <!-- DAO interfaces (AlarmDao, NodeDao, DistPollerDao, ServiceTypeDao) -->
+        <!-- CategoryDao.getCriterionForCategorySetsUnion returns List<Criterion> (Hibernate 3.x type).
+             CategoryDaoJpa.getCriterionForCategorySetsUnion throws UnsupportedOperationException but
+             the compiler still needs the type. org.hibernate:hibernate-core (3.x) does not come
+             through transitively because upstream exclusions in opennms-model and opennms-dao-api
+             strip it before Maven's resolver sees it; the provided-scope dep below supplies it only
+             at compile time. -->
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-dao-api</artifactId>
@@ -151,8 +157,12 @@
             </exclusions>
         </dependency>
 
-        <!-- Old Hibernate 3.x — compile-only for CategoryDao's Criterion type reference.
-             Not on runtime classpath; Hibernate 7 (org.hibernate.orm) is the runtime ORM. -->
+        <!-- Hibernate 3.x — compile-only for CategoryDao.getCriterionForCategorySetsUnion return type.
+             The method always throws UnsupportedOperationException in CategoryDaoJpa; the jar is
+             needed only so javac can resolve org.hibernate.criterion.Criterion. It is excluded from
+             every other transitive path (opennms-dao-api, opennms-model) and absent from the
+             Spring Boot BOM, so an explicit provided-scope entry is the only reliable option.
+             It does NOT enter the fat JAR — spring-boot-maven-plugin only packages compile/runtime deps. -->
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
