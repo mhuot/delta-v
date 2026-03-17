@@ -2311,35 +2311,6 @@
         <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-scriptd/36.0.0-SNAPSHOT</bundle>
     </feature>
 
-    <!-- Karaf-only Provisiond: loads Provisioner daemon without Manager/Eventd -->
-    <feature name="opennms-daemon-provisiond" version="36.0.0-SNAPSHOT"
-             description="OpenNMS :: Daemon Loader :: Provisiond">
-        <feature>opennms-spring-extender</feature>
-        <feature>opennms-event-forwarder-kafka</feature>
-        <feature>opennms-distributed-core-impl</feature>
-        <feature>opennms-persistence</feature>
-        <feature>opennms-config</feature>
-        <feature>opennms-core-tracing</feature>
-        <feature>quartz</feature>
-        <!-- Task coordinator (DefaultTaskCoordinator for import/scan/write lifecycles) -->
-        <bundle>mvn:org.opennms.core/org.opennms.core.tasks/36.0.0-SNAPSHOT</bundle>
-        <!-- API bundles needed by onmsgi:reference proxies -->
-        <bundle>mvn:org.opennms/opennms-provision-api/36.0.0-SNAPSHOT</bundle>
-        <bundle>mvn:org.opennms/opennms-provision-persistence/36.0.0-SNAPSHOT</bundle>
-        <bundle>mvn:org.opennms.core.snmp/org.opennms.core.snmp.api/36.0.0-SNAPSHOT</bundle>
-        <bundle>mvn:org.opennms/opennms-icmp-api/36.0.0-SNAPSHOT</bundle>
-        <bundle>mvn:org.opennms.core.tracing/org.opennms.core.tracing.api/36.0.0-SNAPSHOT</bundle>
-        <!-- Provisiond classes -->
-        <bundle>mvn:org.opennms/opennms-provisiond/36.0.0-SNAPSHOT</bundle>
-        <!-- RPC implementation bundles (SNMP proxy, detector client, DNS lookup) -->
-        <bundle>mvn:org.opennms.core.snmp/org.opennms.core.snmp.proxy.rpc-impl/36.0.0-SNAPSHOT</bundle>
-        <bundle>mvn:org.opennms/opennms-detectorclient-rpc/36.0.0-SNAPSHOT</bundle>
-        <bundle>mvn:org.opennms/opennms-detector-registry/36.0.0-SNAPSHOT</bundle>
-        <!-- Daemon loader (creates Provisioner, starts it) -->
-        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-provisiond/36.0.0-SNAPSHOT</bundle>
-        <feature>opennms-core-ipc-rpc-kafka</feature>
-        <bundle>mvn:org.opennms.core/org.opennms.core.daemon-loader-shared/36.0.0-SNAPSHOT</bundle>
-    </feature>
 
     <!-- Karaf-only Bsmd: loads Bsmd daemon without Manager/Eventd.
          Monitors business service operational status from alarm snapshots.
