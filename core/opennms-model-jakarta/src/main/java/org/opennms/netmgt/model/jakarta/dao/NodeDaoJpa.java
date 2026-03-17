@@ -112,6 +112,9 @@ public class NodeDaoJpa extends AbstractDaoJpa<OnmsNode, Integer> implements Nod
             initialize(node.getIpInterfaces());
             initialize(node.getSnmpInterfaces());
             initialize(node.getCategories());
+            for (OnmsIpInterface iface : node.getIpInterfaces()) {
+                initialize(iface.getSnmpInterface());
+            }
         }
         return node;
     }
@@ -204,6 +207,7 @@ public class NodeDaoJpa extends AbstractDaoJpa<OnmsNode, Integer> implements Nod
     public List<OnmsIpInterface> findObsoleteIpInterfaces(Integer nodeId, Date scanStamp) {
         return findObjects(OnmsIpInterface.class,
                 "from OnmsIpInterface iface where iface.node.id = ?1 " +
+                "and iface.snmpPrimary != 'P' " +
                 "and (iface.ipLastCapsdPoll is null or iface.ipLastCapsdPoll < ?2)",
                 nodeId, scanStamp);
     }
@@ -212,7 +216,14 @@ public class NodeDaoJpa extends AbstractDaoJpa<OnmsNode, Integer> implements Nod
     public void deleteObsoleteInterfaces(Integer nodeId, Date scanStamp) {
         entityManager().createQuery(
                 "delete from OnmsIpInterface iface where iface.node.id = ?1 " +
+                "and iface.snmpPrimary != 'P' " +
                 "and (iface.ipLastCapsdPoll is null or iface.ipLastCapsdPoll < ?2)")
+                .setParameter(1, nodeId)
+                .setParameter(2, scanStamp)
+                .executeUpdate();
+        entityManager().createQuery(
+                "delete from OnmsSnmpInterface snmp where snmp.node.id = ?1 " +
+                "and (snmp.lastCapsdPoll is null or snmp.lastCapsdPoll < ?2)")
                 .setParameter(1, nodeId)
                 .setParameter(2, scanStamp)
                 .executeUpdate();
@@ -220,11 +231,11 @@ public class NodeDaoJpa extends AbstractDaoJpa<OnmsNode, Integer> implements Nod
 
     @Override
     public void updateNodeScanStamp(Integer nodeId, Date scanStamp) {
-        entityManager().createQuery(
-                "update OnmsNode set lastCapsdPoll = ?1 where id = ?2")
-                .setParameter(1, scanStamp)
-                .setParameter(2, nodeId)
-                .executeUpdate();
+        OnmsNode node = get(nodeId);
+        if (node != null) {
+            node.setLastCapsdPoll(scanStamp);
+            update(node);
+        }
     }
 
     @Override
