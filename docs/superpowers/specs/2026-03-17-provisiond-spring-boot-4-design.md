@@ -198,7 +198,7 @@ New JPA DAO implementations to add to the shared `jakarta.dao` package, extendin
 | `MonitoringSystemDao` | `OnmsMonitoringSystem` | **New** | `get()` — used by Provisioner to resolve monitoring system location |
 | `ProvisiondConfigurationDao` | N/A (config file) | **Exists** (move) | Not JPA. Move `InlineProvisiondConfigDao` from daemon-loader-provisiond to daemon-boot-provisiond. Update paths from `/opt/sentinel` to `${opennms.home}`. |
 | `HwEntityDao` | `OnmsHwEntity` | **New** | For SnmpHardwareInventory adapter |
-| `HwEntityAttributeTypeDao` | `OnmsHwEntityAttributeType` | **New** | For SnmpHardwareInventory adapter |
+| `HwEntityAttributeTypeDao` | `HwEntityAttributeType` | **New** | For SnmpHardwareInventory adapter |
 
 **9 new DAOs, 2 existing DAOs to expand, 1 config DAO to relocate.**
 
@@ -229,8 +229,9 @@ public PersistenceManagedTypes persistenceManagedTypes() {
         // Provisiond additions
         RequisitionedCategoryAssociation.class.getName(),
         OnmsHwEntity.class.getName(),
-        OnmsHwEntityAttributeType.class.getName(),
-        OnmsHwEntityAlias.class.getName()      // mapped collection in OnmsHwEntity
+        OnmsHwEntityAttribute.class.getName(), // @Entity — mapped collection in OnmsHwEntity
+        HwEntityAttributeType.class.getName(),
+        OnmsHwEntityAlias.class.getName()      // @Entity — mapped collection in OnmsHwEntity
     );
 }
 ```
