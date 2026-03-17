@@ -172,6 +172,16 @@
             <groupId>org.opennms.core</groupId>
             <artifactId>org.opennms.core.daemon-common</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <!-- jackson-module-scala 2.16.2 (via servicemix kafka bundle) is
+                     incompatible with jackson-databind 2.19.4 pinned by Spring Boot 4.
+                     Hibernate 7 auto-discovers it via classpath scan, causing startup
+                     crash. Alarmd doesn't use Kafka RPC, so this is safe to exclude. -->
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.module</groupId>
+                    <artifactId>jackson-module-scala_2.13</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Alarmd implementation -->
