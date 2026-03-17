@@ -1,4 +1,4 @@
-package org.opennms.netmgt.discovery.boot;
+package org.opennms.core.daemon.common;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

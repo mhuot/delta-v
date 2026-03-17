@@ -8,8 +8,6 @@ import javax.sql.DataSource;
 import org.opennms.core.daemon.common.DaemonSmartLifecycle;
 import org.opennms.core.daemon.common.JdbcDistPollerDao;
 import org.opennms.core.daemon.common.JdbcInterfaceToNodeCache;
-import org.opennms.core.daemon.loader.LocalServiceDetectorRegistry;
-import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.netmgt.config.DiscoveryConfigFactory;
 import org.opennms.netmgt.dao.api.DistPollerDao;
 import org.opennms.netmgt.dao.api.InterfaceToNodeCache;
@@ -25,7 +23,6 @@ import org.opennms.netmgt.icmp.proxy.PingSweepRpcModule;
 import org.opennms.netmgt.provision.LocationAwareDetectorClient;
 import org.opennms.netmgt.provision.detector.client.rpc.DetectorClientRpcModule;
 import org.opennms.netmgt.provision.detector.client.rpc.LocationAwareDetectorClientRpcImpl;
-import org.opennms.netmgt.provision.detector.registry.api.ServiceDetectorRegistry;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -88,16 +85,6 @@ public class DiscoveryBootConfiguration {
     }
 
     // -- Detector RPC --
-
-    @Bean
-    public EntityScopeProvider entityScopeProvider() {
-        return new NoOpEntityScopeProvider();
-    }
-
-    @Bean
-    public ServiceDetectorRegistry serviceDetectorRegistry() {
-        return new LocalServiceDetectorRegistry();
-    }
 
     @Bean(name = "scanExecutor")
     public Executor scanExecutor() {

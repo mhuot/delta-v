@@ -291,6 +291,40 @@
             <version>${opentracingVersion}</version>
         </dependency>
 
+        <!-- MATE API (EntityScopeProvider interface for NoOpEntityScopeProvider) -->
+        <dependency>
+            <groupId>org.opennms.core.mate</groupId>
+            <artifactId>org.opennms.core.mate.api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Detector Registry (ServiceDetectorRegistry interface, LocalServiceDetectorRegistry) -->
+        <dependency>
+            <groupId>org.opennms.core</groupId>
+            <artifactId>org.opennms.core.daemon-loader-shared</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opennms</groupId>
+            <artifactId>opennms-detector-registry</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <!-- core.soa pulls spring-dependencies (ServiceMix Spring 4.2.x) -->
+                <exclusion><groupId>org.opennms.core</groupId><artifactId>org.opennms.core.soa</artifactId></exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.opennms</groupId>
+            <artifactId>opennms-provision-api</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>mina-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>netty-dependencies</artifactId></exclusion>
+                <!-- opennms-model already on classpath with proper exclusions -->
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+            </exclusions>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
