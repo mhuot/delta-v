@@ -45,6 +45,7 @@ import org.opennms.netmgt.model.OnmsMonitoringSystem;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsReductionKeyMemo;
 import org.opennms.netmgt.model.OnmsServiceType;
+import org.opennms.netmgt.model.OnmsApplication;
 import org.opennms.netmgt.model.OnmsSnmpInterface;
 import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
@@ -109,7 +110,8 @@ public class AlarmdConfiguration {
             OnmsReductionKeyMemo.class.getName(),
             OnmsServiceType.class.getName(),
             OnmsSnmpInterface.class.getName(),
-            OnmsMonitoringLocation.class.getName()
+            OnmsMonitoringLocation.class.getName(),
+            OnmsApplication.class.getName()
         );
     }
 

@@ -49,6 +49,7 @@ import org.opennms.netmgt.model.OnmsHwEntity;
 import org.opennms.netmgt.model.OnmsHwEntityAlias;
 import org.opennms.netmgt.model.OnmsHwEntityAttribute;
 import org.opennms.netmgt.model.OnmsIpInterface;
+import org.opennms.netmgt.model.OnmsApplication;
 import org.opennms.netmgt.model.OnmsMemo;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsMonitoringSystem;
@@ -135,6 +136,7 @@ public class ProvisiondBootConfiguration {
             OnmsServiceType.class.getName(),
             OnmsSnmpInterface.class.getName(),
             OnmsMonitoringLocation.class.getName(),
+            OnmsApplication.class.getName(),
             RequisitionedCategoryAssociation.class.getName()
             // HW inventory entities disabled until HwEntityAttributeType entity registration is fixed:
             // OnmsHwEntity, OnmsHwEntityAttribute, HwEntityAttributeType, OnmsHwEntityAlias

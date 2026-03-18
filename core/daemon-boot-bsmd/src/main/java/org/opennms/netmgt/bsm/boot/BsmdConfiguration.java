@@ -198,6 +198,11 @@ public class BsmdConfiguration {
      * propagation using the configured reduction and map functions.
      */
     @Bean
+    public org.opennms.netmgt.bsm.service.AlarmProvider alarmProvider() {
+        return new org.opennms.netmgt.bsm.service.internal.AlarmProviderImpl();
+    }
+
+    @Bean
     public BusinessServiceStateMachine businessServiceStateMachine() {
         return new DefaultBusinessServiceStateMachine();
     }
