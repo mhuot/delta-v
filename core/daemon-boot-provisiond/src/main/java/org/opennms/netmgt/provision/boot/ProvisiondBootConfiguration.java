@@ -8,14 +8,10 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import javax.sql.DataSource;
 
-import org.opennms.netmgt.config.DefaultSnmpHwInventoryAdapterConfigDao;
 import org.opennms.netmgt.config.SnmpAssetAdapterConfig;
 import org.opennms.netmgt.config.SnmpAssetAdapterConfigFactory;
 import org.opennms.netmgt.config.snmpmetadata.SnmpMetadataConfigDao;
-import org.opennms.netmgt.dao.api.HwEntityAttributeTypeDao;
-import org.opennms.netmgt.dao.api.HwEntityDao;
 import org.opennms.netmgt.provision.SnmpAssetProvisioningAdapter;
-import org.opennms.netmgt.provision.SnmpHardwareInventoryProvisioningAdapter;
 import org.opennms.netmgt.provision.SnmpMetadataProvisioningAdapter;
 
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
@@ -139,11 +135,9 @@ public class ProvisiondBootConfiguration {
             OnmsServiceType.class.getName(),
             OnmsSnmpInterface.class.getName(),
             OnmsMonitoringLocation.class.getName(),
-            RequisitionedCategoryAssociation.class.getName(),
-            OnmsHwEntity.class.getName(),
-            OnmsHwEntityAttribute.class.getName(),
-            HwEntityAttributeType.class.getName(),
-            OnmsHwEntityAlias.class.getName()
+            RequisitionedCategoryAssociation.class.getName()
+            // HW inventory entities disabled until HwEntityAttributeType entity registration is fixed:
+            // OnmsHwEntity, OnmsHwEntityAttribute, HwEntityAttributeType, OnmsHwEntityAlias
         );
     }
 
@@ -586,48 +580,11 @@ public class ProvisiondBootConfiguration {
 
     // ===================================================================
     // Section 17: SNMP Hardware Inventory Provisioning Adapter
+    // DISABLED: HwEntityAttributeType entity not recognized by Hibernate 7
+    // (javax.persistence @Entity on classpath but not registered in metamodel).
+    // Needs investigation — possibly requires jakarta-transform of opennms-model
+    // or explicit entity class registration workaround.
     // ===================================================================
-
-    @Bean
-    public DefaultSnmpHwInventoryAdapterConfigDao snmpHwInventoryAdapterConfigDao() {
-        var dao = new DefaultSnmpHwInventoryAdapterConfigDao();
-        dao.setConfigResource(
-            new FileSystemResource(opennmsHome + "/etc/snmp-hardware-inventory-adapter-configuration.xml"));
-        dao.afterPropertiesSet();
-        return dao;
-    }
-
-    @Bean
-    public SnmpHardwareInventoryProvisioningAdapter snmpHardwareInventoryProvisioningAdapter(
-            NodeDao nodeDao,
-            HwEntityDao hwEntityDao,
-            HwEntityAttributeTypeDao hwEntityAttributeTypeDao,
-            EventForwarder eventForwarder,
-            SnmpAgentConfigFactory snmpPeerFactory,
-            DefaultSnmpHwInventoryAdapterConfigDao hwInventoryConfigDao,
-            LocationAwareSnmpClient locationAwareSnmpClient,
-            TransactionTemplate transactionTemplate) {
-        var adapter = new SnmpHardwareInventoryProvisioningAdapter();
-        adapter.setNodeDao(nodeDao);
-        adapter.setHwEntityDao(hwEntityDao);
-        adapter.setHwEntityAttributeTypeDao(hwEntityAttributeTypeDao);
-        adapter.setEventForwarder(eventForwarder);
-        adapter.setSnmpPeerFactory(snmpPeerFactory);
-        adapter.setHwInventoryAdapterConfigDao(hwInventoryConfigDao);
-        adapter.setLocationAwareSnmpClient(locationAwareSnmpClient);
-        adapter.setTemplate(transactionTemplate);
-        return adapter;
-    }
-
-    @Bean
-    public AnnotationBasedEventListenerAdapter snmpHwInventoryEventListener(
-            SnmpHardwareInventoryProvisioningAdapter adapter,
-            @Qualifier("kafkaEventSubscriptionService") EventSubscriptionService eventSubscriptionService) {
-        var listener = new AnnotationBasedEventListenerAdapter();
-        listener.setAnnotatedListener(adapter);
-        listener.setEventSubscriptionService(eventSubscriptionService);
-        return listener;
-    }
 
     // ===================================================================
     // Section 18: SNMP Asset Provisioning Adapter
