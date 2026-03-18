@@ -56,3 +56,5 @@ logging:
   level:
     org.opennms: INFO
     org.opennms.netmgt.provision: DEBUG
+    org.opennms.netmgt.provision.service.lifecycle: DEBUG
+    org.opennms.core.tasks: DEBUG
