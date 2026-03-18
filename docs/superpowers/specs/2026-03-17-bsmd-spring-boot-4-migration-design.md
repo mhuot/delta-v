@@ -18,6 +18,18 @@ We create Jakarta versions of all BSM entities and new JPA DAOs, but **reuse the
 
 **Note:** `BusinessServiceManagerImpl` uses `org.hibernate.Hibernate.initialize()` in two places (for lazy-loading `OnmsApplication.monitoredServices`). This resolves correctly against Hibernate 7 since `org.hibernate.Hibernate` exists at the same package path in both Hibernate 3.x and 7.x.
 
+### Bsmd: Convert to Constructor Injection
+
+As part of this migration, convert `Bsmd` from `@Autowired` field injection to constructor injection. The 6 fields to convert:
+- `EventIpcManager m_eventIpcManager`
+- `MessageBus m_messageBus` (optional — keep `@Nullable` or use `Optional`)
+- `EventConfDao m_eventConfDao`
+- `TransactionTemplate m_template`
+- `BusinessServiceStateMachine m_stateMachine`
+- `BusinessServiceManager m_manager`
+
+`BusinessServiceManagerImpl` retains `@Autowired` field injection for now since it lives in `features/bsm/service/impl/` and is shared with the Karaf deployment.
+
 ### Why not other approaches
 
 - **Option A (rewrite service layer too)**: No benefit — the service layer works through interfaces and doesn't touch `javax.persistence`.
