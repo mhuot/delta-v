@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <provisiond-configuration xmlns="http://xmlns.opennms.org/xsd/config/provisiond-configuration"
-  foreign-source-dir="/opt/sentinel/etc/foreign-sources"
-  requistion-dir="/opt/sentinel/etc/imports"
-  importThreads="4" scanThreads="4" rescanThreads="4" writeThreads="4" >
-  <requisition-def import-name="cloud-services"
-                   import-url-resource="file:///opt/sentinel/etc/imports/cloud-services.xml">
-    <cron-schedule>0/30 * * * * ?</cron-schedule>
-  </requisition-def>
+                          import-threads="2"
+                          scan-threads="4"
+                          write-threads="2"
+                          rescan-threads="2"
+                          requisition-dir="/opt/deltav/etc/imports"
+                          foreign-source-dir="/opt/deltav/etc/foreign-sources">
+    <requisition-def import-name="test-e2e"
+                     import-url-resource="file:///opt/deltav/etc/imports/test-e2e.xml"
+                     cron-schedule="0 0 0 1 1 ? 2099">
+    </requisition-def>
 </provisiond-configuration>
