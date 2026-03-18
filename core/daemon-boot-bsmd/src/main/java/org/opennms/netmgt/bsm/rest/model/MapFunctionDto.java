@@ -19,21 +19,17 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.bsm.boot;
+package org.opennms.netmgt.bsm.rest.model;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-@SpringBootApplication(scanBasePackages = {
-    "org.opennms.core.daemon.common",
-    "org.opennms.netmgt.bsm.boot",
-    "org.opennms.netmgt.bsm.dao",
-    "org.opennms.netmgt.bsm.rest",
-    "org.opennms.netmgt.model.jakarta.dao"
-})
-public class BsmdApplication {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class MapFunctionDto {
+    private String type;
+    private String severity;
 
-    public static void main(String[] args) {
-        SpringApplication.run(BsmdApplication.class, args);
-    }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+    public String getSeverity() { return severity; }
+    public void setSeverity(String severity) { this.severity = severity; }
 }

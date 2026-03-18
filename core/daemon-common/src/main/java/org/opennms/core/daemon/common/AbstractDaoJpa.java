@@ -168,7 +168,19 @@ public abstract class AbstractDaoJpa<T, K extends Serializable> implements OnmsD
 
     @Override
     public void saveOrUpdate(T entity) {
-        entityManager.merge(entity);
+        if (entityManager.contains(entity)) {
+            // Already managed — just let the persistence context track changes
+            return;
+        }
+        @SuppressWarnings("unchecked")
+        K id = (K) entityManager.getEntityManagerFactory()
+                .getPersistenceUnitUtil().getIdentifier(entity);
+        if (id == null) {
+            // New entity — persist so the ID is assigned on the original instance
+            entityManager.persist(entity);
+        } else {
+            entityManager.merge(entity);
+        }
     }
 
     @Override

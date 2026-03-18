@@ -19,21 +19,22 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.bsm.boot;
+package org.opennms.netmgt.bsm.rest.model;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import java.util.List;
 
-@SpringBootApplication(scanBasePackages = {
-    "org.opennms.core.daemon.common",
-    "org.opennms.netmgt.bsm.boot",
-    "org.opennms.netmgt.bsm.dao",
-    "org.opennms.netmgt.bsm.rest",
-    "org.opennms.netmgt.model.jakarta.dao"
-})
-public class BsmdApplication {
+public class BusinessServiceStatusDto {
+    private Long id;
+    private String name;
+    private String operationalStatus;
+    private List<String> rootCause;
 
-    public static void main(String[] args) {
-        SpringApplication.run(BsmdApplication.class, args);
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getOperationalStatus() { return operationalStatus; }
+    public void setOperationalStatus(String operationalStatus) { this.operationalStatus = operationalStatus; }
+    public List<String> getRootCause() { return rootCause; }
+    public void setRootCause(List<String> rootCause) { this.rootCause = rootCause; }
 }
