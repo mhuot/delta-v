@@ -28,6 +28,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
     "org.opennms.core.daemon.common",
     "org.opennms.netmgt.bsm.boot",
     "org.opennms.netmgt.bsm.dao",
+    "org.opennms.netmgt.bsm.rest",
     "org.opennms.netmgt.model.jakarta.dao"
 })
 public class BsmdApplication {
