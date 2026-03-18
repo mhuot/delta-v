@@ -360,6 +360,12 @@
             <artifactId>jaxb-runtime</artifactId>
         </dependency>
 
+        <!-- Jakarta Validation — needed by BSM entity @Size annotations -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+
         <!-- Jakarta Inject — needed by Hibernate 7 -->
         <dependency>
             <groupId>jakarta.inject</groupId>
