@@ -395,10 +395,8 @@ public class ProvisiondBootConfiguration {
     // Section 12: Core Provisiond Beans
     // ===================================================================
 
-    @Bean
-    public EntityScopeProvider entityScopeProvider() {
-        return new NoOpEntityScopeProvider();
-    }
+    // EntityScopeProvider is provided by DaemonProvisioningConfiguration (@ConditionalOnMissingBean)
+    // as NoOpEntityScopeProvider. When real MATE support is needed, override here.
 
     @Bean
     public JSR223ScriptCache scriptCache() {
