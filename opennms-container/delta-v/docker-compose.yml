@@ -402,6 +402,7 @@ services:
       RPC_KAFKA_FORCE_REMOTE: "true"
     volumes:
       - ./provisiond-overlay/etc:/opt/deltav/etc
+      - ./etc/imports:/opt/deltav/etc/imports
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
       interval: 15s
@@ -414,32 +415,30 @@ services:
     image: opennms/daemon-deltav:${VERSION}
     container_name: delta-v-bsmd
     hostname: bsmd
+    entrypoint: []
+    command: ["java", "-Xms256m", "-Xmx512m", "-jar", "/opt/daemon-boot-bsmd.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
       kafka:
         condition: service_healthy
     environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_USER: opennms
-      POSTGRES_PASSWORD: opennms
-      POSTGRES_DB: opennms
-      JAVA_OPTS: >-
-        -Xms256m -Xmx512m
-        -XX:MaxMetaspaceSize=256m
-        -Djava.security.egd=file:/dev/./urandom
-        -Dorg.opennms.tsid.node-id=17
-        -Dorg.opennms.alarms.snapshot.sync.ms=30000
-    volumes:
-      - bsmd-data:/opt/sentinel/data
-      - ./bsmd-overlay/etc:/opt/sentinel-etc-overlay:ro
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
+      SPRING_DATASOURCE_USERNAME: opennms
+      SPRING_DATASOURCE_PASSWORD: opennms
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_CONSUMER_GROUP: opennms-bsmd
+      OPENNMS_HOME: /opt/deltav
+      OPENNMS_INSTANCE_ID: OpenNMS
+      OPENNMS_TSID_NODE_ID: "17"
+    ports:
+      - "8180:8080"
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf -u admin:admin http://localhost:8181/sentinel/rest/health/probe || exit 1"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 20
-      start_period: 90s
+      start_period: 30s
 
   perspectivepollerd:
     profiles: [full]
@@ -543,6 +542,5 @@ volumes:
   collectd-data:
   enlinkd-data:
   scriptd-data:
-  bsmd-data:
   perspectivepollerd-data:
   telemetryd-data:

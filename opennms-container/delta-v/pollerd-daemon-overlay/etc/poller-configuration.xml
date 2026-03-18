@@ -266,6 +266,32 @@
          <parameter key="username" value="${requisition:username|detector:username|admin}" />
          <parameter key="password" value="${requisition:password|detector:password|admin}" />
       </service>
+      <!-- Delta-V container health checks via PageSequenceMonitor -->
+      <service name="Deltav-Health" interval="30000" user-defined="false" status="on">
+        <parameter key="page-sequence">
+          <page-sequence>
+            <page host="${nodeLabel}" path="/actuator/health" port="8080"
+                  response-range="200-299"/>
+          </page-sequence>
+        </parameter>
+      </service>
+      <service name="Minion-Health" interval="30000" user-defined="false" status="on">
+        <parameter key="page-sequence">
+          <page-sequence>
+            <page host="${nodeLabel}" path="/minion/rest/health/probe" port="8181"
+                  response-range="200-299"/>
+          </page-sequence>
+        </parameter>
+      </service>
+      <!-- Delta-V infrastructure TCP monitors -->
+      <service name="PostgreSQL" interval="30000" user-defined="false" status="on">
+        <parameter key="port" value="5432"/>
+        <parameter key="hostname" value="${nodeLabel}"/>
+      </service>
+      <service name="Kafka" interval="30000" user-defined="false" status="on">
+        <parameter key="port" value="9092"/>
+        <parameter key="hostname" value="${nodeLabel}"/>
+      </service>
       <!-- Passive cloud service monitors — status driven by syslog → Event Translator → passiveServiceStatus -->
       <service name="GoogleCloud" interval="30000" user-defined="true" status="on"/>
       <service name="Azure" interval="30000" user-defined="true" status="on"/>
@@ -338,4 +364,8 @@
    <monitor service="GoogleCloud" class-name="org.opennms.netmgt.poller.monitors.PassiveServiceMonitor" />
    <monitor service="Azure" class-name="org.opennms.netmgt.poller.monitors.PassiveServiceMonitor" />
    <monitor service="AWS" class-name="org.opennms.netmgt.poller.monitors.PassiveServiceMonitor" />
+   <monitor service="Deltav-Health" class-name="org.opennms.netmgt.poller.monitors.PageSequenceMonitor"/>
+   <monitor service="Minion-Health" class-name="org.opennms.netmgt.poller.monitors.PageSequenceMonitor"/>
+   <monitor service="PostgreSQL" class-name="org.opennms.netmgt.poller.monitors.TcpMonitor"/>
+   <monitor service="Kafka" class-name="org.opennms.netmgt.poller.monitors.TcpMonitor"/>
 </poller-configuration>
