@@ -62,7 +62,6 @@ import org.opennms.netmgt.xml.eventconf.AlarmData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -92,24 +91,31 @@ public class Bsmd implements SpringServiceDaemon, BusinessServiceStateChangeHand
     /** MessageBus type derived from uei.opennms.org/internal/reloadDaemonConfig */
     private static final String MSG_TYPE_RELOAD_DAEMON_CONFIG = "reloadDaemonConfig";
 
-    @Autowired
-    @Qualifier("eventIpcManager")
     private EventIpcManager m_eventIpcManager;
 
     @Autowired(required = false)
     private MessageBus m_messageBus;
 
-    @Autowired
     private EventConfDao m_eventConfDao;
 
-    @Autowired
     private TransactionTemplate m_template;
 
-    @Autowired
     private BusinessServiceStateMachine m_stateMachine;
 
-    @Autowired
     private BusinessServiceManager m_manager;
+
+    @Autowired
+    public Bsmd(EventIpcManager eventIpcManager,
+                EventConfDao eventConfDao,
+                TransactionTemplate transactionTemplate,
+                BusinessServiceStateMachine stateMachine,
+                BusinessServiceManager manager) {
+        m_eventIpcManager = Objects.requireNonNull(eventIpcManager);
+        m_eventConfDao = Objects.requireNonNull(eventConfDao);
+        m_template = Objects.requireNonNull(transactionTemplate);
+        m_stateMachine = Objects.requireNonNull(stateMachine);
+        m_manager = Objects.requireNonNull(manager);
+    }
 
     private boolean m_verifyReductionKeys = true;
 
