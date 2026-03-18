@@ -94,6 +94,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.orm.jpa.persistenceunit.PersistenceManagedTypes;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
@@ -150,10 +151,8 @@ public class ProvisiondBootConfiguration {
     // Section 2: DAO / Cache / Transaction
     // ===================================================================
 
-    @Bean
-    public DistPollerDao distPollerDao(DataSource dataSource) {
-        return new JdbcDistPollerDao(dataSource);
-    }
+    // DistPollerDao is provided by DistPollerDaoJpa (component-scanned from jakarta.dao package).
+    // Do NOT define an explicit bean here — it conflicts with the @Repository bean.
 
     @Bean
     public InterfaceToNodeCache interfaceToNodeCache(DataSource dataSource) {
