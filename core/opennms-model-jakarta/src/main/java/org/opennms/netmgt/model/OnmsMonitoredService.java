@@ -543,9 +543,14 @@ public class OnmsMonitoredService extends OnmsEntity implements Serializable, Co
      *
      * @return a {@link java.util.Set} object.
      */
-    // OnmsApplication is not yet migrated to Jakarta Persistence.
-    // Marked @Transient until a Jakarta OnmsApplication entity is available.
-    @Transient
+    @ManyToMany(
+                cascade={CascadeType.PERSIST, CascadeType.MERGE}
+    )
+    @JoinTable(
+               name="application_service_map",
+               joinColumns={@JoinColumn(name="ifserviceid")},
+               inverseJoinColumns={@JoinColumn(name="appid")}
+    )
     @JsonIgnore
     public Set<OnmsApplication> getApplications() {
         return m_applications;

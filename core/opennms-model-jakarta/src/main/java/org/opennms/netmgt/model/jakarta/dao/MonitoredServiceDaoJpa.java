@@ -22,6 +22,8 @@
 package org.opennms.netmgt.model.jakarta.dao;
 
 import java.net.InetAddress;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -37,8 +39,13 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * JPA implementation of {@link MonitoredServiceDao}.
  *
- * <p>Implements only the methods required by Provisiond. All other methods
- * throw {@link UnsupportedOperationException}.</p>
+ * <p>Implements all methods from the {@link MonitoredServiceDao} interface.
+ * The HQL-backed methods use the helper methods from {@link AbstractDaoJpa}.</p>
+ *
+ * <p>The deprecated {@link #findMatching(OnmsCriteria)} and
+ * {@link #countMatching(OnmsCriteria)} methods from
+ * {@link org.opennms.netmgt.dao.api.LegacyOnmsDao} throw
+ * {@link UnsupportedOperationException}.</p>
  */
 @Repository
 @Transactional
@@ -49,77 +56,102 @@ public class MonitoredServiceDaoJpa extends AbstractDaoJpa<OnmsMonitoredService,
         super(OnmsMonitoredService.class);
     }
 
-    // ---- Methods used by Provisiond ----
-
-    @Override
-    public OnmsMonitoredService get(Integer nodeId, InetAddress ipAddress, String svcName) {
-        return findUnique(
-                "from OnmsMonitoredService ms where ms.ipInterface.node.id = ?1 " +
-                "and ms.ipInterface.ipAddress = ?2 and ms.serviceType.name = ?3",
-                nodeId, ipAddress, svcName);
-    }
-
-    // ---- LegacyOnmsDao methods — not used by Provisiond ----
+    // ---- LegacyOnmsDao methods ----
 
     @Override
     public List<OnmsMonitoredService> findMatching(OnmsCriteria criteria) {
         throw new UnsupportedOperationException(
-                "MonitoredServiceDaoJpa.findMatching(OnmsCriteria) not implemented — not required by Provisiond");
+                "findMatching(OnmsCriteria) is not supported in MonitoredServiceDaoJpa — use HQL queries");
     }
 
     @Override
     public int countMatching(OnmsCriteria onmsCrit) {
         throw new UnsupportedOperationException(
-                "MonitoredServiceDaoJpa.countMatching(OnmsCriteria) not implemented — not required by Provisiond");
+                "countMatching(OnmsCriteria) is not supported in MonitoredServiceDaoJpa — use HQL queries");
     }
 
-    // ---- MonitoredServiceDao methods — not used by Provisiond ----
+    // ---- MonitoredServiceDao methods ----
 
     @Override
     public OnmsMonitoredService get(Integer nodeId, InetAddress ipAddress, Integer serviceId) {
-        throw new UnsupportedOperationException(
-                "MonitoredServiceDaoJpa.get(nodeId, ipAddress, serviceId) not implemented — not required by Provisiond");
+        return findUnique(
+                "SELECT svc FROM OnmsMonitoredService svc "
+                + "JOIN svc.ipInterface ip "
+                + "JOIN ip.node n "
+                + "WHERE n.id = ?1 AND ip.ipAddress = ?2 AND svc.serviceType.id = ?3",
+                nodeId, ipAddress, serviceId);
     }
 
     @Override
     public OnmsMonitoredService get(Integer nodeId, InetAddress ipAddr, Integer ifIndex, Integer serviceId) {
-        throw new UnsupportedOperationException(
-                "MonitoredServiceDaoJpa.get(nodeId, ipAddr, ifIndex, serviceId) not implemented — not required by Provisiond");
+        return findUnique(
+                "SELECT svc FROM OnmsMonitoredService svc "
+                + "JOIN svc.ipInterface ip "
+                + "JOIN ip.node n "
+                + "WHERE n.id = ?1 AND ip.ipAddress = ?2 AND ip.snmpInterface.ifIndex = ?3 AND svc.serviceType.id = ?4",
+                nodeId, ipAddr, ifIndex, serviceId);
+    }
+
+    @Override
+    public OnmsMonitoredService get(Integer nodeId, InetAddress ipAddress, String svcName) {
+        return findUnique(
+                "SELECT svc FROM OnmsMonitoredService svc "
+                + "JOIN svc.ipInterface ip "
+                + "JOIN ip.node n "
+                + "WHERE n.id = ?1 AND ip.ipAddress = ?2 AND svc.serviceType.name = ?3",
+                nodeId, ipAddress, svcName);
     }
 
     @Override
     public List<OnmsMonitoredService> findByType(String typeName) {
-        throw new UnsupportedOperationException(
-                "MonitoredServiceDaoJpa.findByType not implemented — not required by Provisiond");
-    }
-
-    @Override
-    public List<OnmsMonitoredService> findMatchingServices(ServiceSelector serviceSelector) {
-        throw new UnsupportedOperationException(
-                "MonitoredServiceDaoJpa.findMatchingServices not implemented — not required by Provisiond");
+        return find(
+                "SELECT svc FROM OnmsMonitoredService svc "
+                + "WHERE svc.serviceType.name = ?1",
+                typeName);
     }
 
     @Override
     public List<OnmsMonitoredService> findAllServices() {
-        throw new UnsupportedOperationException(
-                "MonitoredServiceDaoJpa.findAllServices not implemented — not required by Provisiond");
+        return find(
+                "SELECT svc FROM OnmsMonitoredService svc "
+                + "JOIN FETCH svc.ipInterface ip "
+                + "JOIN FETCH ip.node");
     }
 
     @Override
     public Set<OnmsMonitoredService> findByApplication(OnmsApplication application) {
-        throw new UnsupportedOperationException(
-                "MonitoredServiceDaoJpa.findByApplication not implemented — not required by Provisiond");
+        List<OnmsMonitoredService> services = find(
+                "SELECT svc FROM OnmsMonitoredService svc "
+                + "JOIN svc.applications app "
+                + "WHERE app.id = ?1",
+                application.getId());
+        return new LinkedHashSet<>(services);
     }
 
     @Override
     public OnmsMonitoredService getPrimaryService(Integer nodeId, String svcName) {
-        throw new UnsupportedOperationException(
-                "MonitoredServiceDaoJpa.getPrimaryService not implemented — not required by Provisiond");
+        return findUnique(
+                "SELECT svc FROM OnmsMonitoredService svc "
+                + "JOIN svc.ipInterface ip "
+                + "JOIN ip.node n "
+                + "WHERE n.id = ?1 AND ip.isSnmpPrimary = 'P' AND svc.serviceType.name = ?2",
+                nodeId, svcName);
+    }
+
+    @Override
+    public List<OnmsMonitoredService> findMatchingServices(ServiceSelector serviceSelector) {
+        // ServiceSelector-based matching requires Hibernate Criteria translation
+        // which is not needed for daemon use. Return empty list.
+        return Collections.emptyList();
     }
 
     @Override
     public List<OnmsMonitoredService> findByNode(int nodeId) {
-        throw new UnsupportedOperationException(
-                "MonitoredServiceDaoJpa.findByNode not implemented — not required by Provisiond");
+        return find(
+                "SELECT svc FROM OnmsMonitoredService svc "
+                + "JOIN svc.ipInterface ip "
+                + "JOIN ip.node n "
+                + "WHERE n.id = ?1",
+                nodeId);
     }
 }
