@@ -75,7 +75,7 @@ public class BsmdRestController {
     }
 
     @GetMapping("/{id}")
-    public BusinessServiceDto getById(@PathVariable Long id) {
+    public BusinessServiceDto getById(@PathVariable("id") Long id) {
         return transactionTemplate.execute(status -> {
             BusinessService bs = findOrThrow(id);
             return mapper.toDto(bs);
@@ -105,7 +105,7 @@ public class BsmdRestController {
     }
 
     @PutMapping("/{id}")
-    public BusinessServiceDto update(@PathVariable Long id, @RequestBody BusinessServiceDto request) {
+    public BusinessServiceDto update(@PathVariable("id") Long id, @RequestBody BusinessServiceDto request) {
         BusinessServiceDto result = transactionTemplate.execute(status -> {
             BusinessService bs = findOrThrow(id);
             bs.setName(request.getName());
@@ -129,7 +129,7 @@ public class BsmdRestController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
         transactionTemplate.executeWithoutResult(status -> {
             BusinessService bs = findOrThrow(id);
             manager.deleteBusinessService(bs);
@@ -139,7 +139,7 @@ public class BsmdRestController {
     }
 
     @GetMapping("/{id}/status")
-    public BusinessServiceStatusDto getStatus(@PathVariable Long id) {
+    public BusinessServiceStatusDto getStatus(@PathVariable("id") Long id) {
         return transactionTemplate.execute(status -> {
             BusinessService bs = findOrThrow(id);
             Status opStatus = manager.getOperationalStatus(bs);

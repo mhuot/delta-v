@@ -443,6 +443,9 @@
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <release>${java.version}</release>
+                    <!-- Spring 7 requires -parameters for @PathVariable, @RequestParam
+                         without explicit name attributes -->
+                    <parameters>true</parameters>
                 </configuration>
             </plugin>
             <plugin>
