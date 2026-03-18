@@ -402,7 +402,7 @@ services:
       RPC_KAFKA_FORCE_REMOTE: "true"
     volumes:
       - ./provisiond-overlay/etc:/opt/deltav/etc
-      - ./etc/imports:/opt/deltav/etc/imports:ro
+      - ./etc/imports:/opt/deltav/etc/imports
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
       interval: 15s

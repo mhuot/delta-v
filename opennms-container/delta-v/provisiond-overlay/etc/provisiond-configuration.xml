@@ -10,4 +10,8 @@
                      import-url-resource="file:///opt/deltav/etc/imports/test-e2e.xml">
         <cron-schedule>0 * * * * ? *</cron-schedule>
     </requisition-def>
+    <requisition-def import-name="delta-v"
+                     import-url-resource="file:///opt/deltav/etc/imports/delta-v.xml">
+        <cron-schedule>0 * * * * ? *</cron-schedule>
+    </requisition-def>
 </provisiond-configuration>
