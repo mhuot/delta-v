@@ -21,7 +21,7 @@
 | **Ticketer** | Trouble ticketing integration — not in microservice architecture | #29 |
 | **DHCPd** | DHCP monitor/detector service | — |
 
-### Migrated to Spring Boot 4 (5 daemons)
+### Migrated to Spring Boot 4 (6 daemons)
 
 | Daemon | Spring Boot Module | Startup | Key Feature | PR |
 |--------|--------------------|---------|------------|-----|
@@ -30,16 +30,17 @@
 | **Trapd** | `daemon-boot-trapd` | 2.0s | Kafka Sink bridge pattern (`daemon-sink-kafka`) | #33 |
 | **Syslogd** | `daemon-boot-syslogd` | 2.2s | Reuses Sink bridge, local DNS resolver | #34, #35 |
 | **Discovery** | `daemon-boot-discovery` | ~2s | Kafka RPC client pattern (`KafkaRpcClientConfiguration`) | — |
+| **Provisiond** | `daemon-boot-provisiond` | 4.2s | JPA + 3× Kafka RPC + Quartz + SNMP adapters (Tier 5) | #41 |
 
 ### Shared Infrastructure
 
 | Module | Purpose |
 |--------|---------|
-| `daemon-common` | DataSource, Kafka event transport, Kafka RPC client, JdbcDistPollerDao, JdbcInterfaceToNodeCache |
+| `daemon-common` | DataSource, Kafka event transport, Kafka RPC client, JdbcDistPollerDao, JdbcInterfaceToNodeCache, AbstractDaoJpa |
 | `daemon-sink-kafka` | KafkaSinkBridge — consumes from Minion Sink topics (`OpenNMS.Sink.*`) |
-| `opennms-model-jakarta` | 13 Jakarta Persistence entities for Hibernate 7 |
+| `opennms-model-jakarta` | 17 Jakarta Persistence entities + 13 JPA DAOs for Hibernate 7 |
 
-### Running on Karaf (8 daemons — migration candidates)
+### Running on Karaf (7 daemons — migration candidates)
 
 | Daemon | Tier | Complexity | Infrastructure |
 |--------|------|-----------|----------------|
@@ -50,7 +51,6 @@
 | **Telemetryd** | 4 | High | Multi-module Kafka Sink |
 | **Collectd** | 4 | High | Events + Kafka RPC |
 | **PerspectivePoller** | 5 | Very High | Events + Kafka RPC |
-| **Provisiond** | 5 | Very High | Events + 3× Kafka RPC |
 
 ### Other Components Removed
 
@@ -73,7 +73,7 @@
 
 ## Plan Status Dashboard
 
-### Complete (33 docs)
+### Complete (35 docs)
 
 | Date | Plan | Key Achievement |
 |------|------|-----------------|
@@ -100,6 +100,8 @@
 | 03-15 | Trapd Spring Boot 4 Migration | Kafka Sink bridge pattern — `daemon-sink-kafka` shared module, E2E trap pipeline verified |
 | 03-15 | Syslogd Spring Boot 4 Migration | Reuses Sink bridge, shared JDBC extracted to `daemon-common`, local DNS resolver |
 | 03-16 | Discovery Spring Boot 4 Migration | Kafka RPC client pattern — `KafkaRpcClientConfiguration` in `daemon-common`, Minion ping sweeps |
+| 03-16 | Provisiond Shared Infrastructure | `DaemonProvisioningConfiguration` — shared NoOpEntityScopeProvider, LocalServiceDetectorRegistry |
+| 03-17 | Provisiond Spring Boot 4 Migration | Tier 5: JPA + 3× Kafka RPC + Quartz + SNMP adapters, constructor injection, 13 JPA DAOs, E2E with 22 SNMP interfaces |
 
 ### Superseded (2 docs)
 
@@ -126,10 +128,10 @@
 1. **Events table eliminated** — events never touch PostgreSQL
 2. **ActiveMQ eliminated** — all IPC via Kafka
 3. **Core container eliminated** — replaced by lightweight `db-init` Spring Boot app
-4. **Spring Boot 4 migration** — 5 daemons migrated (Alarmd, EventTranslator, Trapd, Syslogd, Discovery) as `java -jar` fat JARs with ~2s startup
+4. **Spring Boot 4 migration** — 6 daemons migrated (Alarmd, EventTranslator, Trapd, Syslogd, Discovery, Provisiond) as `java -jar` fat JARs with 2–4s startup
 5. **Kafka Sink bridge** — `daemon-sink-kafka` module consumes from Minion Sink topics (`OpenNMS.Sink.*`), reused by Trapd and Syslogd
-6a. **Kafka RPC client** — `KafkaRpcClientConfiguration` in `daemon-common` sends RPC requests to Minions, first used by Discovery
-6. **opennms-model-jakarta** — 13 Jakarta Persistence entities with JPA AttributeConverters replacing Hibernate 3.6 UserTypes
+6a. **Kafka RPC client** — `KafkaRpcClientConfiguration` in `daemon-common` sends RPC requests to Minions, used by Discovery and Provisiond (3× RPC: SNMP, Detector, DNS)
+6. **opennms-model-jakarta** — 17 Jakarta Persistence entities with JPA AttributeConverters + 13 JPA DAOs replacing Hibernate 3.6 UserTypes
 7. **Event-conf enrichment** — `EventConfEnrichmentService` in daemon-common loads alarm-data from PostgreSQL for all Spring Boot daemons
 8. **10 daemons deleted** — Notifd, Ackd, Actiond, Vacuumd, Statsd, Tl1d, Queued, RTCd, Ticketer, DHCPd
 9. **Minion RPC mandatory** — all 6 polling/collection daemons use real Kafka RPC
@@ -140,7 +142,7 @@
 
 ### Remaining Work
 
-**Spring Boot 4 migration** — 8 Karaf daemons remain. Three shared infrastructure patterns established: Kafka event transport (all daemons), Kafka Sink bridge (Trapd, Syslogd, Telemetryd), Kafka RPC client (Discovery, Pollerd, Collectd, Enlinkd, PerspectivePoller, Provisiond). Deferred items (service detectors, MATE scopes, Minion-side DNS) should be addressed before migrating remaining RPC daemons.
+**Spring Boot 4 migration** — 7 Karaf daemons remain. Three shared infrastructure patterns established: Kafka event transport (all daemons), Kafka Sink bridge (Trapd, Syslogd, Telemetryd), Kafka RPC client (Discovery, Provisiond, Pollerd, Collectd, Enlinkd, PerspectivePoller). Provisiond was the most complex migration (Tier 5) — constructor injection, 13 JPA DAOs, Quartz scheduling, 3× RPC, SNMP adapters. Deferred items: HW inventory adapter (Hibernate 7 entity issue), Minion echo probes, service detector RPC, MATE scopes.
 
 **Deferred** — Minion-Mandatory Architecture requires prerequisite work on non-distributable ServiceMonitors and collector delegation.
 
@@ -156,7 +158,7 @@ OpenNMS Horizon is an enterprise-grade open-source network monitoring platform. 
 - **Kafka-only event transport** — no ActiveMQ, no shared event bus
 - **Events never touch PostgreSQL** — only alarms are persisted to the database
 - **2 Docker images** serve all daemon roles — `opennms/daemon-deltav` (13 daemon types, JRE 21), `opennms/minion-deltav` (distributed collection, JRE 21)
-- **Spring Boot 4 migration underway** — 5 daemons migrated (Alarmd, EventTranslator, Trapd, Syslogd, Discovery) as fat JARs (~2s startup); 8 daemons remain on Karaf
+- **Spring Boot 4 migration underway** — 6 daemons migrated (Alarmd, EventTranslator, Trapd, Syslogd, Discovery, Provisiond) as fat JARs (2–4s startup); 7 daemons remain on Karaf
 - **One-shot database initialization** — `opennms/db-init` (312 MB) replaces the Core container for schema setup
 
 ## Architecture
@@ -191,7 +193,7 @@ Minion → Kafka Sink → Trapd/Syslogd
 | eventtranslator | **Spring Boot 4** | 13 | Event translation rules + enrichment |
 | enlinkd | Karaf | 14 | Enhanced link discovery |
 | scriptd | Karaf | 15 | Script-based event automation |
-| provisiond | Karaf | 16 | Node provisioning and scanning |
+| provisiond | **Spring Boot 4** | 25 | Node provisioning and scanning (via Minion 3× Kafka RPC) |
 | bsmd | Karaf | 17 | Business service monitoring |
 | telemetryd | Karaf | 18 | Telemetry/flow reception (via Minion Kafka Sink) |
 | minion | Karaf | — | Distributed data collection agent |
@@ -272,7 +274,7 @@ See [BUILD.md](BUILD.md) for detailed build instructions.
 
 See [DELTA-V_Status.md](DELTA-V_Status.md) for detailed progress tracking.
 
-**Current state:** 15 services running (10 daemons deleted, 5 migrated to Spring Boot 4). Alarmd, EventTranslator, Trapd, Syslogd, and Discovery run as Spring Boot 4 fat JARs (~2s startup). 8 daemons remain on Karaf. Three shared infrastructure patterns: event transport, Sink bridge, RPC client.
+**Current state:** 15 services running (10 daemons deleted, 6 migrated to Spring Boot 4). Alarmd, EventTranslator, Trapd, Syslogd, Discovery, and Provisiond run as Spring Boot 4 fat JARs (2–4s startup). 7 daemons remain on Karaf. Three shared infrastructure patterns: event transport, Sink bridge, RPC client.
 
 ## Documentation
 
