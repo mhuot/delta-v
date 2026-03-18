@@ -76,13 +76,12 @@ public abstract class AbstractDaoJpa<T, K extends Serializable> implements OnmsD
 
     @Override
     public void lock() {
-        // Acquire a pessimistic write lock on the access-lock row for this entity's table.
-        // Uses a native query because the AccessLock entity lives in opennms-dao which
-        // is not a dependency of daemon-common.
-        String lockName = entityClass.getSimpleName().toUpperCase() + "_ACCESS";
-        entityManager.createNativeQuery("SELECT lockName FROM accessLocks WHERE lockName = ?1 FOR UPDATE")
-                .setParameter(1, lockName)
-                .getSingleResult();
+        // No-op in Spring Boot context. The legacy AbstractDaoHibernate used pessimistic
+        // locking via the accessLocks table to serialize DAO writes. In Spring Boot with
+        // @Transactional and Hibernate 7, database-level row locking handles concurrency.
+        // The accessLocks table entry names (e.g., "NODE_ACCESS") don't match the auto-derived
+        // names from entity class names (e.g., "ONMSNODE_ACCESS"), making the old approach
+        // incompatible without a name mapping table.
     }
 
     @Override

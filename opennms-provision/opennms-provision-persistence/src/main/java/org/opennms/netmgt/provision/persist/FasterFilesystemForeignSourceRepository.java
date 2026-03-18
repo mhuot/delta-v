@@ -73,7 +73,7 @@ public class FasterFilesystemForeignSourceRepository extends FilesystemForeignSo
      */
     @Override
     public Requisition importResourceRequisition(final Resource resource) throws ForeignSourceRepositoryException {
-        Assert.notNull(resource);
+        Assert.notNull(resource, "resource must not be null");
         try {
             boolean isLocal = true;
             try {

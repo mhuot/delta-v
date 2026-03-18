@@ -61,7 +61,7 @@ public class MockForeignSourceRepository extends AbstractForeignSourceRepository
 
     @Override
     public ForeignSource getForeignSource(final String foreignSourceName) {
-        Assert.notNull(foreignSourceName);
+        Assert.notNull(foreignSourceName, "foreignSourceName must not be null");
         final ForeignSource foreignSource = m_foreignSources.get(foreignSourceName);
         if (foreignSource == null) {
         	if (foreignSourceName == "default") {
@@ -75,8 +75,8 @@ public class MockForeignSourceRepository extends AbstractForeignSourceRepository
 
     @Override
     public void save(final ForeignSource foreignSource) {
-        Assert.notNull(foreignSource);
-        Assert.notNull(foreignSource.getName());
+        Assert.notNull(foreignSource, "foreignSource must not be null");
+        Assert.notNull(foreignSource.getName(), "foreignSource.getName() must not be null");
 
         validate(foreignSource);
 
@@ -95,21 +95,21 @@ public class MockForeignSourceRepository extends AbstractForeignSourceRepository
 
     @Override
     public Requisition getRequisition(final String foreignSourceName) {
-        Assert.notNull(foreignSourceName);
+        Assert.notNull(foreignSourceName, "foreignSourceName must not be null");
         return m_requisitions.get(foreignSourceName);
     }
 
     @Override
     public Requisition getRequisition(final ForeignSource foreignSource) {
-        Assert.notNull(foreignSource);
-        Assert.notNull(foreignSource.getName());
+        Assert.notNull(foreignSource, "foreignSource must not be null");
+        Assert.notNull(foreignSource.getName(), "foreignSource.getName() must not be null");
         return getRequisition(foreignSource.getName());
     }
 
     @Override
     public void save(final Requisition requisition) {
-        Assert.notNull(requisition);
-        Assert.notNull(requisition.getForeignSource());
+        Assert.notNull(requisition, "requisition must not be null");
+        Assert.notNull(requisition.getForeignSource(), "requisition.getForeignSource() must not be null");
         
         validate(requisition);
 

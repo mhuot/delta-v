@@ -141,7 +141,7 @@ do_stage_daemon_jars() {
         "core/daemon-boot-trapd/target/org.opennms.core.daemon-boot-trapd-$VERSION.jar:daemon-boot-trapd.jar"
         "core/daemon-boot-syslogd/target/org.opennms.core.daemon-boot-syslogd-$VERSION.jar:daemon-boot-syslogd.jar"
         "core/daemon-boot-discovery/target/org.opennms.core.daemon-boot-discovery-$VERSION.jar:daemon-boot-discovery.jar"
-        "core/daemon-loader-provisiond/target/org.opennms.core.daemon-loader-provisiond-$VERSION.jar:daemon-loader-provisiond.jar"
+        "core/daemon-boot-provisiond/target/org.opennms.core.daemon-boot-provisiond-$VERSION-boot.jar:daemon-boot-provisiond.jar"
         "core/daemon-loader-bsmd/target/org.opennms.core.daemon-loader-bsmd-$VERSION.jar:daemon-loader-bsmd.jar"
         "core/daemon-loader-perspectivepoller/target/org.opennms.core.daemon-loader-perspectivepoller-$VERSION.jar:daemon-loader-perspectivepoller.jar"
         "core/daemon-loader-telemetryd/target/daemon-loader-telemetryd-$VERSION.jar:daemon-loader-telemetryd.jar"

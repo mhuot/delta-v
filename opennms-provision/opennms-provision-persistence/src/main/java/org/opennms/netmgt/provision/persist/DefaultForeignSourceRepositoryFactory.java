@@ -166,16 +166,16 @@ public class DefaultForeignSourceRepositoryFactory implements ForeignSourceRepos
      */
     @Override
     public void afterPropertiesSet() throws Exception {
-        Assert.notNull(m_fastQueueingRepository);
-        Assert.notNull(m_queueingRepository);
-        Assert.notNull(m_fastCachingRepository);
-        Assert.notNull(m_cachingRepository);
-        Assert.notNull(m_fastFusedRepository);
-        Assert.notNull(m_fusedRepository);
-        Assert.notNull(m_fastFileDeployedRepository);
-        Assert.notNull(m_fastFilePendingRepository);
-        Assert.notNull(m_fileDeployedRepository);
-        Assert.notNull(m_filePendingRepository);
+        Assert.notNull(m_fastQueueingRepository, "fastQueueingRepository must not be null");
+        Assert.notNull(m_queueingRepository, "queueingRepository must not be null");
+        Assert.notNull(m_fastCachingRepository, "fastCachingRepository must not be null");
+        Assert.notNull(m_cachingRepository, "cachingRepository must not be null");
+        Assert.notNull(m_fastFusedRepository, "fastFusedRepository must not be null");
+        Assert.notNull(m_fusedRepository, "fusedRepository must not be null");
+        Assert.notNull(m_fastFileDeployedRepository, "fastFileDeployedRepository must not be null");
+        Assert.notNull(m_fastFilePendingRepository, "fastFilePendingRepository must not be null");
+        Assert.notNull(m_fileDeployedRepository, "fileDeployedRepository must not be null");
+        Assert.notNull(m_filePendingRepository, "filePendingRepository must not be null");
     }
 
 }

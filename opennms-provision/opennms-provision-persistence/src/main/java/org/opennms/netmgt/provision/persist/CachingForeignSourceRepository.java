@@ -172,7 +172,7 @@ public class CachingForeignSourceRepository extends AbstractForeignSourceReposit
 
     @Override
     public void afterPropertiesSet() {
-        Assert.notNull(m_foreignSourceRepository);
+        Assert.notNull(m_foreignSourceRepository, "foreignSourceRepository must not be null");
     }
 
     @Override

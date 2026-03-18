@@ -57,8 +57,8 @@ public class ImportJob implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
         try {
             String url = interpolate(context.getJobDetail().getJobDataMap().getString(URL));
-            Assert.notNull(url);
-            Assert.notNull(provisionMonitor);
+            Assert.notNull(url, "Import URL must not be null");
+            Assert.notNull(provisionMonitor, "ProvisionMonitor must not be null");
             String rescanExisting = context.getJobDetail().getJobDataMap().getString(RESCAN_EXISTING);
             getProvisioner().doImport(url, rescanExisting == null ? Boolean.TRUE.toString() : rescanExisting, provisionMonitor);
         } catch (Exception t) {

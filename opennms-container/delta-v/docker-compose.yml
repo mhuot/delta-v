@@ -79,6 +79,15 @@ services:
       OPENNMS_DBINIT_CREATE_USER: "false"
       JAVA_TOOL_OPTIONS: -Xms256m -Xmx512m
 
+  snmp-agent:
+    build: ./mock-snmp-agent
+    container_name: delta-v-snmp-agent
+    hostname: snmp-agent
+    healthcheck:
+      test: ["CMD-SHELL", "true"]
+      interval: 10s
+      retries: 3
+
   minion:
     image: opennms/minion-deltav:${VERSION}
     container_name: delta-v-minion
@@ -373,29 +382,28 @@ services:
     image: opennms/daemon-deltav:${VERSION}
     container_name: delta-v-provisiond
     hostname: provisiond
+    entrypoint: []
+    command: ["java", "-Xms512m", "-Xmx1g", "-jar", "/opt/daemon-boot-provisiond.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
       kafka:
         condition: service_healthy
     environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_USER: opennms
-      POSTGRES_PASSWORD: opennms
-      POSTGRES_DB: opennms
-      JAVA_OPTS: >-
-        -Xms512m -Xmx1g
-        -XX:MaxMetaspaceSize=512m
-        -Djava.security.egd=file:/dev/./urandom
-        -Dorg.opennms.tsid.node-id=16
-        -Dorg.opennms.core.ipc.rpc.kafka.bootstrap.servers=kafka:9092
-        -Dorg.opennms.core.ipc.rpc.force-remote=true
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
+      SPRING_DATASOURCE_USERNAME: opennms
+      SPRING_DATASOURCE_PASSWORD: opennms
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      OPENNMS_HOME: /opt/deltav
+      OPENNMS_INSTANCE_ID: OpenNMS
+      OPENNMS_TSID_NODE_ID: "25"
+      RPC_KAFKA_ENABLED: "true"
+      RPC_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      RPC_KAFKA_FORCE_REMOTE: "true"
     volumes:
-      - provisiond-data:/opt/sentinel/data
-      - ./provisiond-overlay/etc:/opt/sentinel-etc-overlay:ro
+      - ./provisiond-overlay/etc:/opt/deltav/etc
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf -u admin:admin http://localhost:8181/sentinel/rest/health/probe || exit 1"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 20
@@ -535,7 +543,6 @@ volumes:
   collectd-data:
   enlinkd-data:
   scriptd-data:
-  provisiond-data:
   bsmd-data:
   perspectivepollerd-data:
   telemetryd-data:

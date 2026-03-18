@@ -24,11 +24,13 @@ package org.opennms.netmgt.model.jakarta.dao;
 import java.net.InetAddress;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.opennms.core.daemon.common.AbstractDaoJpa;
+import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.model.OnmsCategory;
 import org.opennms.netmgt.model.OnmsCriteria;
@@ -41,9 +43,9 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * JPA implementation of {@link NodeDao}.
  *
- * <p>Alarmd only uses {@link #get(Integer)} to load node state when processing alarms.
- * All other methods from the {@link NodeDao} interface are unused by Alarmd and throw
- * {@link UnsupportedOperationException}.</p>
+ * <p>Implements methods needed by Alarmd ({@link #get(Integer)}) and Provisiond
+ * (hierarchy loading, foreign source/ID lookups, scan stamp management, etc.).
+ * Methods not used by either daemon throw {@link UnsupportedOperationException}.</p>
  *
  * <p>The deprecated {@link #findMatching(OnmsCriteria)} and {@link #countMatching(OnmsCriteria)}
  * methods from {@link org.opennms.netmgt.dao.api.LegacyOnmsDao} also throw
@@ -95,7 +97,7 @@ public class NodeDaoJpa extends AbstractDaoJpa<OnmsNode, Integer> implements Nod
 
     @Override
     public List<OnmsNode> findByLabel(String label) {
-        throw new UnsupportedOperationException("findByLabel() is not used by Alarmd");
+        return find("from OnmsNode n where n.label = ?1", label);
     }
 
     @Override
@@ -105,12 +107,27 @@ public class NodeDaoJpa extends AbstractDaoJpa<OnmsNode, Integer> implements Nod
 
     @Override
     public OnmsNode getHierarchy(Integer id) {
-        throw new UnsupportedOperationException("getHierarchy() is not used by Alarmd");
+        OnmsNode node = get(id);
+        if (node != null) {
+            initialize(node.getIpInterfaces());
+            initialize(node.getSnmpInterfaces());
+            initialize(node.getCategories());
+            for (OnmsIpInterface iface : node.getIpInterfaces()) {
+                initialize(iface.getSnmpInterface());
+            }
+        }
+        return node;
     }
 
     @Override
     public Map<String, Integer> getForeignIdToNodeIdMap(String foreignSource) {
-        throw new UnsupportedOperationException("getForeignIdToNodeIdMap() is not used by Alarmd");
+        List<Object[]> rows = findObjects(Object[].class,
+                "select n.foreignId, n.id from OnmsNode n where n.foreignSource = ?1", foreignSource);
+        Map<String, Integer> map = new HashMap<>();
+        for (Object[] row : rows) {
+            map.put((String) row[0], (Integer) row[1]);
+        }
+        return map;
     }
 
     @Override
@@ -157,7 +174,8 @@ public class NodeDaoJpa extends AbstractDaoJpa<OnmsNode, Integer> implements Nod
 
     @Override
     public OnmsNode findByForeignId(String foreignSource, String foreignId) {
-        throw new UnsupportedOperationException("findByForeignId(source, id) is not used by Alarmd");
+        return findUnique("from OnmsNode n where n.foreignSource = ?1 and n.foreignId = ?2",
+                foreignSource, foreignId);
     }
 
     @Override
@@ -182,22 +200,52 @@ public class NodeDaoJpa extends AbstractDaoJpa<OnmsNode, Integer> implements Nod
 
     @Override
     public List<OnmsNode> findAllProvisionedNodes() {
-        throw new UnsupportedOperationException("findAllProvisionedNodes() is not used by Alarmd");
+        return find("from OnmsNode n where n.foreignSource is not null");
     }
 
     @Override
     public List<OnmsIpInterface> findObsoleteIpInterfaces(Integer nodeId, Date scanStamp) {
-        throw new UnsupportedOperationException("findObsoleteIpInterfaces() is not used by Alarmd");
+        return findObjects(OnmsIpInterface.class,
+                "from OnmsIpInterface iface where iface.node.id = ?1 " +
+                "and iface.snmpPrimary != 'P' " +
+                "and (iface.ipLastCapsdPoll is null or iface.ipLastCapsdPoll < ?2)",
+                nodeId, scanStamp);
     }
 
     @Override
     public void deleteObsoleteInterfaces(Integer nodeId, Date scanStamp) {
-        throw new UnsupportedOperationException("deleteObsoleteInterfaces() is not used by Alarmd");
+        // Delete monitored services on obsolete interfaces first (FK constraint)
+        entityManager().createQuery(
+                "delete from OnmsMonitoredService ms where ms.ipInterface.node.id = ?1 " +
+                "and ms.ipInterface.snmpPrimary != 'P' " +
+                "and (ms.ipInterface.ipLastCapsdPoll is null or ms.ipInterface.ipLastCapsdPoll < ?2)")
+                .setParameter(1, nodeId)
+                .setParameter(2, scanStamp)
+                .executeUpdate();
+        // Then delete the IP interfaces
+        entityManager().createQuery(
+                "delete from OnmsIpInterface iface where iface.node.id = ?1 " +
+                "and iface.snmpPrimary != 'P' " +
+                "and (iface.ipLastCapsdPoll is null or iface.ipLastCapsdPoll < ?2)")
+                .setParameter(1, nodeId)
+                .setParameter(2, scanStamp)
+                .executeUpdate();
+        // Finally delete the SNMP interfaces
+        entityManager().createQuery(
+                "delete from OnmsSnmpInterface snmp where snmp.node.id = ?1 " +
+                "and (snmp.lastCapsdPoll is null or snmp.lastCapsdPoll < ?2)")
+                .setParameter(1, nodeId)
+                .setParameter(2, scanStamp)
+                .executeUpdate();
     }
 
     @Override
     public void updateNodeScanStamp(Integer nodeId, Date scanStamp) {
-        throw new UnsupportedOperationException("updateNodeScanStamp() is not used by Alarmd");
+        OnmsNode node = get(nodeId);
+        if (node != null) {
+            node.setLastCapsdPoll(scanStamp);
+            update(node);
+        }
     }
 
     @Override
@@ -207,7 +255,9 @@ public class NodeDaoJpa extends AbstractDaoJpa<OnmsNode, Integer> implements Nod
 
     @Override
     public List<OnmsNode> findByForeignSourceAndIpAddress(String foreignSource, String ipAddress) {
-        throw new UnsupportedOperationException("findByForeignSourceAndIpAddress() is not used by Alarmd");
+        return find("select distinct n from OnmsNode n join n.ipInterfaces iface " +
+                "where n.foreignSource = ?1 and iface.ipAddress = ?2",
+                foreignSource, InetAddressUtils.addr(ipAddress));
     }
 
     @Override

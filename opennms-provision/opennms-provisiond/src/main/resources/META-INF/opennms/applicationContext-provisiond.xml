@@ -157,14 +157,18 @@
   </bean>
     
   <bean id="daemon" class="org.opennms.netmgt.provision.service.Provisioner" depends-on="snmpPeerFactory-init">
-    <property name="provisionService" ref="provisionService" />
-    <property name="eventForwarder" ref="transactionAwareEventForwarder"/>
-    <property name="lifeCycleRepository" ref="lifeCycleRepository" />
-    <property name="scheduledExecutor" ref="scheduledExecutor" />
-    <property name="importSchedule" ref="provisiondImportSchedule" />
-    <property name="importActivities" ref="coreImportActivities" />
-    <property name="taskCoordinator" ref="taskCoordinator" />
-    <property name="agentConfigFactory" ref="snmpPeerFactory" />
+    <constructor-arg ref="provisionService" />
+    <constructor-arg ref="transactionAwareEventForwarder"/>
+    <constructor-arg ref="lifeCycleRepository" />
+    <constructor-arg ref="scheduledExecutor" />
+    <constructor-arg ref="provisiondImportSchedule" />
+    <constructor-arg ref="coreImportActivities" />
+    <constructor-arg ref="taskCoordinator" />
+    <constructor-arg ref="snmpPeerFactory" />
+    <constructor-arg ref="adapterManager" />
+    <constructor-arg ref="monitoringSystemDao" />
+    <constructor-arg ref="tracerRegistry" />
+    <constructor-arg ref="monitorHolder" />
   </bean>
   
   <bean id="daemonListener" class="org.opennms.netmgt.events.api.AnnotationBasedEventListenerAdapter">
@@ -192,11 +196,14 @@
 
   <bean id="provisiondImportSchedule" class="org.opennms.netmgt.provision.service.ImportScheduler" >
     <constructor-arg ref="quartzScheduler" />
+    <constructor-arg ref="provisiondConfigDao" />
     <property name="provisioner" ref="daemon" />
     <property name="importJobFactory" ref="jobFactory" />
   </bean>
-  
+
   <bean id="jobFactory" class="org.opennms.netmgt.provision.service.ImportJobFactory" >
+    <constructor-arg ref="monitorHolder" />
+    <constructor-arg ref="entityScopeProvider" />
     <property name="provisioner" ref="daemon" />
   </bean>
 
