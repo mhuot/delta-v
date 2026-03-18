@@ -158,6 +158,9 @@
             <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
+                <!-- jackson-module-scala 2.16.2 (via servicemix kafka bundle) is incompatible
+                     with jackson-databind 2.19.4. Hibernate 7 auto-discovers it, causing crash. -->
+                <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-aop</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-aspects</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
