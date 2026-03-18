@@ -4,6 +4,31 @@
 
 Add a Spring Web MVC REST API (`/api/v3/business-services`) to the BSMd Spring Boot container for full CRUD operations on business services. Use this API plus a static requisition and setup script to create an end-to-end test that validates BSM status propagation across the Delta-V container infrastructure.
 
+## Prerequisites
+
+### BSMd Docker Compose Migration
+
+The `docker-compose.yml` currently runs BSMd on the Karaf-based Sentinel image (`opennms/daemon-deltav`) with a Karaf health check on port 8181. As part of this work, the BSMd compose service must be migrated to the Spring Boot jar pattern (matching Trapd, Syslogd, Alarmd, etc.):
+
+- `entrypoint: []` and `command: ["java", "-jar", "/opt/daemon-boot-bsmd.jar"]`
+- Spring Boot datasource env vars (`SPRING_DATASOURCE_URL`, etc.)
+- Health check: `curl -sf http://localhost:8080/actuator/health`
+- Port mapping: `8180:8080` (exposes the v3 REST API)
+
+### BsmdApplication scanBasePackages Update
+
+Add `"org.opennms.netmgt.bsm.rest"` to `BsmdApplication`'s `scanBasePackages` so the REST controller is discovered:
+
+```java
+@SpringBootApplication(scanBasePackages = {
+    "org.opennms.core.daemon.common",
+    "org.opennms.netmgt.bsm.boot",
+    "org.opennms.netmgt.bsm.dao",
+    "org.opennms.netmgt.bsm.rest",
+    "org.opennms.netmgt.model.jakarta.dao"
+})
+```
+
 ## Part 1: BSM v3 REST API
 
 ### Architecture
@@ -35,7 +60,7 @@ The controller is the only new production code. DTOs and a mapper handle convers
 
 Clean break from the legacy v2 API. Uses camelCase, flat edge structure with type discriminator, and a separate status endpoint.
 
-**Business Service (request/response):**
+**Business Service (response — `id` and edge `id` fields included):**
 
 ```json
 {
@@ -49,12 +74,14 @@ Clean break from the legacy v2 API. Uses camelCase, flat edge structure with typ
   },
   "edges": [
     {
+      "id": 10,
       "type": "child",
       "childId": 2,
       "mapFunction": { "type": "identity" },
       "weight": 1
     },
     {
+      "id": 11,
       "type": "ipService",
       "ipServiceId": 42,
       "mapFunction": { "type": "identity" },
@@ -62,12 +89,14 @@ Clean break from the legacy v2 API. Uses camelCase, flat edge structure with typ
       "friendlyName": "HTTP on postgresql"
     },
     {
+      "id": 12,
       "type": "reductionKey",
       "reductionKey": "uei.opennms.org/nodes/nodeLostService::1:10.0.0.5:HTTP",
       "mapFunction": { "type": "setTo", "severity": "critical" },
       "weight": 1
     },
     {
+      "id": 13,
       "type": "application",
       "applicationId": 3,
       "mapFunction": { "type": "identity" },
@@ -75,6 +104,11 @@ Clean break from the legacy v2 API. Uses camelCase, flat edge structure with typ
     }
   ]
 }
+```
+
+**Request (POST/PUT):** Same structure but `id` fields are omitted (assigned by the server). For PUT, the full edge set is provided — edges not in the list are removed.
+
+**Note:** `ipServiceId` and `applicationId` are `Integer` types matching the Java API (`BusinessServiceManager.getIpServiceById(Integer)`, `getApplicationById(Integer)`). `childId` is `Long` matching `BusinessServiceEntity.getId()`.
 ```
 
 **Reduce function types:** `highestSeverity`, `highestSeverityAbove` (with `threshold` field), `threshold` (with `threshold` field), `exponentialPropagation` (with `base` field).
@@ -96,6 +130,16 @@ Clean break from the legacy v2 API. Uses camelCase, flat edge structure with typ
   ]
 }
 ```
+
+**Status casing:** `operationalStatus` uses lowercase (`normal`, `warning`, `minor`, `major`, `critical`, `indeterminate`) — the mapper calls `Status.name().toLowerCase()`.
+
+**Root cause mapping:** The mapper inspects each `GraphVertex` returned by `BusinessServiceStateMachine.calculateRootCause()` and formats based on vertex type:
+- Business service vertex → `"business service '<name>'"`
+- IP service vertex → `"IP service '<nodeLabel>/<ipAddress>/<serviceName>'"`
+- Reduction key vertex → `"reduction key '<key>'"`
+- Application vertex → `"application '<name>'"`
+
+`rootCause` is empty when `operationalStatus` is `normal` or `indeterminate`.
 
 ### Key improvements over v2
 
@@ -127,6 +171,26 @@ src/main/java/org/opennms/netmgt/bsm/
 - `BusinessServiceMapper` converts between DTOs and the existing domain model (`BusinessService`, `Edge`, `MapFunction`, `ReductionFunction`)
 - The controller delegates to `BusinessServiceManager` for all business logic
 - HTTP 201 for successful create, 200 for get/update, 204 for delete, 404 for not found, 400 for validation errors
+- **After mutations** (POST, PUT, DELETE): the controller calls `BusinessServiceManager.triggerDaemonReload()` to reload the state machine graph with the updated configuration
+
+### Node/Service query endpoint
+
+The E2E setup script needs to look up `ipServiceId` values after provisioning. Add a lightweight read-only endpoint to BSMd:
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/v3/monitored-services` | List monitored services (with node label, IP, service name, and service ID) |
+
+This queries `MonitoredServiceDao.findAllServices()` and returns a flat list:
+
+```json
+[
+  { "id": 42, "nodeLabel": "trapd", "ipAddress": "169.254.0.10", "serviceName": "Deltav-Health" },
+  { "id": 43, "nodeLabel": "postgresql", "ipAddress": "169.254.0.1", "serviceName": "PostgreSQL" }
+]
+```
+
+The setup script uses this to map `(nodeLabel, serviceName)` → `ipServiceId` for BSM edge creation.
 
 ## Part 2: E2E Test Infrastructure
 
@@ -176,7 +240,7 @@ Defines all Delta-V container nodes with link-local placeholder IPs (PSM uses `$
 
 ### Poller Service Definitions
 
-Configured in Pollerd/Sentinel's `poller-configuration.xml`:
+Added to Pollerd's daemon overlay at `opennms-container/delta-v/pollerd-daemon-overlay/etc/poller-configuration.xml`. These service definitions must be appended to the existing configuration:
 
 ```xml
 <!-- Spring Boot actuator health check via PageSequenceMonitor -->
@@ -235,7 +299,7 @@ BSM: "Delta-V" (HighestSeverity)
     └── ipService → eventtranslator / Deltav-Health
 ```
 
-The `ipService` edges reference the monitored service IDs that are assigned after provisioning. The setup script looks these up via the Provisiond or node REST API.
+The `ipService` edges reference the monitored service IDs that are assigned after provisioning. The setup script looks these up via BSMd's `/api/v3/monitored-services` endpoint.
 
 ### Setup Script
 
@@ -246,7 +310,7 @@ Runs after `docker-compose up --wait`. Steps:
 1. **Wait for Provisiond** — poll Provisiond's `/actuator/health` until ready
 2. **Trigger requisition import** — call Provisiond REST API to import `delta-v` foreign source
 3. **Wait for nodes to be provisioned** — poll until all 6 nodes exist
-4. **Look up ipService IDs** — query node/interface/service data to get the monitored service IDs for BSM edge creation
+4. **Look up ipService IDs** — query BSMd's `GET /api/v3/monitored-services` to map `(nodeLabel, serviceName)` → `ipServiceId`
 5. **Create BSM hierarchy** — POST to BSMd `/api/v3/business-services` (leaf BSMs first, then parent)
 6. **Verify status propagation** — poll `GET /api/v3/business-services/{id}/status` on the top-level "Delta-V" BSM until it shows a non-INDETERMINATE status
 
@@ -270,6 +334,10 @@ Add BSMd port mapping in `docker-compose.yml`: `8180:8080` (so the setup script 
 ```
 
 Steps 5-10 are the actual E2E validation — they prove that a container failure propagates through the alarm → BSM state machine → status endpoint chain.
+
+### Compose Profile
+
+Use the `full` profile (`docker compose --profile full up`) which includes all daemons. The monitored targets (trapd, syslogd, eventtranslator) are part of `passive` and `full` profiles; Pollerd, Provisiond, Alarmd, and BSMd are in `lite` and `full`.
 
 ## What We Don't Build
 
