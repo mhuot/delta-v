@@ -7,7 +7,7 @@
                           requisition-dir="/opt/deltav/etc/imports"
                           foreign-source-dir="/opt/deltav/etc/foreign-sources">
     <requisition-def import-name="test-e2e"
-                     import-url-resource="file:///opt/deltav/etc/imports/test-e2e.xml"
-                     cron-schedule="0 0 0 1 1 ? 2099">
+                     import-url-resource="file:///opt/deltav/etc/imports/test-e2e.xml">
+        <cron-schedule>0 * * * * ? *</cron-schedule>
     </requisition-def>
 </provisiond-configuration>
