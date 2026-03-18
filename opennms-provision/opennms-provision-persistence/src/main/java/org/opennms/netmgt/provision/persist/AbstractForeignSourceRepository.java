@@ -54,7 +54,7 @@ public abstract class AbstractForeignSourceRepository implements ForeignSourceRe
     /** {@inheritDoc} */
     @Override
     public Requisition importResourceRequisition(final Resource resource) throws ForeignSourceRepositoryException {
-        Assert.notNull(resource);
+        Assert.notNull(resource, "resource must not be null");
 
         LOG.debug("importing requisition from {}", stripCredentials(resource));
         final Requisition requisition = JaxbUtils.unmarshal(Requisition.class, resource);
