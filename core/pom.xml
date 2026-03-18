@@ -41,6 +41,7 @@
     <module>daemon-boot-eventtranslator</module>
     <module>daemon-boot-discovery</module>
     <module>daemon-boot-provisiond</module>
+    <module>daemon-boot-bsmd</module>
     <module>opennms-model-jakarta</module>
     <module>db</module>
     <module>db-install</module>
