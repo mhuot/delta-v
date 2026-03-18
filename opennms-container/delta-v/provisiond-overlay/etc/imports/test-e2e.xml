@@ -1,7 +1,5 @@
-<model-import xmlns="http://xmlns.opennms.org/xsd/config/model-import" date-stamp="2026-03-17T00:00:00.000Z" foreign-source="test-e2e" last-import="2026-03-18T02:02:00.028Z">
-   <node foreign-id="test-node-1" node-label="E2E-Test-Node-1">
-      <interface descr="loopback" ip-addr="127.0.0.1" status="1" snmp-primary="P">
-         <monitored-service service-name="ICMP"/>
-      </interface>
+<model-import xmlns="http://xmlns.opennms.org/xsd/config/model-import" date-stamp="2026-03-18T02:30:00.000Z" foreign-source="test-e2e" last-import="2026-03-18T02:25:00.045Z">
+   <node foreign-id="snmp-agent-1" node-label="Mock-SNMP-Agent">
+      <interface descr="primary" ip-addr="172.18.0.12" status="1" snmp-primary="P"/>
    </node>
 </model-import>

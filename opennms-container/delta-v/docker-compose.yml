@@ -79,6 +79,15 @@ services:
       OPENNMS_DBINIT_CREATE_USER: "false"
       JAVA_TOOL_OPTIONS: -Xms256m -Xmx512m
 
+  snmp-agent:
+    build: ./mock-snmp-agent
+    container_name: delta-v-snmp-agent
+    hostname: snmp-agent
+    healthcheck:
+      test: ["CMD-SHELL", "true"]
+      interval: 10s
+      retries: 3
+
   minion:
     image: opennms/minion-deltav:${VERSION}
     container_name: delta-v-minion

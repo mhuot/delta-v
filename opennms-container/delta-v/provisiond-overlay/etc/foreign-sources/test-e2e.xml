@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<foreign-source xmlns="http://xmlns.opennms.org/xsd/config/foreign-source" name="test-e2e">
+    <scan-interval>1d</scan-interval>
+    <detectors>
+        <detector name="SNMP" class="org.opennms.netmgt.provision.detector.snmp.SnmpDetector"/>
+    </detectors>
+    <policies/>
+</foreign-source>
