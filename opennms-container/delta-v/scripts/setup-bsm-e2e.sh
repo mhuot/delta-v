@@ -75,7 +75,7 @@ get_svc_id() {
     echo "$SERVICES" | jq -r ".[] | select(.nodeLabel==\"${node_label}\" and .serviceName==\"${svc_name}\") | .id"
 }
 
-PG_SVC_ID=$(get_svc_id "postgresql" "PostgreSQL")
+PG_SVC_ID=$(get_svc_id "postgres" "PostgreSQL")
 KAFKA_SVC_ID=$(get_svc_id "kafka" "Kafka")
 MINION_SVC_ID=$(get_svc_id "minion" "Minion-Health")
 TRAPD_SVC_ID=$(get_svc_id "trapd" "Deltav-Health")

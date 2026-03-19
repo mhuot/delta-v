@@ -122,6 +122,10 @@ public class DefaultBusinessServiceStateMachine implements BusinessServiceStateM
                     for (Entry<String, AlarmWrapper> eachEntry : lookup.entrySet()) {
                         updateAndPropagateVertex(g, g.getVertexByReductionKey(eachEntry.getKey()), eachEntry.getValue().getStatus());
                     }
+                    // Reduction keys with no matching alarm are NORMAL (no alarm = no problem)
+                    for (String key : Sets.difference(reductionsKeysToLookup, lookup.keySet())) {
+                        updateAndPropagateVertex(g, g.getVertexByReductionKey(key), Status.NORMAL);
+                    }
                 }
             }
             m_g = g;
@@ -165,8 +169,9 @@ public class DefaultBusinessServiceStateMachine implements BusinessServiceStateM
 
             for (String missingReductionKey : Sets.difference(m_g.getReductionKeys(), reductionKeysFromGivenAlarms)) {
                 // There is a vertex on the graph that corresponds to this reduction key
-                // but no alarm with this reduction key exists
-                updateAndPropagateVertex(m_g, m_g.getVertexByReductionKey(missingReductionKey), Status.INDETERMINATE);
+                // but no alarm with this reduction key exists — the service is NORMAL
+                // (absence of an alarm = no problem in the OpenNMS alarm model)
+                updateAndPropagateVertex(m_g, m_g.getVertexByReductionKey(missingReductionKey), Status.NORMAL);
             }
         } finally {
             m_rwLock.writeLock().unlock();

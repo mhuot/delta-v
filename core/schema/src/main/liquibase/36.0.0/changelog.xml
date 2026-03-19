@@ -301,4 +301,30 @@
         <dropTable tableName="event_parameters" cascadeConstraints="true"/>
     </changeSet>
 
+    <changeSet id="36.0.0-bsm-edge-type-discriminator" author="delta-v">
+        <comment>Add type discriminator column to bsm_service_edge for JPA JOINED inheritance.
+            Old Hibernate 3.6 inferred subclass type from joined tables; Jakarta Persistence requires
+            an explicit discriminator column. Backfill from the joined subclass tables.</comment>
+
+        <addColumn tableName="bsm_service_edge">
+            <column name="type" type="VARCHAR(255)"/>
+        </addColumn>
+
+        <sql>
+            UPDATE bsm_service_edge SET type = 'ipservices'
+            WHERE id IN (SELECT id FROM bsm_service_ifservices);
+
+            UPDATE bsm_service_edge SET type = 'children'
+            WHERE id IN (SELECT id FROM bsm_service_children);
+
+            UPDATE bsm_service_edge SET type = 'reductionkeys'
+            WHERE id IN (SELECT id FROM bsm_service_reductionkeys);
+
+            UPDATE bsm_service_edge SET type = 'applications'
+            WHERE id IN (SELECT id FROM bsm_service_applications);
+        </sql>
+
+        <addNotNullConstraint tableName="bsm_service_edge" columnName="type" columnDataType="VARCHAR(255)"/>
+    </changeSet>
+
 </databaseChangeLog>

@@ -332,6 +332,13 @@ public class KafkaRpcClientFactory implements RpcClientFactory {
             KafkaConfigProvider kafkaConfigProvider = new OnmsKafkaConfigProvider(KafkaRpcConstants.KAFKA_RPC_CONFIG_SYS_PROP_PREFIX,
                     KAFKA_IPC_CONFIG_SYS_PROP_PREFIX);
             kafkaConfig.putAll(kafkaConfigProvider.getProperties());
+
+            // Each daemon needs its own consumer group for RPC responses so it
+            // receives ALL response partitions, not just a subset. Applied AFTER
+            // kafkaConfigProvider to override any shared group.id from config.
+            kafkaConfig.put(ConsumerConfig.GROUP_ID_CONFIG,
+                    kafkaConfig.getProperty(ConsumerConfig.GROUP_ID_CONFIG, SystemInfoUtils.getInstanceId())
+                            + "-rpc-" + java.util.UUID.randomUUID().toString().substring(0, 8));
             maxBufferSize = getMaxBufferSize(kafkaConfig);
             defaultTTL = PropertiesUtils.getProperty(kafkaConfig, DEFAULT_TTL_PROPERTY, DEFAULT_TTL_CONFIGURED);
             String singleTopicConfig = kafkaConfig.getProperty(SINGLE_TOPIC_FOR_ALL_MODULES);

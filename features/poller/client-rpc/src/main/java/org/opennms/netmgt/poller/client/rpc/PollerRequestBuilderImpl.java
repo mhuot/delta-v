@@ -42,8 +42,12 @@ import org.opennms.netmgt.poller.PollerRequestBuilder;
 import org.opennms.netmgt.poller.PollerResponse;
 import org.opennms.netmgt.poller.ServiceMonitorAdaptor;
 import org.opennms.netmgt.poller.ServiceMonitorLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PollerRequestBuilderImpl implements PollerRequestBuilder {
+
+    private static final Logger LOG = LoggerFactory.getLogger(PollerRequestBuilderImpl.class);
 
     private MonitoredService service;
 
@@ -151,7 +155,7 @@ public class PollerRequestBuilderImpl implements PollerRequestBuilder {
 
         final var serviceMonitor = client.getRegistry().getMonitorByClassName(className);
         if (serviceMonitor == null) {
-            throw new IllegalArgumentException("Monitor not found: " + className);
+            LOG.warn("Monitor not found locally: {}. Delegating to remote Minion for execution.", className);
         }
 
         final Map<String, Object> interpolatedAttributes = safeGetInterpolatedAttributes();
@@ -161,7 +165,9 @@ public class PollerRequestBuilderImpl implements PollerRequestBuilder {
                 .withLocation(service.getNodeLocation())
                 .withSystemId(systemId)
                 .withServiceAttributes(interpolatedAttributes)
-                .withLocationOverride((s) -> serviceMonitor.getEffectiveLocation(s))
+                .withLocationOverride(serviceMonitor != null
+                        ? (s) -> serviceMonitor.getEffectiveLocation(s)
+                        : (s) -> s)
                 .build();
 
         final PollerRequestDTO request = new PollerRequestDTO();
@@ -186,11 +192,13 @@ public class PollerRequestBuilderImpl implements PollerRequestBuilder {
         // such as the agent details and other state related attributes
         // which should be included in the request
         final Map<String, Object> parameters = request.getMonitorParameters();
-        try {
-            request.addAttributes(Interpolator.interpolateAttributes(serviceMonitor.getRuntimeAttributes(request, parameters), getScope()));
-        } catch (Exception e) {
-            // EntityScopeProvider may not be available in standalone daemon containers.
-            request.addAttributes(serviceMonitor.getRuntimeAttributes(request, parameters));
+        if (serviceMonitor != null) {
+            try {
+                request.addAttributes(Interpolator.interpolateAttributes(serviceMonitor.getRuntimeAttributes(request, parameters), getScope()));
+            } catch (Exception e) {
+                // EntityScopeProvider may not be available in standalone daemon containers.
+                request.addAttributes(serviceMonitor.getRuntimeAttributes(request, parameters));
+            }
         }
 
         // Execute the request

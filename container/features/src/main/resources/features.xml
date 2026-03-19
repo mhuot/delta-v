@@ -2105,6 +2105,12 @@
         <bundle>mvn:org.opennms.core.mate/org.opennms.core.mate.api/${project.version}</bundle>
         <!-- Poller daemon classes -->
         <bundle>mvn:org.opennms/opennms-services/${project.version}</bundle>
+        <!-- Service monitors (TcpMonitor, PageSequenceMonitor, etc.) — loaded as a
+             bundle so DynamicImport-Package can discover classes via Class.forName().
+             The full opennms-poller-monitors-core feature has too many transitive deps
+             (PingerFactory, SecureCredentialsVault, ActiveMQ, Camel, etc.) for a lean
+             Pollerd container, so we load just the bundle without its Blueprint. -->
+        <bundle>mvn:org.opennms.features.poller.monitors/org.opennms.features.poller.monitors.core/${project.version}</bundle>
         <!-- Poller RPC client (LocationAwarePollerClientImpl, PollerClientRpcModule) -->
         <bundle>mvn:org.opennms.features.poller/org.opennms.features.poller.client-rpc/${project.version}</bundle>
         <bundle>mvn:org.opennms/opennms-provision-api/${project.version}</bundle>

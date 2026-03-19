@@ -109,9 +109,21 @@ final public class TcpMonitor extends AbstractServiceMonitor {
         //
         String strBannerMatch = ParameterMap.getKeyedString(parameters, PARAMETER_BANNER, null);
 
-        // Get the address instance.
+        // Get the address instance. If a 'hostname' parameter is specified,
+        // resolve it (supports ${nodeLabel} substitution via PropertiesUtils);
+        // otherwise fall back to the interface IP from the MonitoredService.
         //
-        InetAddress ipAddr = svc.getAddress();
+        String hostnameParam = ParameterMap.getKeyedString(parameters, "hostname", null);
+        InetAddress ipAddr;
+        if (hostnameParam != null && !hostnameParam.isEmpty()) {
+            String resolvedHost = org.opennms.core.utils.PropertiesUtils.substitute(hostnameParam, getServiceProperties(svc));
+            ipAddr = InetAddressUtils.addr(resolvedHost);
+            if (ipAddr == null) {
+                return PollStatus.unavailable("Unable to resolve hostname: " + resolvedHost);
+            }
+        } else {
+            ipAddr = svc.getAddress();
+        }
 
         final String hostAddress = InetAddressUtils.str(ipAddr);
 	LOG.debug("poll: address = {}, port = {}, {}", hostAddress, port, tracker);
