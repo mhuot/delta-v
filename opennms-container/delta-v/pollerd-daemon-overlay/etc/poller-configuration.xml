@@ -1,5 +1,5 @@
 <poller-configuration xmlns="http://xmlns.opennms.org/xsd/config/poller" threads="30" asyncPollingEngineEnabled="false" maxConcurrentAsyncPolls="200" nextOutageId="SELECT nextval('outageNxtId')" serviceUnresponsiveEnabled="false" pathOutageEnabled="false">
-   <node-outage status="on" pollAllIfNoCriticalServiceDefined="true">
+   <node-outage status="off" pollAllIfNoCriticalServiceDefined="true">
       <critical-service name="ICMP" />
    </node-outage>
    <package name="cassandra-via-jmx">
@@ -269,6 +269,9 @@
       <!-- Delta-V container health checks via PageSequenceMonitor -->
       <service name="Deltav-Health" interval="30000" user-defined="false" status="on">
         <parameter key="rrd-status" value="false"/>
+        <parameter key="timeout" value="3000"/>
+        <parameter key="retry" value="0"/>
+        <parameter key="strict-timeout" value="true"/>
         <parameter key="page-sequence">
           <page-sequence>
             <page host="${nodeLabel}" path="/actuator/health" port="8080"
@@ -278,17 +281,28 @@
       </service>
       <service name="Minion-Health" interval="30000" user-defined="false" status="on">
         <parameter key="rrd-status" value="false"/>
-        <parameter key="port" value="8181"/>
-        <parameter key="hostname" value="${nodeLabel}"/>
+        <parameter key="timeout" value="3000"/>
+        <parameter key="retry" value="0"/>
+        <parameter key="strict-timeout" value="true"/>
+        <parameter key="page-sequence">
+          <page-sequence>
+            <page host="${nodeLabel}" path="/minion/rest/health/probe" port="8181"
+                  response-range="200-299"/>
+          </page-sequence>
+        </parameter>
       </service>
       <!-- Delta-V infrastructure TCP monitors -->
       <service name="PostgreSQL" interval="30000" user-defined="false" status="on">
         <parameter key="rrd-status" value="false"/>
+        <parameter key="timeout" value="3000"/>
+        <parameter key="retry" value="0"/>
         <parameter key="port" value="5432"/>
         <parameter key="hostname" value="${nodeLabel}"/>
       </service>
       <service name="Kafka" interval="30000" user-defined="false" status="on">
         <parameter key="rrd-status" value="false"/>
+        <parameter key="timeout" value="3000"/>
+        <parameter key="retry" value="0"/>
         <parameter key="port" value="9092"/>
         <parameter key="hostname" value="${nodeLabel}"/>
       </service>
