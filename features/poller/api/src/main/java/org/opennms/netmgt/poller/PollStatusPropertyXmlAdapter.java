@@ -51,9 +51,11 @@ public class PollStatusPropertyXmlAdapter extends XmlAdapter<PollStatusPropertie
             return null;
         }
         final List<PollStatusProperty> props = new ArrayList<>(map.size());
-        map.entrySet().stream().forEach(e -> {
-           props.add(new PollStatusProperty(e.getKey(), e.getValue()));
-        });
+        map.entrySet().stream()
+           .filter(e -> e.getValue() != null && Double.isFinite(e.getValue().doubleValue()))
+           .forEach(e -> {
+               props.add(new PollStatusProperty(e.getKey(), e.getValue()));
+           });
         return new PollStatusProperties(props);
     }
 

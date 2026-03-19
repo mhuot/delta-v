@@ -82,7 +82,8 @@ RUN for jar in \
       /opt/sentinel/system/org/opennms/opennms-services/${VERSION}/*.jar \
       /opt/sentinel/system/org/opennms/opennms-provisiond/${VERSION}/*.jar \
       /opt/sentinel/system/org/opennms/features/poller/org.opennms.features.poller.api/${VERSION}/*.jar \
-      /opt/sentinel/system/org/opennms/core/org.opennms.core.daemon-loader-pollerd/${VERSION}/*.jar; do \
+      /opt/sentinel/system/org/opennms/core/org.opennms.core.daemon-loader-pollerd/${VERSION}/*.jar \
+      /opt/sentinel/system/org/opennms/core/ipc/rpc/org.opennms.core.ipc.rpc.kafka/${VERSION}/*.jar; do \
     if [ -f "$jar" ] && [ ! -f "$jar.sha1" ]; then \
       sha1sum "$jar" | awk '{print $1}' > "$jar.sha1"; \
     fi; \
@@ -106,3 +107,7 @@ COPY staging/daemon/opennms-services.jar \
 
 COPY staging/daemon/opennms-provisiond.jar \
      /opt/sentinel/system/org/opennms/opennms-provisiond/${VERSION}/opennms-provisiond-${VERSION}.jar
+
+# Kafka RPC client (unique consumer group ID per daemon instance)
+COPY staging/daemon/ipc-rpc-kafka.jar \
+     /opt/sentinel/system/org/opennms/core/ipc/rpc/org.opennms.core.ipc.rpc.kafka/${VERSION}/org.opennms.core.ipc.rpc.kafka-${VERSION}.jar
