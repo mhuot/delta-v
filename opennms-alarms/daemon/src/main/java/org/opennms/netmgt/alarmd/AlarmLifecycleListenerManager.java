@@ -88,7 +88,7 @@ public class AlarmLifecycleListenerManager implements AlarmEntityListener, Initi
         }
     }
 
-    protected void doSnapshot() {
+    public void doSnapshot() {
         if (listeners.size() < 1) {
             return;
         }

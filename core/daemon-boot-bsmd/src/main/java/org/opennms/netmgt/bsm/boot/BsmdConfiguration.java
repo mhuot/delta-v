@@ -194,12 +194,26 @@ public class BsmdConfiguration {
     }
 
     /**
-     * The Business Service state machine that evaluates alarm-to-BS severity
-     * propagation using the configured reduction and map functions.
+     * AlarmProvider that looks up alarms by reduction key using JPA/HQL.
+     *
+     * <p>Replaces the default {@code AlarmProviderImpl} which uses the legacy
+     * {@code findMatching(Criteria)} API that is not implemented in the
+     * Jakarta/Hibernate 7 DAO layer.</p>
      */
     @Bean
-    public org.opennms.netmgt.bsm.service.AlarmProvider alarmProvider() {
-        return new org.opennms.netmgt.bsm.service.internal.AlarmProviderImpl();
+    public org.opennms.netmgt.bsm.service.AlarmProvider alarmProvider(
+            org.opennms.netmgt.dao.api.AlarmDao alarmDao) {
+        return reductionKeys -> {
+            if (reductionKeys == null || reductionKeys.isEmpty()) {
+                return new HashMap<>();
+            }
+            return alarmDao.findAll().stream()
+                    .filter(a -> reductionKeys.contains(a.getReductionKey()))
+                    .collect(java.util.stream.Collectors.toMap(
+                            OnmsAlarm::getReductionKey,
+                            a -> (org.opennms.netmgt.bsm.service.model.AlarmWrapper)
+                                    new org.opennms.netmgt.bsm.service.internal.AlarmWrapperImpl(a)));
+        };
     }
 
     @Bean
@@ -228,13 +242,22 @@ public class BsmdConfiguration {
     /**
      * Registers Bsmd as an alarm lifecycle listener after all beans are
      * fully constructed, avoiding circular dependency issues during
-     * bean initialization.
+     * bean initialization. Then triggers an immediate alarm snapshot so
+     * that BSMd picks up any alarms that were created before it started.
+     *
+     * <p>The AlarmLifecycleListenerManager's timer fires its first snapshot
+     * at delay=0 (before this callback runs), so without the explicit
+     * doSnapshot() call here, BSMd would have to wait for the next timer
+     * tick (default 2 minutes) to get its first alarm state.</p>
      */
     @Bean
     public SmartInitializingSingleton registerBsmdAsAlarmListener(
             AlarmLifecycleListenerManager manager,
             Bsmd bsmd) {
-        return () -> manager.onListenerRegistered(bsmd, new HashMap<>());
+        return () -> {
+            manager.onListenerRegistered(bsmd, new HashMap<>());
+            manager.doSnapshot();
+        };
     }
 
     /**
