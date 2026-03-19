@@ -44,16 +44,49 @@ public class LocalServiceMonitorRegistry implements ServiceMonitorRegistry {
 
     private final Map<String, ServiceMonitor> monitorsByClassName = new HashMap<>();
 
+    /**
+     * Monitors to register explicitly because OSGi's ServiceLoader can't
+     * discover them across bundle boundaries. These are the monitors from
+     * poller-monitors-core that Delta-V E2E tests require.
+     */
+    private static final String[] EXPLICIT_MONITORS = {
+        "org.opennms.netmgt.poller.monitors.TcpMonitor",
+        "org.opennms.netmgt.poller.monitors.PageSequenceMonitor",
+        "org.opennms.netmgt.poller.monitors.HttpMonitor",
+        "org.opennms.netmgt.poller.monitors.HttpsMonitor",
+        "org.opennms.netmgt.poller.monitors.DnsMonitor",
+        "org.opennms.netmgt.poller.monitors.IcmpMonitor",
+        "org.opennms.netmgt.poller.monitors.SnmpMonitor",
+        "org.opennms.netmgt.poller.monitors.SshMonitor",
+        "org.opennms.netmgt.poller.monitors.SSLCertMonitor",
+    };
+
     public LocalServiceMonitorRegistry() {
         for (ServiceMonitor monitor : ServiceLoader.load(ServiceMonitor.class)) {
             final String className = monitor.getClass().getCanonicalName();
-            LOG.info("Registered service monitor: {}", className);
+            LOG.info("Registered service monitor via ServiceLoader: {}", className);
             monitorsByClassName.put(className, monitor);
         }
         // In Karaf OSGi, ServiceLoader can't discover monitors across bundle boundaries.
         // Explicitly register monitors from poller-api that aren't in the monitors-core JAR.
         monitorsByClassName.putIfAbsent(PassiveServiceMonitor.class.getCanonicalName(), new PassiveServiceMonitor());
-        LOG.info("Loaded {} service monitors (ServiceLoader + explicit)", monitorsByClassName.size());
+        // Register common monitors from poller-monitors-core via reflection.
+        // DynamicImport-Package: * in the bundle manifest allows loading classes
+        // from any other bundle at runtime.
+        for (String className : EXPLICIT_MONITORS) {
+            if (!monitorsByClassName.containsKey(className)) {
+                try {
+                    // Use this class's bundle classloader (which has DynamicImport-Package: *)
+                    // rather than the thread context classloader which may be from a different bundle
+                    Class<?> clazz = Class.forName(className, true, LocalServiceMonitorRegistry.class.getClassLoader());
+                    monitorsByClassName.put(className, (ServiceMonitor) clazz.getDeclaredConstructor().newInstance());
+                    LOG.info("Registered service monitor via reflection: {}", className);
+                } catch (Exception e) {
+                    LOG.warn("Could not register monitor {}: {}", className, e.getMessage());
+                }
+            }
+        }
+        LOG.info("Loaded {} service monitors total", monitorsByClassName.size());
     }
 
     @Override

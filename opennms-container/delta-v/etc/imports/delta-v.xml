@@ -1,5 +1,5 @@
-<model-import xmlns="http://xmlns.opennms.org/xsd/config/model-import" date-stamp="2026-03-18T00:00:00.000Z" foreign-source="delta-v" last-import="2026-03-19T00:10:00.015Z">
-   <node foreign-id="postgresql" node-label="postgresql">
+<model-import xmlns="http://xmlns.opennms.org/xsd/config/model-import" date-stamp="2026-03-18T00:00:00.000Z" foreign-source="delta-v" last-import="2026-03-19T05:57:00.035Z">
+   <node foreign-id="postgresql" node-label="postgres">
       <interface ip-addr="169.254.0.1" managed="true" snmp-primary="P">
          <monitored-service service-name="PostgreSQL"/>
       </interface>

@@ -163,6 +163,7 @@ do_stage_daemon_jars() {
         "core/ipc/common/kafka/target/org.opennms.core.ipc.common.kafka-$VERSION.jar:ipc-common-kafka.jar"
         "features/distributed/opennms-identity/target/org.opennms.features.distributed.opennms-identity-$VERSION.jar:opennms-identity.jar"
         "features/poller/client-rpc/target/org.opennms.features.poller.client-rpc-$VERSION.jar:poller-client-rpc.jar"
+        "features/poller/monitors/core/target/org.opennms.features.poller.monitors.core-$VERSION.jar:poller-monitors-core.jar"
     )
 
     local missing=0

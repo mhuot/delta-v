@@ -103,7 +103,9 @@
     <!-- Local Beans (from daemon context, normally provided by Manager) -->
     <!-- ============================================================== -->
 
-    <!-- Service monitor registry (discovers monitors via ServiceLoader) -->
+    <!-- Service monitor registry (discovers monitors via ServiceLoader +
+         explicit registration for monitors whose bundle can't be loaded via
+         ServiceLoader in OSGi). -->
     <bean id="serviceMonitorRegistry"
           class="org.opennms.core.daemon.loader.LocalServiceMonitorRegistry"/>
 
