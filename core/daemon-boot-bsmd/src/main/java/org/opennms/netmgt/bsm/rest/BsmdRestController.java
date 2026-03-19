@@ -100,7 +100,7 @@ public class BsmdRestController {
 
             return mapper.toDto(bs);
         });
-        manager.triggerDaemonReload();
+        reloadStateMachine();
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
@@ -124,7 +124,7 @@ public class BsmdRestController {
             bs.save();
             return mapper.toDto(bs);
         });
-        manager.triggerDaemonReload();
+        reloadStateMachine();
         return result;
     }
 
@@ -134,7 +134,7 @@ public class BsmdRestController {
             BusinessService bs = findOrThrow(id);
             manager.deleteBusinessService(bs);
         });
-        manager.triggerDaemonReload();
+        reloadStateMachine();
         return ResponseEntity.noContent().build();
     }
 
@@ -147,6 +147,18 @@ public class BsmdRestController {
                     ? stateMachine.calculateRootCause(bs)
                     : List.of();
             return mapper.toStatusDto(bs, opStatus, rootCause);
+        });
+    }
+
+    /**
+     * Reloads the BSM state machine with the current set of business services.
+     * Called after every mutation (create/update/delete) to reflect changes
+     * immediately without relying on the event-based daemon reload roundtrip
+     * through Kafka.
+     */
+    private void reloadStateMachine() {
+        transactionTemplate.executeWithoutResult(status -> {
+            stateMachine.setBusinessServices(manager.getAllBusinessServices());
         });
     }
 
