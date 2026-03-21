@@ -44,9 +44,12 @@ import org.springframework.context.annotation.Configuration;
  *       into the {@link EventIpcManager} interface expected by daemon code</li>
  * </ol>
  *
- * <p>The forwarder uses {@code NoOpEventProcessor} (no eventconf expansion) because
- * daemon containers do not have access to eventconf. Events are enriched separately
- * by the core Eventd pipeline before reaching Kafka.</p>
+ * <p>The forwarder's event expander uses {@code NoOpEventProcessor} (the legacy Eventd
+ * expansion pipeline is not available). Instead, eventconf enrichment (alarm-data,
+ * severity, reduction-key expansion) is handled by {@link EventConfEnrichmentService}
+ * which loads event configurations from the database. This enrichment is wired into
+ * the forwarder via {@code setEventConfDao()} so ALL events from ALL daemons are
+ * enriched before reaching Kafka.</p>
  */
 @Configuration
 public class KafkaEventTransportConfiguration {
@@ -67,9 +70,14 @@ public class KafkaEventTransportConfiguration {
     private long pollTimeoutMs;
 
     @Bean
-    public KafkaEventForwarder kafkaEventForwarder() {
+    public KafkaEventForwarder kafkaEventForwarder(
+            @org.springframework.beans.factory.annotation.Autowired(required = false)
+            EventConfEnrichmentService eventConfEnrichmentService) {
         KafkaEventForwarder forwarder = KafkaEventForwarderFactory.create(bootstrapServers, eventTopic);
         forwarder.setIpcTopicName(ipcTopic);
+        if (eventConfEnrichmentService != null) {
+            forwarder.setEventConfDao(eventConfEnrichmentService.getEventConfDao());
+        }
         return forwarder;
     }
 

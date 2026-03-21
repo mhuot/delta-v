@@ -24,8 +24,6 @@ package org.opennms.netmgt.poller.boot;
 import java.io.IOException;
 
 import org.opennms.core.daemon.common.DaemonSmartLifecycle;
-import org.opennms.core.daemon.common.EventConfEnrichmentService;
-import org.opennms.core.daemon.common.EventIpcManagerEnrichingWrapper;
 import org.opennms.core.tsid.TsidFactory;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.features.distributed.kvstore.json.noop.NoOpJsonStore;
@@ -37,7 +35,6 @@ import org.opennms.netmgt.config.dao.outages.impl.OnmsPollOutagesDao;
 import org.opennms.netmgt.dao.api.MonitoredServiceDao;
 import org.opennms.netmgt.dao.api.OutageDao;
 import org.opennms.netmgt.events.api.EventIpcManager;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.opennms.netmgt.icmp.proxy.LocationAwarePingClient;
 import org.opennms.netmgt.poller.LocationAwarePollerClient;
 import org.opennms.netmgt.poller.Poller;
@@ -105,19 +102,6 @@ public class PollerdDaemonConfiguration {
     }
 
     /**
-     * Wraps the Kafka-backed EventIpcManager with eventconf enrichment so that
-     * events sent by Pollerd (nodeLostService, nodeRegainedService, etc.) get
-     * alarm-data, severity, and logmsg applied before hitting Kafka.
-     * Follows the same pattern as EventTranslator's EventIpcManagerEnrichingWrapper.
-     */
-    @Bean("enrichingEventIpcManager")
-    public EventIpcManager enrichingEventIpcManager(
-            @Qualifier("eventIpcManager") EventIpcManager eventIpcManager,
-            EventConfEnrichmentService enrichmentService) {
-        return new EventIpcManagerEnrichingWrapper(eventIpcManager, enrichmentService);
-    }
-
-    /**
      * PollContext that skips AsyncPollingEngine creation.
      *
      * <p>{@link StandalonePollContext} overrides {@code afterPropertiesSet()} as a
@@ -125,7 +109,7 @@ public class PollerdDaemonConfiguration {
      * execute via Kafka RPC to Minion.</p>
      */
     @Bean
-    public PollContext pollContext(@Qualifier("enrichingEventIpcManager") EventIpcManager eventIpcManager,
+    public PollContext pollContext(EventIpcManager eventIpcManager,
                                   PollerConfig pollerConfig,
                                   QueryManager queryManager,
                                   LocationAwarePingClient locationAwarePingClient,
@@ -163,7 +147,7 @@ public class PollerdDaemonConfiguration {
                          PollerConfig pollerConfig,
                          PollContext pollContext,
                          PollableNetwork pollableNetwork,
-                         @Qualifier("enrichingEventIpcManager") EventIpcManager eventIpcManager) {
+                         EventIpcManager eventIpcManager) {
         var poller = new Poller(queryManager, monitoredServiceDao, outageDao,
                 transactionTemplate, persisterFactory, thresholdingService,
                 locationAwarePollerClient, pollOutagesDao);
