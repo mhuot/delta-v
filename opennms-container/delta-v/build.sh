@@ -138,6 +138,7 @@ do_stage_daemon_jars() {
         "features/events/daemon/target/org.opennms.features.events.daemon-$VERSION.jar:events.daemon.jar"
         # Daemon-loader JARs
         "core/daemon-loader-pollerd/target/org.opennms.core.daemon-loader-pollerd-$VERSION.jar:daemon-loader-pollerd.jar"
+        "core/daemon-boot-pollerd/target/org.opennms.core.daemon-boot-pollerd-$VERSION-boot.jar:daemon-boot-pollerd.jar"
         "core/daemon-boot-trapd/target/org.opennms.core.daemon-boot-trapd-$VERSION.jar:daemon-boot-trapd.jar"
         "core/daemon-boot-syslogd/target/org.opennms.core.daemon-boot-syslogd-$VERSION.jar:daemon-boot-syslogd.jar"
         "core/daemon-boot-discovery/target/org.opennms.core.daemon-boot-discovery-$VERSION.jar:daemon-boot-discovery.jar"
