@@ -38,7 +38,6 @@ import org.opennms.netmgt.icmp.proxy.LocationAwarePingClient;
 import org.opennms.netmgt.icmp.proxy.PingSequence;
 import org.opennms.netmgt.icmp.proxy.PingSummary;
 import org.opennms.netmgt.model.events.EventBuilder;
-import org.opennms.netmgt.xml.event.AlarmData;
 import org.opennms.netmgt.xml.event.Event;
 import org.opennms.netmgt.poller.pollables.DbPollEvent;
 import org.opennms.netmgt.poller.pollables.PollContext;
@@ -197,63 +196,7 @@ public class DefaultPollContext implements PollContext, InitializingBean {
 
         }
 
-        // Add alarm-data so Alarmd can create alarms from these events.
-        // In the monolith, Eventd enriches events via eventconf. In standalone
-        // daemon containers, we must set alarm-data directly.
-        addAlarmData(bldr, uei);
-
         return bldr.getEvent();
-    }
-
-    /**
-     * Adds alarm-data to Pollerd events so Alarmd can create alarms.
-     * Matches the eventconf definitions in opennms.pollerd.events.xml.
-     * In the monolith, Eventd enriches events via eventconf and expands
-     * %uei%, %dpname%, etc. In standalone daemon containers, we must
-     * set alarm-data with fully-resolved reduction keys.
-     */
-    private void addAlarmData(EventBuilder bldr, String uei) {
-        Event event = bldr.getEvent();
-        String dpname = event.getDistPoller() != null ? event.getDistPoller() : "localhost";
-        String nodeid = event.getNodeid() != null ? String.valueOf(event.getNodeid()) : "";
-        String iface = event.getInterface() != null ? event.getInterface() : "";
-        String svc = event.getService() != null ? event.getService() : "";
-
-        AlarmData alarmData = new AlarmData();
-        switch (uei) {
-            case EventConstants.NODE_LOST_SERVICE_EVENT_UEI:
-                alarmData.setReductionKey(uei + ":" + dpname + ":" + nodeid + ":" + iface + ":" + svc);
-                alarmData.setAlarmType(1);
-                alarmData.setAutoClean(false);
-                bldr.setAlarmData(alarmData);
-                bldr.setSeverity("Minor");
-                break;
-            case EventConstants.NODE_REGAINED_SERVICE_EVENT_UEI:
-                alarmData.setReductionKey(uei + ":" + dpname + ":" + nodeid + ":" + iface + ":" + svc);
-                alarmData.setAlarmType(2);
-                alarmData.setClearKey(EventConstants.NODE_LOST_SERVICE_EVENT_UEI + ":" + dpname + ":" + nodeid + ":" + iface + ":" + svc);
-                alarmData.setAutoClean(false);
-                bldr.setAlarmData(alarmData);
-                bldr.setSeverity("Normal");
-                break;
-            case EventConstants.NODE_DOWN_EVENT_UEI:
-                alarmData.setReductionKey(uei + ":" + dpname + ":" + nodeid);
-                alarmData.setAlarmType(1);
-                alarmData.setAutoClean(false);
-                bldr.setAlarmData(alarmData);
-                bldr.setSeverity("Major");
-                break;
-            case EventConstants.NODE_UP_EVENT_UEI:
-                alarmData.setReductionKey(uei + ":" + dpname + ":" + nodeid);
-                alarmData.setAlarmType(2);
-                alarmData.setClearKey(EventConstants.NODE_DOWN_EVENT_UEI + ":" + dpname + ":" + nodeid);
-                alarmData.setAutoClean(false);
-                bldr.setAlarmData(alarmData);
-                bldr.setSeverity("Normal");
-                break;
-            default:
-                break;
-        }
     }
 
     /**

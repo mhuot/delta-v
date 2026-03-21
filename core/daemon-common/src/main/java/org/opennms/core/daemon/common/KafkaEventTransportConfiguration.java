@@ -67,9 +67,14 @@ public class KafkaEventTransportConfiguration {
     private long pollTimeoutMs;
 
     @Bean
-    public KafkaEventForwarder kafkaEventForwarder() {
+    public KafkaEventForwarder kafkaEventForwarder(
+            @org.springframework.beans.factory.annotation.Autowired(required = false)
+            EventConfEnrichmentService eventConfEnrichmentService) {
         KafkaEventForwarder forwarder = KafkaEventForwarderFactory.create(bootstrapServers, eventTopic);
         forwarder.setIpcTopicName(ipcTopic);
+        if (eventConfEnrichmentService != null) {
+            forwarder.setEventConfDao(eventConfEnrichmentService.getEventConfDao());
+        }
         return forwarder;
     }
 
