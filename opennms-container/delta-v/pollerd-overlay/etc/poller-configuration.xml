@@ -274,7 +274,7 @@
         <parameter key="strict-timeout" value="true"/>
         <parameter key="page-sequence">
           <page-sequence>
-            <page host="${nodeLabel}" path="/actuator/health" port="8080"
+            <page host="${nodelabel}" path="/actuator/health" port="8080"
                   response-range="200-299"/>
           </page-sequence>
         </parameter>
@@ -286,7 +286,7 @@
         <parameter key="strict-timeout" value="true"/>
         <parameter key="page-sequence">
           <page-sequence>
-            <page host="${nodeLabel}" path="/minion/rest/health/probe" port="8181"
+            <page host="${nodelabel}" path="/minion/rest/health/probe" port="8181"
                   response-range="200-299"/>
           </page-sequence>
         </parameter>

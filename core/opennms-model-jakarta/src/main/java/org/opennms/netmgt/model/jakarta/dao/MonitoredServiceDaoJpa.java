@@ -25,6 +25,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -82,10 +83,10 @@ public class MonitoredServiceDaoJpa extends AbstractDaoJpa<OnmsMonitoredService,
      * Supports {@link InRestriction} (used by Poller.scheduleServices()).
      */
     @Override
-    @SuppressWarnings("unchecked")
     public List<OnmsMonitoredService> findMatching(Criteria criteria) {
         StringBuilder jpql = new StringBuilder("SELECT svc FROM OnmsMonitoredService svc");
-        List<Object> parameters = new ArrayList<>();
+        Map<String, Object> parameters = new java.util.LinkedHashMap<>();
+        int paramIndex = 0;
 
         Collection<Restriction> restrictions = criteria.getRestrictions();
         if (!restrictions.isEmpty()) {
@@ -95,8 +96,9 @@ public class MonitoredServiceDaoJpa extends AbstractDaoJpa<OnmsMonitoredService,
                 if (restriction instanceof InRestriction) {
                     InRestriction in = (InRestriction) restriction;
                     String attr = in.getAttribute().contains(".") ? in.getAttribute() : "svc." + in.getAttribute();
-                    parameters.add(in.getValues());
-                    fragments.add(attr + " IN ?" + parameters.size());
+                    String paramName = "p" + (paramIndex++);
+                    parameters.put(paramName, in.getValues());
+                    fragments.add(attr + " IN (:" + paramName + ")");
                 } else {
                     throw new UnsupportedOperationException(
                             "Unsupported restriction type in MonitoredServiceDaoJpa.findMatching: "
@@ -108,8 +110,8 @@ public class MonitoredServiceDaoJpa extends AbstractDaoJpa<OnmsMonitoredService,
 
         TypedQuery<OnmsMonitoredService> query = entityManager().createQuery(
                 jpql.toString(), OnmsMonitoredService.class);
-        for (int i = 0; i < parameters.size(); i++) {
-            query.setParameter(i + 1, parameters.get(i));
+        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+            query.setParameter(entry.getKey(), entry.getValue());
         }
         return query.getResultList();
     }
