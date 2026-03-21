@@ -365,6 +365,13 @@
             </exclusions>
         </dependency>
 
+        <!-- Pollerd service monitor loader — LocalServiceMonitorRegistry -->
+        <dependency>
+            <groupId>org.opennms.core</groupId>
+            <artifactId>org.opennms.core.daemon-loader-pollerd</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- javax.persistence API — needed at runtime so legacy opennms-model classes
              on the classpath (pulled transitively for enums/utilities) don't cause
              ClassNotFoundException when Spring's classpath scanner encounters them.
