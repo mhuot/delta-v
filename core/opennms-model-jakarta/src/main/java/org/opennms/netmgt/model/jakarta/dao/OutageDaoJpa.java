@@ -65,11 +65,29 @@ import org.springframework.transaction.annotation.Transactional;
  * {@link UnsupportedOperationException}.</p>
  */
 @Repository
-@Transactional
+@Transactional(readOnly = false)
 public class OutageDaoJpa extends AbstractDaoJpa<OnmsOutage, Integer> implements OutageDao {
 
     public OutageDaoJpa() {
         super(OnmsOutage.class);
+    }
+
+    @Override
+    @Transactional
+    public void saveOrUpdate(OnmsOutage entity) {
+        super.saveOrUpdate(entity);
+    }
+
+    @Override
+    @Transactional
+    public void update(OnmsOutage entity) {
+        super.update(entity);
+    }
+
+    @Override
+    @Transactional
+    public Integer save(OnmsOutage entity) {
+        return super.save(entity);
     }
 
     @Override
