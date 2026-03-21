@@ -25,6 +25,7 @@ import javax.sql.DataSource;
 
 import org.opennms.core.daemon.common.DaemonSmartLifecycle;
 import org.opennms.core.daemon.common.EventConfEnrichmentService;
+import org.opennms.core.daemon.common.EventIpcManagerEnrichingWrapper;
 import org.opennms.core.db.DataSourceFactory;
 import org.opennms.netmgt.config.EventTranslatorConfigFactory;
 import org.opennms.netmgt.events.api.EventIpcManager;
