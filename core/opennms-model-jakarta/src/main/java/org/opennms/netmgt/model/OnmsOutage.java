@@ -430,7 +430,7 @@ public class OnmsOutage implements Serializable {
     /**
      * Monitoring perspective that this outage is associated with.
      */
-    @ManyToOne(optional=false, fetch=FetchType.LAZY)
+    @ManyToOne(optional=true, fetch=FetchType.LAZY)
     @JoinColumn(name="perspective")
     public OnmsMonitoringLocation getPerspective() {
         return m_perspective;
