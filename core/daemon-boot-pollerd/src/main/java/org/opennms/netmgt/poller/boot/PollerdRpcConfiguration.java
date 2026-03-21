@@ -25,6 +25,8 @@ import org.opennms.core.daemon.loader.LocalServiceMonitorRegistry;
 import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.core.rpc.api.RpcClientFactory;
 import org.opennms.core.rpc.utils.RpcTargetHelper;
+import org.opennms.netmgt.icmp.Pinger;
+import org.opennms.netmgt.icmp.PingerFactory;
 import org.opennms.netmgt.icmp.proxy.LocationAwarePingClient;
 import org.opennms.netmgt.icmp.proxy.LocationAwarePingClientImpl;
 import org.opennms.netmgt.icmp.proxy.PingProxyRpcModule;
@@ -35,6 +37,9 @@ import org.opennms.netmgt.poller.client.rpc.LocationAwarePollerClientImpl;
 import org.opennms.netmgt.poller.client.rpc.PollerClientRpcModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * Spring Boot configuration for Pollerd's Kafka RPC clients.
@@ -57,6 +62,27 @@ public class PollerdRpcConfiguration {
     @Bean
     public ServiceMonitorRegistry serviceMonitorRegistry() {
         return new LocalServiceMonitorRegistry();
+    }
+
+    /**
+     * Executor for PollerClientRpcModule async response handling.
+     * Satisfies the @Autowired @Qualifier("pollerExecutor") on PollerClientRpcModule.
+     */
+    @Bean("pollerExecutor")
+    public Executor pollerExecutor() {
+        return Executors.newCachedThreadPool();
+    }
+
+    /**
+     * No-op PingerFactory — Pollerd never pings locally, it delegates to Minion.
+     * This bean satisfies the @Autowired PingerFactory field on PingProxyRpcModule.
+     */
+    @Bean
+    public PingerFactory pingerFactory() {
+        return new PingerFactory() {
+            @Override public Pinger getInstance() { return null; }
+            @Override public Pinger getInstance(int tc, boolean allowFragmentation) { return null; }
+        };
     }
 
     /**

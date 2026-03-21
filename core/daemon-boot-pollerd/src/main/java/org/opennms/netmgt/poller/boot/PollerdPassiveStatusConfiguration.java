@@ -33,7 +33,6 @@ import org.opennms.distributed.core.api.Identity;
 import org.opennms.netmgt.events.api.EventIpcManager;
 import org.opennms.netmgt.passive.PassiveStatusKeeper;
 import org.opennms.netmgt.passive.PassiveStatusTwinPublisher;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -67,11 +66,6 @@ public class PollerdPassiveStatusConfiguration {
         return new InlineIdentity();
     }
 
-    @Bean("twinPublisherMetricRegistry")
-    public MetricRegistry twinPublisherMetricRegistry() {
-        return new MetricRegistry();
-    }
-
     @Bean
     public LocalTwinSubscriberImpl localTwinSubscriber(Identity twinIdentity) {
         return new LocalTwinSubscriberImpl(twinIdentity);
@@ -80,9 +74,8 @@ public class PollerdPassiveStatusConfiguration {
     @Bean(initMethod = "init", destroyMethod = "close")
     public KafkaTwinPublisher kafkaTwinPublisher(
             LocalTwinSubscriberImpl localTwinSubscriber,
-            TracerRegistry tracerRegistry,
-            @Qualifier("twinPublisherMetricRegistry") MetricRegistry metricRegistry) {
-        return new KafkaTwinPublisher(localTwinSubscriber, tracerRegistry, metricRegistry);
+            TracerRegistry tracerRegistry) {
+        return new KafkaTwinPublisher(localTwinSubscriber, tracerRegistry, new MetricRegistry());
     }
 
     @Bean(initMethod = "init", destroyMethod = "close")

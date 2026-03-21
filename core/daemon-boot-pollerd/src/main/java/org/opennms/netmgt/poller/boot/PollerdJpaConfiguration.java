@@ -48,7 +48,9 @@ import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsMonitoringSystem;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsOutage;
+import org.opennms.netmgt.model.OnmsApplication;
 import org.opennms.netmgt.model.OnmsServiceType;
+import org.opennms.netmgt.model.OnmsSnmpInterface;
 import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
 import org.opennms.netmgt.poller.QueryManager;
 import org.opennms.netmgt.poller.QueryManagerDaoImpl;
@@ -117,7 +119,9 @@ public class PollerdJpaConfiguration {
             OnmsMonitoringSystem.class.getName(),
             OnmsMonitoringLocation.class.getName(),
             OnmsDistPoller.class.getName(),
-            OnmsCategory.class.getName()
+            OnmsCategory.class.getName(),
+            OnmsSnmpInterface.class.getName(),
+            OnmsApplication.class.getName()
         );
     }
 
@@ -152,15 +156,9 @@ public class PollerdJpaConfiguration {
     }
 
     /**
-     * TransactionOperations for QueryManagerDaoImpl.
-     */
-    @Bean
-    public TransactionOperations transactionOperations(PlatformTransactionManager txManager) {
-        return new TransactionTemplate(txManager);
-    }
-
-    /**
-     * TransactionTemplate for Poller constructor.
+     * TransactionTemplate for Poller and QueryManagerDaoImpl.
+     * TransactionTemplate implements TransactionOperations, so this single bean
+     * satisfies both injection points.
      */
     @Bean
     public TransactionTemplate transactionTemplate(PlatformTransactionManager txManager) {
