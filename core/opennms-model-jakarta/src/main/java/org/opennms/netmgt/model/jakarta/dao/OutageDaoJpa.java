@@ -214,9 +214,19 @@ public class OutageDaoJpa extends AbstractDaoJpa<OnmsOutage, Integer> implements
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Map<Integer, Set<OnmsOutage>> currentOutagesByServiceId() {
-        throw new UnsupportedOperationException(
-                "currentOutagesByServiceId() is not used by Pollerd");
+        List<OnmsOutage> outages = entityManager().createQuery(
+                "SELECT o FROM OnmsOutage o WHERE o.ifRegainedService IS NULL AND o.perspective IS NULL")
+                .getResultList();
+        Map<Integer, Set<OnmsOutage>> result = new java.util.HashMap<>();
+        for (OnmsOutage outage : outages) {
+            if (outage.getMonitoredService() != null) {
+                result.computeIfAbsent(outage.getMonitoredService().getId(),
+                        k -> new java.util.HashSet<>()).add(outage);
+            }
+        }
+        return result;
     }
 
     @Override
