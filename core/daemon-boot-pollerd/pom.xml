@@ -372,6 +372,14 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- NoOp JsonStore — used by OnmsPollOutagesDao in standalone mode
+             (no distributed config sync needed) -->
+        <dependency>
+            <groupId>org.opennms.features.distributed</groupId>
+            <artifactId>org.opennms.features.distributed.kv-store.json.noop</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- javax.persistence API — needed at runtime so legacy opennms-model classes
              on the classpath (pulled transitively for enums/utilities) don't cause
              ClassNotFoundException when Spring's classpath scanner encounters them.
