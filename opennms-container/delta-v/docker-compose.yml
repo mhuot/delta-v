@@ -419,7 +419,9 @@ services:
     container_name: delta-v-bsmd
     hostname: bsmd
     entrypoint: []
-    command: ["java", "-Xms256m", "-Xmx512m", "-jar", "/opt/daemon-boot-bsmd.jar"]
+    command: ["java", "-Xms256m", "-Xmx512m",
+              "-Dorg.opennms.alarms.snapshot.sync.ms=10000",
+              "-jar", "/opt/daemon-boot-bsmd.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully

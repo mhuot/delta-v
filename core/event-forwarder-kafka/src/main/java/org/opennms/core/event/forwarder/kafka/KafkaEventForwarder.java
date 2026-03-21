@@ -306,7 +306,10 @@ public class KafkaEventForwarder implements EventForwarder {
             case "interface":
                 return event.getInterface() != null ? event.getInterface() : "";
             case "dpname":
+            case "distpoller":
                 return event.getDistPoller() != null ? event.getDistPoller() : "";
+            case "service":
+                return event.getService() != null ? event.getService() : "";
             case "severity":
                 return event.getSeverity() != null ? event.getSeverity() : "";
             case "source":
