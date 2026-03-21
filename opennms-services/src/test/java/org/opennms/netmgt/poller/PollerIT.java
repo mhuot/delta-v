@@ -230,27 +230,17 @@ public class PollerIT implements TemporaryDatabaseAware<MockDatabase> {
 
         m_locationAwarePingClient = mock(LocationAwarePingClient.class);
 
-        DefaultPollContext pollContext = new DefaultPollContext();
-        pollContext.setEventManager(m_eventMgr);
-        pollContext.setLocalHostName("localhost");
-        pollContext.setName("Test.DefaultPollContext");
-        pollContext.setPollerConfig(m_pollerConfig);
-        pollContext.setQueryManager(m_queryManager);
-        pollContext.setLocationAwarePingClient(m_locationAwarePingClient);
+        DefaultPollContext pollContext = new DefaultPollContext(m_eventMgr, m_pollerConfig, m_queryManager,
+                m_locationAwarePingClient, null, "localhost", "Test.DefaultPollContext");
 
         PollableNetwork network = new PollableNetwork(pollContext);
 
-        m_poller = new Poller();
-        m_poller.setMonitoredServiceDao(m_monitoredServiceDao);
-        m_poller.setOutageDao(m_outageDao);
-        m_poller.setTransactionTemplate(m_transactionTemplate);
+        m_poller = new Poller(m_queryManager, m_monitoredServiceDao, m_outageDao,
+                m_transactionTemplate, new MockPersisterFactory(), null,
+                m_locationAwarePollerClient, m_pollerConfig);
         m_poller.setEventIpcManager(m_eventMgr);
         m_poller.setNetwork(network);
-        m_poller.setQueryManager(m_queryManager);
         m_poller.setPollerConfig(m_pollerConfig);
-        m_poller.setPollOutagesDao(m_pollerConfig);
-        m_poller.setLocationAwarePollerClient(m_locationAwarePollerClient);
-        m_poller.setPersisterFactory(new MockPersisterFactory());
     }
 
     @After

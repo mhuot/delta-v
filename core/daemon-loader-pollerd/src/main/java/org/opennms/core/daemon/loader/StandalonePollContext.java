@@ -21,7 +21,12 @@
  */
 package org.opennms.core.daemon.loader;
 
+import org.opennms.core.tsid.TsidFactory;
+import org.opennms.netmgt.config.PollerConfig;
+import org.opennms.netmgt.events.api.EventIpcManager;
+import org.opennms.netmgt.icmp.proxy.LocationAwarePingClient;
 import org.opennms.netmgt.poller.DefaultPollContext;
+import org.opennms.netmgt.poller.QueryManager;
 
 /**
  * Standalone PollContext that skips AsyncPollingEngine initialization.
@@ -32,6 +37,13 @@ import org.opennms.netmgt.poller.DefaultPollContext;
  * execute directly via LocalPollerClient without async bulkhead control.
  */
 public class StandalonePollContext extends DefaultPollContext {
+
+    public StandalonePollContext(EventIpcManager eventManager, PollerConfig pollerConfig,
+                                 QueryManager queryManager, LocationAwarePingClient locationAwarePingClient,
+                                 TsidFactory tsidFactory, String localHostName, String name) {
+        super(eventManager, pollerConfig, queryManager, locationAwarePingClient,
+              tsidFactory, localHostName, name);
+    }
 
     @Override
     public void afterPropertiesSet() {

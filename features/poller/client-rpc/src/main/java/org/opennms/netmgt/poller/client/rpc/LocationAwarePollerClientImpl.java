@@ -31,32 +31,27 @@ import org.opennms.netmgt.poller.LocationAwarePollerClient;
 import org.opennms.netmgt.poller.PollerRequestBuilder;
 import org.opennms.netmgt.poller.ServiceMonitorRegistry;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class LocationAwarePollerClientImpl implements LocationAwarePollerClient, InitializingBean {
 
-    @Autowired
-    private ServiceMonitorRegistry registry;
-
-    @Autowired
-    private PollerClientRpcModule pollerClientRpcModule;
-
-    @Autowired
-    private RpcClientFactory rpcClientFactory;
-
-    @Autowired
-    private RpcTargetHelper rpcTargetHelper;
-
-    @Autowired
-    private EntityScopeProvider entityScopeProvider;
+    private final ServiceMonitorRegistry registry;
+    private final PollerClientRpcModule pollerClientRpcModule;
+    private final RpcClientFactory rpcClientFactory;
+    private final RpcTargetHelper rpcTargetHelper;
+    private final EntityScopeProvider entityScopeProvider;
 
     private RpcClient<PollerRequestDTO, PollerResponseDTO> delegate;
 
-    public LocationAwarePollerClientImpl() { }
-
-    public LocationAwarePollerClientImpl(RpcClientFactory rpcClientFactory) {
+    public LocationAwarePollerClientImpl(ServiceMonitorRegistry registry,
+                                         PollerClientRpcModule pollerClientRpcModule,
+                                         RpcClientFactory rpcClientFactory,
+                                         RpcTargetHelper rpcTargetHelper,
+                                         EntityScopeProvider entityScopeProvider) {
+        this.registry = Objects.requireNonNull(registry);
+        this.pollerClientRpcModule = Objects.requireNonNull(pollerClientRpcModule);
         this.rpcClientFactory = Objects.requireNonNull(rpcClientFactory);
-        afterPropertiesSet();
+        this.rpcTargetHelper = Objects.requireNonNull(rpcTargetHelper);
+        this.entityScopeProvider = Objects.requireNonNull(entityScopeProvider);
     }
 
     @Override
@@ -77,23 +72,11 @@ public class LocationAwarePollerClientImpl implements LocationAwarePollerClient,
         return registry;
     }
 
-    public void setRegistry(ServiceMonitorRegistry registry) {
-        this.registry = registry;
-    }
-
     public RpcTargetHelper getRpcTargetHelper() {
         return rpcTargetHelper;
     }
 
-    public void setRpcTargetHelper(RpcTargetHelper rpcTargetHelper) {
-        this.rpcTargetHelper = rpcTargetHelper;
-    }
-
     public EntityScopeProvider getEntityScopeProvider() {
         return this.entityScopeProvider;
-    }
-
-    public void setEntityScopeProvider(final EntityScopeProvider entityScopeProvider) {
-        this.entityScopeProvider = entityScopeProvider;
     }
 }

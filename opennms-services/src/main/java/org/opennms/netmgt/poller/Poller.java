@@ -61,13 +61,11 @@ import org.opennms.netmgt.scheduler.Scheduler;
 import org.opennms.netmgt.threshd.api.ThresholdingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import com.google.common.annotations.VisibleForTesting;
 
 /**
  * <p>Poller class.</p>
@@ -89,49 +87,25 @@ public class Poller extends AbstractServiceDaemon {
 
     private PollableNetwork m_network;
 
-    @Autowired
-    private QueryManager m_queryManager;
+    private final QueryManager m_queryManager;
 
     private PollerConfig m_pollerConfig;
 
     private EventIpcManager m_eventMgr;
 
-    @Autowired
-    private MonitoredServiceDao m_monitoredServiceDao;
+    private final MonitoredServiceDao m_monitoredServiceDao;
 
-    @Autowired
-    private OutageDao m_outageDao;
+    private final OutageDao m_outageDao;
 
-    @Autowired
-    private TransactionTemplate m_transactionTemplate;
+    private final TransactionTemplate m_transactionTemplate;
 
-    @Autowired
-    private PersisterFactory m_persisterFactory;
+    private final PersisterFactory m_persisterFactory;
 
-    @Autowired
-    private ThresholdingService m_thresholdingService;
+    private final ThresholdingService m_thresholdingService;
 
-    @Autowired
-    private LocationAwarePollerClient m_locationAwarePollerClient;
-    
-    @Autowired(required = false)
-    private ReadablePollOutagesDao m_pollOutagesDao;
+    private final LocationAwarePollerClient m_locationAwarePollerClient;
 
-    public void setPersisterFactory(PersisterFactory persisterFactory) {
-        m_persisterFactory = persisterFactory;
-    }
-
-    public void setOutageDao(OutageDao outageDao) {
-        this.m_outageDao = outageDao;
-    }
-
-    public void setMonitoredServiceDao(MonitoredServiceDao monitoredServiceDao) {
-        this.m_monitoredServiceDao = monitoredServiceDao;
-    }
-
-    public void setTransactionTemplate(TransactionTemplate transactionTemplate) {
-        m_transactionTemplate = transactionTemplate;
-    }
+    private final ReadablePollOutagesDao m_pollOutagesDao;
 
     /**
      * <p>setEventIpcManager</p>
@@ -154,8 +128,20 @@ public class Poller extends AbstractServiceDaemon {
     /**
      * <p>Constructor for Poller.</p>
      */
-    public Poller() {
+    public Poller(QueryManager queryManager, MonitoredServiceDao monitoredServiceDao,
+                  OutageDao outageDao, TransactionTemplate transactionTemplate,
+                  PersisterFactory persisterFactory, ThresholdingService thresholdingService,
+                  LocationAwarePollerClient locationAwarePollerClient,
+                  ReadablePollOutagesDao pollOutagesDao) {
         super(LOG4J_CATEGORY);
+        this.m_queryManager = Objects.requireNonNull(queryManager);
+        this.m_monitoredServiceDao = Objects.requireNonNull(monitoredServiceDao);
+        this.m_outageDao = Objects.requireNonNull(outageDao);
+        this.m_transactionTemplate = Objects.requireNonNull(transactionTemplate);
+        this.m_persisterFactory = Objects.requireNonNull(persisterFactory);
+        this.m_thresholdingService = thresholdingService; // nullable — not all deployments use thresholding
+        this.m_locationAwarePollerClient = Objects.requireNonNull(locationAwarePollerClient);
+        this.m_pollOutagesDao = pollOutagesDao; // nullable — not available in Karaf
     }
 
     /* Getters/Setters used for dependency injection */
@@ -206,15 +192,6 @@ public class Poller extends AbstractServiceDaemon {
     }
 
     /**
-     * <p>setQueryManager</p>
-     *
-     * @param queryManager a {@link org.opennms.netmgt.poller.QueryManager} object.
-     */
-    void setQueryManager(QueryManager queryManager) {
-        m_queryManager = queryManager;
-    }
-
-    /**
      * <p>getQueryManager</p>
      *
      * @return a {@link org.opennms.netmgt.poller.QueryManager} object.
@@ -247,11 +224,6 @@ public class Poller extends AbstractServiceDaemon {
     ReadablePollOutagesDao getPollOutagesDao() {
         return m_pollOutagesDao;
     }
-    
-    @VisibleForTesting
-    void setPollOutagesDao(ReadablePollOutagesDao pollOutagesDao) {
-        m_pollOutagesDao = pollOutagesDao;
-    }
 
     /**
      * <p>getScheduler</p>
@@ -269,10 +241,6 @@ public class Poller extends AbstractServiceDaemon {
      */
     public void setScheduler(LegacyScheduler scheduler) {
         m_scheduler = scheduler;
-    }
-
-    public void setLocationAwarePollerClient(LocationAwarePollerClient locationAwarePollerClient) {
-        m_locationAwarePollerClient = locationAwarePollerClient;
     }
 
     /**

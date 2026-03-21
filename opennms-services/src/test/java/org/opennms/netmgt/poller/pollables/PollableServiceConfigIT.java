@@ -118,8 +118,9 @@ public class PollableServiceConfigIT {
         PollerConfigFactory.setInstance(factory);
         IOUtils.closeQuietly(is);
 
-        m_locationAwarePollerClient.setRegistry(factory.getServiceMonitorRegistry());
-        m_pollerClientRpcModule.setServiceMonitorRegistry(factory.getServiceMonitorRegistry());
+        // The registry is now final on LocationAwarePollerClientImpl — use the
+        // constructor-injected registry. Monitors are discovered via ServiceLoader.
+        m_pollerClientRpcModule.setServiceMonitorRegistry(m_locationAwarePollerClient.getRegistry());
 
         PersisterFactory persisterFactory = new MockPersisterFactory();
 

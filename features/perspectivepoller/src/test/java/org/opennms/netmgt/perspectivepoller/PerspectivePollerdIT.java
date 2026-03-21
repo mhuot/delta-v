@@ -76,7 +76,9 @@ import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.netmgt.poller.ServiceMonitor;
+import org.opennms.netmgt.poller.ServiceMonitorRegistry;
 import org.opennms.netmgt.poller.client.rpc.LocationAwarePollerClientImpl;
+import org.opennms.netmgt.poller.client.rpc.PollerClientRpcModule;
 import org.opennms.netmgt.threshd.ThresholdingServiceImpl;
 import org.opennms.test.JUnitConfigurationEnvironment;
 import org.quartz.JobDetail;
@@ -144,6 +146,9 @@ public class PerspectivePollerdIT implements InitializingBean, TemporaryDatabase
     @Autowired
     private DistPollerDao distPollerDao;
 
+    @Autowired
+    private ServiceMonitorRegistry serviceMonitorRegistry;
+
     private PerspectivePollerd perspectivePollerd;
 
     private OnmsMonitoredService node1icmp;
@@ -210,9 +215,9 @@ public class PerspectivePollerdIT implements InitializingBean, TemporaryDatabase
             return null;
         });
 
-        final LocationAwarePollerClientImpl locationAwarePollerClient = new LocationAwarePollerClientImpl(new MockRpcClientFactory());
-        locationAwarePollerClient.setEntityScopeProvider(new MockEntityScopeProvider());
-        locationAwarePollerClient.setRpcTargetHelper(new RpcTargetHelper());
+        final LocationAwarePollerClientImpl locationAwarePollerClient = new LocationAwarePollerClientImpl(
+                this.serviceMonitorRegistry, new PollerClientRpcModule(),
+                new MockRpcClientFactory(), new RpcTargetHelper(), new MockEntityScopeProvider());
         locationAwarePollerClient.afterPropertiesSet();
 
         System.setProperty(PerspectiveServiceTracker.REFRESH_RATE_LIMIT_PROPERTY, "5");

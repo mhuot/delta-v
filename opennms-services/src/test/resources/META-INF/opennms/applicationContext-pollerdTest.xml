@@ -17,9 +17,14 @@
 ">
 
     <aop:aspectj-autoproxy proxy-target-class="true"/>
-    <context:annotation-config />
 
-    <bean name="pollerQueryManager" class="org.opennms.netmgt.poller.QueryManagerDaoImpl"/>
+    <bean name="pollerQueryManager" class="org.opennms.netmgt.poller.QueryManagerDaoImpl">
+      <constructor-arg ref="nodeDao"/>
+      <constructor-arg ref="outageDao"/>
+      <constructor-arg ref="monitoredServiceDao"/>
+      <constructor-arg ref="ipInterfaceDao"/>
+      <constructor-arg ref="transactionTemplate"/>
+    </bean>
 
     <!--
     <bean name="pollContext" class="org.opennms.netmgt.poller.DefaultPollContext">

@@ -27,8 +27,7 @@
            http://xmlns.opennms.org/xsd/spring/onms-osgi http://xmlns.opennms.org/xsd/spring/onms-osgi.xsd
        ">
 
-    <!-- Enable @Autowired processing for Poller and QueryManagerDaoImpl -->
-    <context:annotation-config />
+    <!-- Constructor injection is used for all beans; annotation-config no longer needed -->
 
     <!-- Shared KafkaRpcClientFactory wiring -->
     <import resource="classpath:kafka-rpc-client-factory.xml"/>
@@ -121,7 +120,13 @@
 
     <!-- Real LocationAwarePollerClient — delegates polls to Minions via Kafka RPC -->
     <bean id="locationAwarePollerClient"
-          class="org.opennms.netmgt.poller.client.rpc.LocationAwarePollerClientImpl"/>
+          class="org.opennms.netmgt.poller.client.rpc.LocationAwarePollerClientImpl">
+        <constructor-arg ref="serviceMonitorRegistry"/>
+        <constructor-arg ref="pollerClientRpcModule"/>
+        <constructor-arg ref="kafkaRpcClientFactory"/>
+        <constructor-arg ref="rpcTargetHelper"/>
+        <constructor-arg ref="entityScopeProvider"/>
+    </bean>
     <onmsgi:service interface="org.opennms.netmgt.poller.LocationAwarePollerClient"
                     ref="locationAwarePollerClient"/>
 
@@ -134,16 +139,22 @@
     </bean>
 
     <bean name="pollerQueryManager"
-          class="org.opennms.netmgt.poller.QueryManagerDaoImpl"/>
+          class="org.opennms.netmgt.poller.QueryManagerDaoImpl">
+        <constructor-arg ref="nodeDao"/>
+        <constructor-arg ref="outageDao"/>
+        <constructor-arg ref="monitoredServiceDao"/>
+        <constructor-arg ref="ipInterfaceDao"/>
+        <constructor-arg ref="transactionTemplate"/>
+    </bean>
 
     <bean name="pollContext" class="org.opennms.core.daemon.loader.StandalonePollContext">
-        <property name="eventManager" ref="eventIpcManager"/>
-        <property name="localHostName" ref="localHostName"/>
-        <property name="name" value="OpenNMS.Poller.DefaultPollContext"/>
-        <property name="pollerConfig" ref="pollerConfig"/>
-        <property name="queryManager" ref="pollerQueryManager"/>
-        <property name="locationAwarePingClient" ref="locationAwarePingClient"/>
-        <property name="tsidFactory" ref="tsidFactory"/>
+        <constructor-arg ref="eventIpcManager"/>
+        <constructor-arg ref="pollerConfig"/>
+        <constructor-arg ref="pollerQueryManager"/>
+        <constructor-arg ref="locationAwarePingClient"/>
+        <constructor-arg ref="tsidFactory"/>
+        <constructor-arg ref="localHostName"/>
+        <constructor-arg value="OpenNMS.Poller.DefaultPollContext"/>
     </bean>
 
     <bean name="pollableNetwork"
@@ -152,6 +163,14 @@
     </bean>
 
     <bean name="daemon" class="org.opennms.netmgt.poller.Poller">
+        <constructor-arg ref="pollerQueryManager"/>
+        <constructor-arg ref="monitoredServiceDao"/>
+        <constructor-arg ref="outageDao"/>
+        <constructor-arg ref="transactionTemplate"/>
+        <constructor-arg ref="persisterFactory"/>
+        <constructor-arg ref="thresholdingService"/>
+        <constructor-arg ref="locationAwarePollerClient"/>
+        <constructor-arg><null/></constructor-arg>  <!-- pollOutagesDao (optional, not available in Karaf) -->
         <property name="network" ref="pollableNetwork"/>
         <property name="pollerConfig" ref="pollerConfig"/>
         <property name="eventIpcManager" ref="eventIpcManager"/>

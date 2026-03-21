@@ -126,12 +126,15 @@
           class="org.opennms.netmgt.poller.client.rpc.PollerClientRpcModule"/>
 
     <!-- The real LocationAwarePollerClient that delegates to Minions via Kafka RPC.
-         afterPropertiesSet() creates the RPC delegate from rpcClientFactory + pollerClientRpcModule.
-         All 5 @Autowired fields are resolved by <context:annotation-config/>:
-           - serviceMonitorRegistry, pollerClientRpcModule, rpcClientFactory,
-             rpcTargetHelper, entityScopeProvider -->
+         afterPropertiesSet() creates the RPC delegate from rpcClientFactory + pollerClientRpcModule. -->
     <bean id="locationAwarePollerClient"
-          class="org.opennms.netmgt.poller.client.rpc.LocationAwarePollerClientImpl"/>
+          class="org.opennms.netmgt.poller.client.rpc.LocationAwarePollerClientImpl">
+        <constructor-arg ref="serviceMonitorRegistry"/>
+        <constructor-arg ref="pollerClientRpcModule"/>
+        <constructor-arg ref="kafkaRpcClientFactory"/>
+        <constructor-arg ref="rpcTargetHelper"/>
+        <constructor-arg ref="entityScopeProvider"/>
+    </bean>
 
     <!-- ============================================================== -->
     <!-- Local Beans                                                    -->

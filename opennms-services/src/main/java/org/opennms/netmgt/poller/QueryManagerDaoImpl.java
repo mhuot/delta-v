@@ -42,6 +42,8 @@ import org.opennms.core.criteria.restrictions.EqRestriction;
 import org.opennms.core.criteria.restrictions.NeRestriction;
 import org.opennms.core.criteria.restrictions.NullRestriction;
 import org.opennms.core.utils.InetAddressUtils;
+import java.util.Objects;
+
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
 import org.opennms.netmgt.dao.api.MonitoredServiceDao;
 import org.opennms.netmgt.dao.api.NodeDao;
@@ -52,7 +54,6 @@ import org.opennms.netmgt.model.OnmsOutage;
 import org.opennms.netmgt.poller.pollables.PollableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionOperations;
 
@@ -65,21 +66,22 @@ public class QueryManagerDaoImpl implements QueryManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(QueryManagerDaoImpl.class);
 
-    @Autowired
-    private NodeDao m_nodeDao;
+    private final NodeDao m_nodeDao;
+    private final OutageDao m_outageDao;
+    private final MonitoredServiceDao m_monitoredServiceDao;
+    private final IpInterfaceDao m_ipInterfaceDao;
+    private final TransactionOperations m_transcationOps;
 
-    @Autowired
-    private OutageDao m_outageDao;
-
-    @Autowired
-    private MonitoredServiceDao m_monitoredServiceDao;
-
-    @Autowired
-    private IpInterfaceDao m_ipInterfaceDao;
-
-    @Autowired
-    private TransactionOperations m_transcationOps;
-    
+    public QueryManagerDaoImpl(NodeDao nodeDao, OutageDao outageDao,
+                               MonitoredServiceDao monitoredServiceDao,
+                               IpInterfaceDao ipInterfaceDao,
+                               TransactionOperations transactionOperations) {
+        this.m_nodeDao = Objects.requireNonNull(nodeDao);
+        this.m_outageDao = Objects.requireNonNull(outageDao);
+        this.m_monitoredServiceDao = Objects.requireNonNull(monitoredServiceDao);
+        this.m_ipInterfaceDao = Objects.requireNonNull(ipInterfaceDao);
+        this.m_transcationOps = Objects.requireNonNull(transactionOperations);
+    }
 
 
     /** {@inheritDoc} */
