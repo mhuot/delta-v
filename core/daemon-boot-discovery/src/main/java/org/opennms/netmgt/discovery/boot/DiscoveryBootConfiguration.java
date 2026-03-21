@@ -17,6 +17,7 @@ import org.opennms.netmgt.discovery.RangeChunker;
 import org.opennms.netmgt.discovery.UnmanagedInterfaceFilter;
 import org.opennms.netmgt.icmp.best.BestMatchPingerFactory;
 import org.opennms.netmgt.icmp.PingerFactory;
+import org.opennms.core.rpc.api.RpcClientFactory;
 import org.opennms.netmgt.icmp.proxy.LocationAwarePingClientImpl;
 import org.opennms.netmgt.icmp.proxy.PingProxyRpcModule;
 import org.opennms.netmgt.icmp.proxy.PingSweepRpcModule;
@@ -80,8 +81,11 @@ public class DiscoveryBootConfiguration {
      * does NOT recognize. Must use {@code initMethod = "init"}.
      */
     @Bean(initMethod = "init")
-    public LocationAwarePingClientImpl locationAwarePingClient() {
-        return new LocationAwarePingClientImpl();
+    public LocationAwarePingClientImpl locationAwarePingClient(
+            RpcClientFactory rpcClientFactory,
+            PingProxyRpcModule pingProxyRpcModule,
+            PingSweepRpcModule pingSweepRpcModule) {
+        return new LocationAwarePingClientImpl(rpcClientFactory, pingProxyRpcModule, pingSweepRpcModule);
     }
 
     // -- Detector RPC --

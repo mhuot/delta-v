@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.core.daemon.loader;
+package org.opennms.netmgt.poller.boot;
 
 import org.opennms.core.tsid.TsidFactory;
 import org.opennms.netmgt.config.PollerConfig;
@@ -31,10 +31,10 @@ import org.opennms.netmgt.poller.QueryManager;
 /**
  * Standalone PollContext that skips AsyncPollingEngine initialization.
  *
- * In standalone daemon containers, resilience4j bundles may not be wired
+ * <p>In standalone daemon containers, resilience4j bundles may not be wired
  * to opennms-services at class-load time. The AsyncPollingEngine (which
- * uses resilience4j Bulkhead) is not needed for local polling — polls
- * execute directly via LocalPollerClient without async bulkhead control.
+ * uses resilience4j Bulkhead) is not needed -- polls execute via Kafka RPC
+ * to Minion without async bulkhead control.</p>
  */
 public class StandalonePollContext extends DefaultPollContext {
 
@@ -47,8 +47,8 @@ public class StandalonePollContext extends DefaultPollContext {
 
     @Override
     public void afterPropertiesSet() {
-        // Skip AsyncPollingEngine creation — not needed for standalone polling.
+        // Skip AsyncPollingEngine creation -- not needed for standalone polling.
         // The parent creates new AsyncPollingEngine(...) which requires
-        // resilience4j-bulkhead, unavailable in the minimal OSGi container.
+        // resilience4j-bulkhead, unavailable in the standalone container.
     }
 }

@@ -147,11 +147,8 @@ public class PathOutageManagerDaoIT implements TemporaryDatabaseAware<MockDataba
 		m_pollerConfig.setDefaultPollInterval(2000L);
 		m_pollerConfig.addService(m_network.getService(2, "192.168.1.3", "HTTP"));
 
-		DefaultPollContext pollContext = new DefaultPollContext();
-		pollContext.setLocalHostName("localhost");
-		pollContext.setName("Test.DefaultPollContext");
-		pollContext.setPollerConfig(m_pollerConfig);
-		pollContext.setQueryManager(m_queryManager);
+		DefaultPollContext pollContext = new DefaultPollContext(null, m_pollerConfig, m_queryManager,
+				null, null, "localhost", "Test.DefaultPollContext");
 	}
 
 	@After

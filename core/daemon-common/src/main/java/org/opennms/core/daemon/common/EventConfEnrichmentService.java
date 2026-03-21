@@ -73,6 +73,14 @@ public class EventConfEnrichmentService {
     }
 
     /**
+     * Returns the underlying EventConfDao for use by components that need
+     * direct access to event configuration lookups (e.g., KafkaEventForwarder).
+     */
+    public DefaultEventConfDao getEventConfDao() {
+        return eventConfDao;
+    }
+
+    /**
      * Enriches an event by looking up the matching event conf entry and applying
      * alarm-data, severity, and logmsg when the event is missing them.
      *

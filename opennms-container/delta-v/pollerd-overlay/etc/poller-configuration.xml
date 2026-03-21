@@ -297,14 +297,14 @@
         <parameter key="timeout" value="3000"/>
         <parameter key="retry" value="0"/>
         <parameter key="port" value="5432"/>
-        <parameter key="hostname" value="${nodelabel}"/>
+        <parameter key="hostname" value="${nodeLabel}"/>
       </service>
       <service name="Kafka" interval="30000" user-defined="false" status="on">
         <parameter key="rrd-status" value="false"/>
         <parameter key="timeout" value="3000"/>
         <parameter key="retry" value="0"/>
         <parameter key="port" value="9092"/>
-        <parameter key="hostname" value="${nodelabel}"/>
+        <parameter key="hostname" value="${nodeLabel}"/>
       </service>
       <!-- Passive cloud service monitors — status driven by syslog → Event Translator → passiveServiceStatus -->
       <service name="GoogleCloud" interval="30000" user-defined="true" status="on"/>

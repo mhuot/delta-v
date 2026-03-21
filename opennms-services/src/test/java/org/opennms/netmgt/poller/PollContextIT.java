@@ -173,13 +173,8 @@ public class PollContextIT implements TemporaryDatabaseAware<MockDatabase> {
 
         m_locationAwarePingClient = mock(LocationAwarePingClient.class);
 
-        m_pollContext = new DefaultPollContext();
-        m_pollContext.setEventManager(m_eventMgr);
-        m_pollContext.setLocalHostName("localhost");
-        m_pollContext.setName("PollContextTest.DefaultPollContext");
-        m_pollContext.setPollerConfig(m_pollerConfig);
-        m_pollContext.setQueryManager(m_queryManager);
-        m_pollContext.setLocationAwarePingClient(m_locationAwarePingClient);
+        m_pollContext = new DefaultPollContext(m_eventMgr, m_pollerConfig, m_queryManager,
+                m_locationAwarePingClient, null, "localhost", "PollContextTest.DefaultPollContext");
 
        m_pNetwork = new PollableNetwork(m_pollContext);
        m_pSvc = m_pNetwork.createService(1, "Router", null, InetAddressUtils.addr("192.168.1.1"), "ICMP");

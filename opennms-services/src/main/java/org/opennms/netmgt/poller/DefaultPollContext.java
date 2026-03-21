@@ -38,6 +38,7 @@ import org.opennms.netmgt.icmp.proxy.LocationAwarePingClient;
 import org.opennms.netmgt.icmp.proxy.PingSequence;
 import org.opennms.netmgt.icmp.proxy.PingSummary;
 import org.opennms.netmgt.model.events.EventBuilder;
+import org.opennms.netmgt.xml.event.Event;
 import org.opennms.netmgt.poller.pollables.DbPollEvent;
 import org.opennms.netmgt.poller.pollables.PollContext;
 import org.opennms.netmgt.poller.pollables.PollEvent;
@@ -66,14 +67,26 @@ public class DefaultPollContext implements PollContext, InitializingBean {
      */
     public static final boolean DISABLE_POLL_TIMESTAMP_TRACKING = Boolean.getBoolean("org.opennms.netmgt.poller.disablePollTimestampTracking");
 
-    private volatile PollerConfig m_pollerConfig;
-    private volatile QueryManager m_queryManager;
-    private volatile EventIpcManager m_eventManager;
-    private volatile LocationAwarePingClient m_locationAwarePingClient;
-    private volatile TsidFactory m_tsidFactory;
-    private volatile String m_name;
-    private volatile String m_localHostName;
+    private final PollerConfig m_pollerConfig;
+    private final QueryManager m_queryManager;
+    private final EventIpcManager m_eventManager;
+    private final LocationAwarePingClient m_locationAwarePingClient;
+    private final TsidFactory m_tsidFactory;
+    private final String m_name;
+    private final String m_localHostName;
     private volatile AsyncPollingEngine m_asyncPollingEngine;
+
+    public DefaultPollContext(EventIpcManager eventManager, PollerConfig pollerConfig,
+                              QueryManager queryManager, LocationAwarePingClient locationAwarePingClient,
+                              TsidFactory tsidFactory, String localHostName, String name) {
+        this.m_eventManager = eventManager;
+        this.m_pollerConfig = pollerConfig;
+        this.m_queryManager = queryManager;
+        this.m_locationAwarePingClient = locationAwarePingClient;
+        this.m_tsidFactory = tsidFactory;
+        this.m_localHostName = localHostName;
+        this.m_name = name;
+    }
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -84,14 +97,6 @@ public class DefaultPollContext implements PollContext, InitializingBean {
         return m_eventManager;
     }
 
-    public void setEventManager(EventIpcManager eventManager) {
-        m_eventManager = eventManager;
-    }
-
-    public void setLocalHostName(String localHostName) {
-        m_localHostName = localHostName;
-    }
-
     public String getLocalHostName() {
         return m_localHostName;
     }
@@ -100,40 +105,20 @@ public class DefaultPollContext implements PollContext, InitializingBean {
         return m_name;
     }
 
-    public void setName(String name) {
-        m_name = name;
-    }
-
     public PollerConfig getPollerConfig() {
         return m_pollerConfig;
-    }
-
-    public void setPollerConfig(PollerConfig pollerConfig) {
-        m_pollerConfig = pollerConfig;
     }
 
     public QueryManager getQueryManager() {
         return m_queryManager;
     }
 
-    public void setQueryManager(QueryManager queryManager) {
-        m_queryManager = queryManager;
-    }
-
     public LocationAwarePingClient getLocationAwarePingClient() {
         return m_locationAwarePingClient;
     }
 
-    public void setLocationAwarePingClient(LocationAwarePingClient locationAwarePingClient) {
-        m_locationAwarePingClient = locationAwarePingClient;
-    }
-
     public TsidFactory getTsidFactory() {
         return m_tsidFactory;
-    }
-
-    public void setTsidFactory(TsidFactory tsidFactory) {
-        m_tsidFactory = tsidFactory;
     }
 
     @Override

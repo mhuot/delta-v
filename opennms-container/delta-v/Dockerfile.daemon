@@ -45,6 +45,7 @@ COPY staging/daemon/daemon-boot-alarmd.jar /opt/daemon-boot-alarmd.jar
 COPY staging/daemon/daemon-boot-trapd.jar /opt/daemon-boot-trapd.jar
 COPY staging/daemon/daemon-boot-eventtranslator.jar /opt/daemon-boot-eventtranslator.jar
 COPY staging/daemon/daemon-boot-bsmd.jar /opt/daemon-boot-bsmd.jar
+COPY staging/daemon/daemon-boot-pollerd.jar /opt/daemon-boot-pollerd.jar
 
 # Config directory for Spring Boot daemons (distinct from Sentinel's /opt/sentinel/etc)
 USER root

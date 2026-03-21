@@ -24,16 +24,21 @@ package org.opennms.netmgt.translator.boot;
 import javax.sql.DataSource;
 
 import org.opennms.core.daemon.common.DaemonSmartLifecycle;
-import org.opennms.core.daemon.common.EventConfEnrichmentService;
 import org.opennms.core.db.DataSourceFactory;
 import org.opennms.netmgt.config.EventTranslatorConfigFactory;
 import org.opennms.netmgt.events.api.EventIpcManager;
 import org.opennms.netmgt.translator.EventTranslator;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Spring Boot configuration for EventTranslator.
+ *
+ * <p>Event enrichment (alarm-data, severity) is handled at the transport layer
+ * by {@code KafkaEventTransportConfiguration} which wires {@code EventConfEnrichmentService}
+ * into the {@code KafkaEventForwarder}. No per-daemon wrapper is needed.</p>
+ */
 @Configuration
 public class EventTranslatorBootConfiguration {
 
@@ -46,14 +51,11 @@ public class EventTranslatorBootConfiguration {
 
     @Bean
     public EventTranslator eventTranslator(
-            @Qualifier("eventIpcManager") EventIpcManager eventIpcManager,
+            EventIpcManager eventIpcManager,
             EventTranslatorConfigFactory config,
-            DataSource dataSource,
-            EventConfEnrichmentService enrichmentService) {
-        EventIpcManager enrichingManager =
-                new EventIpcManagerEnrichingWrapper(eventIpcManager, enrichmentService);
+            DataSource dataSource) {
         var translator = new EventTranslator();
-        translator.setEventManager(enrichingManager);
+        translator.setEventManager(eventIpcManager);
         translator.setConfig(config);
         translator.setDataSource(dataSource);
         return translator;

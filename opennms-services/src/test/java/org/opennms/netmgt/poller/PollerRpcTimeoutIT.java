@@ -212,27 +212,17 @@ public class PollerRpcTimeoutIT implements TemporaryDatabaseAware<MockDatabase> 
         Service svc = pkg.getServices().iterator().next();
         Assert.assertEquals("HTTP", svc.getName());
 
-        DefaultPollContext pollContext = new DefaultPollContext();
-        pollContext.setEventManager(m_eventMgr);
-        pollContext.setLocalHostName("localhost");
-        pollContext.setName("Test.DefaultPollContext");
-        pollContext.setPollerConfig(factory);
-        pollContext.setQueryManager(m_queryManager);
-        pollContext.setLocationAwarePingClient(m_locationAwarePingClient);
+        DefaultPollContext pollContext = new DefaultPollContext(m_eventMgr, factory, m_queryManager,
+                m_locationAwarePingClient, null, "localhost", "Test.DefaultPollContext");
 
         PollableNetwork network = new PollableNetwork(pollContext);
 
-        m_poller = new Poller();
-        m_poller.setMonitoredServiceDao(m_monitoredServiceDao);
-        m_poller.setOutageDao(m_outageDao);
-        m_poller.setTransactionTemplate(m_transactionTemplate);
+        m_poller = new Poller(m_queryManager, m_monitoredServiceDao, m_outageDao,
+                m_transactionTemplate, new MockPersisterFactory(), null,
+                m_locationAwarePollerClient, m_pollOutagesDao);
         m_poller.setEventIpcManager(m_eventMgr);
         m_poller.setNetwork(network);
-        m_poller.setQueryManager(m_queryManager);
         m_poller.setPollerConfig(factory);
-        m_poller.setLocationAwarePollerClient(m_locationAwarePollerClient);
-        m_poller.setPollOutagesDao(m_pollOutagesDao);
-        m_poller.setPersisterFactory(new MockPersisterFactory());
     }
 
     @After

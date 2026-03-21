@@ -22,29 +22,32 @@
 package org.opennms.netmgt.icmp.proxy;
 
 import java.net.InetAddress;
+import java.util.Objects;
 
 import javax.annotation.PostConstruct;
 
 import org.opennms.core.rpc.api.RpcClient;
 import org.opennms.core.rpc.api.RpcClientFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component(value = "locationAwarePingClient")
 public class LocationAwarePingClientImpl implements LocationAwarePingClient {
 
-    @Autowired
-    private RpcClientFactory rpcClientFactory;
-
-    @Autowired
-    private PingProxyRpcModule pingProxyRpcModule;
-
-    @Autowired
-    private PingSweepRpcModule pingSweepRpcModule;
+    private final RpcClientFactory rpcClientFactory;
+    private final PingProxyRpcModule pingProxyRpcModule;
+    private final PingSweepRpcModule pingSweepRpcModule;
 
     private RpcClient<PingRequestDTO, PingResponseDTO> pingProxyDelegate;
 
     private RpcClient<PingSweepRequestDTO, PingSweepResponseDTO> pingSweepDelegate;
+
+    public LocationAwarePingClientImpl(RpcClientFactory rpcClientFactory,
+                                       PingProxyRpcModule pingProxyRpcModule,
+                                       PingSweepRpcModule pingSweepRpcModule) {
+        this.rpcClientFactory = Objects.requireNonNull(rpcClientFactory);
+        this.pingProxyRpcModule = Objects.requireNonNull(pingProxyRpcModule);
+        this.pingSweepRpcModule = Objects.requireNonNull(pingSweepRpcModule);
+    }
 
     @PostConstruct
     public void init() {

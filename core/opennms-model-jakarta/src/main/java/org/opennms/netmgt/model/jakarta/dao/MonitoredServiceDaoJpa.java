@@ -22,11 +22,19 @@
 package org.opennms.netmgt.model.jakarta.dao;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import jakarta.persistence.TypedQuery;
+
+import org.opennms.core.criteria.Criteria;
+import org.opennms.core.criteria.restrictions.InRestriction;
+import org.opennms.core.criteria.restrictions.Restriction;
 import org.opennms.core.daemon.common.AbstractDaoJpa;
 import org.opennms.netmgt.dao.api.MonitoredServiceDao;
 import org.opennms.netmgt.model.OnmsApplication;
@@ -68,6 +76,44 @@ public class MonitoredServiceDaoJpa extends AbstractDaoJpa<OnmsMonitoredService,
     public int countMatching(OnmsCriteria onmsCrit) {
         throw new UnsupportedOperationException(
                 "countMatching(OnmsCriteria) is not supported in MonitoredServiceDaoJpa — use HQL queries");
+    }
+
+    /**
+     * Translates an OpenNMS {@link Criteria} to JPQL.
+     * Supports {@link InRestriction} (used by Poller.scheduleServices()).
+     */
+    @Override
+    public List<OnmsMonitoredService> findMatching(Criteria criteria) {
+        StringBuilder jpql = new StringBuilder("SELECT svc FROM OnmsMonitoredService svc");
+        Map<String, Object> parameters = new java.util.LinkedHashMap<>();
+        int paramIndex = 0;
+
+        Collection<Restriction> restrictions = criteria.getRestrictions();
+        if (!restrictions.isEmpty()) {
+            jpql.append(" WHERE ");
+            List<String> fragments = new ArrayList<>();
+            for (Restriction restriction : restrictions) {
+                if (restriction instanceof InRestriction) {
+                    InRestriction in = (InRestriction) restriction;
+                    String attr = in.getAttribute().contains(".") ? in.getAttribute() : "svc." + in.getAttribute();
+                    String paramName = "p" + (paramIndex++);
+                    parameters.put(paramName, in.getValues());
+                    fragments.add(attr + " IN (:" + paramName + ")");
+                } else {
+                    throw new UnsupportedOperationException(
+                            "Unsupported restriction type in MonitoredServiceDaoJpa.findMatching: "
+                                    + restriction.getClass().getSimpleName());
+                }
+            }
+            jpql.append(String.join(" AND ", fragments));
+        }
+
+        TypedQuery<OnmsMonitoredService> query = entityManager().createQuery(
+                jpql.toString(), OnmsMonitoredService.class);
+        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+            query.setParameter(entry.getKey(), entry.getValue());
+        }
+        return query.getResultList();
     }
 
     // ---- MonitoredServiceDao methods ----

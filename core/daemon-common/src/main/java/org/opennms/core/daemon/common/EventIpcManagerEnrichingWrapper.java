@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.translator.boot;
+package org.opennms.core.daemon.common;
 
 import java.util.Collection;
 import java.util.Objects;

@@ -44,9 +44,12 @@ import org.springframework.context.annotation.Configuration;
  *       into the {@link EventIpcManager} interface expected by daemon code</li>
  * </ol>
  *
- * <p>The forwarder uses {@code NoOpEventProcessor} (no eventconf expansion) because
- * daemon containers do not have access to eventconf. Events are enriched separately
- * by the core Eventd pipeline before reaching Kafka.</p>
+ * <p>The forwarder's event expander uses {@code NoOpEventProcessor} (the legacy Eventd
+ * expansion pipeline is not available). Instead, eventconf enrichment (alarm-data,
+ * severity, reduction-key expansion) is handled by {@link EventConfEnrichmentService}
+ * which loads event configurations from the database. This enrichment is wired into
+ * the forwarder via {@code setEventConfDao()} so ALL events from ALL daemons are
+ * enriched before reaching Kafka.</p>
  */
 @Configuration
 public class KafkaEventTransportConfiguration {
@@ -71,6 +74,33 @@ public class KafkaEventTransportConfiguration {
         KafkaEventForwarder forwarder = KafkaEventForwarderFactory.create(bootstrapServers, eventTopic);
         forwarder.setIpcTopicName(ipcTopic);
         return forwarder;
+    }
+
+    /**
+     * Wires EventConfDao into KafkaEventForwarder after all beans are created.
+     * This avoids bean creation order issues — EventConfEnrichmentService needs
+     * DataSource which may not be available when KafkaEventForwarder is created.
+     */
+    @Bean
+    public SmartLifecycle eventConfEnrichmentWiring(
+            KafkaEventForwarder forwarder,
+            @org.springframework.beans.factory.annotation.Autowired(required = false)
+            EventConfEnrichmentService eventConfEnrichmentService) {
+        return new SmartLifecycle() {
+            private volatile boolean running = false;
+
+            @Override
+            public void start() {
+                if (eventConfEnrichmentService != null) {
+                    forwarder.setEventConfDao(eventConfEnrichmentService.getEventConfDao());
+                }
+                running = true;
+            }
+
+            @Override public void stop() { running = false; }
+            @Override public boolean isRunning() { return running; }
+            @Override public int getPhase() { return -20; } // before event consumer starts at -10
+        };
     }
 
     @Bean(destroyMethod = "stop")

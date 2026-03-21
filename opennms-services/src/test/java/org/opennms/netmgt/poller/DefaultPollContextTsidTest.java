@@ -66,13 +66,8 @@ public class DefaultPollContextTsidTest {
         when(pollerConfig.isPathOutageEnabled()).thenReturn(false);
         when(pollerConfig.getMaxConcurrentAsyncPolls()).thenReturn(10);
 
-        pollContext = new DefaultPollContext();
-        pollContext.setEventManager(eventManager);
-        pollContext.setQueryManager(queryManager);
-        pollContext.setTsidFactory(tsidFactory);
-        pollContext.setPollerConfig(pollerConfig);
-        pollContext.setName("TestPoller");
-        pollContext.setLocalHostName("localhost");
+        pollContext = new DefaultPollContext(eventManager, pollerConfig, queryManager,
+                null, tsidFactory, "localhost", "TestPoller");
         pollContext.afterPropertiesSet();
     }
 

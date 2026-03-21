@@ -21,7 +21,7 @@
 | **Ticketer** | Trouble ticketing integration — not in microservice architecture | #29 |
 | **DHCPd** | DHCP monitor/detector service | — |
 
-### Migrated to Spring Boot 4 (6 daemons)
+### Migrated to Spring Boot 4 (8 daemons)
 
 | Daemon | Spring Boot Module | Startup | Key Feature | PR |
 |--------|--------------------|---------|------------|-----|
@@ -31,22 +31,22 @@
 | **Syslogd** | `daemon-boot-syslogd` | 2.2s | Reuses Sink bridge, local DNS resolver | #34, #35 |
 | **Discovery** | `daemon-boot-discovery` | ~2s | Kafka RPC client pattern (`KafkaRpcClientConfiguration`) | — |
 | **Provisiond** | `daemon-boot-provisiond` | 4.2s | JPA + 3× Kafka RPC + Quartz + SNMP adapters (Tier 5) | #41 |
+| **BSMd** | `daemon-boot-bsmd` | 3.3s | JPA + AlarmLifecycleListener + REST API | #44 |
+| **Pollerd** | `daemon-boot-pollerd` | 4.1s | JPA + Kafka RPC + Twin API + PassiveStatusKeeper | #47 |
 
 ### Shared Infrastructure
 
 | Module | Purpose |
 |--------|---------|
-| `daemon-common` | DataSource, Kafka event transport, Kafka RPC client, JdbcDistPollerDao, JdbcInterfaceToNodeCache, AbstractDaoJpa |
+| `daemon-common` | DataSource, Kafka event transport (with EventConfDao enrichment), Kafka RPC client, JdbcDistPollerDao, JdbcInterfaceToNodeCache, AbstractDaoJpa, EventIpcManagerEnrichingWrapper |
 | `daemon-sink-kafka` | KafkaSinkBridge — consumes from Minion Sink topics (`OpenNMS.Sink.*`) |
-| `opennms-model-jakarta` | 17 Jakarta Persistence entities + 13 JPA DAOs for Hibernate 7 |
+| `opennms-model-jakarta` | 17 Jakarta Persistence entities + 15 JPA DAOs for Hibernate 7 |
 
-### Running on Karaf (7 daemons — migration candidates)
+### Running on Karaf (5 daemons — migration candidates)
 
 | Daemon | Tier | Complexity | Infrastructure |
 |--------|------|-----------|----------------|
 | **Scriptd** | 1 | Very Low | Events only |
-| **BSMd** | 3 | High | Events (alarm polling) |
-| **Pollerd** | 4 | High | Events + Twin API |
 | **Enlinkd** | 4 | High | Events + Kafka RPC |
 | **Telemetryd** | 4 | High | Multi-module Kafka Sink |
 | **Collectd** | 4 | High | Events + Kafka RPC |
@@ -73,7 +73,7 @@
 
 ## Plan Status Dashboard
 
-### Complete (35 docs)
+### Complete (37 docs)
 
 | Date | Plan | Key Achievement |
 |------|------|-----------------|
@@ -102,6 +102,8 @@
 | 03-16 | Discovery Spring Boot 4 Migration | Kafka RPC client pattern — `KafkaRpcClientConfiguration` in `daemon-common`, Minion ping sweeps |
 | 03-16 | Provisiond Shared Infrastructure | `DaemonProvisioningConfiguration` — shared NoOpEntityScopeProvider, LocalServiceDetectorRegistry |
 | 03-17 | Provisiond Spring Boot 4 Migration | Tier 5: JPA + 3× Kafka RPC + Quartz + SNMP adapters, constructor injection, 13 JPA DAOs, E2E with 22 SNMP interfaces |
+| 03-20 | BSMd Spring Boot 4 Migration | JPA + AlarmLifecycleListener + REST API, alarm snapshot polling (10s interval) |
+| 03-21 | Pollerd Spring Boot 4 Migration | JPA + Kafka RPC + Twin API + PassiveStatusKeeper, constructor injection, `%service%` token fix, transport-layer EventConfDao enrichment — BSM E2E + Passive E2E passing |
 
 ### Superseded (2 docs)
 
