@@ -27,6 +27,7 @@ import org.opennms.core.event.forwarder.kafka.KafkaEventIpcManagerAdapter;
 import org.opennms.core.event.forwarder.kafka.KafkaEventSubscriptionService;
 import org.opennms.netmgt.events.api.EventIpcManager;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -72,7 +73,7 @@ public class KafkaEventTransportConfiguration {
         return forwarder;
     }
 
-    @Bean(initMethod = "start", destroyMethod = "stop")
+    @Bean(destroyMethod = "stop")
     public KafkaEventSubscriptionService kafkaEventSubscriptionService() {
         return KafkaEventSubscriptionService.create(
                 bootstrapServers,
@@ -86,5 +87,40 @@ public class KafkaEventTransportConfiguration {
     public EventIpcManager eventIpcManager(KafkaEventForwarder forwarder,
                                            KafkaEventSubscriptionService subscriptionService) {
         return new KafkaEventIpcManagerAdapter(forwarder, subscriptionService);
+    }
+
+    /**
+     * Starts the Kafka event consumer AFTER all InitializingBean callbacks
+     * have fired (i.e., after AnnotationBasedEventListenerAdapter has
+     * registered its listeners). SmartLifecycle runs after bean init but
+     * before the application is considered started. Phase -10 ensures this
+     * fires before daemon SmartLifecycles at the default phase (0).
+     */
+    @Bean
+    public SmartLifecycle kafkaEventSubscriptionLifecycle(KafkaEventSubscriptionService subscriptionService) {
+        return new SmartLifecycle() {
+            private volatile boolean running = false;
+
+            @Override
+            public void start() {
+                subscriptionService.start();
+                running = true;
+            }
+
+            @Override
+            public void stop() {
+                running = false;
+            }
+
+            @Override
+            public boolean isRunning() {
+                return running;
+            }
+
+            @Override
+            public int getPhase() {
+                return -10;
+            }
+        };
     }
 }
