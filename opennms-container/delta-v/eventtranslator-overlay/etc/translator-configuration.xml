@@ -119,6 +119,61 @@
       </mappings>
     </event-translation-spec>
 
+    <!-- Cloud service status → passive service status.
+         Translates cloud/serviceDown and cloud/serviceUp syslog-derived events
+         into passiveServiceStatus events consumed by Pollerd's PassiveStatusKeeper.
+         Uses the syslogmessage parameter ("Service AWS is Down") to extract the
+         service name, and SQL to look up the node label from the node ID. -->
+    <event-translation-spec uei="uei.opennms.org/syslogd/cloud/serviceDown">
+      <mappings>
+        <mapping>
+          <assignment name="uei" type="field">
+            <value type="constant" result="uei.opennms.org/services/passiveServiceStatus" />
+          </assignment>
+          <assignment name="passiveNodeLabel" type="parameter">
+            <value type="sql" result="SELECT nodelabel FROM node WHERE nodeid = ?::integer">
+              <value type="field" name="nodeid" matches=".*" result="${0}" />
+            </value>
+          </assignment>
+          <assignment name="passiveIpAddr" type="parameter">
+            <value type="field" name="interface" matches=".*" result="${0}" />
+          </assignment>
+          <assignment name="passiveServiceName" type="parameter">
+            <value type="parameter" name="syslogmessage" matches="^.*Service (\S+) is .*$" result="${1}" />
+          </assignment>
+          <assignment name="passiveStatus" type="parameter">
+            <value type="constant" result="Down" />
+          </assignment>
+          <assignment name="passiveReasonCode" type="parameter">
+            <value type="constant" result="cloud service reported down via syslog" />
+          </assignment>
+        </mapping>
+      </mappings>
+    </event-translation-spec>
+    <event-translation-spec uei="uei.opennms.org/syslogd/cloud/serviceUp">
+      <mappings>
+        <mapping>
+          <assignment name="uei" type="field">
+            <value type="constant" result="uei.opennms.org/services/passiveServiceStatus" />
+          </assignment>
+          <assignment name="passiveNodeLabel" type="parameter">
+            <value type="sql" result="SELECT nodelabel FROM node WHERE nodeid = ?::integer">
+              <value type="field" name="nodeid" matches=".*" result="${0}" />
+            </value>
+          </assignment>
+          <assignment name="passiveIpAddr" type="parameter">
+            <value type="field" name="interface" matches=".*" result="${0}" />
+          </assignment>
+          <assignment name="passiveServiceName" type="parameter">
+            <value type="parameter" name="syslogmessage" matches="^.*Service (\S+) is .*$" result="${1}" />
+          </assignment>
+          <assignment name="passiveStatus" type="parameter">
+            <value type="constant" result="Up" />
+          </assignment>
+        </mapping>
+      </mappings>
+    </event-translation-spec>
+
   </translation>
 
 </event-translator-configuration>

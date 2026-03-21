@@ -250,21 +250,23 @@ REQEOF
 
     log "  Requisition: ${NODE_LABEL} at ${NODE_IP} with GoogleCloud, Azure, AWS"
 
-    # Write files to the HOST overlay directory (mounted read-only into the container).
-    # On restart, the container entrypoint copies from overlay → /opt/sentinel/etc/.
-    mkdir -p provisiond-overlay/etc/foreign-sources provisiond-overlay/etc/imports
+    # Write files to the host directories mounted into the Provisiond container.
+    # docker-compose mounts:
+    #   ./provisiond-overlay/etc → /opt/deltav/etc (general config)
+    #   ./etc/imports → /opt/deltav/etc/imports (overrides the overlay's imports dir)
+    mkdir -p provisiond-overlay/etc/foreign-sources etc/imports
     cp "$TEST_TMPDIR/cloud-services-fs.xml" "provisiond-overlay/etc/foreign-sources/${FOREIGN_SOURCE}.xml"
-    cp "$TEST_TMPDIR/cloud-services-req.xml" "provisiond-overlay/etc/imports/${FOREIGN_SOURCE}.xml"
+    cp "$TEST_TMPDIR/cloud-services-req.xml" "etc/imports/${FOREIGN_SOURCE}.xml"
 
     # Add a requisition-def so Provisiond auto-imports the requisition on startup
     cat > provisiond-overlay/etc/provisiond-configuration.xml <<PROVEOF
 <?xml version="1.0" encoding="UTF-8"?>
 <provisiond-configuration xmlns="http://xmlns.opennms.org/xsd/config/provisiond-configuration"
-  foreign-source-dir="/opt/sentinel/etc/foreign-sources"
-  requistion-dir="/opt/sentinel/etc/imports"
+  foreign-source-dir="/opt/deltav/etc/foreign-sources"
+  requistion-dir="/opt/deltav/etc/imports"
   importThreads="4" scanThreads="4" rescanThreads="4" writeThreads="4" >
   <requisition-def import-name="${FOREIGN_SOURCE}"
-                   import-url-resource="file:///opt/sentinel/etc/imports/${FOREIGN_SOURCE}.xml">
+                   import-url-resource="file:///opt/deltav/etc/imports/${FOREIGN_SOURCE}.xml">
     <cron-schedule>0/30 * * * * ?</cron-schedule>
   </requisition-def>
 </provisiond-configuration>
