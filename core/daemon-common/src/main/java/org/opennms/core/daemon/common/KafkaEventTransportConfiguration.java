@@ -70,15 +70,37 @@ public class KafkaEventTransportConfiguration {
     private long pollTimeoutMs;
 
     @Bean
-    public KafkaEventForwarder kafkaEventForwarder(
-            @org.springframework.beans.factory.annotation.Autowired(required = false)
-            EventConfEnrichmentService eventConfEnrichmentService) {
+    public KafkaEventForwarder kafkaEventForwarder() {
         KafkaEventForwarder forwarder = KafkaEventForwarderFactory.create(bootstrapServers, eventTopic);
         forwarder.setIpcTopicName(ipcTopic);
-        if (eventConfEnrichmentService != null) {
-            forwarder.setEventConfDao(eventConfEnrichmentService.getEventConfDao());
-        }
         return forwarder;
+    }
+
+    /**
+     * Wires EventConfDao into KafkaEventForwarder after all beans are created.
+     * This avoids bean creation order issues — EventConfEnrichmentService needs
+     * DataSource which may not be available when KafkaEventForwarder is created.
+     */
+    @Bean
+    public SmartLifecycle eventConfEnrichmentWiring(
+            KafkaEventForwarder forwarder,
+            @org.springframework.beans.factory.annotation.Autowired(required = false)
+            EventConfEnrichmentService eventConfEnrichmentService) {
+        return new SmartLifecycle() {
+            private volatile boolean running = false;
+
+            @Override
+            public void start() {
+                if (eventConfEnrichmentService != null) {
+                    forwarder.setEventConfDao(eventConfEnrichmentService.getEventConfDao());
+                }
+                running = true;
+            }
+
+            @Override public void stop() { running = false; }
+            @Override public boolean isRunning() { return running; }
+            @Override public int getPhase() { return -20; } // before event consumer starts at -10
+        };
     }
 
     @Bean(destroyMethod = "stop")
