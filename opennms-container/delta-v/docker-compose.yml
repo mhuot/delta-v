@@ -448,6 +448,10 @@ services:
   perspectivepollerd:
     profiles: [full]
     image: opennms/daemon-deltav:${VERSION}
+    entrypoint: []
+    command: ["java", "-Xms512m", "-Xmx1g",
+              "-Dorg.opennms.core.ipc.rpc.force-remote=true",
+              "-jar", "/opt/daemon-boot-perspectivepollerd.jar"]
     container_name: delta-v-perspectivepollerd
     hostname: perspectivepollerd
     depends_on:
@@ -456,27 +460,24 @@ services:
       kafka:
         condition: service_healthy
     environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_USER: opennms
-      POSTGRES_PASSWORD: opennms
-      POSTGRES_DB: opennms
-      JAVA_OPTS: >-
-        -Xms256m -Xmx512m
-        -XX:MaxMetaspaceSize=256m
-        -Djava.security.egd=file:/dev/./urandom
-        -Dorg.opennms.tsid.node-id=7
-        -Dorg.opennms.core.ipc.rpc.kafka.bootstrap.servers=kafka:9092
-        -Dorg.opennms.core.ipc.rpc.force-remote=true
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
+      SPRING_DATASOURCE_USERNAME: opennms
+      SPRING_DATASOURCE_PASSWORD: opennms
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_CONSUMER_GROUP: opennms-perspectivepollerd
+      OPENNMS_HOME: /opt/deltav
+      OPENNMS_INSTANCE_ID: OpenNMS
+      OPENNMS_TSID_NODE_ID: "7"
+      OPENNMS_RPC_KAFKA_ENABLED: "true"
+      OPENNMS_RPC_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     volumes:
-      - perspectivepollerd-data:/opt/sentinel/data
-      - ./perspectivepollerd-overlay/etc:/opt/sentinel-etc-overlay:ro
+      - ./perspectivepollerd-overlay/etc:/opt/deltav/etc:ro
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf -u admin:admin http://localhost:8181/sentinel/rest/health/probe || exit 1"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 20
-      start_period: 90s
+      start_period: 30s
 
   alarmd:
     profiles: [lite, passive, full]
@@ -546,5 +547,4 @@ volumes:
   collectd-data:
   enlinkd-data:
   scriptd-data:
-  perspectivepollerd-data:
   telemetryd-data:
