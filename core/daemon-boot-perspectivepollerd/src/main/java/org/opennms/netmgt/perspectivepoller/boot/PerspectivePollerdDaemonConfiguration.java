@@ -125,12 +125,20 @@ public class PerspectivePollerdDaemonConfiguration {
 
     /**
      * Registers PerspectivePollerd's @EventHandler methods with the EventIpcManager.
+     *
+     * <p>Uses the 0-arg constructor + setters so that Spring's InitializingBean
+     * callback calls afterPropertiesSet() exactly once. The 2-arg constructor
+     * calls afterPropertiesSet() internally, which causes double registration
+     * when Spring also calls it as an InitializingBean.</p>
      */
     @Bean
     public AnnotationBasedEventListenerAdapter perspectivePollerdEventAdapter(
             PerspectivePollerd perspectivePollerd,
             EventIpcManager eventIpcManager) {
-        return new AnnotationBasedEventListenerAdapter(perspectivePollerd, eventIpcManager);
+        var adapter = new AnnotationBasedEventListenerAdapter();
+        adapter.setAnnotatedListener(perspectivePollerd);
+        adapter.setEventSubscriptionService(eventIpcManager);
+        return adapter;
     }
 
     /**
@@ -140,7 +148,10 @@ public class PerspectivePollerdDaemonConfiguration {
     public AnnotationBasedEventListenerAdapter perspectiveServiceTrackerEventAdapter(
             PerspectiveServiceTracker perspectiveServiceTracker,
             EventIpcManager eventIpcManager) {
-        return new AnnotationBasedEventListenerAdapter(perspectiveServiceTracker, eventIpcManager);
+        var adapter = new AnnotationBasedEventListenerAdapter();
+        adapter.setAnnotatedListener(perspectiveServiceTracker);
+        adapter.setEventSubscriptionService(eventIpcManager);
+        return adapter;
     }
 
     /**
