@@ -254,6 +254,13 @@
             </exclusions>
         </dependency>
 
+        <!-- Pollerd service monitor loader — LocalServiceMonitorRegistry -->
+        <dependency>
+            <groupId>org.opennms.core</groupId>
+            <artifactId>org.opennms.core.daemon-loader-perspectivepoller</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Poller config — PollerConfigFactory, PollOutagesConfigManager -->
         <dependency>
             <groupId>org.opennms</groupId>
