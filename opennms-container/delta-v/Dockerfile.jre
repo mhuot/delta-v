@@ -9,7 +9,7 @@ FROM eclipse-temurin:21-jdk-alpine AS jre-builder
 
 RUN jlink \
     --add-modules \
-      java.base,java.sql,java.sql.rowset,java.naming,java.management,java.xml,java.desktop,java.logging,java.security.jgss,java.instrument,java.net.http,java.compiler,java.transaction.xa,jdk.jcmd,jdk.management,jdk.management.agent,jdk.naming.dns,jdk.naming.rmi,jdk.crypto.ec,jdk.unsupported,jdk.zipfs \
+      java.base,java.sql,java.sql.rowset,java.naming,java.management,java.xml,java.desktop,java.logging,java.security.jgss,java.instrument,java.net.http,java.compiler,java.transaction.xa,java.scripting,jdk.jcmd,jdk.management,jdk.management.agent,jdk.naming.dns,jdk.naming.rmi,jdk.crypto.ec,jdk.unsupported,jdk.zipfs \
     --strip-debug \
     --no-man-pages \
     --no-header-files \
