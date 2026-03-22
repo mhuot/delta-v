@@ -100,6 +100,17 @@ do_db_init_image() {
     docker build -t "opennms/db-init:$VERSION" -t "opennms/db-init:latest" .
 }
 
+do_jre_image() {
+    log "Building opennms/jre-deltav:21..."
+    cd "$SCRIPT_DIR"
+    docker build -f Dockerfile.jre \
+        -t "opennms/jre-deltav:21" \
+        -t "opennms/jre-deltav:latest" \
+        .
+    log "JRE image built:"
+    docker images opennms/jre-deltav --format "  {{.Repository}}:{{.Tag}}\t{{.Size}}"
+}
+
 do_images() {
     local make_args="DOCKER_REGISTRY=$DOCKER_REGISTRY DOCKER_ORG=$DOCKER_ORG"
     [ "${1:-}" = "push" ] && make_args="$make_args DOCKER_FLAGS=--push"
@@ -190,9 +201,23 @@ do_stage_daemon_jars() {
 do_deltav_images() {
     log "Building Delta-V layered images..."
 
+    # Check that JRE base image exists
+    if ! docker image inspect opennms/jre-deltav:21 >/dev/null 2>&1; then
+        err "opennms/jre-deltav:21 not found — run './build.sh jre' first"
+    fi
+
     do_stage_daemon_jars
 
-    # Daemon image (all 15 daemon services share one image)
+    # Spring Boot daemons — lightweight image
+    log "Building opennms/daemon-deltav-springboot:$VERSION..."
+    cd "$SCRIPT_DIR"
+    docker build \
+        -f Dockerfile.springboot \
+        -t "opennms/daemon-deltav-springboot:$VERSION" \
+        -t "opennms/daemon-deltav-springboot:latest" \
+        .
+
+    # Karaf daemons — existing Sentinel-based image
     log "Building opennms/daemon-deltav:$VERSION..."
     cd "$SCRIPT_DIR"
     docker build \
@@ -228,6 +253,7 @@ Commands:
   compile   Compile only (Maven)
   assemble  Assemble distributions (Daemon + Alarmd + Minion + Sentinel)
   images    Build base Docker images only (requires prior assembly)
+  jre       Build JRE base image (opennms/jre-deltav:21, rarely needed)
   deltav    Build Delta-V layered images (stages JARs into derived images)
   push      Build and push images to registry
   clean     Remove named Docker volumes (fresh start)
@@ -262,6 +288,9 @@ main() {
             do_compile
             do_assemble
             do_images
+            if ! docker image inspect opennms/jre-deltav:21 >/dev/null 2>&1; then
+                do_jre_image
+            fi
             do_deltav_images
             log "Build complete! Run: cd $SCRIPT_DIR && docker compose up -d"
             ;;
@@ -274,6 +303,9 @@ main() {
         images)
             do_images
             ;;
+        jre)
+            do_jre_image
+            ;;
         deltav)
             do_deltav_images
             ;;
@@ -281,6 +313,9 @@ main() {
             do_compile
             do_assemble
             do_images push
+            if ! docker image inspect opennms/jre-deltav:21 >/dev/null 2>&1; then
+                do_jre_image
+            fi
             do_deltav_images
             ;;
         clean)
