@@ -121,11 +121,10 @@ services:
 
   pollerd:
     profiles: [lite, full]
-    image: opennms/daemon-deltav:${VERSION}
+    image: opennms/daemon-deltav-springboot:${VERSION}
     container_name: delta-v-pollerd
     hostname: pollerd
-    entrypoint: []
-    command: ["java", "-Xms512m", "-Xmx1g",
+    command: ["java", "-Xms512m", "-Xmx1g", "-XX:MaxMetaspaceSize=256m",
               "-Dorg.opennms.core.ipc.twin.kafka.bootstrap.servers=kafka:9092",
               "-Dorg.opennms.core.ipc.rpc.force-remote=true",
               "-jar", "/opt/daemon-boot-pollerd.jar"]
@@ -191,11 +190,10 @@ services:
 
   discovery:
     profiles: [passive, full]
-    image: opennms/daemon-deltav:${VERSION}
+    image: opennms/daemon-deltav-springboot:${VERSION}
     container_name: delta-v-discovery
     hostname: discovery
-    entrypoint: []
-    command: ["java", "-Xms256m", "-Xmx512m", "-jar", "/opt/daemon-boot-discovery.jar"]
+    command: ["java", "-Xms256m", "-Xmx512m", "-XX:MaxMetaspaceSize=256m", "-jar", "/opt/daemon-boot-discovery.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
@@ -223,11 +221,10 @@ services:
 
   trapd:
     profiles: [passive, full]
-    image: opennms/daemon-deltav:${VERSION}
+    image: opennms/daemon-deltav-springboot:${VERSION}
     container_name: delta-v-trapd
     hostname: trapd
-    entrypoint: []
-    command: ["java", "-Xms256m", "-Xmx512m", "-jar", "/opt/daemon-boot-trapd.jar"]
+    command: ["java", "-Xms256m", "-Xmx512m", "-XX:MaxMetaspaceSize=256m", "-jar", "/opt/daemon-boot-trapd.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
@@ -255,11 +252,10 @@ services:
 
   syslogd:
     profiles: [passive, full]
-    image: opennms/daemon-deltav:${VERSION}
+    image: opennms/daemon-deltav-springboot:${VERSION}
     container_name: delta-v-syslogd
     hostname: syslogd
-    entrypoint: []
-    command: ["java", "-Xms256m", "-Xmx512m", "-jar", "/opt/daemon-boot-syslogd.jar"]
+    command: ["java", "-Xms256m", "-Xmx512m", "-XX:MaxMetaspaceSize=256m", "-jar", "/opt/daemon-boot-syslogd.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
@@ -288,11 +284,10 @@ services:
 
   eventtranslator:
     profiles: [passive, full]
-    image: opennms/daemon-deltav:${VERSION}
+    image: opennms/daemon-deltav-springboot:${VERSION}
     container_name: delta-v-eventtranslator
     hostname: eventtranslator
-    entrypoint: []
-    command: ["java", "-Xms256m", "-Xmx512m", "-jar", "/opt/daemon-boot-eventtranslator.jar"]
+    command: ["java", "-Xms256m", "-Xmx512m", "-XX:MaxMetaspaceSize=256m", "-jar", "/opt/daemon-boot-eventtranslator.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
@@ -382,11 +377,10 @@ services:
 
   provisiond:
     profiles: [lite, passive, full]
-    image: opennms/daemon-deltav:${VERSION}
+    image: opennms/daemon-deltav-springboot:${VERSION}
     container_name: delta-v-provisiond
     hostname: provisiond
-    entrypoint: []
-    command: ["java", "-Xms512m", "-Xmx1g", "-jar", "/opt/daemon-boot-provisiond.jar"]
+    command: ["java", "-Xms512m", "-Xmx1g", "-XX:MaxMetaspaceSize=256m", "-jar", "/opt/daemon-boot-provisiond.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
@@ -415,11 +409,10 @@ services:
 
   bsmd:
     profiles: [lite, full]
-    image: opennms/daemon-deltav:${VERSION}
+    image: opennms/daemon-deltav-springboot:${VERSION}
     container_name: delta-v-bsmd
     hostname: bsmd
-    entrypoint: []
-    command: ["java", "-Xms256m", "-Xmx512m",
+    command: ["java", "-Xms256m", "-Xmx512m", "-XX:MaxMetaspaceSize=256m",
               "-Dorg.opennms.alarms.snapshot.sync.ms=10000",
               "-jar", "/opt/daemon-boot-bsmd.jar"]
     depends_on:
@@ -447,9 +440,8 @@ services:
 
   perspectivepollerd:
     profiles: [full]
-    image: opennms/daemon-deltav:${VERSION}
-    entrypoint: []
-    command: ["java", "-Xms512m", "-Xmx1g",
+    image: opennms/daemon-deltav-springboot:${VERSION}
+    command: ["java", "-Xms512m", "-Xmx1g", "-XX:MaxMetaspaceSize=256m",
               "-Dorg.opennms.core.ipc.rpc.force-remote=true",
               "-jar", "/opt/daemon-boot-perspectivepollerd.jar"]
     container_name: delta-v-perspectivepollerd
@@ -481,9 +473,8 @@ services:
 
   alarmd:
     profiles: [lite, passive, full]
-    image: opennms/daemon-deltav:${VERSION}
-    entrypoint: []
-    command: ["java", "-Xms512m", "-Xmx1g", "-jar", "/opt/daemon-boot-alarmd.jar"]
+    image: opennms/daemon-deltav-springboot:${VERSION}
+    command: ["java", "-Xms512m", "-Xmx1g", "-XX:MaxMetaspaceSize=256m", "-jar", "/opt/daemon-boot-alarmd.jar"]
     container_name: delta-v-alarmd
     hostname: alarmd
     depends_on:
