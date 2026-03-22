@@ -33,6 +33,7 @@
 | **Provisiond** | `daemon-boot-provisiond` | 4.2s | JPA + 3× Kafka RPC + Quartz + SNMP adapters (Tier 5) | #41 |
 | **BSMd** | `daemon-boot-bsmd` | 3.3s | JPA + AlarmLifecycleListener + REST API | #44 |
 | **Pollerd** | `daemon-boot-pollerd` | 4.1s | JPA + Kafka RPC + Twin API + PassiveStatusKeeper | #47 |
+| **PerspectivePollerd** | `daemon-boot-perspectivepollerd` | 3.6s | JPA + Kafka RPC + perspective outages + event self-consumption | — |
 
 ### Shared Infrastructure
 
@@ -104,6 +105,7 @@
 | 03-17 | Provisiond Spring Boot 4 Migration | Tier 5: JPA + 3× Kafka RPC + Quartz + SNMP adapters, constructor injection, 13 JPA DAOs, E2E with 22 SNMP interfaces |
 | 03-20 | BSMd Spring Boot 4 Migration | JPA + AlarmLifecycleListener + REST API, alarm snapshot polling (10s interval) |
 | 03-21 | Pollerd Spring Boot 4 Migration | JPA + Kafka RPC + Twin API + PassiveStatusKeeper, constructor injection, `%service%` token fix, transport-layer EventConfDao enrichment — BSM E2E + Passive E2E passing |
+| 03-21 | PerspectivePollerd Spring Boot 4 Migration | First daemon without opennms-services dep, JPA + Kafka RPC + perspective outages, ServiceMix exclusion cleanup, 0-arg event adapter pattern |
 
 ### Superseded (2 docs)
 
@@ -276,7 +278,7 @@ See [BUILD.md](BUILD.md) for detailed build instructions.
 
 See [DELTA-V_Status.md](DELTA-V_Status.md) for detailed progress tracking.
 
-**Current state:** 15 services running (10 daemons deleted, 6 migrated to Spring Boot 4). Alarmd, EventTranslator, Trapd, Syslogd, Discovery, and Provisiond run as Spring Boot 4 fat JARs (2–4s startup). 7 daemons remain on Karaf. Three shared infrastructure patterns: event transport, Sink bridge, RPC client.
+**Current state:** 15 services running (10 daemons deleted, 9 migrated to Spring Boot 4). Alarmd, EventTranslator, Trapd, Syslogd, Discovery, Provisiond, BSMd, Pollerd, and PerspectivePollerd run as Spring Boot 4 fat JARs (2–4s startup). 4 daemons remain on Karaf. Three shared infrastructure patterns: event transport, Sink bridge, RPC client.
 
 ## Documentation
 
