@@ -1,0 +1,47 @@
+# JRE base image for Delta-V Spring Boot daemons.
+# Uses jlink to create a custom JRE with only the modules needed by
+# Spring Boot 4 + Hibernate 7 + Kafka + PostgreSQL JDBC.
+#
+# Build with: ./build.sh jre
+# Rebuild only when upgrading JDK version or changing diagnostic tools.
+
+FROM eclipse-temurin:21-jdk-alpine AS jre-builder
+
+RUN jlink \
+    --add-modules \
+      java.base,java.sql,java.sql.rowset,java.naming,java.management,java.xml,java.desktop,java.logging,java.security.jgss,java.instrument,java.net.http,java.compiler,java.transaction.xa,java.scripting,jdk.jcmd,jdk.management,jdk.management.agent,jdk.naming.dns,jdk.naming.rmi,jdk.crypto.ec,jdk.unsupported,jdk.zipfs \
+    --strip-debug \
+    --no-man-pages \
+    --no-header-files \
+    --compress=zip-6 \
+    --output /custom-jre
+
+FROM alpine:3.21
+LABEL org.opencontainers.image.title="Delta-V JRE Base" \
+      org.opencontainers.image.description="Custom JRE with diagnostic tools for Delta-V Spring Boot daemons"
+
+# Custom JRE
+COPY --from=jre-builder /custom-jre /opt/java/openjdk
+ENV JAVA_HOME=/opt/java/openjdk
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
+
+# Diagnostic tools
+RUN apk add --no-cache \
+    curl \
+    bind-tools \
+    iproute2 \
+    procps \
+    htop \
+    lsof \
+    tcpdump \
+    busybox-extras \
+    nmap-ncat
+
+# Non-root user
+RUN addgroup -S opennms && adduser -S opennms -G opennms
+
+# Config directory for Spring Boot daemons
+RUN mkdir -p /opt/deltav/etc && chown opennms:opennms /opt/deltav/etc
+
+USER opennms
+WORKDIR /opt
