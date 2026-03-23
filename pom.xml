@@ -1443,6 +1443,7 @@
         <artifactId>maven-failsafe-plugin</artifactId>
         <configuration>
           <!-- Don't use this! Use the normal -DskipITs=true; this exists only for CI to do some optimizations. -->
+          <!--suppress UnresolvedMavenProperty -->
           <skip>${skipFailsafe}</skip>
           <!-- Don't specify argLine here or it will override the argLine property value -->
           <systemPropertyVariables>
@@ -1693,10 +1694,10 @@
 
     <install.postgresql.service>postgresql</install.postgresql.service>
     <install.database.name>opennms</install.database.name>
-    <install.database.user>${scv:postgres:username|env:OPENNMS_DBUSER|opennms}</install.database.user>
-    <install.database.password>${scv:postgres:password|env:OPENNMS_DBPASS|opennms}</install.database.password>
-    <install.database.admin.user>${scv:postgres-admin:username|env:POSTGRES_USER|postgres}</install.database.admin.user>
-    <install.database.admin.password>${scv:postgres-admin:password|env:POSTGRES_PASSWORD|}</install.database.admin.password>
+    <install.database.user>$\{scv:postgres:username|env:OPENNMS_DBUSER|opennms}</install.database.user>
+    <install.database.password>$\{scv:postgres:password|env:OPENNMS_DBPASS|opennms}</install.database.password>
+    <install.database.admin.user>$\{scv:postgres-admin:username|env:POSTGRES_USER|postgres}</install.database.admin.user>
+    <install.database.admin.password>$\{scv:postgres-admin:password|env:POSTGRES_PASSWORD|}</install.database.admin.password>
     <install.database.driver>org.postgresql.Driver</install.database.driver>
     <install.database.bindir>/usr/bin</install.database.bindir>
     <install.rrdtool.bin>/usr/bin/rrdtool</install.rrdtool.bin>
@@ -2425,7 +2426,9 @@
               </dependency>
             </dependencies>
             <configuration>
+              <!--suppress UnresolvedMavenProperty -->
               <configLocation>${opennms.build.basedir}/src/main/resources/nms_checks.xml</configLocation>
+              <!--suppress UnresolvedMavenProperty -->
               <suppressionsLocation>${opennms.build.basedir}/src/main/resources/checkstyle-suppressions.xml</suppressionsLocation>
               <!-- <sourceDirectory> is needed so that checkstyle ignores the generated sources directory -->
               <sourceDirectories>${project.build.sourceDirectory}</sourceDirectories>
@@ -2751,12 +2754,7 @@
         <artifactId>org.opennms.features.name-cutter</artifactId>
         <version>${project.version}</version>
       </dependency>
-      <dependency>
-        <groupId>org.opennms.features.notifications</groupId>
-        <artifactId>org.opennms.features.notifications.api</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
+<dependency>
         <groupId>org.opennms.features</groupId>
         <artifactId>org.opennms.features.mib-compiler</artifactId>
         <version>${project.version}</version>

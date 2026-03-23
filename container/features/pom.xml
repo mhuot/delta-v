@@ -589,20 +589,7 @@
       <type>pom</type>
       <scope>provided</scope>
     </dependency>
-    <dependency>
-      <groupId>org.opennms.features</groupId>
-      <artifactId>jira-troubleticketer</artifactId>
-      <version>${project.version}</version>
-      <type>pom</type>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms.features</groupId>
-      <artifactId>opennms-integration-tsrm</artifactId>
-      <version>${project.version}</version>
-      <type>pom</type>
-      <scope>provided</scope>
-    </dependency>
+
     <dependency>
       <groupId>org.opennms.newts</groupId>
       <artifactId>newts-karaf</artifactId>
@@ -989,11 +976,6 @@
       <artifactId>jung-shaded</artifactId>
       <scope>provided</scope>
     </dependency>
-    <dependency>
-      <groupId>org.opennms.features.notifications</groupId>
-      <artifactId>org.opennms.features.notifications.shell</artifactId>
-      <version>${project.version}</version>
-    </dependency>
 
     <!-- Daemon loader bundles (for opennms/daemon container) -->
     <dependency>
@@ -1006,37 +988,7 @@
       <artifactId>org.opennms.core.daemon-loader-collectd</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.opennms.core</groupId>
-      <artifactId>org.opennms.core.daemon-loader-alarmd</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms.core</groupId>
-      <artifactId>org.opennms.core.daemon-loader-notifd</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms.core</groupId>
-      <artifactId>org.opennms.core.daemon-loader-discovery</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms.core</groupId>
-      <artifactId>org.opennms.core.daemon-loader-trapd</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms.core</groupId>
-      <artifactId>org.opennms.core.daemon-loader-syslogd</artifactId>
-      <version>${project.version}</version>
-    </dependency>
 
-    <dependency>
-      <groupId>org.opennms.core</groupId>
-      <artifactId>org.opennms.core.daemon-loader-rtcd</artifactId>
-      <version>${project.version}</version>
-    </dependency>
     <dependency>
       <groupId>org.opennms.core</groupId>
       <artifactId>org.opennms.core.daemon-loader-bsmd</artifactId>
