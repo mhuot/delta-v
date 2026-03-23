@@ -10,7 +10,7 @@ COMMIT=""
 
 JAVA_HOME=`"$TOPDIR/bin/javahome.pl"`
 
-export PATH="$TOPDIR/maven/bin:$JAVA_HOME/bin:$PATH"
+export PATH="$TOPDIR:$JAVA_HOME/bin:$PATH"
 
 cd "$TOPDIR"
 

@@ -79,7 +79,7 @@ $GIT = find_git();
 # path to maven executable
 $MVN = $ENV{'MVN'};
 if (not defined $MVN or not -x $MVN) {
-	$MVN = File::Spec->catfile($PREFIX, 'maven', 'bin', 'mvn');
+	$MVN = File::Spec->catfile($PREFIX, 'mvnw');
 	if ($^O =~ /(mswin|msys)/i) {
 		$MVN .= '.cmd';
 	}

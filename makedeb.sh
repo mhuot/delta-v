@@ -207,7 +207,7 @@ EXTRA_INFO2=$(extraInfo2)
 VERSION=$(version)
 OPA_VERSION=$(opa_version)
 
-export PATH="$TOPDIR/maven/bin:$JAVA_HOME/bin:$PATH"
+export PATH="$TOPDIR:$JAVA_HOME/bin:$PATH"
 
 export OPENNMS_SKIP_COMPILE=$(skipCompile)
 export OPENNMS_ENABLE_SNAPSHOTS=$(enableSnapshots)
