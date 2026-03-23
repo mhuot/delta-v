@@ -170,6 +170,9 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Enlinkd enum types are now defined as inner classes in our Jakarta entities.
+             No dependency on enlinkd-persistence-api needed. -->
+
         <!-- Jackson for @JsonIgnoreProperties -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

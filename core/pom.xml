@@ -45,6 +45,7 @@
     <module>daemon-boot-pollerd</module>
     <module>daemon-boot-perspectivepollerd</module>
     <module>daemon-boot-telemetryd</module>
+    <module>daemon-boot-enlinkd</module>
     <module>opennms-model-jakarta</module>
     <module>db</module>
     <module>db-install</module>

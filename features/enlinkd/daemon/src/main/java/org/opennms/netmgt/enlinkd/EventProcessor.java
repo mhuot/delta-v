@@ -36,7 +36,6 @@ import org.opennms.netmgt.events.api.model.IEvent;
 import org.opennms.netmgt.model.events.EventUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author <a href="mailto:antonio@opennms.it">Antonio Russo</a>
@@ -56,7 +55,6 @@ public final class EventProcessor implements MessageHandler {
 
     private EnhancedLinkd m_linkd;
 
-    @Autowired(required = false)
     private MessageBus m_messageBus;
 
     /**

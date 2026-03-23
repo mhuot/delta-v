@@ -163,6 +163,7 @@ do_stage_daemon_jars() {
         "core/daemon-boot-bsmd/target/org.opennms.core.daemon-boot-bsmd-$VERSION-boot.jar:daemon-boot-bsmd.jar"
         "core/daemon-boot-perspectivepollerd/target/org.opennms.core.daemon-boot-perspectivepollerd-$VERSION-boot.jar:daemon-boot-perspectivepollerd.jar"
         "core/daemon-boot-telemetryd/target/org.opennms.core.daemon-boot-telemetryd-$VERSION-boot.jar:daemon-boot-telemetryd.jar"
+        "core/daemon-boot-enlinkd/target/org.opennms.core.daemon-boot-enlinkd-$VERSION-boot.jar:daemon-boot-enlinkd.jar"
         # Special JARs (EventTranslator split-package fix, Alarmd, Passive status)
         "opennms-config/target/opennms-config-$VERSION.jar:opennms-config.jar"
         "opennms-util/target/opennms-util-$VERSION.jar:opennms-util.jar"
@@ -212,7 +213,7 @@ do_deltav_images() {
     # Spring Boot daemons — lightweight image
     log "Building opennms/daemon-deltav-springboot:$VERSION..."
     cd "$SCRIPT_DIR"
-    docker build \
+    docker build --no-cache \
         -f Dockerfile.springboot \
         -t "opennms/daemon-deltav-springboot:$VERSION" \
         -t "opennms/daemon-deltav-springboot:latest" \

@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.opennms.core.spring.BeanUtils;
 import org.opennms.netmgt.config.EnhancedLinkdConfig;
 import org.opennms.netmgt.daemon.AbstractServiceDaemon;
 import org.opennms.netmgt.enlinkd.api.ReloadableTopologyDaemon;
@@ -47,7 +46,6 @@ import org.opennms.netmgt.scheduler.Schedulable;
 import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * <p>
@@ -76,56 +74,75 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
      */
     private LegacyPriorityExecutor m_executor;
 
-    /**
-     * The DB connection read and write handler
-     */
-    private NodeTopologyService m_queryMgr;
+    // --- All dependencies injected via constructor ---
 
-    private BridgeTopologyService m_bridgeTopologyService;
-    private CdpTopologyService m_cdpTopologyService;
-    private IsisTopologyService m_isisTopologyService;
-    private IpNetToMediaTopologyService m_ipNetToMediaTopologyService;
-    private LldpTopologyService m_lldpTopologyService;
-    private OspfTopologyService m_ospfTopologyService;
+    private final EnhancedLinkdConfig m_linkdConfig;
+    private final NodeTopologyService m_queryMgr;
+    private final BridgeTopologyService m_bridgeTopologyService;
+    private final CdpTopologyService m_cdpTopologyService;
+    private final IsisTopologyService m_isisTopologyService;
+    private final IpNetToMediaTopologyService m_ipNetToMediaTopologyService;
+    private final LldpTopologyService m_lldpTopologyService;
+    private final OspfTopologyService m_ospfTopologyService;
+    private final LocationAwareSnmpClient m_locationAwareSnmpClient;
 
-    /**
-     * Linkd Configuration Initialization
-     */
-
-    private EnhancedLinkdConfig m_linkdConfig;
-
-    @Autowired
-    private LocationAwareSnmpClient m_locationAwareSnmpClient;
-
-    @Autowired
+    // Non-final: reload() reassigns these via .clone()
     private NodesOnmsTopologyUpdater m_nodesTopologyUpdater;
-    @Autowired
     private BridgeOnmsTopologyUpdater m_bridgeTopologyUpdater;
-    @Autowired
     private CdpOnmsTopologyUpdater m_cdpTopologyUpdater;
-    @Autowired
     private LldpOnmsTopologyUpdater m_lldpTopologyUpdater;
-    @Autowired
     private IsisOnmsTopologyUpdater m_isisTopologyUpdater;
-    @Autowired
     private OspfOnmsTopologyUpdater m_ospfTopologyUpdater;
-    @Autowired
     private OspfAreaOnmsTopologyUpdater m_ospfAreaTopologyUpdater;
-    @Autowired
     private DiscoveryBridgeDomains m_discoveryBridgeDomains;
-    @Autowired
     private UserDefinedLinkTopologyUpdater m_userDefinedLinkTopologyUpdater;
-    @Autowired
     private NetworkRouterTopologyUpdater m_networkRouterTopologyUpdater;
 
     private final List<SchedulableNodeCollectorGroup> m_groups = new ArrayList<>();
+
     /**
-     * <p>
-     * Constructor for EnhancedLinkd.
-     * </p>
+     * Constructor for EnhancedLinkd — all dependencies injected explicitly.
      */
-    public EnhancedLinkd() {
+    public EnhancedLinkd(
+            EnhancedLinkdConfig linkdConfig,
+            NodeTopologyService queryMgr,
+            BridgeTopologyService bridgeTopologyService,
+            CdpTopologyService cdpTopologyService,
+            IsisTopologyService isisTopologyService,
+            IpNetToMediaTopologyService ipNetToMediaTopologyService,
+            LldpTopologyService lldpTopologyService,
+            OspfTopologyService ospfTopologyService,
+            LocationAwareSnmpClient locationAwareSnmpClient,
+            NodesOnmsTopologyUpdater nodesTopologyUpdater,
+            BridgeOnmsTopologyUpdater bridgeTopologyUpdater,
+            CdpOnmsTopologyUpdater cdpTopologyUpdater,
+            LldpOnmsTopologyUpdater lldpTopologyUpdater,
+            IsisOnmsTopologyUpdater isisTopologyUpdater,
+            OspfOnmsTopologyUpdater ospfTopologyUpdater,
+            OspfAreaOnmsTopologyUpdater ospfAreaTopologyUpdater,
+            DiscoveryBridgeDomains discoveryBridgeDomains,
+            UserDefinedLinkTopologyUpdater userDefinedLinkTopologyUpdater,
+            NetworkRouterTopologyUpdater networkRouterTopologyUpdater) {
         super(LOG_PREFIX);
+        m_linkdConfig = linkdConfig;
+        m_queryMgr = queryMgr;
+        m_bridgeTopologyService = bridgeTopologyService;
+        m_cdpTopologyService = cdpTopologyService;
+        m_isisTopologyService = isisTopologyService;
+        m_ipNetToMediaTopologyService = ipNetToMediaTopologyService;
+        m_lldpTopologyService = lldpTopologyService;
+        m_ospfTopologyService = ospfTopologyService;
+        m_locationAwareSnmpClient = locationAwareSnmpClient;
+        m_nodesTopologyUpdater = nodesTopologyUpdater;
+        m_bridgeTopologyUpdater = bridgeTopologyUpdater;
+        m_cdpTopologyUpdater = cdpTopologyUpdater;
+        m_lldpTopologyUpdater = lldpTopologyUpdater;
+        m_isisTopologyUpdater = isisTopologyUpdater;
+        m_ospfTopologyUpdater = ospfTopologyUpdater;
+        m_ospfAreaTopologyUpdater = ospfAreaTopologyUpdater;
+        m_discoveryBridgeDomains = discoveryBridgeDomains;
+        m_userDefinedLinkTopologyUpdater = userDefinedLinkTopologyUpdater;
+        m_networkRouterTopologyUpdater = networkRouterTopologyUpdater;
     }
 
     /**
@@ -134,8 +151,6 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
      * </p>
      */
     protected void onInit() {
-        BeanUtils.assertAutowiring(this);
-
         try {
             LOG.info("init: Creating EnhancedLinkd scheduler");
             m_scheduler = new LegacyScheduler("EnhancedLinkd", m_linkdConfig.getThreads());
@@ -194,7 +209,7 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
         } else {
             m_isisTopologyService.deletePersistedData();
         }
-        
+
         if (m_linkdConfig.useOspfDiscovery()) {
             NodeCollectionGroupOspf nodeCollectionGroupOspf = new NodeCollectionGroupOspf(m_linkdConfig.getOspfRescanInterval(), m_linkdConfig.getInitialSleepTime(), m_executor, m_linkdConfig.getOspfPriority(), m_queryMgr, m_locationAwareSnmpClient, m_ospfTopologyService);
             nodeCollectionGroupOspf.setScheduler(m_scheduler);
@@ -252,7 +267,7 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
         // start the scheduler
         //
         m_scheduler.start();
-        
+
         m_executor.start();
 
     }
@@ -337,13 +352,13 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
                 m_cdpTopologyUpdater.forceRun();
             }
             break;
-  
+
         case LLDP:
             if (m_linkdConfig.useLldpDiscovery()) {
                 m_lldpTopologyUpdater.forceRun();
             }
             break;
-        
+
         case ISIS:
             if (m_linkdConfig.useIsisDiscovery()) {
                 m_isisTopologyUpdater.forceRun();
@@ -361,7 +376,7 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
                 m_ospfTopologyUpdater.forceRun();
             }
             break;
-        
+
         case BRIDGE:
             if (m_linkdConfig.useBridgeDiscovery()) {
                 m_bridgeTopologyUpdater.forceRun();
@@ -382,7 +397,7 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
 
         default:
             break;
-        
+
         }
 
     }
@@ -394,19 +409,19 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
                     m_cdpTopologyUpdater.runSchedulable();
                 }
                 break;
-      
+
             case LLDP:
                 if (m_linkdConfig.useLldpDiscovery()) {
                     m_lldpTopologyUpdater.runSchedulable();
                 }
                 break;
-            
+
             case ISIS:
                 if (m_linkdConfig.useIsisDiscovery()) {
                     m_isisTopologyUpdater.runSchedulable();
                 }
                 break;
-            
+
             case OSPF:
                 if (m_linkdConfig.useOspfDiscovery()) {
                     m_ospfTopologyUpdater.runSchedulable();
@@ -455,7 +470,7 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
         m_lldpTopologyService.delete(nodeid);
         m_ospfTopologyService.delete(nodeid);
         m_ipNetToMediaTopologyService.delete(nodeid);
-        
+
         m_queryMgr.updatesAvailable();
 
     }
@@ -476,10 +491,6 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
         return m_queryMgr;
     }
 
-    public void setQueryManager(NodeTopologyService queryMgr) {
-        m_queryMgr = queryMgr;
-    }
-
     public LegacyScheduler getScheduler() {
         return m_scheduler;
     }
@@ -492,9 +503,6 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
         return m_linkdConfig;
     }
 
-    public void setLinkdConfig(final EnhancedLinkdConfig config) {
-        m_linkdConfig = config;
-    }
     public String getSource() {
         return "enlinkd";
     }
@@ -502,41 +510,27 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
     public BridgeTopologyService getBridgeTopologyService() {
         return m_bridgeTopologyService;
     }
-    public void setBridgeTopologyService(
-            BridgeTopologyService bridgeTopologyService) {
-        m_bridgeTopologyService = bridgeTopologyService;
-    }
+
     public CdpTopologyService getCdpTopologyService() {
         return m_cdpTopologyService;
     }
-    public void setCdpTopologyService(CdpTopologyService cdpTopologyService) {
-        m_cdpTopologyService = cdpTopologyService;
-    }
+
     public IsisTopologyService getIsisTopologyService() {
         return m_isisTopologyService;
     }
-    public void setIsisTopologyService(IsisTopologyService isisTopologyService) {
-        m_isisTopologyService = isisTopologyService;
-    }
+
     public LldpTopologyService getLldpTopologyService() {
         return m_lldpTopologyService;
     }
-    public void setLldpTopologyService(LldpTopologyService lldpTopologyService) {
-        m_lldpTopologyService = lldpTopologyService;
-    }
+
     public OspfTopologyService getOspfTopologyService() {
         return m_ospfTopologyService;
     }
-    public void setOspfTopologyService(OspfTopologyService ospfTopologyService) {
-        m_ospfTopologyService = ospfTopologyService;
-    }
+
     public IpNetToMediaTopologyService getIpNetToMediaTopologyService() {
         return m_ipNetToMediaTopologyService;
     }
-    public void setIpNetToMediaTopologyService(
-            IpNetToMediaTopologyService ipNetToMediaTopologyService) {
-        m_ipNetToMediaTopologyService = ipNetToMediaTopologyService;
-    }
+
     public NodesOnmsTopologyUpdater getNodesTopologyUpdater() {
         return m_nodesTopologyUpdater;
     }
@@ -598,7 +592,7 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
             m_cdpTopologyUpdater.unregister();
             m_cdpTopologyUpdater = CdpOnmsTopologyUpdater.clone(m_cdpTopologyUpdater);
         }
-        
+
         if (m_bridgeTopologyUpdater.isRegistered()) {
             m_bridgeTopologyUpdater.unschedule();
             m_bridgeTopologyUpdater.unregister();

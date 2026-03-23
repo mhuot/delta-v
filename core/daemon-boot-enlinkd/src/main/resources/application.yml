@@ -1,0 +1,35 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/opennms}
+    username: ${SPRING_DATASOURCE_USERNAME:opennms}
+    password: ${SPRING_DATASOURCE_PASSWORD:opennms}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+  jpa:
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    properties:
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+      hibernate.archive.autodetection: none
+
+opennms:
+  home: ${OPENNMS_HOME:/opt/deltav}
+  instance:
+    id: ${OPENNMS_INSTANCE_ID:OpenNMS}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    event-topic: ${KAFKA_EVENT_TOPIC:opennms-fault-events}
+    ipc-topic: ${KAFKA_IPC_TOPIC:opennms-ipc-events}
+    consumer-group: ${KAFKA_CONSUMER_GROUP:opennms-enlinkd}
+    poll-timeout-ms: ${KAFKA_POLL_TIMEOUT_MS:100}
+  rpc:
+    kafka:
+      enabled: ${OPENNMS_RPC_KAFKA_ENABLED:true}
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+      force-remote: "true"
+
+server:
+  port: 8080
