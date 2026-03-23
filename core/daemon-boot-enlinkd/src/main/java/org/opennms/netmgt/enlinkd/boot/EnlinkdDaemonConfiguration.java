@@ -22,14 +22,12 @@
 package org.opennms.netmgt.enlinkd.boot;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
 
 
 import org.opennms.core.daemon.common.DaemonSmartLifecycle;
 import org.opennms.core.rpc.api.RpcClientFactory;
-import org.opennms.core.tracing.api.TracerRegistry;
 import org.opennms.netmgt.config.EnhancedLinkdConfig;
 import org.opennms.netmgt.config.EnhancedLinkdConfigFactory;
 import org.opennms.netmgt.config.SnmpPeerFactory;
@@ -269,8 +267,7 @@ public class EnlinkdDaemonConfiguration {
             UserDefinedLinkDaoJpa userDefinedLinkDao,
             TopologyEntityCache topologyEntityCache) {
         var svc = new UserDefinedLinkTopologyServiceImpl();
-        // UserDefinedLinkTopologyServiceImpl uses @Autowired field injection with no setter
-        setField(svc, "userDefinedLinkDao", userDefinedLinkDao);
+        svc.setUserDefinedLinkDao(userDefinedLinkDao);
         svc.setTopologyEntityCache(topologyEntityCache);
         return svc;
     }
@@ -354,19 +351,29 @@ public class EnlinkdDaemonConfiguration {
                                         IsisTopologyService isisTopologyService,
                                         OspfTopologyService ospfTopologyService,
                                         BridgeTopologyService bridgeTopologyService,
-                                        IpNetToMediaTopologyService ipNetToMediaTopologyService) {
-        var linkd = new EnhancedLinkd();
-        linkd.setLinkdConfig(linkdConfig);
-        linkd.setQueryManager(nodeTopologyService);
-        linkd.setCdpTopologyService(cdpTopologyService);
-        linkd.setLldpTopologyService(lldpTopologyService);
-        linkd.setIsisTopologyService(isisTopologyService);
-        linkd.setOspfTopologyService(ospfTopologyService);
-        linkd.setBridgeTopologyService(bridgeTopologyService);
-        linkd.setIpNetToMediaTopologyService(ipNetToMediaTopologyService);
-        // @Autowired fields (updaters, snmpClient, discoveryBridgeDomains) are
-        // injected by Spring's AutowiredAnnotationBeanPostProcessor after construction
-        return linkd;
+                                        IpNetToMediaTopologyService ipNetToMediaTopologyService,
+                                        LocationAwareSnmpClient locationAwareSnmpClient,
+                                        NodesOnmsTopologyUpdater nodesTopologyUpdater,
+                                        BridgeOnmsTopologyUpdater bridgeTopologyUpdater,
+                                        CdpOnmsTopologyUpdater cdpTopologyUpdater,
+                                        LldpOnmsTopologyUpdater lldpTopologyUpdater,
+                                        IsisOnmsTopologyUpdater isisTopologyUpdater,
+                                        OspfOnmsTopologyUpdater ospfTopologyUpdater,
+                                        OspfAreaOnmsTopologyUpdater ospfAreaTopologyUpdater,
+                                        DiscoveryBridgeDomains discoveryBridgeDomains,
+                                        UserDefinedLinkTopologyUpdater userDefinedLinkTopologyUpdater,
+                                        NetworkRouterTopologyUpdater networkRouterTopologyUpdater) {
+        return new EnhancedLinkd(
+                linkdConfig, nodeTopologyService,
+                bridgeTopologyService, cdpTopologyService,
+                isisTopologyService, ipNetToMediaTopologyService,
+                lldpTopologyService, ospfTopologyService,
+                locationAwareSnmpClient,
+                nodesTopologyUpdater, bridgeTopologyUpdater,
+                cdpTopologyUpdater, lldpTopologyUpdater,
+                isisTopologyUpdater, ospfTopologyUpdater,
+                ospfAreaTopologyUpdater, discoveryBridgeDomains,
+                userDefinedLinkTopologyUpdater, networkRouterTopologyUpdater);
     }
 
     // ── 9. Event Processor ───────────────────────────────────────────
@@ -400,20 +407,4 @@ public class EnlinkdDaemonConfiguration {
         return new DaemonSmartLifecycle(daemon);
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────
-
-    /**
-     * Sets a private field on an object via reflection.
-     * Used only for UserDefinedLinkTopologyServiceImpl which has @Autowired
-     * field injection with no setter method.
-     */
-    private static void setField(Object target, String fieldName, Object value) {
-        try {
-            Field field = target.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
-            field.set(target, value);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new RuntimeException("Failed to set field " + fieldName + " on " + target.getClass().getName(), e);
-        }
-    }
 }

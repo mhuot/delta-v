@@ -26,12 +26,14 @@ import java.util.List;
 import org.opennms.netmgt.enlinkd.model.UserDefinedLink;
 import org.opennms.netmgt.enlinkd.persistence.api.UserDefinedLinkDao;
 import org.opennms.netmgt.enlinkd.service.api.UserDefinedLinkTopologyService;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class UserDefinedLinkTopologyServiceImpl extends TopologyServiceImpl implements UserDefinedLinkTopologyService {
 
-    @Autowired
     private UserDefinedLinkDao userDefinedLinkDao;
+
+    public void setUserDefinedLinkDao(UserDefinedLinkDao userDefinedLinkDao) {
+        this.userDefinedLinkDao = userDefinedLinkDao;
+    }
 
     @Override
     public List<UserDefinedLink> findAllUserDefinedLinks() {
