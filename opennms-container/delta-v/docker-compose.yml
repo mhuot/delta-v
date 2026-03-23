@@ -313,36 +313,39 @@ services:
 
   enlinkd:
     profiles: [full]
-    image: opennms/daemon-deltav:${VERSION}
+    image: opennms/daemon-deltav-springboot:${VERSION}
     container_name: delta-v-enlinkd
     hostname: enlinkd
-    depends_on:
-      db-init:
-        condition: service_completed_successfully
-      kafka:
-        condition: service_healthy
+    entrypoint: []
+    command:
+      - "java"
+      - "-Xms256m"
+      - "-Xmx512m"
+      - "-XX:MaxMetaspaceSize=256m"
+      - "-Dopennms.home=/opt/deltav"
+      - "-jar"
+      - "/opt/daemon-boot-enlinkd.jar"
     environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_USER: opennms
-      POSTGRES_PASSWORD: opennms
-      POSTGRES_DB: opennms
-      JAVA_OPTS: >-
-        -Xms256m -Xmx512m
-        -XX:MaxMetaspaceSize=256m
-        -Djava.security.egd=file:/dev/./urandom
-        -Dorg.opennms.tsid.node-id=14
-        -Dorg.opennms.core.ipc.rpc.kafka.bootstrap.servers=kafka:9092
-        -Dorg.opennms.core.ipc.rpc.force-remote=true
-    volumes:
-      - enlinkd-data:/opt/sentinel/data
-      - ./enlinkd-overlay/etc:/opt/sentinel-etc-overlay:ro
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
+      SPRING_DATASOURCE_USERNAME: opennms
+      SPRING_DATASOURCE_PASSWORD: opennms
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_CONSUMER_GROUP: enlinkd
+      OPENNMS_HOME: /opt/deltav
+      OPENNMS_RPC_KAFKA_ENABLED: "true"
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf -u admin:admin http://localhost:8181/sentinel/rest/health/probe || exit 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 20
-      start_period: 60s
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    stop_grace_period: 60s
+    volumes:
+      - ./opennms-container/delta-v/overlay/etc:/opt/deltav/etc:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
 
   scriptd:
     profiles: [full]
@@ -536,5 +539,4 @@ volumes:
   kafkadata:
   minion-data:
   collectd-data:
-  enlinkd-data:
   scriptd-data:
