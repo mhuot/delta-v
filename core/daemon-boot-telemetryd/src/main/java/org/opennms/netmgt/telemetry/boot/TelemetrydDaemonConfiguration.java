@@ -1,0 +1,302 @@
+/*
+ * Licensed to The OpenNMS Group, Inc (TOG) under one or more
+ * contributor license agreements.  See the LICENSE.md file
+ * distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * TOG licenses this file to You under the GNU Affero General
+ * Public License Version 3 (the "License") or (at your option)
+ * any later version.  You may not use this file except in
+ * compliance with the License.  You may obtain a copy of the
+ * License at:
+ *
+ *      https://www.gnu.org/licenses/agpl-3.0.txt
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied.  See the License for the specific
+ * language governing permissions and limitations under the
+ * License.
+ */
+package org.opennms.netmgt.telemetry.boot;
+
+import java.io.Closeable;
+import java.util.function.Consumer;
+
+import com.codahale.metrics.MetricRegistry;
+
+import org.opennms.core.daemon.common.NoOpEntityScopeProvider;
+import org.opennms.core.daemon.common.NoOpTracerRegistry;
+import org.opennms.core.ipc.twin.api.LocalTwinSubscriber;
+import org.opennms.core.ipc.twin.api.TwinPublisher;
+import org.opennms.core.ipc.twin.api.TwinSubscriber;
+import org.opennms.core.ipc.twin.api.TwinUpdate;
+import org.opennms.core.ipc.twin.kafka.publisher.KafkaTwinPublisher;
+import org.opennms.core.mate.api.EntityScopeProvider;
+import org.opennms.core.tracing.api.TracerRegistry;
+import org.opennms.netmgt.dao.api.ServiceTracker;
+import org.opennms.netmgt.telemetry.config.dao.TelemetrydConfigDao;
+import org.opennms.netmgt.telemetry.daemon.ConnectorManager;
+import org.opennms.netmgt.telemetry.daemon.LocationPublisherManager;
+import org.opennms.netmgt.telemetry.daemon.OpenConfigTwinPublisher;
+import org.opennms.netmgt.telemetry.daemon.OpenConfigTwinPublisherImpl;
+import org.opennms.netmgt.telemetry.daemon.Telemetryd;
+import org.opennms.netmgt.telemetry.protocols.registry.api.TelemetryServiceRegistry;
+import org.opennms.netmgt.telemetry.protocols.registry.impl.TelemetryRegistryImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.SmartLifecycle;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.FileSystemResource;
+
+/**
+ * Spring Boot configuration for the Telemetryd daemon and its dependencies.
+ *
+ * <p>Wires the {@link Telemetryd} daemon with its configuration DAO, telemetry
+ * registry (with no-op sub-registries since no adapters run locally), Twin API
+ * chain (for ConnectorManager), and lifecycle management.</p>
+ *
+ * <p>Most beans in this graph use {@code @Autowired} field injection. When
+ * declared via {@code @Bean} in a {@code @Configuration} class, Spring's
+ * {@code AutowiredAnnotationBeanPostProcessor} handles field injection
+ * automatically after construction.</p>
+ */
+@Configuration
+public class TelemetrydDaemonConfiguration {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TelemetrydDaemonConfiguration.class);
+
+    @Value("${opennms.home:/opt/deltav}")
+    private String opennmsHome;
+
+    // ── 1. Configuration DAO ──────────────────────────────────────────
+
+    @Bean
+    public TelemetrydConfigDao telemetrydConfigDao() {
+        var dao = new TelemetrydConfigDao();
+        dao.setConfigResource(new FileSystemResource(opennmsHome + "/etc/telemetryd-configuration.xml"));
+        return dao;
+    }
+
+    // ── 2. Telemetry Registry ─────────────────────────────────────────
+
+    /**
+     * No-op adapter registry. Telemetryd in this deployment is a pure ingestion
+     * bridge -- no adapters execute locally.
+     */
+    @Bean
+    @Qualifier("adapterRegistry")
+    public TelemetryServiceRegistry<?, ?> adapterRegistry() {
+        return noOpServiceRegistry();
+    }
+
+    @Bean
+    @Qualifier("listenerRegistry")
+    public TelemetryServiceRegistry<?, ?> listenerRegistry() {
+        return noOpServiceRegistry();
+    }
+
+    @Bean
+    @Qualifier("connectorRegistry")
+    public TelemetryServiceRegistry<?, ?> connectorRegistry() {
+        return noOpServiceRegistry();
+    }
+
+    @Bean
+    @Qualifier("parserRegistry")
+    public TelemetryServiceRegistry<?, ?> parserRegistry() {
+        return noOpServiceRegistry();
+    }
+
+    @Bean
+    public MetricRegistry metricRegistry() {
+        return new MetricRegistry();
+    }
+
+    /**
+     * The concrete TelemetryRegistry. Uses {@code @Autowired @Qualifier} field
+     * injection for the 4 sub-registries. MetricRegistry is wired via setter
+     * (not {@code @Autowired}), so we call it explicitly.
+     */
+    @Bean
+    public TelemetryRegistryImpl telemetryRegistry(MetricRegistry metricRegistry) {
+        var registry = new TelemetryRegistryImpl();
+        registry.setMetricRegistry(metricRegistry);
+        return registry;
+    }
+
+    // ── 3. ServiceTracker (no-op) ─────────────────────────────────────
+
+    @Bean
+    public ServiceTracker serviceTracker() {
+        return new ServiceTracker() {
+            @Override
+            public Closeable trackServiceMatchingFilterRule(String serviceName, String filterRule, ServiceListener listener) {
+                return () -> {};
+            }
+
+            @Override
+            public Closeable trackService(String serviceName, ServiceListener listener) {
+                return () -> {};
+            }
+        };
+    }
+
+    // ── 4. Twin API chain ─────────────────────────────────────────────
+
+    @Bean
+    public TracerRegistry tracerRegistry() {
+        return new NoOpTracerRegistry();
+    }
+
+    @Bean
+    public EntityScopeProvider entityScopeProvider() {
+        return new NoOpEntityScopeProvider();
+    }
+
+    /**
+     * No-op LocalTwinSubscriber. Telemetryd publishes Twin updates but does
+     * not subscribe. KafkaTwinPublisher's constructor requires a non-null
+     * LocalTwinSubscriber, so we provide a stub.
+     */
+    @Bean
+    public LocalTwinSubscriber localTwinSubscriber(TracerRegistry tracerRegistry, MetricRegistry metricRegistry) {
+        return new LocalTwinSubscriber() {
+            @Override
+            public void accept(TwinUpdate twinResponse) {
+                // no-op
+            }
+
+            @Override
+            public TracerRegistry getTracerRegistry() {
+                return tracerRegistry;
+            }
+
+            @Override
+            public MetricRegistry getMetricRegistry() {
+                return metricRegistry;
+            }
+
+            @Override
+            public <T> Closeable subscribe(String key, Class<T> clazz, Consumer<T> consumer) {
+                return () -> {};
+            }
+
+            @Override
+            public void close() {
+                // no-op
+            }
+        };
+    }
+
+    @Bean(initMethod = "init")
+    public TwinPublisher twinPublisher(LocalTwinSubscriber localTwinSubscriber,
+                                       TracerRegistry tracerRegistry,
+                                       MetricRegistry metricRegistry) {
+        return new KafkaTwinPublisher(localTwinSubscriber, tracerRegistry, metricRegistry);
+    }
+
+    /**
+     * LocationPublisherManager uses {@code @Autowired TwinPublisher} field
+     * injection -- Spring will inject the KafkaTwinPublisher bean.
+     */
+    @Bean
+    public LocationPublisherManager locationPublisherManager() {
+        return new LocationPublisherManager();
+    }
+
+    @Bean
+    public OpenConfigTwinPublisher openConfigTwinPublisher(LocationPublisherManager locationPublisherManager) {
+        return new OpenConfigTwinPublisherImpl(locationPublisherManager);
+    }
+
+    // ── 5. ConnectorManager ───────────────────────────────────────────
+
+    /**
+     * ConnectorManager uses {@code @Autowired} field injection for
+     * TelemetryRegistry, EntityScopeProvider, ServiceTracker, and
+     * OpenConfigTwinPublisher. Spring handles all 4 automatically.
+     */
+    @Bean
+    public ConnectorManager connectorManager() {
+        return new ConnectorManager();
+    }
+
+    // ── 6. Telemetryd daemon ──────────────────────────────────────────
+
+    /**
+     * The Telemetryd daemon. Uses {@code @Autowired} field injection for
+     * TelemetrydConfigDao, MessageDispatcherFactory, MessageConsumerManager,
+     * ApplicationContext, TelemetryRegistry, ConnectorManager, and
+     * MessageBus (optional, will be null).
+     */
+    @Bean
+    public Telemetryd telemetryd() {
+        return new Telemetryd();
+    }
+
+    // ── 7. SmartLifecycle ─────────────────────────────────────────────
+
+    @Bean
+    public SmartLifecycle telemetrydLifecycle(Telemetryd telemetryd) {
+        return new SmartLifecycle() {
+            private volatile boolean running = false;
+
+            @Override
+            public void start() {
+                try {
+                    LOG.info("Initializing Telemetryd");
+                    telemetryd.afterPropertiesSet();
+                    LOG.info("Starting Telemetryd");
+                    telemetryd.start();
+                    running = true;
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to start Telemetryd", e);
+                }
+            }
+
+            @Override
+            public void stop(Runnable callback) {
+                stop();
+                callback.run();
+            }
+
+            @Override
+            public void stop() {
+                try {
+                    LOG.info("Stopping Telemetryd");
+                    telemetryd.destroy();
+                    running = false;
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to stop Telemetryd", e);
+                }
+            }
+
+            @Override
+            public boolean isRunning() {
+                return running;
+            }
+
+            @Override
+            public boolean isAutoStartup() {
+                return true;
+            }
+
+            @Override
+            public int getPhase() {
+                return Integer.MAX_VALUE;
+            }
+        };
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────
+
+    @SuppressWarnings("unchecked")
+    private static <BD, T> TelemetryServiceRegistry<BD, T> noOpServiceRegistry() {
+        return beanDefinition -> null;
+    }
+}
