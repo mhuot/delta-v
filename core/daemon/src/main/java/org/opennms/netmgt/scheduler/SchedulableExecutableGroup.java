@@ -55,8 +55,8 @@ public class SchedulableExecutableGroup extends Schedulable {
      */
     public SchedulableExecutableGroup(long interval, long initial, LegacyPriorityExecutor executor, String name) {
         super(interval,initial);
-        Assert.notNull(executor);
-        Assert.notNull(name);
+        Assert.notNull(executor, "executor must not be null");
+        Assert.notNull(name, "name must not be null");
         m_executor=executor;
         m_name=name;
     }

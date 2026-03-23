@@ -26,12 +26,8 @@ import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
 
-import com.codahale.metrics.MetricRegistry;
 
 import org.opennms.core.daemon.common.DaemonSmartLifecycle;
-import org.opennms.core.daemon.common.NoOpEntityScopeProvider;
-import org.opennms.core.daemon.common.NoOpTracerRegistry;
-import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.core.rpc.api.RpcClientFactory;
 import org.opennms.core.tracing.api.TracerRegistry;
 import org.opennms.netmgt.config.EnhancedLinkdConfig;
@@ -126,21 +122,6 @@ public class EnlinkdDaemonConfiguration {
     private String opennmsHome;
 
     // ── 1. Infrastructure ────────────────────────────────────────────
-
-    @Bean
-    public MetricRegistry metricRegistry() {
-        return new MetricRegistry();
-    }
-
-    @Bean
-    public TracerRegistry tracerRegistry() {
-        return new NoOpTracerRegistry();
-    }
-
-    @Bean
-    public EntityScopeProvider entityScopeProvider() {
-        return new NoOpEntityScopeProvider();
-    }
 
     // ── 2. SNMP ──────────────────────────────────────────────────────
 
@@ -399,11 +380,17 @@ public class EnlinkdDaemonConfiguration {
         return processor;
     }
 
-    @Bean(initMethod = "afterPropertiesSet")
+    @Bean
     public AnnotationBasedEventListenerAdapter enlinkdEventListener(
             EventProcessor eventProcessor,
             EventSubscriptionService eventSubscriptionService) {
-        return new AnnotationBasedEventListenerAdapter(eventProcessor, eventSubscriptionService);
+        // Use no-arg constructor + setters so afterPropertiesSet() is called
+        // exactly once by Spring's InitializingBean contract. The two-arg
+        // constructor also calls afterPropertiesSet(), which would double-register.
+        var adapter = new AnnotationBasedEventListenerAdapter();
+        adapter.setAnnotatedListener(eventProcessor);
+        adapter.setEventSubscriptionService(eventSubscriptionService);
+        return adapter;
     }
 
     // ── 10. SmartLifecycle ───────────────────────────────────────────

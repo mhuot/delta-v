@@ -290,8 +290,14 @@ public class AnnotationBasedEventListenerAdapter implements StoppableEventListen
 
         m_threads = listenerInfo.threads();
 
+        // Clear maps/lists to make afterPropertiesSet idempotent — Spring 7
+        // may call this more than once (InitializingBean + constructor chain)
+        m_ueiToHandlerMap.clear();
+        m_eventPreProcessors.clear();
+        m_eventPostProcessors.clear();
+
         populatePreProcessorList();
-        
+
         populateUeiToHandlerMap();
         
         populatePostProcessorList();

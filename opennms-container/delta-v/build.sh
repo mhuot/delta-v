@@ -213,7 +213,7 @@ do_deltav_images() {
     # Spring Boot daemons — lightweight image
     log "Building opennms/daemon-deltav-springboot:$VERSION..."
     cd "$SCRIPT_DIR"
-    docker build \
+    docker build --no-cache \
         -f Dockerfile.springboot \
         -t "opennms/daemon-deltav-springboot:$VERSION" \
         -t "opennms/daemon-deltav-springboot:latest" \

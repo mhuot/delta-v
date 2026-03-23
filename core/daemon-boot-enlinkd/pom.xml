@@ -524,6 +524,15 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- javax.annotation API — needed at runtime for legacy @Resource annotations
+             in transitive dependencies (e.g., AbstractServiceDaemon hierarchy) -->
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <version>1.3.2</version>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- SLF4J 2.x — must be explicit to override old 1.7.x from transitive deps -->
         <dependency>
             <groupId>org.slf4j</groupId>

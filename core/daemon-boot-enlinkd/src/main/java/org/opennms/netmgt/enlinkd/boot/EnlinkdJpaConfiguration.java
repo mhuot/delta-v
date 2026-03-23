@@ -54,11 +54,14 @@ import org.opennms.netmgt.enlinkd.persistence.impl.OspfElementDaoJpa;
 import org.opennms.netmgt.enlinkd.persistence.impl.OspfLinkDaoJpa;
 import org.opennms.netmgt.enlinkd.persistence.impl.UserDefinedLinkDaoJpa;
 import org.opennms.netmgt.eventd.EventUtil;
+import org.opennms.netmgt.model.OnmsApplication;
 import org.opennms.netmgt.model.OnmsCategory;
 import org.opennms.netmgt.model.OnmsDistPoller;
 import org.opennms.netmgt.model.OnmsIpInterface;
+import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsMonitoringSystem;
 import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.model.OnmsServiceType;
 import org.opennms.netmgt.model.OnmsSnmpInterface;
 import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
 import org.slf4j.Logger;
@@ -109,6 +112,9 @@ public class EnlinkdJpaConfiguration {
             OnmsDistPoller.class.getName(),
             OnmsMonitoringSystem.class.getName(),
             OnmsCategory.class.getName(),
+            OnmsMonitoredService.class.getName(),
+            OnmsServiceType.class.getName(),
+            OnmsApplication.class.getName(),
             // Enlinkd entities (Jakarta)
             CdpLink.class.getName(),
             CdpElement.class.getName(),

@@ -340,7 +340,7 @@ services:
       retries: 3
     stop_grace_period: 60s
     volumes:
-      - ./opennms-container/delta-v/overlay/etc:/opt/deltav/etc:ro
+      - ./enlinkd-overlay/etc:/opt/deltav/etc:ro
     depends_on:
       postgres:
         condition: service_healthy
