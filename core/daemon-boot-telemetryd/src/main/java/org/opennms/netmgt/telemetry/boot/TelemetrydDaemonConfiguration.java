@@ -148,14 +148,12 @@ public class TelemetrydDaemonConfiguration {
 
     // ── 4. Twin API chain ─────────────────────────────────────────────
 
+    // EntityScopeProvider is provided by daemon-common (DaemonProvisioningConfiguration)
+    // TracerRegistry is provided by KafkaRpcClientConfiguration but only when RPC is enabled.
+    // Telemetryd doesn't use RPC, so we provide our own NoOp.
     @Bean
     public TracerRegistry tracerRegistry() {
         return new NoOpTracerRegistry();
-    }
-
-    @Bean
-    public EntityScopeProvider entityScopeProvider() {
-        return new NoOpEntityScopeProvider();
     }
 
     /**
