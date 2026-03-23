@@ -417,7 +417,10 @@
             </exclusions>
         </dependency>
 
-        <!-- Enlinkd persistence API (DAO interfaces for topology services) -->
+        <!-- Enlinkd persistence API — needed at compile time for TopologyEntityCache
+             and topology entity types. Entity classes and DAO interfaces are also
+             provided by opennms-model-jakarta (split package); opennms-model-jakarta
+             is listed first so its Jakarta entity classes win on the classpath. -->
         <dependency>
             <groupId>org.opennms.features.enlinkd</groupId>
             <artifactId>org.opennms.features.enlinkd.persistence.api</artifactId>

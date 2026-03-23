@@ -51,21 +51,21 @@ import org.opennms.netmgt.enlinkd.NodesOnmsTopologyUpdater;
 import org.opennms.netmgt.enlinkd.OspfAreaOnmsTopologyUpdater;
 import org.opennms.netmgt.enlinkd.OspfOnmsTopologyUpdater;
 import org.opennms.netmgt.enlinkd.UserDefinedLinkTopologyUpdater;
-import org.opennms.netmgt.enlinkd.model.jakarta.dao.BridgeBridgeLinkDaoJpa;
-import org.opennms.netmgt.enlinkd.model.jakarta.dao.BridgeElementDaoJpa;
-import org.opennms.netmgt.enlinkd.model.jakarta.dao.BridgeMacLinkDaoJpa;
-import org.opennms.netmgt.enlinkd.model.jakarta.dao.BridgeStpLinkDaoJpa;
-import org.opennms.netmgt.enlinkd.model.jakarta.dao.CdpElementDaoJpa;
-import org.opennms.netmgt.enlinkd.model.jakarta.dao.CdpLinkDaoJpa;
-import org.opennms.netmgt.enlinkd.model.jakarta.dao.IpNetToMediaDaoJpa;
-import org.opennms.netmgt.enlinkd.model.jakarta.dao.IsIsElementDaoJpa;
-import org.opennms.netmgt.enlinkd.model.jakarta.dao.IsIsLinkDaoJpa;
-import org.opennms.netmgt.enlinkd.model.jakarta.dao.LldpElementDaoJpa;
-import org.opennms.netmgt.enlinkd.model.jakarta.dao.LldpLinkDaoJpa;
-import org.opennms.netmgt.enlinkd.model.jakarta.dao.OspfAreaDaoJpa;
-import org.opennms.netmgt.enlinkd.model.jakarta.dao.OspfElementDaoJpa;
-import org.opennms.netmgt.enlinkd.model.jakarta.dao.OspfLinkDaoJpa;
-import org.opennms.netmgt.enlinkd.model.jakarta.dao.UserDefinedLinkDaoJpa;
+import org.opennms.netmgt.enlinkd.persistence.impl.BridgeBridgeLinkDaoJpa;
+import org.opennms.netmgt.enlinkd.persistence.impl.BridgeElementDaoJpa;
+import org.opennms.netmgt.enlinkd.persistence.impl.BridgeMacLinkDaoJpa;
+import org.opennms.netmgt.enlinkd.persistence.impl.BridgeStpLinkDaoJpa;
+import org.opennms.netmgt.enlinkd.persistence.impl.CdpElementDaoJpa;
+import org.opennms.netmgt.enlinkd.persistence.impl.CdpLinkDaoJpa;
+import org.opennms.netmgt.enlinkd.persistence.impl.IpNetToMediaDaoJpa;
+import org.opennms.netmgt.enlinkd.persistence.impl.IsIsElementDaoJpa;
+import org.opennms.netmgt.enlinkd.persistence.impl.IsIsLinkDaoJpa;
+import org.opennms.netmgt.enlinkd.persistence.impl.LldpElementDaoJpa;
+import org.opennms.netmgt.enlinkd.persistence.impl.LldpLinkDaoJpa;
+import org.opennms.netmgt.enlinkd.persistence.impl.OspfAreaDaoJpa;
+import org.opennms.netmgt.enlinkd.persistence.impl.OspfElementDaoJpa;
+import org.opennms.netmgt.enlinkd.persistence.impl.OspfLinkDaoJpa;
+import org.opennms.netmgt.enlinkd.persistence.impl.UserDefinedLinkDaoJpa;
 import org.opennms.netmgt.enlinkd.persistence.api.TopologyEntityCache;
 import org.opennms.netmgt.enlinkd.model.CdpElementTopologyEntity;
 import org.opennms.netmgt.enlinkd.model.CdpLinkTopologyEntity;
@@ -113,20 +113,9 @@ import org.springframework.context.annotation.Configuration;
  * <p>Wires the {@link EnhancedLinkd} daemon with topology services, updaters,
  * SNMP client, event processor, and lifecycle management.</p>
  *
- * <h3>Type Compatibility: JPA DAOs vs Persistence API Interfaces</h3>
- * <p>The topology service implementations (e.g., {@code CdpTopologyServiceImpl})
- * declare their DAO fields using the persistence API interface types (e.g.,
- * {@code CdpLinkDao} from {@code features/enlinkd/persistence/api}). Our JPA
- * DAOs ({@code CdpLinkDaoJpa}) extend {@code AbstractDaoJpa} and implement
- * {@code OnmsDao} but do NOT implement the persistence API interfaces because
- * those interfaces are parameterized on legacy (javax.persistence) entity types.</p>
- *
- * <p>Since both entity hierarchies map to the same DB tables and the JPA DAOs
- * provide all the same method signatures, we use reflective field injection to
- * bypass the typed setter methods. At runtime, Java type erasure ensures the
- * DAO method calls work correctly -- the topology services call methods like
- * {@code findByNodeId(Integer)}, {@code deleteByNodeId(Integer)}, {@code flush()},
- * etc., which have identical signatures in both the interface and JPA DAO.</p>
+ * <p>JPA DAOs in {@code opennms-model-jakarta} implement the persistence API
+ * interfaces (same FQCN as legacy entities), so topology services receive
+ * DAOs via their normal typed setter methods.</p>
  */
 @Configuration
 public class EnlinkdDaemonConfiguration {
@@ -210,10 +199,8 @@ public class EnlinkdDaemonConfiguration {
 
     // ── 6. Topology Services ─────────────────────────────────────────
     //
-    // These service impls declare their DAO fields using persistence API
-    // interface types. Our JPA DAOs don't implement those interfaces (different
-    // entity type parameters). We use reflective field injection to bypass the
-    // typed setters. See class Javadoc for rationale.
+    // Our JPA DAOs now implement the persistence API interfaces, so normal
+    // setter injection works — no more reflective field injection needed.
 
     @Bean
     public NodeTopologyService nodeTopologyService(NodeDao nodeDao,
@@ -225,57 +212,52 @@ public class EnlinkdDaemonConfiguration {
     }
 
     @Bean
-    @SuppressWarnings("unchecked")
     public CdpTopologyService cdpTopologyService(CdpLinkDaoJpa cdpLinkDao,
                                                   CdpElementDaoJpa cdpElementDao,
                                                   TopologyEntityCache topologyEntityCache) {
         var svc = new CdpTopologyServiceImpl();
-        setField(svc, "m_cdpLinkDao", cdpLinkDao);
-        setField(svc, "m_cdpElementDao", cdpElementDao);
+        svc.setCdpLinkDao(cdpLinkDao);
+        svc.setCdpElementDao(cdpElementDao);
         svc.setTopologyEntityCache(topologyEntityCache);
         return svc;
     }
 
     @Bean
-    @SuppressWarnings("unchecked")
     public LldpTopologyService lldpTopologyService(LldpLinkDaoJpa lldpLinkDao,
                                                     LldpElementDaoJpa lldpElementDao,
                                                     TopologyEntityCache topologyEntityCache) {
         var svc = new LldpTopologyServiceImpl();
-        setField(svc, "m_lldpLinkDao", lldpLinkDao);
-        setField(svc, "m_lldpElementDao", lldpElementDao);
+        svc.setLldpLinkDao(lldpLinkDao);
+        svc.setLldpElementDao(lldpElementDao);
         svc.setTopologyEntityCache(topologyEntityCache);
         return svc;
     }
 
     @Bean
-    @SuppressWarnings("unchecked")
     public OspfTopologyService ospfTopologyService(OspfLinkDaoJpa ospfLinkDao,
                                                     OspfElementDaoJpa ospfElementDao,
                                                     OspfAreaDaoJpa ospfAreaDao,
                                                     TopologyEntityCache topologyEntityCache) {
         var svc = new OspfTopologyServiceImpl();
-        setField(svc, "m_ospfLinkDao", ospfLinkDao);
-        setField(svc, "m_ospfElementDao", ospfElementDao);
-        setField(svc, "m_ospfAreaDao", ospfAreaDao);
+        svc.setOspfLinkDao(ospfLinkDao);
+        svc.setOspfElementDao(ospfElementDao);
+        svc.setOspfAreaDao(ospfAreaDao);
         svc.setTopologyEntityCache(topologyEntityCache);
         return svc;
     }
 
     @Bean
-    @SuppressWarnings("unchecked")
     public IsisTopologyService isisTopologyService(IsIsLinkDaoJpa isisLinkDao,
                                                     IsIsElementDaoJpa isisElementDao,
                                                     TopologyEntityCache topologyEntityCache) {
         var svc = new IsisTopologyServiceImpl();
-        setField(svc, "m_isisLinkDao", isisLinkDao);
-        setField(svc, "m_isisElementDao", isisElementDao);
+        svc.setIsisLinkDao(isisLinkDao);
+        svc.setIsisElementDao(isisElementDao);
         svc.setTopologyEntityCache(topologyEntityCache);
         return svc;
     }
 
     @Bean
-    @SuppressWarnings("unchecked")
     public BridgeTopologyService bridgeTopologyService(BridgeElementDaoJpa bridgeElementDao,
                                                         BridgeBridgeLinkDaoJpa bridgeBridgeLinkDao,
                                                         BridgeMacLinkDaoJpa bridgeMacLinkDao,
@@ -283,31 +265,30 @@ public class EnlinkdDaemonConfiguration {
                                                         IpNetToMediaDaoJpa ipNetToMediaDao,
                                                         TopologyEntityCache topologyEntityCache) {
         var svc = new BridgeTopologyServiceImpl();
-        setField(svc, "m_bridgeElementDao", bridgeElementDao);
-        setField(svc, "m_bridgeBridgeLinkDao", bridgeBridgeLinkDao);
-        setField(svc, "m_bridgeMacLinkDao", bridgeMacLinkDao);
-        setField(svc, "m_bridgeStpLinkDao", bridgeStpLinkDao);
-        setField(svc, "m_ipNetToMediaDao", ipNetToMediaDao);
+        svc.setBridgeElementDao(bridgeElementDao);
+        svc.setBridgeBridgeLinkDao(bridgeBridgeLinkDao);
+        svc.setBridgeMacLinkDao(bridgeMacLinkDao);
+        svc.setBridgeStpLinkDao(bridgeStpLinkDao);
+        svc.setIpNetToMediaDao(ipNetToMediaDao);
         svc.setTopologyEntityCache(topologyEntityCache);
         return svc;
     }
 
     @Bean
-    @SuppressWarnings("unchecked")
     public IpNetToMediaTopologyService ipNetToMediaTopologyService(IpNetToMediaDaoJpa ipNetToMediaDao,
                                                                     IpInterfaceDao ipInterfaceDao) {
         var svc = new IpNetToMediaTopologyServiceImpl();
-        setField(svc, "m_ipNetToMediaDao", ipNetToMediaDao);
-        setField(svc, "m_ipInterfaceDao", ipInterfaceDao);
+        svc.setIpNetToMediaDao(ipNetToMediaDao);
+        svc.setIpInterfaceDao(ipInterfaceDao);
         return svc;
     }
 
     @Bean
-    @SuppressWarnings("unchecked")
     public UserDefinedLinkTopologyService userDefinedLinkTopologyService(
             UserDefinedLinkDaoJpa userDefinedLinkDao,
             TopologyEntityCache topologyEntityCache) {
         var svc = new UserDefinedLinkTopologyServiceImpl();
+        // UserDefinedLinkTopologyServiceImpl uses @Autowired field injection with no setter
         setField(svc, "userDefinedLinkDao", userDefinedLinkDao);
         svc.setTopologyEntityCache(topologyEntityCache);
         return svc;
@@ -435,29 +416,17 @@ public class EnlinkdDaemonConfiguration {
     // ── Helpers ──────────────────────────────────────────────────────
 
     /**
-     * Sets a private field on an object via reflection, bypassing type checks.
-     * Used to inject JPA DAOs into topology service fields that declare
-     * persistence API interface types. See class Javadoc for rationale.
+     * Sets a private field on an object via reflection.
+     * Used only for UserDefinedLinkTopologyServiceImpl which has @Autowired
+     * field injection with no setter method.
      */
     private static void setField(Object target, String fieldName, Object value) {
         try {
-            Field field = findField(target.getClass(), fieldName);
+            Field field = target.getClass().getDeclaredField(fieldName);
             field.setAccessible(true);
             field.set(target, value);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException("Failed to set field " + fieldName + " on " + target.getClass().getName(), e);
         }
-    }
-
-    private static Field findField(Class<?> clazz, String fieldName) throws NoSuchFieldException {
-        Class<?> current = clazz;
-        while (current != null) {
-            try {
-                return current.getDeclaredField(fieldName);
-            } catch (NoSuchFieldException e) {
-                current = current.getSuperclass();
-            }
-        }
-        throw new NoSuchFieldException(fieldName + " not found in " + clazz.getName() + " hierarchy");
     }
 }
