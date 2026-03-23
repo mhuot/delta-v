@@ -405,6 +405,32 @@
             </exclusions>
         </dependency>
 
+        <!-- Topologies service impl (OnmsTopologyDaoInMemoryImpl) -->
+        <dependency>
+            <groupId>org.opennms.features.topologies</groupId>
+            <artifactId>org.opennms.features.topologies.service.impl</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Enlinkd persistence API (DAO interfaces for topology services) -->
+        <dependency>
+            <groupId>org.opennms.features.enlinkd</groupId>
+            <artifactId>org.opennms.features.enlinkd.persistence.api</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
+                <exclusion><groupId>org.hibernate.javax.persistence</groupId><artifactId>hibernate-jpa-2.0-api</artifactId></exclusion>
+            </exclusions>
+        </dependency>
+
         <!-- SNMP RPC implementation -->
         <dependency>
             <groupId>org.opennms.core.snmp</groupId>
@@ -575,8 +601,7 @@
                             <!-- Use a classifier so the original JAR stays available
                                  for failsafe integration tests (which need plain classes) -->
                             <classifier>boot</classifier>
-                            <!-- Skip until Application main class is added (Task 10) -->
-                            <skip>true</skip>
+                            <skip>false</skip>
                         </configuration>
                     </execution>
                 </executions>
