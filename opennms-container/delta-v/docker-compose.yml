@@ -500,7 +500,12 @@ services:
 
   telemetryd:
     profiles: [full]
-    image: opennms/daemon-deltav:${VERSION}
+    image: opennms/daemon-deltav-springboot:${VERSION}
+    command: ["java", "-Xms256m", "-Xmx512m", "-XX:MaxMetaspaceSize=256m",
+              "-Dorg.opennms.core.ipc.sink.kafka.bootstrap.servers=kafka:9092",
+              "-Dorg.opennms.core.ipc.sink.kafka.group.id=opennms-telemetryd-sink",
+              "-Dorg.opennms.core.ipc.twin.kafka.bootstrap.servers=kafka:9092",
+              "-jar", "/opt/daemon-boot-telemetryd.jar"]
     container_name: delta-v-telemetryd
     hostname: telemetryd
     depends_on:
@@ -509,27 +514,22 @@ services:
       kafka:
         condition: service_healthy
     environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_USER: opennms
-      POSTGRES_PASSWORD: opennms
-      POSTGRES_DB: opennms
-      JAVA_OPTS: >-
-        -Xms256m -Xmx512m
-        -XX:MaxMetaspaceSize=256m
-        -Djava.security.egd=file:/dev/./urandom
-        -Dorg.opennms.tsid.node-id=18
-        -Dorg.opennms.core.ipc.sink.kafka.bootstrap.servers=kafka:9092
-        -Dorg.opennms.core.ipc.sink.kafka.group.id=opennms-telemetryd-sink
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
+      SPRING_DATASOURCE_USERNAME: opennms
+      SPRING_DATASOURCE_PASSWORD: opennms
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_CONSUMER_GROUP: opennms-telemetryd
+      OPENNMS_HOME: /opt/deltav
+      OPENNMS_INSTANCE_ID: OpenNMS
+      OPENNMS_TSID_NODE_ID: "18"
     volumes:
-      - telemetryd-data:/opt/sentinel/data
-      - ./telemetryd-overlay/etc:/opt/sentinel-etc-overlay:ro
+      - ./telemetryd-overlay/etc:/opt/deltav/etc:ro
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf -u admin:admin http://localhost:8181/sentinel/rest/health/probe || exit 1"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 20
-      start_period: 60s
+      start_period: 30s
 
 volumes:
   pgdata:
@@ -538,4 +538,3 @@ volumes:
   collectd-data:
   enlinkd-data:
   scriptd-data:
-  telemetryd-data:
