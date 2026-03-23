@@ -20,3 +20,4 @@ COPY staging/daemon/daemon-boot-provisiond.jar /opt/daemon-boot-provisiond.jar
 COPY staging/daemon/daemon-boot-bsmd.jar /opt/daemon-boot-bsmd.jar
 COPY staging/daemon/daemon-boot-pollerd.jar /opt/daemon-boot-pollerd.jar
 COPY staging/daemon/daemon-boot-perspectivepollerd.jar /opt/daemon-boot-perspectivepollerd.jar
+COPY staging/daemon/daemon-boot-telemetryd.jar /opt/daemon-boot-telemetryd.jar
