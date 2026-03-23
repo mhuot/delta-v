@@ -1,73 +1,68 @@
-##
-# Makefile to build OpenNMS docs
-##
-.PHONY: help docs docs-docker docs-deps docs-deps-docker docs-serve docs-serve-stop docs-clean docs-clean-cache clean-all
+# ==============================================================================
+# OpenNMS Build Facade
+#
+# Usage:
+#   make build              Compile and install (tests skipped)
+#   make test               Build and run all tests
+#   make assemble           Assemble distribution (default profile)
+#   make assemble PROFILE=dir|full|fulldir
+#
+# Overridable variables (set on command line or in environment):
+#   PROFILE      Assembly profile: default | dir | full | fulldir (default: dir)
+#   MAVEN_FLAGS  Extra Maven flags (default: -DskipTests -B)
+#   MAVEN_OPTS   JVM options for Maven (has a sensible default below)
+# ==============================================================================
 
-.DEFAULT_GOAL := docs
+PROFILE     ?= dir
+MAVEN_FLAGS ?= -DskipTests -B
+MAVEN_OPTS  ?= -Xmx3g \
+               -XX:ReservedCodeCacheSize=512m \
+               -XX:+TieredCompilation \
+               -XX:TieredStopAtLevel=1 \
+               -XX:-UseGCOverheadLimit \
+               -XX:+UseParallelGC \
+               -XX:-MaxFDLimit \
+               -Djdk.util.zip.disableZip64ExtraFieldValidation=true \
+               -Dmaven.wagon.http.retryHandler.count=3
 
-SHELL                := /bin/bash -o nounset -o pipefail -o errexit
-WORKING_DIRECTORY    := $(shell pwd)
-DOCKER_ANTORA_IMAGE  := opennms/antora:3.1.4-b10433
-SITE_FILE            := antora-playbook-local.yml
+MVN         := ./mvnw
+COMMON      := -Djava.awt.headless=true \
+               -Daether.connector.resumeDownloads=false \
+               -Daether.connector.basic.threads=1 \
+               -Droot.dir=$(CURDIR)
 
-help:
+export MAVEN_OPTS
+
+.PHONY: help build test assemble clean
+
+.DEFAULT_GOAL := help
+
+help: ## Show this help
+	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) \
+	  | awk 'BEGIN {FS = ":.*##"}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
 	@echo ""
-	@echo "Makefile to build artifacts for OpenNMS"
-	@echo ""
-	@echo "Requirements to build the docs:"
-	@echo "  * Native: Antora installed globally with antora binary in the search path"
-	@echo "  * Docker: Docker installed with access to the official antora/antora image on DockerHub"
-	@echo ""
-	@echo "Targets:"
-	@echo "  help:             Show this help"
-	@echo "  docs-deps:        Test requirements to run Antora from the local system"
-	@echo "  docs-deps-docker: Test requirements to run Antora with Docker"
-	@echo "  docs:             Build Antora docs with a local install Antora, default target"
-	@echo "  docs-docker:      Build Antora docs with from Docker"
-	@echo "  docs-clean:       Clean all build artifacts in build and public directory"
-	@echo "  docs-clean-cache: Clear git repository cache and UI components from .cache directory"
-	@echo "  clean-all:        Clean build artifacts and Antora cache"
-	@echo "  docs-serve:       Run a local web server with Docker and Nginx to serve the docs locally"
-	@echo "  docs-serve-stop:  Stop the local web server for serving the docs"
-	@echo ""
-	@echo "Arguments: "
-	@echo "  DOCKER_ANTORA_IMAGE: Antora Docker image to build the documentation, default: $(DOCKER_ANTORA_IMAGE)"
-	@echo "  SITE_FILE:           Antora site.yml file to build the site"
-	@echo ""
-	@echo "Example: "
-	@echo "  make DOCKER_ANTORA_IMAGE=antora/antora:latest with-docker"
-	@echo ""
+	@echo "Variables (override on command line):"
+	@echo "  PROFILE      Assembly profile: default | dir | full | fulldir  (current: $(PROFILE))"
+	@echo "  MAVEN_FLAGS  Extra Maven flags                                  (current: $(MAVEN_FLAGS))"
+	@echo "  MAVEN_OPTS   JVM options passed to Maven"
 
-deps-docs:
-	@command -v antora
+build: ## Compile and package all modules (tests skipped)
+	$(MVN) $(MAVEN_FLAGS) $(COMMON) \
+	  -Dbuild.profile=default \
+	  install
 
-deps-docs-docker:
-	@command -v docker
+test: ## Build and run all tests (unit + integration)
+	$(MVN) -B $(COMMON) \
+	  -Dbuild.profile=default \
+	  -DskipTests=false \
+	  -DskipITs=false \
+	  verify
 
-docs: deps-docs
-	@echo "Build Antora docs..."
-	antora --stacktrace $(SITE_FILE)
+assemble: ## Assemble the distribution; set PROFILE=dir|full|fulldir (default: dir)
+	cd opennms-full-assembly && \
+	$(CURDIR)/mvnw $(MAVEN_FLAGS) $(COMMON) \
+	  -Dbuild.profile=$(PROFILE) \
+	  install
 
-docs-docker: deps-docs-docker
-	@echo "Build Antora docs with docker ..."
-	docker run --rm -v $(WORKING_DIRECTORY):/antora $(DOCKER_ANTORA_IMAGE) --stacktrace generate $(SITE_FILE)
-
-docs-clean:
-	@echo "Delete build and public artifacts ..."
-	@rm -rf build public
-
-docs-clean-cache:
-	@echo "Clean Antora cache for git repositories and UI components ..."
-	@rm -rf .cache
-
-clean-all: docs-clean docs-clean-cache
-
-docs-serve:
-	@echo "Start Nginx with public folder as html root ..."
-	docker run --rm -v $(WORKING_DIRECTORY)/public:/usr/share/nginx/html --name opennms-docs -p 8080:80 -d nginx
-
-docs-serve-stop:
-	@echo "Stopping Nginx docs server ..."
-	docker stop opennms-docs
-
-clean-all: docs-clean docs-clean-cache
+clean: ## Remove all build artifacts
+	$(MVN) -B clean
