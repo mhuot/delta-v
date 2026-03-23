@@ -139,7 +139,7 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-dao</artifactId>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.opennms.features.config</groupId>
@@ -193,11 +193,6 @@
         <dependency>
             <groupId>org.opennms.features.enlinkd</groupId>
             <artifactId>org.opennms.features.enlinkd.service.api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.opennms</groupId>
-            <artifactId>opennms-dao</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.opennms.features.topologies</groupId>

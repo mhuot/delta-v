@@ -26,7 +26,8 @@ MAVEN_OPTS  ?= -Xmx3g \
                -Dmaven.wagon.http.retryHandler.count=3
 
 MVN         := ./mvnw
-COMMON      := -Djava.awt.headless=true \
+COMMON      := --color=always \
+               -Djava.awt.headless=true \
                -Daether.connector.resumeDownloads=false \
                -Daether.connector.basic.threads=1 \
                -Droot.dir=$(CURDIR)

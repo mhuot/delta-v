@@ -283,19 +283,6 @@
              EventConfEnrichmentService and declares the opennms-config dependency
              with appropriate exclusions. No direct dep needed here. -->
 
-        <!-- javax.persistence API — needed at runtime so that Spring's class scanner
-             can read legacy entity bytecodes without NoClassDefFoundError.
-             The legacy opennms-model classes reference javax.persistence annotations
-             and share the same package as the Jakarta entities. Spring 7's
-             PersistenceManagedTypesScanner reads all class metadata and fails if
-             javax.persistence types are absent. Only jakarta.persistence entities
-             will be registered with Hibernate 7. -->
-        <dependency>
-            <groupId>javax.persistence</groupId>
-            <artifactId>javax.persistence-api</artifactId>
-            <version>2.2</version>
-        </dependency>
-
         <!-- SLF4J 2.x — must be explicit to override old 1.7.x from transitive deps -->
         <dependency>
             <groupId>org.slf4j</groupId>
