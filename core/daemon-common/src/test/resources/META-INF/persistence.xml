@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence
+             https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
+             version="3.0">
+
+    <persistence-unit name="test-criteria" transaction-type="RESOURCE_LOCAL">
+        <class>org.opennms.core.daemon.common.JpaCriteriaConverterTest$TestItem</class>
+        <properties>
+            <property name="jakarta.persistence.jdbc.driver" value="org.h2.Driver"/>
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:h2:mem:testcriteria;DB_CLOSE_DELAY=-1"/>
+            <property name="jakarta.persistence.jdbc.user" value="sa"/>
+            <property name="jakarta.persistence.jdbc.password" value=""/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
+            <property name="hibernate.show_sql" value="false"/>
+            <!-- Disable Jackson-based JSON format mapper — avoids classpath conflict
+                 with jackson-module-scala 2.16.x from Kafka vs Jackson 2.19.x -->
+            <property name="hibernate.type.json_format_mapper" value="org.hibernate.type.format.jaxb.JaxbXmlFormatMapper"/>
+        </properties>
+    </persistence-unit>
+</persistence>
