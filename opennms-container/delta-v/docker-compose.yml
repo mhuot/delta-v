@@ -157,7 +157,7 @@ services:
 
   collectd:
     profiles: [lite, full]
-    image: opennms/daemon-deltav:${VERSION}
+    image: opennms/daemon-deltav-springboot:${VERSION}
     container_name: delta-v-collectd
     hostname: collectd
     depends_on:
@@ -165,30 +165,24 @@ services:
         condition: service_completed_successfully
       kafka:
         condition: service_healthy
+    command: ["java", "-Xms512m", "-Xmx1g",
+              "-Dorg.opennms.tsid.node-id=5",
+              "-jar", "/opt/daemon-boot-collectd.jar"]
     environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_USER: opennms
-      POSTGRES_PASSWORD: opennms
-      POSTGRES_DB: opennms
-      JAVA_OPTS: >-
-        -Xms512m -Xmx1g
-        -XX:MaxMetaspaceSize=512m
-        -Djava.security.egd=file:/dev/./urandom
-        -Dorg.opennms.tsid.node-id=5
-        -Dorg.opennms.core.ipc.rpc.kafka.bootstrap.servers=kafka:9092
-        -Dorg.opennms.core.ipc.rpc.force-remote=true
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
+      SPRING_DATASOURCE_USERNAME: opennms
+      SPRING_DATASOURCE_PASSWORD: opennms
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      OPENNMS_HOME: /opt/deltav
+      OPENNMS_TIMESERIES_STRATEGY: inmemory
     volumes:
-      - collectd-data:/opt/sentinel/data
-      - ./collectd-daemon-overlay/etc:/opt/sentinel-etc-overlay:ro
-    ports:
-      - "8104:8181"
+      - ./collectd-daemon-overlay/etc:/opt/deltav/etc:ro
+    stop_grace_period: 60s
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf -u admin:admin http://localhost:8181/sentinel/rest/health/probe || exit 1"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
       interval: 15s
-      timeout: 10s
-      retries: 20
-      start_period: 60s
+      timeout: 5s
+      retries: 10
 
   discovery:
     profiles: [passive, full]

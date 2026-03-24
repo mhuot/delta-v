@@ -22,3 +22,4 @@ COPY staging/daemon/daemon-boot-pollerd.jar /opt/daemon-boot-pollerd.jar
 COPY staging/daemon/daemon-boot-perspectivepollerd.jar /opt/daemon-boot-perspectivepollerd.jar
 COPY staging/daemon/daemon-boot-telemetryd.jar /opt/daemon-boot-telemetryd.jar
 COPY staging/daemon/daemon-boot-enlinkd.jar /opt/daemon-boot-enlinkd.jar
+COPY staging/daemon/daemon-boot-collectd.jar /opt/daemon-boot-collectd.jar
