@@ -258,8 +258,20 @@ Per the Enlinkd migration lesson: any Collectd service methods that call `flush(
 
 Collectd's `onEvent()` already wraps all handlers in `TransactionTemplate.execute()`, so the transaction boundary is explicit. Verify this still works correctly with Hibernate 7's session management.
 
+**JpaTransactionManager sharing:** Hibernate 7 (Jakarta) is stricter about session boundaries than Hibernate 3.6. `CollectdJpaConfiguration` must define a `JpaTransactionManager` that is correctly shared between the `TransactionTemplate` (used by event handlers) and all Spring-managed DAOs. A mismatch would cause detached-entity errors or silent session leaks.
+
 ## Known Risks
 
-### `findMatching()` Blocker
+### `findMatching()` Blocker (High Risk — Prerequisite)
 
-`AbstractDaoJpa.findMatching()` is unimplemented in the Jakarta DAO layer (tracked in project memory: `project_findmatching_blocker.md`). Collectd uses DAO queries to find collection-eligible interfaces. This blocker affects all daemons — it must be resolved before Collectd E2E tests can pass. It is not Collectd-specific but is the most likely failure point during integration testing.
+`AbstractDaoJpa.findMatching()` is unimplemented in the Jakarta DAO layer (tracked in project memory: `project_findmatching_blocker.md`). Collectd's `onInit()` and interface scheduling logic rely heavily on complex criteria queries to match nodes/interfaces against collection packages. Without a working `findMatching()`, Collectd will fail to schedule any collection.
+
+**Action:** Implement a JPA Criteria-based `findMatching()` in `opennms-model-jakarta` before or in parallel with this migration. This is a prerequisite for E2E validation, not just a risk.
+
+### LegacyScheduler Shutdown in Fat JAR Environment
+
+`DaemonSmartLifecycle.stop()` calls `Collectd.stop()` which calls `m_scheduler.stop()`. In a fat JAR with `stop_grace_period: 60s`, verify that `LegacyScheduler`'s thread pool actually drains within the grace period. `LegacyScheduler` doesn't always handle JVM signals gracefully — the `stop()` method should be tested to confirm threads terminate before SIGKILL.
+
+### `javax.persistence` Classpath Conflict
+
+`opennms-services` transitively pulls in legacy `hibernate-core` (3.6) and `hibernate-jpa-2.0-api`, which conflict with Hibernate 7's `jakarta.persistence`. **Solved pattern from Pollerd:** exclude `hibernate-core` and `hibernate-jpa-2.0-api` from all `opennms-services` transitive dependencies, then include `javax.persistence-api:2.2` at runtime scope so legacy `opennms-model` classes don't cause `ClassNotFoundException` during classpath scanning. Hibernate 7 ignores `javax.persistence` annotations; only `jakarta.persistence` entities from `opennms-model-jakarta` are registered.
