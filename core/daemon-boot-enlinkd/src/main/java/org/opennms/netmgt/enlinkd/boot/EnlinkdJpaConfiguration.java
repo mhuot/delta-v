@@ -66,6 +66,11 @@ import org.opennms.netmgt.model.OnmsSnmpInterface;
 import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.opennms.netmgt.model.jakarta.converter.InetAddressConverter;
+import org.opennms.netmgt.model.jakarta.converter.NodeLabelSourceConverter;
+import org.opennms.netmgt.model.jakarta.converter.NodeTypeConverter;
+import org.opennms.netmgt.model.jakarta.converter.OnmsSeverityConverter;
+import org.opennms.netmgt.model.jakarta.converter.PrimaryTypeConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.orm.jpa.persistenceunit.PersistenceManagedTypes;
@@ -100,6 +105,10 @@ public class EnlinkdJpaConfiguration {
      * Explicitly lists all Jakarta entity classes needed by Enlinkd:
      * core entities (Node, IpInterface, SnmpInterface, MonitoringLocation,
      * DistPoller, MonitoringSystem, Category) plus all 15 Enlinkd entities.
+     *
+     * <p>Converter classes are listed explicitly so Hibernate 7 registers
+     * {@code @Converter(autoApply=true)} converters (NodeType, PrimaryType,
+     * InetAddress, etc.) that map enum/custom types to DB column values.</p>
      */
     @Bean
     public PersistenceManagedTypes persistenceManagedTypes() {
@@ -130,7 +139,13 @@ public class EnlinkdJpaConfiguration {
             BridgeMacLink.class.getName(),
             BridgeStpLink.class.getName(),
             BridgeElement.class.getName(),
-            UserDefinedLink.class.getName()
+            UserDefinedLink.class.getName(),
+            // AttributeConverters (autoApply=true)
+            NodeTypeConverter.class.getName(),
+            PrimaryTypeConverter.class.getName(),
+            InetAddressConverter.class.getName(),
+            NodeLabelSourceConverter.class.getName(),
+            OnmsSeverityConverter.class.getName()
         );
     }
 

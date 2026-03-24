@@ -27,6 +27,11 @@ import org.opennms.netmgt.eventd.EventUtil;
 import org.opennms.netmgt.model.OnmsDistPoller;
 import org.opennms.netmgt.model.OnmsMonitoringSystem;
 import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
+import org.opennms.netmgt.model.jakarta.converter.InetAddressConverter;
+import org.opennms.netmgt.model.jakarta.converter.NodeLabelSourceConverter;
+import org.opennms.netmgt.model.jakarta.converter.NodeTypeConverter;
+import org.opennms.netmgt.model.jakarta.converter.OnmsSeverityConverter;
+import org.opennms.netmgt.model.jakarta.converter.PrimaryTypeConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -79,7 +84,13 @@ public class TelemetrydJpaConfiguration {
         return PersistenceManagedTypes.of(
             OnmsMonitoringSystem.class.getName(),
             OnmsMonitoringLocation.class.getName(),
-            OnmsDistPoller.class.getName()
+            OnmsDistPoller.class.getName(),
+            // AttributeConverters (autoApply=true)
+            NodeTypeConverter.class.getName(),
+            PrimaryTypeConverter.class.getName(),
+            InetAddressConverter.class.getName(),
+            NodeLabelSourceConverter.class.getName(),
+            OnmsSeverityConverter.class.getName()
         );
     }
 
