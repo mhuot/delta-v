@@ -233,13 +233,8 @@ public class CollectdDaemonConfiguration {
         return new StatisticsCollectorImpl(Runtime.getRuntime().availableProcessors());
     }
 
-    /**
-     * Codahale MetricRegistry for time series persistence metrics.
-     */
-    @Bean
-    public MetricRegistry timeseriesMetricRegistry() {
-        return new MetricRegistry();
-    }
+    // Reuse kafkaRpcMetricRegistry from daemon-common — no separate MetricRegistry needed.
+    // Having two MetricRegistry beans causes autowiring ambiguity in KafkaRpcClientFactory.
 
     /**
      * Cache configuration for meta-tag resolution in the persister.
@@ -279,11 +274,11 @@ public class CollectdDaemonConfiguration {
                                               StatisticsCollector statisticsCollector,
                                               TimeseriesStorageManager timeseriesStorageManager,
                                               CacheConfig timeseriesPersisterMetaTagCache,
-                                              MetricRegistry timeseriesMetricRegistry,
+                                              MetricRegistry kafkaRpcMetricRegistry,
                                               TimeseriesWriterConfig timeseriesWriterConfig) {
         return new TimeseriesPersisterFactory(metaTagDataLoader, statisticsCollector,
                 timeseriesStorageManager, timeseriesPersisterMetaTagCache,
-                timeseriesMetricRegistry, timeseriesWriterConfig);
+                kafkaRpcMetricRegistry, timeseriesWriterConfig);
     }
 
     // ===================================================================

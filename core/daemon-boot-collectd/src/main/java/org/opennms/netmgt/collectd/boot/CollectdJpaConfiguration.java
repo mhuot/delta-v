@@ -30,6 +30,7 @@ import org.opennms.netmgt.dao.api.SessionUtils;
 import org.opennms.netmgt.eventd.EventUtil;
 import org.opennms.netmgt.filter.FilterDaoFactory;
 import org.opennms.netmgt.filter.JdbcFilterDao;
+import org.opennms.netmgt.model.OnmsApplication;
 import org.opennms.netmgt.model.OnmsCategory;
 import org.opennms.netmgt.model.OnmsDistPoller;
 import org.opennms.netmgt.model.OnmsIpInterface;
@@ -114,6 +115,7 @@ public class CollectdJpaConfiguration {
             OnmsDistPoller.class.getName(),
             OnmsCategory.class.getName(),
             OnmsSnmpInterface.class.getName(),
+            OnmsApplication.class.getName(),
             // AttributeConverters (autoApply=true)
             NodeTypeConverter.class.getName(),
             PrimaryTypeConverter.class.getName(),
