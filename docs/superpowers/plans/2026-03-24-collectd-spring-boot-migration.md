@@ -33,7 +33,7 @@
 |------|--------|
 | `core/pom.xml:48` | Add `<module>daemon-boot-collectd</module>` after `daemon-boot-enlinkd` |
 | `opennms-container/delta-v/Dockerfile.springboot:24` | Add `COPY` for collectd JAR |
-| `opennms-container/delta-v/docker-compose.yml:158-188` | Replace Karaf-based collectd service with Spring Boot service |
+| `opennms-container/delta-v/docker-compose.yml:158-191` | Replace Karaf-based collectd service with Spring Boot service |
 
 ---
 
@@ -47,7 +47,7 @@
 
 Use `core/daemon-boot-pollerd/pom.xml` as template. Key differences from Pollerd:
 - `artifactId`: `org.opennms.core.daemon-boot-collectd`
-- Replace Pollerd-specific deps (`poller.client-rpc`, `daemon-loader-pollerd`, `icmp.proxy.rpc-impl`, `ipc.twin.kafka.publisher`, `kv-store.json.noop`) with Collectd-specific deps:
+- Replace Pollerd-specific deps (`poller.client-rpc`, `daemon-loader-pollerd`, `icmp.proxy.rpc-impl`, `ipc.twin.kafka.publisher`) with Collectd-specific deps. Keep `kv-store.json.noop` (needed for `NoOpJsonStore` in `pollOutagesDao`):
   - `org.opennms.features.collection:org.opennms.features.collection.client-rpc` (LocationAwareCollectorClientImpl, CollectorClientRpcModule)
   - `org.opennms.core.daemon:org.opennms.core.daemon-loader-collectd` (LocalServiceCollectorRegistry)
   - `org.opennms.features.collection:org.opennms.features.collection.snmp-collector` (SnmpCollector)
@@ -371,11 +371,23 @@ public PersisterFactory persisterFactory(MetaTagDataLoader metaTagDataLoader,
 }
 ```
 
-**6. No-op thresholding:**
+**6. No-op thresholding (same anonymous class pattern as Pollerd):**
 ```java
 @Bean
 public ThresholdingService thresholdingService() {
-    return (nodeId, ipAddress, serviceName, params) -> null;
+    return new ThresholdingService() {
+        @Override
+        public ThresholdingSession createSession(int nodeId, String hostAddress,
+                String serviceName, ServiceParameters serviceParameters)
+                throws ThresholdInitializationException {
+            return null;
+        }
+
+        @Override
+        public ThresholdingSetPersister getThresholdingSetPersister() {
+            return null;
+        }
+    };
 }
 ```
 
@@ -390,22 +402,18 @@ public Collectd collectd(EventIpcManager eventIpcManager) {
 ```
 All `@Autowired` fields on Collectd (`CollectdConfigFactory`, `IpInterfaceDao`, `FilterDao`, `ServiceCollectorRegistry`, `LocationAwareCollectorClient`, `TransactionTemplate`, `NodeDao`, `PersisterFactory`, `ThresholdingService`, `ReadablePollOutagesDao`, `EntityScopeProvider`) are satisfied by beans defined in this config, JpaConfiguration, RpcConfiguration, or daemon-common.
 
-**8. Event listener adapter:**
-```java
-@Bean
-public AnnotationBasedEventListenerAdapter collectdEventListener(Collectd collectd, EventIpcManager eventIpcManager) {
-    AnnotationBasedEventListenerAdapter adapter = new AnnotationBasedEventListenerAdapter(collectd, eventIpcManager);
-    return adapter;
-}
-```
+**8. Event registration:**
+
+No `AnnotationBasedEventListenerAdapter` needed. Collectd implements `EventListener` directly and self-registers via `getEventIpcManager().addEventListener(this, ueiList)` in its `onInit()` method. The `EventIpcManager` bean (provided by daemon-common's Kafka event transport) is injected via the `setEventIpcManager()` setter on the Collectd bean above. This matches how Pollerd handles its own event registration — Poller creates `PollerEventProcessor` internally during `init()`.
 
 **9. Lifecycle:**
 ```java
 @Bean
 public SmartLifecycle collectdLifecycle(Collectd collectd) {
-    return new DaemonSmartLifecycle(collectd, Integer.MAX_VALUE);
+    return new DaemonSmartLifecycle(collectd);
 }
 ```
+`DaemonSmartLifecycle` has a single-arg constructor; phase `Integer.MAX_VALUE` is hardcoded internally (starts last, stops first).
 
 - [ ] **Step 2: Verify compilation**
 
@@ -471,6 +479,8 @@ opennms:
     strategy: ${OPENNMS_TIMESERIES_STRATEGY:inmemory}
 ```
 
+**Note:** No `logback-spring.xml` or `META-INF/jakarta-rename.properties` needed — Pollerd doesn't have them either. Spring Boot's default logging and no XML namespace remapping required.
+
 - [ ] **Step 2: Commit**
 
 ```bash
@@ -520,7 +530,7 @@ git commit -m "fix(collectd): resolve build/classpath issues"
 
 **Files:**
 - Modify: `opennms-container/delta-v/Dockerfile.springboot:24`
-- Modify: `opennms-container/delta-v/docker-compose.yml:158-188`
+- Modify: `opennms-container/delta-v/docker-compose.yml:158-191`
 
 - [ ] **Step 1: Add JAR to Dockerfile.springboot**
 
@@ -531,7 +541,7 @@ COPY staging/daemon/daemon-boot-collectd.jar /opt/daemon-boot-collectd.jar
 
 - [ ] **Step 2: Replace Karaf-based collectd service in docker-compose.yml**
 
-Replace the existing `collectd:` service definition (lines 158-188) with the Spring Boot version:
+Replace the existing `collectd:` service definition (lines 158-191) with the Spring Boot version:
 
 ```yaml
   collectd:
