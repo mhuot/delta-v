@@ -29,30 +29,6 @@
       <includes><include>org.opennms.features:root-webapp:war:${project.version}</include></includes>
     </dependencySet>
 
-    <!-- OpenNMS webapp -->
-    <dependencySet>
-      <unpack>true</unpack>
-      <unpackOptions>
-        <excludes>
-          <exclude>index.html</exclude>
-        </excludes>
-      </unpackOptions>
-      <useProjectArtifact>false</useProjectArtifact>
-      <useStrictFiltering>true</useStrictFiltering>
-      <useTransitiveDependencies>false</useTransitiveDependencies>
-      <outputDirectory>jetty-webapps/opennms</outputDirectory>
-      <includes><include>org.opennms.assemblies:org.opennms.assemblies.webapp-full:war:${project.version}</include></includes>
-    </dependencySet>
-    <dependencySet>
-      <unpack>true</unpack>
-      <unpackOptions><filtered>true</filtered></unpackOptions>
-      <useProjectArtifact>false</useProjectArtifact>
-      <useStrictFiltering>true</useStrictFiltering>
-      <useTransitiveDependencies>false</useTransitiveDependencies>
-      <outputDirectory>jetty-webapps/opennms/META-INF</outputDirectory>
-      <outputFileNameMapping></outputFileNameMapping>
-      <includes><include>org.opennms:opennms-webapp:tar.gz:meta-inf:${project.version}</include></includes>
-    </dependencySet>
   </dependencySets>
   <fileSets>
     <!-- Copy Hawtio to jetty-webapps -->

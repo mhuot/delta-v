@@ -23,8 +23,7 @@
             </goals>
             <configuration>
               <!-- To load the jar file into jaspersoft studio it is required to be Java 8 compatible -->
-              <source>1.8</source>
-              <target>1.8</target>
+              <release>8</release>
             </configuration>
           </execution>
         </executions>

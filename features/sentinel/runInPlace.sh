@@ -6,7 +6,7 @@ set -e
 # Inclue the bundled Maven in the $PATH
 MYDIR=$(dirname "$0")
 MYDIR=$(cd "$MYDIR"; pwd)
-PATH="$MYDIR/../..:$MYDIR/../../bin:$MYDIR/../../maven/bin:$PATH"
+PATH="$MYDIR/../..:$MYDIR/../../bin:$PATH"
 CONTAINERDIR="${MYDIR}/../container/sentinel"
 JAVA_OPTS="-Xmx2g -Djdk.util.zip.disableZip64ExtraFieldValidation=true"
 

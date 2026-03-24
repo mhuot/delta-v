@@ -24,22 +24,25 @@ The project ships its own Maven in `maven/bin/mvn`. The `compile.pl` and `assemb
 
 ```bash
 # Full compile (skip tests for speed)
-./compile.pl -DskipTests
+make build
 
 # Assemble for local running (dir profile = run from target/)
-./assemble.pl -p dir -DskipTests
+make assemble
 
 # Build a single module and its dependencies
-./compile.pl -DskipTests --projects :opennms-dao -am install
+make module MODULE=:opennms-dao
 
 # Build everything that depends on a changed module
-./compile.pl -DskipTests --projects :opennms-dao -amd install
+make dependents MODULE=:opennms-dao
 
 # Build modules matching a grep pattern
 ./compile.pl -DskipTests --projects $(tools/development/grep-pom-artifact.sh -i jdom) install
 
-# Run a single test class
-./compile.pl -T org.opennms.netmgt.dao.SomeTest --projects :opennms-dao -am install
+# Run a single unit test class
+make test-class MODULE=:opennms-dao TEST=SomeDaoTest
+
+# Run a single integration test class
+make test-class MODULE=:opennms-dao TEST=SomeDaoIT
 
 # Run tests determined by changed files (CI-style)
 ./runtests.sh
@@ -48,13 +51,10 @@ The project ships its own Maven in `maven/bin/mvn`. The `compile.pl` and `assemb
 cd ui && pnpm install && pnpm build && pnpm test
 ```
 
-### compile.pl / assemble.pl flags
-- `-DskipTests` — skip all tests
-- `-p dir|full|fulldir` — assembly profile
-- `-t` / `--enable-tests` — enable integration tests
-- `-T CLASS` / `--single-test CLASS` — run a single test
-- `-v` / `--verbose` — debug logging
-- `-j DIR` — set JAVA_HOME
+### make goals
+```bash
+make help
+```
 
 ### Local development quick start
 ```bash

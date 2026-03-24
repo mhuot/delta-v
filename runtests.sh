@@ -4,7 +4,7 @@ MYDIR="$(dirname "$0")"
 TOPDIR="$(cd "$MYDIR"; pwd)"
 
 # Make sure at least one Maven is in the path
-PATH="$PATH:$TOPDIR/maven/bin"
+PATH="$PATH:$TOPDIR"
 
 set -e
 set -o pipefail
