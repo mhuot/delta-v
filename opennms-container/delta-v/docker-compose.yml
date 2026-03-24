@@ -1,8 +1,8 @@
 ---
-# Delta-V: OpenNMS microservice-mode deployment (19 services)
+# Delta-V: OpenNMS microservice-mode deployment (18 services)
 # db-init (schema migration, runs once) + Webapp + Minion
-# + Alarmd + Pollerd + Collectd + Rtcd
-# + Discovery + Trapd + Syslogd + Ticketer + EventTranslator + Enlinkd + Scriptd
+# + Alarmd + Pollerd + Collectd
+# + Discovery + Trapd + Syslogd + EventTranslator + Enlinkd
 # + Provisiond + Bsmd + PerspectivePollerd + Telemetryd
 #
 # Images: Uses Delta-V layered images (opennms/*-deltav) which bake all
@@ -349,37 +349,6 @@ services:
       kafka:
         condition: service_started
 
-  scriptd:
-    profiles: [full]
-    image: opennms/daemon-deltav:${VERSION}
-    container_name: delta-v-scriptd
-    hostname: scriptd
-    depends_on:
-      db-init:
-        condition: service_completed_successfully
-      kafka:
-        condition: service_healthy
-    environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_USER: opennms
-      POSTGRES_PASSWORD: opennms
-      POSTGRES_DB: opennms
-      JAVA_OPTS: >-
-        -Xms256m -Xmx512m
-        -XX:MaxMetaspaceSize=256m
-        -Djava.security.egd=file:/dev/./urandom
-        -Dorg.opennms.tsid.node-id=15
-    volumes:
-      - scriptd-data:/opt/sentinel/data
-      - ./scriptd-overlay/etc:/opt/sentinel-etc-overlay:ro
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf -u admin:admin http://localhost:8181/sentinel/rest/health/probe || exit 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 20
-      start_period: 60s
-
   provisiond:
     profiles: [lite, passive, full]
     image: opennms/daemon-deltav-springboot:${VERSION}
@@ -541,4 +510,3 @@ volumes:
   kafkadata:
   minion-data:
   collectd-data:
-  scriptd-data:
