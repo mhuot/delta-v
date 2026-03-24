@@ -303,7 +303,8 @@ public class NodeDaoJpa extends AbstractDaoJpa<OnmsNode, Integer> implements Nod
 
     @Override
     public OnmsNode getDefaultFocusPoint() {
-        throw new UnsupportedOperationException("getDefaultFocusPoint() is not used by Alarmd");
+        var results = findAll();
+        return results.isEmpty() ? null : results.get(0);
     }
 
     @Override

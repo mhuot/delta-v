@@ -36,7 +36,7 @@ import org.opennms.netmgt.model.OnmsNode.NodeType;
  *
  * <p>Usage: {@code @Convert(converter = NodeTypeConverter.class)}</p>
  */
-@Converter
+@Converter(autoApply = true)
 public class NodeTypeConverter implements AttributeConverter<NodeType, String> {
 
     @Override

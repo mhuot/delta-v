@@ -21,7 +21,7 @@
  */
 package org.opennms.netmgt.alarmd.boot;
 
-import java.util.List;
+
 
 import org.opennms.core.daemon.common.DaemonSmartLifecycle;
 import org.opennms.netmgt.dao.api.AlarmEntityNotifier;
@@ -48,6 +48,11 @@ import org.opennms.netmgt.model.OnmsServiceType;
 import org.opennms.netmgt.model.OnmsApplication;
 import org.opennms.netmgt.model.OnmsSnmpInterface;
 import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
+import org.opennms.netmgt.model.jakarta.converter.InetAddressConverter;
+import org.opennms.netmgt.model.jakarta.converter.NodeLabelSourceConverter;
+import org.opennms.netmgt.model.jakarta.converter.NodeTypeConverter;
+import org.opennms.netmgt.model.jakarta.converter.OnmsSeverityConverter;
+import org.opennms.netmgt.model.jakarta.converter.PrimaryTypeConverter;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
@@ -111,7 +116,13 @@ public class AlarmdConfiguration {
             OnmsServiceType.class.getName(),
             OnmsSnmpInterface.class.getName(),
             OnmsMonitoringLocation.class.getName(),
-            OnmsApplication.class.getName()
+            OnmsApplication.class.getName(),
+            // AttributeConverters (autoApply=true)
+            NodeTypeConverter.class.getName(),
+            PrimaryTypeConverter.class.getName(),
+            InetAddressConverter.class.getName(),
+            NodeLabelSourceConverter.class.getName(),
+            OnmsSeverityConverter.class.getName()
         );
     }
 

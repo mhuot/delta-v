@@ -132,19 +132,14 @@ public abstract class AbstractDaoJpa<T, K extends Serializable> implements OnmsD
 
     @Override
     public List<T> findMatching(Criteria criteria) {
-        // A full JpaCriteriaConverter that translates OpenNMS Criteria to JPA
-        // CriteriaBuilder predicates is not yet implemented. Subclass DAOs should
-        // use HQL via find()/findUnique() for now.
-        throw new UnsupportedOperationException(
-                "findMatching not yet implemented in AbstractDaoJpa — "
-                + "subclass DAOs should use HQL via find()/findUnique() instead");
+        JpaCriteriaConverter converter = new JpaCriteriaConverter(entityManager);
+        return converter.convert(criteria, entityClass).getResultList();
     }
 
     @Override
     public int countMatching(Criteria criteria) {
-        throw new UnsupportedOperationException(
-                "countMatching not yet implemented in AbstractDaoJpa — "
-                + "subclass DAOs should use HQL via queryInt() instead");
+        JpaCriteriaConverter converter = new JpaCriteriaConverter(entityManager);
+        return converter.convertForCount(criteria, entityClass).getSingleResult().intValue();
     }
 
     @Override

@@ -11,4 +11,8 @@
                    import-url-resource="file:///opt/deltav/etc/imports/cloud-services.xml">
     <cron-schedule>0/30 * * * * ?</cron-schedule>
   </requisition-def>
+  <requisition-def import-name="mhuot-labs"
+                   import-url-resource="file:///opt/deltav/etc/imports/mhuot-labs.xml">
+    <cron-schedule>0/30 * * * * ?</cron-schedule>
+  </requisition-def>
 </provisiond-configuration>

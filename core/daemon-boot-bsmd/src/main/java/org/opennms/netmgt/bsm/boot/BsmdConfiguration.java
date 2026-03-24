@@ -67,6 +67,11 @@ import org.opennms.netmgt.model.OnmsReductionKeyMemo;
 import org.opennms.netmgt.model.OnmsServiceType;
 import org.opennms.netmgt.model.OnmsSnmpInterface;
 import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
+import org.opennms.netmgt.model.jakarta.converter.InetAddressConverter;
+import org.opennms.netmgt.model.jakarta.converter.NodeLabelSourceConverter;
+import org.opennms.netmgt.model.jakarta.converter.NodeTypeConverter;
+import org.opennms.netmgt.model.jakarta.converter.OnmsSeverityConverter;
+import org.opennms.netmgt.model.jakarta.converter.PrimaryTypeConverter;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.SmartLifecycle;
@@ -154,7 +159,13 @@ public class BsmdConfiguration {
             IgnoreEntity.class.getName(),
             DecreaseEntity.class.getName(),
             IncreaseEntity.class.getName(),
-            SetToEntity.class.getName()
+            SetToEntity.class.getName(),
+            // AttributeConverters (autoApply=true)
+            NodeTypeConverter.class.getName(),
+            PrimaryTypeConverter.class.getName(),
+            InetAddressConverter.class.getName(),
+            NodeLabelSourceConverter.class.getName(),
+            OnmsSeverityConverter.class.getName()
         );
     }
 

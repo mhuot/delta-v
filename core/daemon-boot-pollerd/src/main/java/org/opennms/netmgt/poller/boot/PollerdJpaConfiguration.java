@@ -59,6 +59,11 @@ import org.opennms.netmgt.threshd.api.ThresholdInitializationException;
 import org.opennms.netmgt.threshd.api.ThresholdingService;
 import org.opennms.netmgt.threshd.api.ThresholdingSession;
 import org.opennms.netmgt.threshd.api.ThresholdingSetPersister;
+import org.opennms.netmgt.model.jakarta.converter.InetAddressConverter;
+import org.opennms.netmgt.model.jakarta.converter.NodeLabelSourceConverter;
+import org.opennms.netmgt.model.jakarta.converter.NodeTypeConverter;
+import org.opennms.netmgt.model.jakarta.converter.OnmsSeverityConverter;
+import org.opennms.netmgt.model.jakarta.converter.PrimaryTypeConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -123,7 +128,13 @@ public class PollerdJpaConfiguration {
             OnmsDistPoller.class.getName(),
             OnmsCategory.class.getName(),
             OnmsSnmpInterface.class.getName(),
-            OnmsApplication.class.getName()
+            OnmsApplication.class.getName(),
+            // AttributeConverters (autoApply=true)
+            NodeTypeConverter.class.getName(),
+            PrimaryTypeConverter.class.getName(),
+            InetAddressConverter.class.getName(),
+            NodeLabelSourceConverter.class.getName(),
+            OnmsSeverityConverter.class.getName()
         );
     }
 

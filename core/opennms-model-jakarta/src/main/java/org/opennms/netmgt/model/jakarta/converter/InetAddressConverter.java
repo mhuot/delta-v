@@ -37,7 +37,7 @@ import org.opennms.core.utils.InetAddressUtils;
  *
  * <p>Usage: {@code @Convert(converter = InetAddressConverter.class)}</p>
  */
-@Converter
+@Converter(autoApply = true)
 public class InetAddressConverter implements AttributeConverter<InetAddress, String> {
 
     @Override

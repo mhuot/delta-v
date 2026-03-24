@@ -35,18 +35,19 @@ class AbstractDaoJpaTest {
     }
 
     @Test
-    void findMatchingThrowsUnsupported() {
+    void findMatchingRequiresEntityManager() {
         var dao = new TestDao();
-        assertThatThrownBy(() -> dao.findMatching(null))
-                .isInstanceOf(UnsupportedOperationException.class)
-                .hasMessageContaining("findMatching not yet implemented");
+        // Without a Spring context, entityManager is null — the converter constructor
+        // receives null and NPEs. This confirms findMatching() now delegates to
+        // JpaCriteriaConverter instead of throwing UnsupportedOperationException.
+        assertThatThrownBy(() -> dao.findMatching(new org.opennms.core.criteria.Criteria(String.class)))
+                .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    void countMatchingThrowsUnsupported() {
+    void countMatchingRequiresEntityManager() {
         var dao = new TestDao();
-        assertThatThrownBy(() -> dao.countMatching(null))
-                .isInstanceOf(UnsupportedOperationException.class)
-                .hasMessageContaining("countMatching not yet implemented");
+        assertThatThrownBy(() -> dao.countMatching(new org.opennms.core.criteria.Criteria(String.class)))
+                .isInstanceOf(NullPointerException.class);
     }
 }

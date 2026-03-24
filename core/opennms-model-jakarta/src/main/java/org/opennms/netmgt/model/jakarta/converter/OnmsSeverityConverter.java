@@ -35,7 +35,7 @@ import org.opennms.netmgt.model.OnmsSeverity;
  *
  * <p>Usage: {@code @Convert(converter = OnmsSeverityConverter.class)}</p>
  */
-@Converter
+@Converter(autoApply = true)
 public class OnmsSeverityConverter implements AttributeConverter<OnmsSeverity, Integer> {
 
     private static final int DEFAULT_SEVERITY_ID = OnmsSeverity.INDETERMINATE.getId();

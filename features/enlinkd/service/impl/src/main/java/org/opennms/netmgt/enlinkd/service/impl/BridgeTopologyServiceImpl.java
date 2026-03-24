@@ -147,6 +147,7 @@ public class BridgeTopologyServiceImpl extends TopologyServiceImpl implements Br
     }
     
     @Override
+    @Transactional
     public void store(BroadcastDomain domain, Date now) {
         for (SharedSegment segment : domain.getSharedSegments()) {
             segment.getDesignatedPort();
@@ -270,6 +271,7 @@ public class BridgeTopologyServiceImpl extends TopologyServiceImpl implements Br
     }
 
     @Override
+    @Transactional
     public void delete(int nodeid) {
         m_bridgeElementDao.deleteByNodeId(nodeid);
         m_bridgeElementDao.flush();
@@ -462,6 +464,7 @@ public class BridgeTopologyServiceImpl extends TopologyServiceImpl implements Br
     }
 
     @Override
+    @Transactional
     public void reconcile(int nodeId, Date now) {
         m_bridgeElementDao.deleteByNodeIdOlderThen(nodeId, now);
         m_bridgeElementDao.flush();
@@ -800,6 +803,7 @@ SEG:        for (SharedSegment segment : bmlsegments) {
     }
 
     @Override
+    @Transactional
     public void deletePersistedData() {
         m_bridgeElementDao.deleteAll();
         m_bridgeElementDao.flush();
