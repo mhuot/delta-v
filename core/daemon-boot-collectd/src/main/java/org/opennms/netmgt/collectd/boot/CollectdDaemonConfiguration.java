@@ -21,6 +21,7 @@
  */
 package org.opennms.netmgt.collectd.boot;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -35,8 +36,12 @@ import org.opennms.netmgt.collectd.Collectd;
 import org.opennms.netmgt.collectd.DefaultResourceTypeMapper;
 import org.opennms.netmgt.collectd.DefaultSnmpCollectionAgentFactory;
 import org.opennms.netmgt.config.CollectdConfigFactory;
+import org.opennms.netmgt.config.DataCollectionConfigFactory;
+import org.opennms.netmgt.config.DefaultDataCollectionConfigDao;
 import org.opennms.netmgt.config.DefaultResourceTypesDao;
 import org.opennms.netmgt.config.SnmpPeerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
 import org.opennms.netmgt.config.dao.outages.api.ReadablePollOutagesDao;
 import org.opennms.netmgt.config.dao.outages.impl.OnmsPollOutagesDao;
 import org.opennms.netmgt.dao.api.NodeDao;
@@ -118,6 +123,23 @@ public class CollectdDaemonConfiguration {
         LOG.info("Initializing SnmpPeerFactory");
         SnmpPeerFactory.init();
         return SnmpPeerFactory.getInstance();
+    }
+
+    /**
+     * Initializes the DataCollectionConfigFactory singleton.
+     * Loads datacollection-config.xml which defines SNMP OIDs and groups to collect.
+     */
+    @Bean
+    public DefaultDataCollectionConfigDao dataCollectionConfigDao(
+            @Value("${opennms.home:/opt/deltav}") String opennmsHome) throws IOException {
+        var configFile = new File(opennmsHome, "etc/datacollection-config.xml");
+        LOG.info("Initializing DataCollectionConfigFactory from {}", configFile);
+        var dao = new DefaultDataCollectionConfigDao();
+        dao.setConfigResource(new FileSystemResource(configFile));
+        dao.setConfigDirectory(new File(opennmsHome, "etc/datacollection").getAbsolutePath());
+        dao.afterPropertiesSet();
+        DataCollectionConfigFactory.setInstance(dao);
+        return dao;
     }
 
     // ===================================================================
