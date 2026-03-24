@@ -32,8 +32,11 @@ jobs:
           ulimit -n 65536 || true
           make build
 
-      - name: Run tests
-        run: make test
-
       - name: Assemble distribution
-        run: make assemble PROFILE=dir
+        run: make assemble
+
+      - name: Run unit tests
+        run: make unit-tests
+
+      - name: Run integration tests
+        run: make it-tests
