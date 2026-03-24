@@ -105,14 +105,26 @@ public class IpInterfaceDaoJpa extends AbstractDaoJpa<OnmsIpInterface, Integer> 
 
     @Override
     public List<OnmsIpInterface> findByServiceType(String svcName) {
-        throw new UnsupportedOperationException(
-                "IpInterfaceDaoJpa.findByServiceType not implemented — not required by Provisiond");
+        return entityManager().createQuery(
+                "select distinct ipInterface from OnmsIpInterface as ipInterface " +
+                "join ipInterface.monitoredServices as monSvc " +
+                "where monSvc.serviceType.name = :svcName", OnmsIpInterface.class)
+                .setParameter("svcName", svcName)
+                .getResultList();
     }
 
     @Override
     public List<OnmsIpInterface> findHierarchyByServiceType(String svcName) {
-        throw new UnsupportedOperationException(
-                "IpInterfaceDaoJpa.findHierarchyByServiceType not implemented — not required by Provisiond");
+        return entityManager().createQuery(
+                "select distinct ipInterface from OnmsIpInterface as ipInterface " +
+                "left join fetch ipInterface.node as node " +
+                "left join fetch node.assetRecord " +
+                "left join fetch ipInterface.node.snmpInterfaces as snmpIf " +
+                "left join fetch snmpIf.ipInterfaces " +
+                "join ipInterface.monitoredServices as monSvc " +
+                "where monSvc.serviceType.name = :svcName", OnmsIpInterface.class)
+                .setParameter("svcName", svcName)
+                .getResultList();
     }
 
     @Override
