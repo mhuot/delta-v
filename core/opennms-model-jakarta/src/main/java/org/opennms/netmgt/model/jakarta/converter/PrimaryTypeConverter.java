@@ -36,7 +36,7 @@ import org.opennms.netmgt.model.PrimaryType;
  *
  * <p>Usage: {@code @Convert(converter = PrimaryTypeConverter.class)}</p>
  */
-@Converter
+@Converter(autoApply = true)
 public class PrimaryTypeConverter implements AttributeConverter<PrimaryType, String> {
 
     @Override

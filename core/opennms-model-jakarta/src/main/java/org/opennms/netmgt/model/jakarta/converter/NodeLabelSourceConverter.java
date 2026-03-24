@@ -37,7 +37,7 @@ import org.opennms.netmgt.model.OnmsNode.NodeLabelSource;
  *
  * <p>Usage: {@code @Convert(converter = NodeLabelSourceConverter.class)}</p>
  */
-@Converter
+@Converter(autoApply = true)
 public class NodeLabelSourceConverter implements AttributeConverter<NodeLabelSource, String> {
 
     @Override
