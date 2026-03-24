@@ -1701,18 +1701,7 @@
 
     <runMailTests>true</runMailTests>
 
-    <!-- rpm specific -->
-    <rpm.install.dir>/opt/opennms</rpm.install.dir>
-    <rpm.build.executable>rpmbuild</rpm.build.executable>
-    <rpm.build.docs>1</rpm.build.docs>
-    <rpm.sign>false</rpm.sign>
-    <rpm.buildtests>false</rpm.buildtests>
-    <rpm.database.user>opennms</rpm.database.user>
-    <rpm.additional.args/>
-    <rpm.database.name>opennms</rpm.database.name>
-    <rpm.database.password>opennms</rpm.database.password>
-
-    <testcontainers.version>1.19.7</testcontainers.version>
+<testcontainers.version>1.19.7</testcontainers.version>
     <test.keystore>${project.build.directory}/test-keystore.jks</test.keystore>
     <test.storepass>opennms</test.storepass>
     <test.keyalias>opennms-keystore-key</test.keyalias>

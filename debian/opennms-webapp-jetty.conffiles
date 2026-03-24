@@ -1,8 +1,0 @@
-/opt/opennms/jetty-webapps/opennms/WEB-INF/applicationContext-common.xml
-/opt/opennms/jetty-webapps/opennms/WEB-INF/applicationContext-cxf-common.xml
-/opt/opennms/jetty-webapps/opennms/WEB-INF/applicationContext-cxf-rest-v1.xml
-/opt/opennms/jetty-webapps/opennms/WEB-INF/applicationContext-cxf-rest-v2.xml
-/opt/opennms/jetty-webapps/opennms/WEB-INF/applicationContext-spring-security.xml
-/opt/opennms/jetty-webapps/opennms/WEB-INF/dispatcher-servlet.xml
-/opt/opennms/jetty-webapps/opennms/WEB-INF/messages.xml
-/opt/opennms/jetty-webapps/opennms/WEB-INF/web.xml
