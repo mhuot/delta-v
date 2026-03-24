@@ -406,6 +406,8 @@ All `@Autowired` fields on Collectd (`CollectdConfigFactory`, `IpInterfaceDao`, 
 
 No `AnnotationBasedEventListenerAdapter` needed. Collectd implements `EventListener` directly and self-registers via `getEventIpcManager().addEventListener(this, ueiList)` in its `onInit()` method. The `EventIpcManager` bean (provided by daemon-common's Kafka event transport) is injected via the `setEventIpcManager()` setter on the Collectd bean above. This matches how Pollerd handles its own event registration — Poller creates `PollerEventProcessor` internally during `init()`.
 
+**Important:** Verify that the `EventIpcManager` injected is the Kafka-backed implementation from daemon-common (`KafkaEventIpcManagerAdapter`), NOT a `LocalEventIpcManager`. In the Karaf world, Collectd sometimes received a local dispatcher. In Delta-V, cross-service eventing requires the Kafka transport. The daemon-common auto-scan provides this — confirm by checking that `KafkaEventTransportConfiguration` is loaded (look for "Kafka event transport" in startup logs).
+
 **9. Lifecycle:**
 ```java
 @Bean
@@ -664,8 +666,11 @@ wait_for_health "collectd" "http://localhost:8080/actuator/health" 120
 echo "Checking Collectd scheduling..."
 if docker compose logs collectd 2>&1 | grep -q "scheduleInterface"; then
     echo "PASS: Collectd scheduled interfaces for collection"
+elif docker compose logs collectd 2>&1 | grep -q "No collection packages matched"; then
+    echo "FAIL: findMatching() blocker — no collection packages matched (AbstractDaoJpa.findMatching() unimplemented)"
+    echo "  This is the known prerequisite blocker. Collectd started but cannot schedule collection."
 else
-    echo "WARN: No scheduleInterface messages found (may need findMatching() fix)"
+    echo "WARN: No scheduleInterface messages found (check logs for errors)"
 fi
 
 # 3. Check collection cycles
