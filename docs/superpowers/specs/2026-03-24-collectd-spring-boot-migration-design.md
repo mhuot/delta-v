@@ -237,6 +237,8 @@ Wire Cortex as a Spring-discovered `TimeSeriesStorage` bean via `@ConditionalOnP
 
 5. **Phase 2: Layered JAR deduplication** — With all daemons on Spring Boot, deduplicate shared JARs across the multi-daemon Docker image (memory: `project_layered_jars_phase2.md`).
 
+6. **Extract daemons from `opennms-services` monolith** — Collectd, Pollerd, and EventTranslator are the only Spring Boot daemons still sourcing their implementation classes from `opennms-services`. Extract each into focused per-daemon modules (e.g., `features/collection/daemon/`, `features/poller/daemon/`, `features/events/translator/`) to match the pattern used by Enlinkd, Alarmd, BSM, Trapd, etc. This eliminates `opennms-services` as a dependency entirely (memory: `project_eliminate_opennms_services.md`).
+
 ## Key Patterns Applied
 
 | Pattern | Source Daemon | Application in Collectd |
