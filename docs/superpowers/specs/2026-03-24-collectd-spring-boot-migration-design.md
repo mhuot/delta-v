@@ -192,6 +192,7 @@ collectd:
     OPENNMS_HOME: /opt/deltav
   volumes:
     - ./collectd-daemon-overlay/etc:/opt/deltav/etc:ro
+  stop_grace_period: 60s
   healthcheck:
     test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
 ```
@@ -254,3 +255,9 @@ Wire Cortex as a Spring-discovered `TimeSeriesStorage` bean via `@ConditionalOnP
 Per the Enlinkd migration lesson: any Collectd service methods that call `flush()`, `save()`, or `delete()` on DAOs need `@Transactional` in Spring Boot. In Karaf, transactions were managed by blueprint. Apply proactively to event handler methods that modify DB state.
 
 Collectd's `onEvent()` already wraps all handlers in `TransactionTemplate.execute()`, so the transaction boundary is explicit. Verify this still works correctly with Hibernate 7's session management.
+
+## Known Risks
+
+### `findMatching()` Blocker
+
+`AbstractDaoJpa.findMatching()` is unimplemented in the Jakarta DAO layer (tracked in project memory: `project_findmatching_blocker.md`). Collectd uses DAO queries to find collection-eligible interfaces. This blocker affects all daemons — it must be resolved before Collectd E2E tests can pass. It is not Collectd-specific but is the most likely failure point during integration testing.
