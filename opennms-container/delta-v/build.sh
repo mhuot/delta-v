@@ -164,6 +164,7 @@ do_stage_daemon_jars() {
         "core/daemon-boot-perspectivepollerd/target/org.opennms.core.daemon-boot-perspectivepollerd-$VERSION-boot.jar:daemon-boot-perspectivepollerd.jar"
         "core/daemon-boot-telemetryd/target/org.opennms.core.daemon-boot-telemetryd-$VERSION-boot.jar:daemon-boot-telemetryd.jar"
         "core/daemon-boot-enlinkd/target/org.opennms.core.daemon-boot-enlinkd-$VERSION-boot.jar:daemon-boot-enlinkd.jar"
+        "core/daemon-boot-collectd/target/org.opennms.core.daemon-boot-collectd-$VERSION-boot.jar:daemon-boot-collectd.jar"
         # Special JARs (EventTranslator split-package fix, Alarmd, Passive status)
         "opennms-config/target/opennms-config-$VERSION.jar:opennms-config.jar"
         "opennms-util/target/opennms-util-$VERSION.jar:opennms-util.jar"
