@@ -330,7 +330,6 @@
                 <feature>war</feature>
                 <feature>wrap</feature>
                 <feature>wrapper</feature>
-                <feature>pax-http</feature>
                 <feature>atomikos</feature>
                 <feature>batik</feature>
                 <feature>c3p0</feature>
@@ -488,7 +487,7 @@
                 <feature>opennms-core-tracing-jaeger</feature>
                 <feature>opennms-karaf-health</feature>
                 <feature>opennms-core-ipc-grpc-server</feature>
-                <feature>opennms-inmemory-ticketer</feature>
+
                 <feature>scv-api</feature>
                 <feature>scv-jceks-impl</feature>
                 <feature>scv-shell</feature>
@@ -530,7 +529,6 @@
                 <feature>opennms-activemq-component</feature>
                 <feature>opennms-discovery</feature>
                 <feature>opennms-events-daemon</feature>
-                <feature>opennms-webapp</feature>
               </features>
               <repository>${project.build.directory}/experimental-repo</repository>
             </configuration>
@@ -669,11 +667,11 @@
               <goal>run</goal>
             </goals>
             <configuration>
-              <tasks>
+              <target>
                 <echo>* profile:    ${build.profile}</echo>
                 <echo>* format:     ${build.assembly.format}</echo>
                 <echo>* descriptor: src/assembly/${build.assembly.type}.xml</echo>
-              </tasks>
+              </target>
             </configuration>
           </execution>
         </executions>
@@ -715,19 +713,6 @@
       <groupId>org.opennms.features</groupId>
       <artifactId>root-webapp</artifactId>
       <type>war</type>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms.assemblies</groupId>
-      <artifactId>org.opennms.assemblies.webapp-full</artifactId>
-      <type>war</type>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms</groupId>
-      <artifactId>opennms-webapp</artifactId>
-      <type>tar.gz</type>
-      <classifier>meta-inf</classifier>
       <version>${project.version}</version>
     </dependency>
     <dependency>
