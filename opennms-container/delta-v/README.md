@@ -2,7 +2,7 @@
 
 **Composable, containerized deployment of OpenNMS Horizon.**
 
-Delta-V decomposes the monolithic OpenNMS into 17 independently scalable services connected by Kafka and PostgreSQL. Each daemon runs in its own Karaf container, communicating via a shared event bus. There is no core container — schema migration is handled by a one-shot db-init container, and the webapp serves only the Web UI and REST API.
+Delta-V decomposes the monolithic OpenNMS into 16 independently scalable services connected by Kafka and PostgreSQL. Each daemon runs in its own container (11 Spring Boot fat JARs + 1 Karaf), communicating via Kafka event topics. There is no core container — schema migration is handled by a one-shot db-init container, and the webapp serves only the Web UI and REST API.
 
 ```
                     ┌──────────────────────────────────────────────────┐
@@ -36,7 +36,6 @@ Delta-V decomposes the monolithic OpenNMS into 17 independently scalable service
 | ticketer         | opennms/daemon   | Trouble ticket integration                    | —         |
 | eventtranslator  | opennms/daemon   | Event transformation rules                    | —         |
 | enlinkd          | opennms/daemon   | Link discovery (CDP, LLDP, OSPF, IS-IS, Bridge) | —      |
-| scriptd          | opennms/daemon   | Event-driven scripting                        | —         |
 
 ## Quick Start
 
