@@ -13,5 +13,5 @@ if [ -z "$MAIN_CLASS" ]; then
 fi
 
 exec java $JAVA_OPTS \
-    -cp "/opt/libs/external/*:/opt/libs/internal/*:/opt/libs/daemon/*:/opt/app/*" \
+    -cp "/opt/libs/priority/*:/opt/libs/external/*:/opt/libs/internal/*:/opt/libs/daemon/*:/opt/app/*" \
     "$MAIN_CLASS"

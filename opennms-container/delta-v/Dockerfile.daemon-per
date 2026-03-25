@@ -19,6 +19,10 @@ LABEL org.opencontainers.image.title="Delta-V ${DAEMON_NAME}" \
 # Bake the main class into the image — entrypoint.sh reads this
 ENV MAIN_CLASS=${MAIN_CLASS}
 
+# Priority libraries — must load before shared-internal to win split-package
+# races (e.g., model-jakarta vs legacy opennms-model).  May be empty.
+COPY staging/${DAEMON_NAME}/priority/ /opt/libs/priority/
+
 # Daemon-specific libraries (not in the shared base)
 COPY staging/${DAEMON_NAME}/libs/ /opt/libs/daemon/
 
