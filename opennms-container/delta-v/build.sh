@@ -174,7 +174,26 @@ do_deltav_images() {
             .
     done
 
-    # Minion image (unchanged)
+    # Stage Minion overlay JARs (these are separate from the daemon deduplication)
+    log "Staging Minion overlay JARs..."
+    mkdir -p "$SCRIPT_DIR/staging/daemon"
+    local minion_pairs=(
+        "features/poller/api/target/org.opennms.features.poller.api-$VERSION.jar:poller-api.jar"
+        "features/poller/client-rpc/target/org.opennms.features.poller.client-rpc-$VERSION.jar:poller-client-rpc.jar"
+        "features/minion/core/impl/target/core-impl-$VERSION.jar:minion-core-impl.jar"
+        "features/poller/monitors/core/target/org.opennms.features.poller.monitors.core-$VERSION.jar:poller-monitors-core.jar"
+    )
+    for pair in "${minion_pairs[@]}"; do
+        local src="${pair%%:*}"
+        local dst="${pair##*:}"
+        if [ -f "$REPO_ROOT/$src" ]; then
+            cp "$REPO_ROOT/$src" "$SCRIPT_DIR/staging/daemon/$dst"
+        else
+            log "WARNING: $src not found"
+        fi
+    done
+
+    # Minion image
     log "Building opennms/minion-deltav:$VERSION..."
     docker build \
         --build-arg "VERSION=$VERSION" \
