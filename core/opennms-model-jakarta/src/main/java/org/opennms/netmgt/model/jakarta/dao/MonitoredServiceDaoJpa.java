@@ -192,6 +192,17 @@ public class MonitoredServiceDaoJpa extends AbstractDaoJpa<OnmsMonitoredService,
     }
 
     @Override
+    public List<OnmsMonitoredService> findAllServicesForScheduling() {
+        return find(
+                "SELECT DISTINCT svc FROM OnmsMonitoredService svc "
+                + "LEFT JOIN FETCH svc.serviceType "
+                + "LEFT JOIN FETCH svc.ipInterface ip "
+                + "LEFT JOIN FETCH ip.node n "
+                + "LEFT JOIN FETCH n.location "
+                + "WHERE svc.status IN ('A', 'N')");
+    }
+
+    @Override
     public List<OnmsMonitoredService> findByNode(int nodeId) {
         return find(
                 "SELECT svc FROM OnmsMonitoredService svc "
