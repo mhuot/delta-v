@@ -21,18 +21,24 @@
  */
 package org.opennms.core.daemon.common;
 
+import org.opennms.netmgt.daemon.AbstractServiceDaemon;
 import org.opennms.netmgt.daemon.SpringServiceDaemon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.SmartLifecycle;
 
 /**
- * Adapts a {@link SpringServiceDaemon} to Spring's {@link SmartLifecycle} interface.
+ * Adapts a {@link SpringServiceDaemon} to Spring's {@link SmartLifecycle} interface,
+ * providing a single, consistent lifecycle adapter for all OpenNMS daemons.
  *
  * <p>{@code SpringServiceDaemon} extends {@code InitializingBean} and {@code DisposableBean},
  * so this adapter calls {@link SpringServiceDaemon#afterPropertiesSet()} followed by
  * {@link SpringServiceDaemon#start()} on startup, and {@link SpringServiceDaemon#destroy()}
  * on shutdown.</p>
+ *
+ * <p>For {@link AbstractServiceDaemon} subclasses, {@code afterPropertiesSet()} delegates
+ * to {@code init()}, and {@code destroy()} delegates to {@code stop()}, so the behavior
+ * is identical to the former {@code DaemonSmartLifecycle}.</p>
  *
  * <p>The phase is set to {@link Integer#MAX_VALUE} so daemons start last (after all
  * infrastructure beans) and stop first during shutdown.</p>
@@ -48,6 +54,14 @@ public class SpringServiceDaemonSmartLifecycle implements SmartLifecycle {
     public SpringServiceDaemonSmartLifecycle(SpringServiceDaemon daemon, String name) {
         this.daemon = daemon;
         this.name = name;
+    }
+
+    /**
+     * Convenience constructor for {@link AbstractServiceDaemon} subclasses,
+     * which already expose their name via {@link AbstractServiceDaemon#getName()}.
+     */
+    public SpringServiceDaemonSmartLifecycle(AbstractServiceDaemon daemon) {
+        this(daemon, daemon.getName());
     }
 
     @Override

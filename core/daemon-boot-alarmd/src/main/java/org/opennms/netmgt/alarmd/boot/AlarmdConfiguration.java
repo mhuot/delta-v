@@ -23,7 +23,7 @@ package org.opennms.netmgt.alarmd.boot;
 
 
 
-import org.opennms.core.daemon.common.DaemonSmartLifecycle;
+import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
 import org.opennms.netmgt.dao.api.AlarmEntityNotifier;
 import org.opennms.netmgt.eventd.EventUtil;
 import org.opennms.netmgt.model.OnmsSeverity;
@@ -264,6 +264,6 @@ public class AlarmdConfiguration {
 
     @Bean
     public SmartLifecycle alarmdLifecycle(Alarmd alarmd) {
-        return new DaemonSmartLifecycle(alarmd);
+        return new SpringServiceDaemonSmartLifecycle(alarmd);
     }
 }

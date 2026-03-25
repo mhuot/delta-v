@@ -94,6 +94,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.FileSystemResource;
+import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -520,51 +521,9 @@ public class ProvisiondBootConfiguration {
     // Section 15: Lifecycle
     // ===================================================================
 
-    /**
-     * Provisioner implements SpringServiceDaemon (not AbstractServiceDaemon),
-     * so we create a custom SmartLifecycle adapter instead of using DaemonSmartLifecycle.
-     */
     @Bean
     public SmartLifecycle provisiondLifecycle(Provisioner provisioner) {
-        return new SmartLifecycle() {
-            private volatile boolean running = false;
-
-            @Override
-            public void start() {
-                try {
-                    provisioner.afterPropertiesSet();
-                    provisioner.start();
-                    running = true;
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to start Provisiond", e);
-                }
-            }
-
-            @Override
-            public void stop() {
-                try {
-                    provisioner.destroy();
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to stop Provisiond", e);
-                }
-                running = false;
-            }
-
-            @Override
-            public boolean isRunning() {
-                return running;
-            }
-
-            @Override
-            public boolean isAutoStartup() {
-                return true;
-            }
-
-            @Override
-            public int getPhase() {
-                return Integer.MAX_VALUE;
-            }
-        };
+        return new SpringServiceDaemonSmartLifecycle(provisioner, "Provisiond");
     }
 
     // ===================================================================

@@ -26,7 +26,7 @@ import java.util.Collections;
 import java.util.List;
 
 
-import org.opennms.core.daemon.common.DaemonSmartLifecycle;
+import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
 import org.opennms.core.rpc.api.RpcClientFactory;
 import org.opennms.netmgt.config.EnhancedLinkdConfig;
 import org.opennms.netmgt.config.EnhancedLinkdConfigFactory;
@@ -404,7 +404,7 @@ public class EnlinkdDaemonConfiguration {
 
     @Bean
     public SmartLifecycle enlinkdLifecycle(EnhancedLinkd daemon) {
-        return new DaemonSmartLifecycle(daemon);
+        return new SpringServiceDaemonSmartLifecycle(daemon);
     }
 
 }

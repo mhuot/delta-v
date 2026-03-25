@@ -23,7 +23,7 @@ package org.opennms.netmgt.translator.boot;
 
 import javax.sql.DataSource;
 
-import org.opennms.core.daemon.common.DaemonSmartLifecycle;
+import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
 import org.opennms.core.db.DataSourceFactory;
 import org.opennms.netmgt.config.EventTranslatorConfigFactory;
 import org.opennms.netmgt.events.api.EventIpcManager;
@@ -63,6 +63,6 @@ public class EventTranslatorBootConfiguration {
 
     @Bean
     public SmartLifecycle eventTranslatorLifecycle(EventTranslator eventTranslator) {
-        return new DaemonSmartLifecycle(eventTranslator);
+        return new SpringServiceDaemonSmartLifecycle(eventTranslator);
     }
 }

@@ -23,7 +23,7 @@ package org.opennms.netmgt.poller.boot;
 
 import java.io.IOException;
 
-import org.opennms.core.daemon.common.DaemonSmartLifecycle;
+import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
 import org.opennms.core.tsid.TsidFactory;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.features.distributed.kvstore.json.noop.NoOpJsonStore;
@@ -55,7 +55,7 @@ import org.springframework.transaction.support.TransactionTemplate;
  *
  * <p>Wires the {@link Poller} daemon with its configuration, poll context,
  * pollable network tree, and lifecycle management. The Poller is started via
- * {@link DaemonSmartLifecycle} which calls {@code init()} then {@code start()}.</p>
+ * {@link SpringServiceDaemonSmartLifecycle} which calls {@code init()} then {@code start()}.</p>
  *
  * <p>During {@code init()}, Poller creates a LegacyScheduler, closes outages
  * for unmanaged services, schedules existing services, and creates the
@@ -164,6 +164,6 @@ public class PollerdDaemonConfiguration {
      */
     @Bean
     public SmartLifecycle pollerLifecycle(Poller poller) {
-        return new DaemonSmartLifecycle(poller);
+        return new SpringServiceDaemonSmartLifecycle(poller);
     }
 }

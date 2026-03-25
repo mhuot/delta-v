@@ -39,11 +39,10 @@ import org.opennms.netmgt.perspectivepoller.PerspectivePollerd;
 import org.opennms.netmgt.perspectivepoller.PerspectiveServiceTracker;
 import org.opennms.netmgt.poller.LocationAwarePollerClient;
 import org.opennms.netmgt.threshd.api.ThresholdingService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
 import org.springframework.context.SmartLifecycle;
 
 /**
@@ -51,8 +50,8 @@ import org.springframework.context.SmartLifecycle;
  *
  * <p>Wires the {@link PerspectivePollerd} daemon with its configuration,
  * service tracker, event adapters, and lifecycle management. The daemon is
- * started via {@link DaemonSmartLifecycle} which calls {@code init()} then
- * {@code start()}.</p>
+ * started via {@link SpringServiceDaemonSmartLifecycle} which calls
+ * {@code afterPropertiesSet()} then {@code start()}.</p>
  *
  * <p>PerspectivePollerd polls services from perspective (remote) monitoring
  * locations to detect location-specific outages. It shares poller-configuration.xml
@@ -65,8 +64,6 @@ import org.springframework.context.SmartLifecycle;
  */
 @Configuration
 public class PerspectivePollerdDaemonConfiguration {
-
-    private static final Logger LOG = LoggerFactory.getLogger(PerspectivePollerdDaemonConfiguration.class);
 
     /**
      * Loads poller-configuration.xml via the singleton PollerConfigFactory.
@@ -154,64 +151,8 @@ public class PerspectivePollerdDaemonConfiguration {
         return adapter;
     }
 
-    /**
-     * Wraps the PerspectivePollerd daemon in a {@link SmartLifecycle} so Spring Boot
-     * manages its startup and shutdown.
-     *
-     * <p>PerspectivePollerd implements {@code SpringServiceDaemon} (not
-     * {@code AbstractServiceDaemon}), so we cannot use {@code DaemonSmartLifecycle}.
-     * Instead, we create an inline SmartLifecycle that calls
-     * {@code afterPropertiesSet()}, {@code start()}, and {@code destroy()}.</p>
-     */
     @Bean
     public SmartLifecycle perspectivePollerdLifecycle(PerspectivePollerd perspectivePollerd) {
-        return new SmartLifecycle() {
-            private volatile boolean running = false;
-
-            @Override
-            public void start() {
-                try {
-                    LOG.info("Initializing PerspectivePollerd");
-                    perspectivePollerd.afterPropertiesSet();
-                    LOG.info("Starting PerspectivePollerd");
-                    perspectivePollerd.start();
-                    running = true;
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to start PerspectivePollerd", e);
-                }
-            }
-
-            @Override
-            public void stop(Runnable callback) {
-                stop();
-                callback.run();
-            }
-
-            @Override
-            public void stop() {
-                try {
-                    LOG.info("Stopping PerspectivePollerd");
-                    perspectivePollerd.destroy();
-                    running = false;
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to stop PerspectivePollerd", e);
-                }
-            }
-
-            @Override
-            public boolean isRunning() {
-                return running;
-            }
-
-            @Override
-            public boolean isAutoStartup() {
-                return true;
-            }
-
-            @Override
-            public int getPhase() {
-                return Integer.MAX_VALUE;
-            }
-        };
+        return new SpringServiceDaemonSmartLifecycle(perspectivePollerd, "PerspectivePollerd");
     }
 }

@@ -44,10 +44,9 @@ import org.opennms.netmgt.telemetry.daemon.OpenConfigTwinPublisherImpl;
 import org.opennms.netmgt.telemetry.daemon.Telemetryd;
 import org.opennms.netmgt.telemetry.protocols.registry.api.TelemetryServiceRegistry;
 import org.opennms.netmgt.telemetry.protocols.registry.impl.TelemetryRegistryImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -68,7 +67,6 @@ import org.springframework.core.io.FileSystemResource;
 @Configuration
 public class TelemetrydDaemonConfiguration {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TelemetrydDaemonConfiguration.class);
 
     @Value("${opennms.home:/opt/deltav}")
     private String opennmsHome;
@@ -241,54 +239,7 @@ public class TelemetrydDaemonConfiguration {
 
     @Bean
     public SmartLifecycle telemetrydLifecycle(Telemetryd telemetryd) {
-        return new SmartLifecycle() {
-            private volatile boolean running = false;
-
-            @Override
-            public void start() {
-                try {
-                    LOG.info("Initializing Telemetryd");
-                    telemetryd.afterPropertiesSet();
-                    LOG.info("Starting Telemetryd");
-                    telemetryd.start();
-                    running = true;
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to start Telemetryd", e);
-                }
-            }
-
-            @Override
-            public void stop(Runnable callback) {
-                stop();
-                callback.run();
-            }
-
-            @Override
-            public void stop() {
-                try {
-                    LOG.info("Stopping Telemetryd");
-                    telemetryd.destroy();
-                    running = false;
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to stop Telemetryd", e);
-                }
-            }
-
-            @Override
-            public boolean isRunning() {
-                return running;
-            }
-
-            @Override
-            public boolean isAutoStartup() {
-                return true;
-            }
-
-            @Override
-            public int getPhase() {
-                return Integer.MAX_VALUE;
-            }
-        };
+        return new SpringServiceDaemonSmartLifecycle(telemetryd, "Telemetryd");
     }
 
     // ── Helpers ───────────────────────────────────────────────────────

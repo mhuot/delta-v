@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.opennms.core.cache.CacheConfig;
-import org.opennms.core.daemon.common.DaemonSmartLifecycle;
+import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
 import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.features.distributed.kvstore.json.noop.NoOpJsonStore;
 import org.opennms.features.timeseries.plugin.InMemoryStorage;
@@ -367,6 +367,6 @@ public class CollectdDaemonConfiguration {
      */
     @Bean
     public SmartLifecycle collectdLifecycle(Collectd collectd) {
-        return new DaemonSmartLifecycle(collectd);
+        return new SpringServiceDaemonSmartLifecycle(collectd);
     }
 }

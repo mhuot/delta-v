@@ -5,7 +5,7 @@ import java.util.concurrent.Executors;
 
 import javax.sql.DataSource;
 
-import org.opennms.core.daemon.common.DaemonSmartLifecycle;
+import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
 import org.opennms.core.daemon.common.JdbcDistPollerDao;
 import org.opennms.core.daemon.common.JdbcInterfaceToNodeCache;
 import org.opennms.netmgt.config.DiscoveryConfigFactory;
@@ -134,7 +134,7 @@ public class DiscoveryBootConfiguration {
 
     @Bean
     public SmartLifecycle discoveryLifecycle(Discovery discovery) {
-        return new DaemonSmartLifecycle(discovery);
+        return new SpringServiceDaemonSmartLifecycle(discovery);
     }
 
     // Note: Config reload via RELOAD_DAEMON_CONFIG_UEI events is NOT wired.
