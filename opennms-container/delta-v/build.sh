@@ -174,15 +174,6 @@ do_deltav_images() {
             .
     done
 
-    # Phase 4: Karaf daemons — existing Sentinel-based image (unchanged)
-    log "Building opennms/daemon-deltav:$VERSION..."
-    docker build \
-        --build-arg "VERSION=$VERSION" \
-        -f Dockerfile.daemon \
-        -t "opennms/daemon-deltav:$VERSION" \
-        -t "opennms/daemon-deltav:latest" \
-        .
-
     # Minion image (unchanged)
     log "Building opennms/minion-deltav:$VERSION..."
     docker build \
