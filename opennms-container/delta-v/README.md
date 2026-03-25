@@ -2,7 +2,7 @@
 
 **Composable, containerized deployment of OpenNMS Horizon.**
 
-Delta-V decomposes the monolithic OpenNMS into 16 independently scalable services connected by Kafka and PostgreSQL. Each daemon runs in its own container (11 Spring Boot fat JARs + 1 Karaf), communicating via Kafka event topics. There is no core container — schema migration is handled by a one-shot db-init container, and the webapp serves only the Web UI and REST API.
+Delta-V decomposes the monolithic OpenNMS into 16 independently scalable services connected by Kafka and PostgreSQL. Each daemon runs in its own container as a Spring Boot fat JAR, communicating via Kafka event topics. There is no core container — schema migration is handled by a one-shot db-init container, and the webapp serves only the Web UI and REST API.
 
 ```
                     ┌──────────────────────────────────────────────────┐
@@ -11,38 +11,70 @@ Delta-V decomposes the monolithic OpenNMS into 16 independently scalable service
                     └──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬─────┘
                        │  │  │  │  │  │  │  │  │  │  │  │  │  │
   ┌─────────┐     ┌────┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴────┐
-  │Postgres │◄────┤ webapp │ alarmd │ pollerd │ provisiond │ ...     │
-  │         │     │ Jetty  │ Alarms │ Polling │ Provision  │         │
+  │Postgres │◄────┤ alarmd │ pollerd │ collectd │ provisiond │ ...   │
+  │         │     │ Spring Boot fat JARs — one per daemon           │
   └─────────┘     └─────────────────────────────────────────────────┘
 ```
 
+## Spring Boot Migration Progress
+
+All 12 daemons have been migrated from Karaf to Spring Boot 4. Each runs as an independent fat JAR with its own JPA/Hibernate context, Kafka event transport, and health endpoint.
+
+| Daemon             | Status | PR   | E2E Verified | Notes |
+|--------------------|--------|------|--------------|-------|
+| Alarmd             | Done   | #32  | Yes          | Kafka event consumer, alarm processing |
+| Pollerd            | Done   | #47  | Yes          | Service polling via Minion RPC |
+| PerspectivePollerd | Done   | #48  | Yes          | Perspective polling from remote locations |
+| Provisiond         | Done   | #38  | Yes          | Node provisioning, SNMP/ICMP detection via Minion |
+| Discovery          | Done   | #42  | Yes          | Network discovery via Minion |
+| Trapd              | Done   | #35  | Yes          | SNMP trap reception via Kafka Sink |
+| Syslogd            | Done   | #36  | Yes          | Syslog reception via Kafka Sink |
+| EventTranslator    | Done   | #37  | Yes          | Event transformation rules |
+| BSM Daemon         | Done   | #44  | Yes          | Business Service Monitor |
+| Enlinkd            | Done   | #50  | Yes          | Link discovery (LLDP/CDP/OSPF/IS-IS/Bridge) via Minion |
+| Telemetryd         | Done   | #52  | Yes          | Telemetry ingestion bridge |
+| **Collectd**       | **Done** | **#56** | **Yes** | **SNMP data collection via Minion SNMP proxy** |
+
+### Collectd Migration Details
+
+Collectd was the last daemon migrated to Spring Boot. Key architectural decisions:
+
+- **Two-layer SNMP collection**: `SnmpCollector` runs locally in the Collectd JVM (`force-remote=false`). Inside `collect()`, the `LocationAwareSnmpClient` sends individual SNMP walk requests via Kafka RPC to the Minion at the node's actual location. The Minion executes the walks and returns raw SNMP data.
+- **Time-series persistence**: Uses `InMemoryStorage` by default. The TSS pipeline (TimeseriesPersisterFactory → TimeseriesStorageManager → InMemoryStorage) is wired as a `PersisterFactory` bean.
+- **Legacy BeanUtils bypass**: `SnmpCollector` obtains `LocationAwareSnmpClient` via `BeanUtils.getBean("daoContext", ...)` in monolithic OpenNMS. In Spring Boot, the client is injected into ServiceLoader-loaded collectors at startup.
+- **Thresholding**: Stubbed with a no-op `ThresholdingService`. Full thresholding support is a follow-up task.
+
+### Karaf Image Retirement
+
+With all 12 daemons on Spring Boot, the Karaf-based Sentinel image (`opennms/daemon-deltav`) can be retired. The only Karaf component remaining is the Minion, which runs the standard OpenNMS Minion distribution.
+
 ## Services
 
-| Service          | Image            | Purpose                                       | Host Port |
-|------------------|------------------|-----------------------------------------------|-----------|
-| postgres         | postgres:15      | Shared database                               | 5432      |
-| kafka            | apache/kafka     | Event bus (KRaft mode)                        | —         |
-| db-init          | opennms/horizon  | One-shot schema migration (exits after init)  | —         |
-| webapp           | opennms/horizon  | JettyServer — Web UI, REST API, Provisiond    | 8980      |
-| minion           | opennms/minion   | Distributed data collection agent             | —         |
-| alarmd           | opennms/daemon   | Alarm processing (Kafka consumer)             | 8201      |
-| pollerd          | opennms/daemon   | Service polling                               | 8103      |
-| collectd         | opennms/daemon   | Data collection                               | 8104      |
-| rtcd             | opennms/daemon   | Real-time console data                        | —         |
-| notifd           | opennms/daemon   | Notifications                                 | —         |
-| discovery        | opennms/daemon   | Network discovery                             | —         |
-| trapd            | opennms/daemon   | SNMP trap reception                           | 1162/udp  |
-| syslogd          | opennms/daemon   | Syslog reception                              | 10514/udp |
-| ticketer         | opennms/daemon   | Trouble ticket integration                    | —         |
-| eventtranslator  | opennms/daemon   | Event transformation rules                    | —         |
-| enlinkd          | opennms/daemon   | Link discovery (CDP, LLDP, OSPF, IS-IS, Bridge) | —      |
+| Service          | Image                          | Purpose                                       | Host Port |
+|------------------|--------------------------------|-----------------------------------------------|-----------|
+| postgres         | postgres:15                    | Shared database                               | 5432      |
+| kafka            | apache/kafka                   | Event bus (KRaft mode)                        | 19092     |
+| db-init          | opennms/db-init                | One-shot schema migration (exits after init)  | —         |
+| minion           | opennms/minion-deltav          | Distributed data collection agent (Karaf)     | —         |
+| alarmd           | opennms/daemon-deltav-springboot | Alarm processing (Kafka consumer)           | —         |
+| pollerd          | opennms/daemon-deltav-springboot | Service polling via Minion RPC              | —         |
+| collectd         | opennms/daemon-deltav-springboot | SNMP data collection via Minion SNMP proxy  | —         |
+| discovery        | opennms/daemon-deltav-springboot | Network discovery via Minion RPC            | —         |
+| provisiond       | opennms/daemon-deltav-springboot | Node provisioning and detection             | —         |
+| trapd            | opennms/daemon-deltav-springboot | SNMP trap reception (Kafka Sink)            | —         |
+| syslogd          | opennms/daemon-deltav-springboot | Syslog reception (Kafka Sink)               | —         |
+| eventtranslator  | opennms/daemon-deltav-springboot | Event transformation rules                  | —         |
+| enlinkd          | opennms/daemon-deltav-springboot | Link discovery (CDP, LLDP, OSPF, IS-IS, Bridge) | —  |
+| bsmd             | opennms/daemon-deltav-springboot | Business Service Monitor                    | 8180      |
+| perspectivepollerd | opennms/daemon-deltav-springboot | Perspective polling from remote locations | —         |
+| telemetryd       | opennms/daemon-deltav-springboot | Telemetry ingestion bridge                  | —         |
 
 ## Quick Start
 
 ### Prerequisites
 
 - Docker Engine 24+ with Compose v2
-- Java 17 (for building from source)
+- Java 21 (for building from source)
 - 8 GB RAM allocated to Docker (16 GB recommended for full deployment)
 
 ### Build from Source
@@ -67,7 +99,7 @@ cd opennms-container/delta-v
 # Start with a profile
 ./deploy.sh up lite       # Essential daemons
 ./deploy.sh up passive    # Lite + trapd/syslogd/eventtranslator
-./deploy.sh up full       # All 17 services
+./deploy.sh up full       # All services
 
 # Check status
 ./deploy.sh status
@@ -85,9 +117,6 @@ Web UI: **http://localhost:8980/opennms** (admin / admin)
 ./deploy.sh logs              # All services
 ./deploy.sh logs alarmd       # Single service
 
-# Karaf shell access
-./deploy.sh shell webapp      # SSH to webapp Karaf
-
 # Stop (preserve data)
 ./deploy.sh down
 
@@ -102,7 +131,7 @@ Web UI: **http://localhost:8980/opennms** (admin / admin)
 ./build.sh compile      # Maven compile only
 ./build.sh assemble     # Build distribution tarballs
 ./build.sh images       # Build Docker images (requires prior assembly)
-./build.sh overlay      # Prepare webapp overlay
+./build.sh deltav       # Build Delta-V layered images
 ./build.sh push         # Build and push to registry
 ./build.sh clean        # Remove Docker volumes
 
@@ -115,10 +144,9 @@ DOCKER_ORG=pbranestrategy ./build.sh push
 Delta-V replaces the monolithic OpenNMS runtime with a composable service mesh:
 
 - **db-init** runs schema migration (Liquibase) and exits — no persistent core container
-- **Webapp** runs JettyServer (Web UI + REST API) and Provisiond (node management)
-- **Alarmd** consumes events from Kafka and processes them into alarms in PostgreSQL
-- **Daemon containers** (pollerd, collectd, etc.) each run a single daemon in a lightweight Karaf instance
+- **Daemon containers** each run a single daemon as a Spring Boot fat JAR with embedded Tomcat for health endpoints (`/actuator/health`)
 - **Minion** handles distributed data collection (SNMP, ICMP) via Kafka IPC
+- All daemons use **Hibernate 7 / Jakarta Persistence** with the `opennms-model-jakarta` entity model
 
 All services communicate via two Kafka topics: `opennms-fault-events` (alarm-bearing events) and `opennms-ipc-events` (daemon-to-daemon coordination). Each service generates globally unique event IDs using TSID (Time-Sorted IDs) with a unique node-id per JVM.
 
@@ -132,15 +160,32 @@ Daemon → KafkaEventForwarder → Kafka → KafkaEventSubscriptionService → A
 
 Events bypass the traditional `events` database table entirely. They flow through Kafka in real-time, and Alarmd processes them directly into alarms.
 
+### Daemon Boot Pattern
+
+Each Spring Boot daemon follows a consistent pattern:
+
+```
+core/daemon-boot-<name>/
+├── src/main/java/.../boot/
+│   ├── <Name>Application.java          # @SpringBootApplication entry point
+│   ├── <Name>JpaConfiguration.java     # JPA entities, FilterDao, TransactionTemplate
+│   ├── <Name>DaemonConfiguration.java  # Daemon bean, lifecycle, config factories
+│   └── <Name>RpcConfiguration.java     # Kafka RPC client (if needed)
+└── src/main/resources/
+    └── application.yml                 # Datasource, Kafka, RPC settings
+```
+
+Infrastructure beans (Kafka event transport, RPC client factory, TSID) are shared via `core/daemon-common`.
+
 ## Memory Requirements
 
-Running all 17 services requires significant memory. If Docker Desktop runs out of memory (exit code 137), use deployment profiles:
+Running all services requires significant memory. If Docker Desktop runs out of memory (exit code 137), use deployment profiles:
 
 | Profile | Services | Approx. Memory |
 |---------|----------|-----------------|
 | lite    | ~10      | ~8 GB           |
 | passive | ~13      | ~10 GB          |
-| full    | 17       | ~12 GB          |
+| full    | all      | ~12 GB          |
 
 ## Troubleshooting
 
@@ -148,7 +193,7 @@ Running all 17 services requires significant memory. If Docker Desktop runs out 
 
 **OOM kills (exit 137):** Increase Docker Desktop memory or use `./deploy.sh up lite`.
 
-**Service won't start:** Check logs: `./deploy.sh logs <service>`. Most issues are Karaf feature resolution failures — read OSGi error messages backwards from "Unable to resolve root".
+**Service won't start:** Check logs: `./deploy.sh logs <service>`. Spring Boot daemons log to stdout. Check `/actuator/health` for health status.
 
 **Database connection errors:** Ensure postgres is healthy before other services start. The compose healthchecks handle this, but initial schema creation takes time.
 
