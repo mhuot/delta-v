@@ -1,0 +1,33 @@
+# daemon-base — shared dependency layer for all Delta-V Spring Boot daemons.
+#
+# Contains 3rd-party libraries (external) and project libraries (internal)
+# shared by all 12 daemons. Per-daemon images extend this with their
+# unique libs and application classes.
+#
+# Build with: ./build.sh deltav  (built automatically)
+# Rebuild when: shared dependencies change (Spring Boot, Hibernate, Kafka, etc.)
+
+ARG JRE_IMAGE=opennms/jre-deltav:21
+FROM ${JRE_IMAGE}
+
+LABEL org.opencontainers.image.title="Delta-V Daemon Base" \
+      org.opencontainers.image.description="Shared dependency layer for all Spring Boot daemons"
+
+# Layer 1: 3rd-party libraries (rarely changes — Spring, Hibernate, Kafka, Jackson)
+COPY staging/shared-external/ /opt/libs/external/
+
+# Layer 2: project-internal libraries (changes with code — daemon-common, model)
+COPY staging/shared-internal/ /opt/libs/internal/
+
+# Layer 3: priority libraries — loaded FIRST on the classpath to win split-package
+# races (e.g., model-jakarta must load before legacy opennms-model so Hibernate 7
+# sees @jakarta.persistence.Entity instead of @javax.persistence.Entity)
+COPY staging/shared-priority/ /opt/libs/priority/
+
+# Shared entrypoint for all daemons (--chmod avoids needing root for RUN chmod)
+COPY --chmod=755 entrypoint.sh /opt/entrypoint.sh
+
+# Pre-create directories for per-daemon layers
+USER root
+RUN mkdir -p /opt/libs/daemon /opt/libs/priority /opt/app && chown opennms:opennms /opt/libs/daemon /opt/libs/priority /opt/app
+USER opennms

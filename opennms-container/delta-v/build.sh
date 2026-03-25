@@ -137,70 +137,6 @@ do_images() {
     docker images --format "  {{.Repository}}:{{.Tag}}\t{{.Size}}" | grep -E "(horizon|daemon|sentinel|minion|db-init)" | head -20
 }
 
-do_stage_daemon_jars() {
-    log "Staging daemon JARs for Delta-V image..."
-    local staging="$SCRIPT_DIR/staging/daemon"
-    rm -rf "$staging"
-    mkdir -p "$staging"
-
-    # Common JARs (all daemon containers)
-    local pairs=(
-        "core/event-forwarder-kafka/target/org.opennms.core.event-forwarder-kafka-$VERSION.jar:event-forwarder-kafka.jar"
-        "features/events/daemon/target/org.opennms.features.events.daemon-$VERSION.jar:events.daemon.jar"
-        # Daemon-loader JARs
-        "core/daemon-loader-pollerd/target/org.opennms.core.daemon-loader-pollerd-$VERSION.jar:daemon-loader-pollerd.jar"
-        "core/daemon-boot-pollerd/target/org.opennms.core.daemon-boot-pollerd-$VERSION-boot.jar:daemon-boot-pollerd.jar"
-        "core/daemon-boot-trapd/target/org.opennms.core.daemon-boot-trapd-$VERSION.jar:daemon-boot-trapd.jar"
-        "core/daemon-boot-syslogd/target/org.opennms.core.daemon-boot-syslogd-$VERSION.jar:daemon-boot-syslogd.jar"
-        "core/daemon-boot-discovery/target/org.opennms.core.daemon-boot-discovery-$VERSION.jar:daemon-boot-discovery.jar"
-        "core/daemon-boot-provisiond/target/org.opennms.core.daemon-boot-provisiond-$VERSION-boot.jar:daemon-boot-provisiond.jar"
-        "core/daemon-loader-bsmd/target/org.opennms.core.daemon-loader-bsmd-$VERSION.jar:daemon-loader-bsmd.jar"
-        "core/daemon-loader-perspectivepoller/target/org.opennms.core.daemon-loader-perspectivepoller-$VERSION.jar:daemon-loader-perspectivepoller.jar"
-        "core/daemon-loader-telemetryd/target/daemon-loader-telemetryd-$VERSION.jar:daemon-loader-telemetryd.jar"
-        # Spring Boot fat JARs (migrated daemons)
-        "core/daemon-boot-alarmd/target/org.opennms.core.daemon-boot-alarmd-$VERSION-boot.jar:daemon-boot-alarmd.jar"
-        "core/daemon-boot-eventtranslator/target/org.opennms.core.daemon-boot-eventtranslator-$VERSION-boot.jar:daemon-boot-eventtranslator.jar"
-        "core/daemon-boot-bsmd/target/org.opennms.core.daemon-boot-bsmd-$VERSION-boot.jar:daemon-boot-bsmd.jar"
-        "core/daemon-boot-perspectivepollerd/target/org.opennms.core.daemon-boot-perspectivepollerd-$VERSION-boot.jar:daemon-boot-perspectivepollerd.jar"
-        "core/daemon-boot-telemetryd/target/org.opennms.core.daemon-boot-telemetryd-$VERSION-boot.jar:daemon-boot-telemetryd.jar"
-        "core/daemon-boot-enlinkd/target/org.opennms.core.daemon-boot-enlinkd-$VERSION-boot.jar:daemon-boot-enlinkd.jar"
-        "core/daemon-boot-collectd/target/org.opennms.core.daemon-boot-collectd-$VERSION-boot.jar:daemon-boot-collectd.jar"
-        # Special JARs (EventTranslator split-package fix, Alarmd, Passive status)
-        "opennms-config/target/opennms-config-$VERSION.jar:opennms-config.jar"
-        "opennms-util/target/opennms-util-$VERSION.jar:opennms-util.jar"
-        "opennms-alarms/daemon/target/opennms-alarmd-$VERSION.jar:opennms-alarmd.jar"
-        "opennms-services/target/opennms-services-$VERSION.jar:opennms-services.jar"
-        "opennms-provision/opennms-provisiond/target/opennms-provisiond-$VERSION.jar:opennms-provisiond.jar"
-        "features/minion/core/impl/target/core-impl-$VERSION.jar:minion-core-impl.jar"
-        "features/poller/api/target/org.opennms.features.poller.api-$VERSION.jar:poller-api.jar"
-        "core/ipc/twin/common/target/org.opennms.core.ipc.twin.common-$VERSION.jar:twin-common.jar"
-        "core/ipc/twin/kafka/common/target/org.opennms.core.ipc.twin.kafka.common-$VERSION.jar:twin-kafka-common.jar"
-        "core/ipc/twin/kafka/publisher/target/org.opennms.core.ipc.twin.kafka.publisher-$VERSION.jar:twin-kafka-publisher.jar"
-        "core/ipc/common/kafka/target/org.opennms.core.ipc.common.kafka-$VERSION.jar:ipc-common-kafka.jar"
-        "features/distributed/opennms-identity/target/org.opennms.features.distributed.opennms-identity-$VERSION.jar:opennms-identity.jar"
-        "features/poller/client-rpc/target/org.opennms.features.poller.client-rpc-$VERSION.jar:poller-client-rpc.jar"
-        "features/poller/monitors/core/target/org.opennms.features.poller.monitors.core-$VERSION.jar:poller-monitors-core.jar"
-        "core/ipc/rpc/kafka/target/org.opennms.core.ipc.rpc.kafka-$VERSION.jar:ipc-rpc-kafka.jar"
-    )
-
-    local missing=0
-    for pair in "${pairs[@]}"; do
-        local src="${pair%%:*}"
-        local dst="${pair##*:}"
-        if [ -f "$REPO_ROOT/$src" ]; then
-            cp "$REPO_ROOT/$src" "$staging/$dst"
-        else
-            log "WARNING: $src not found — run './build.sh compile' first"
-            missing=$((missing + 1))
-        fi
-    done
-
-    log "Staged $(ls "$staging" | wc -l | tr -d ' ') files ($missing missing)"
-    if [ "$missing" -gt 3 ]; then
-        err "Too many missing JARs ($missing) — run './build.sh compile' first"
-    fi
-}
-
 do_deltav_images() {
     log "Building Delta-V layered images..."
 
@@ -209,26 +145,53 @@ do_deltav_images() {
         err "opennms/jre-deltav:21 not found — run './build.sh jre' first"
     fi
 
-    do_stage_daemon_jars
+    # Phase 1: Extract and deduplicate
+    "$SCRIPT_DIR/compute-shared-libs.sh" "$REPO_ROOT" "$VERSION"
 
-    # Spring Boot daemons — lightweight image
-    log "Building opennms/daemon-deltav-springboot:$VERSION..."
     cd "$SCRIPT_DIR"
+
+    # Phase 2: Build daemon-base image
+    log "Building opennms/daemon-base:$VERSION..."
     docker build --no-cache \
-        -f Dockerfile.springboot \
-        -t "opennms/daemon-deltav-springboot:$VERSION" \
-        -t "opennms/daemon-deltav-springboot:latest" \
+        -f Dockerfile.daemon-base \
+        -t "opennms/daemon-base:$VERSION" \
+        -t "opennms/daemon-base:latest" \
         .
 
-    # Karaf daemons — existing Sentinel-based image
-    log "Building opennms/daemon-deltav:$VERSION..."
-    cd "$SCRIPT_DIR"
-    docker build \
-        --build-arg "VERSION=$VERSION" \
-        -f Dockerfile.daemon \
-        -t "opennms/daemon-deltav:$VERSION" \
-        -t "opennms/daemon-deltav:latest" \
-        .
+    # Phase 3: Build per-daemon images
+    local daemon_names="alarmd bsmd collectd discovery enlinkd eventtranslator perspectivepollerd pollerd provisiond syslogd telemetryd trapd"
+    for name in $daemon_names; do
+        local main_class
+        main_class=$(cat "staging/$name/.main_class")
+        log "Building opennms/$name:$VERSION (main: $main_class)..."
+        docker build \
+            -f Dockerfile.daemon-per \
+            --build-arg "VERSION=$VERSION" \
+            --build-arg "DAEMON_NAME=$name" \
+            --build-arg "MAIN_CLASS=$main_class" \
+            -t "opennms/$name:$VERSION" \
+            -t "opennms/$name:latest" \
+            .
+    done
+
+    # Stage Minion overlay JARs (these are separate from the daemon deduplication)
+    log "Staging Minion overlay JARs..."
+    mkdir -p "$SCRIPT_DIR/staging/daemon"
+    local minion_pairs=(
+        "features/poller/api/target/org.opennms.features.poller.api-$VERSION.jar:poller-api.jar"
+        "features/poller/client-rpc/target/org.opennms.features.poller.client-rpc-$VERSION.jar:poller-client-rpc.jar"
+        "features/minion/core/impl/target/core-impl-$VERSION.jar:minion-core-impl.jar"
+        "features/poller/monitors/core/target/org.opennms.features.poller.monitors.core-$VERSION.jar:poller-monitors-core.jar"
+    )
+    for pair in "${minion_pairs[@]}"; do
+        local src="${pair%%:*}"
+        local dst="${pair##*:}"
+        if [ -f "$REPO_ROOT/$src" ]; then
+            cp "$REPO_ROOT/$src" "$SCRIPT_DIR/staging/daemon/$dst"
+        else
+            log "WARNING: $src not found"
+        fi
+    done
 
     # Minion image
     log "Building opennms/minion-deltav:$VERSION..."
@@ -243,7 +206,7 @@ do_deltav_images() {
     rm -rf "$SCRIPT_DIR/staging"
 
     log "Delta-V images built:"
-    docker images --format "  {{.Repository}}:{{.Tag}}\t{{.Size}}" | grep -E "deltav" | head -10
+    docker images --format "  {{.Repository}}:{{.Tag}}\t{{.Size}}" | grep -E "daemon-base|alarmd|bsmd|collectd|discovery|enlinkd|eventtranslator|perspectivepollerd|pollerd|provisiond|syslogd|telemetryd|trapd|daemon-deltav|minion-deltav" | sort | head -20
 }
 
 
