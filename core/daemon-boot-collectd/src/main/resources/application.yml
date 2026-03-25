@@ -31,5 +31,9 @@ opennms:
     kafka:
       enabled: ${OPENNMS_RPC_KAFKA_ENABLED:true}
       bootstrap-servers: ${OPENNMS_RPC_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+      # SnmpCollector runs locally (getEffectiveLocation returns "Default") and
+      # uses LocationAwareSnmpClient to proxy SNMP walks to the remote Minion.
+      # force-remote must be false so the Collect RPC executes in-process.
+      force-remote: ${OPENNMS_RPC_KAFKA_FORCE_REMOTE:false}
   timeseries:
     strategy: ${OPENNMS_TIMESERIES_STRATEGY:inmemory}

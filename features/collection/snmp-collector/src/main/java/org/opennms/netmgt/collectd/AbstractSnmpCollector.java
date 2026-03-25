@@ -176,6 +176,11 @@ public abstract class AbstractSnmpCollector extends AbstractServiceCollector {
 
     protected LocationAwareSnmpClient m_client;
 
+    public void setLocationAwareSnmpClient(LocationAwareSnmpClient client) {
+        LOG.info("setLocationAwareSnmpClient: injecting {} into {}", client.getClass().getSimpleName(), this.getClass().getSimpleName());
+        m_client = client;
+    }
+
     /**
      * Returns the name of the service that the plug-in collects ("SNMP").
      *

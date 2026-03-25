@@ -47,6 +47,7 @@ import org.opennms.netmgt.config.dao.outages.impl.OnmsPollOutagesDao;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.dao.api.SessionUtils;
 import org.opennms.netmgt.events.api.EventIpcManager;
+import org.opennms.netmgt.events.api.EventIpcManagerFactory;
 import org.opennms.netmgt.threshd.api.ThresholdInitializationException;
 import org.opennms.netmgt.threshd.api.ThresholdingService;
 import org.opennms.netmgt.threshd.api.ThresholdingSession;
@@ -346,6 +347,10 @@ public class CollectdDaemonConfiguration {
      */
     @Bean
     public Collectd collectd(EventIpcManager eventIpcManager) {
+        // CollectableService.sendEvent() uses the static EventIpcManagerFactory singleton
+        // rather than the Spring-injected EventIpcManager. Initialize it here.
+        EventIpcManagerFactory.setIpcManager(eventIpcManager);
+
         Collectd collectd = new Collectd();
         collectd.setEventIpcManager(eventIpcManager);
         return collectd;

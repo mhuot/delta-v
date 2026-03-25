@@ -154,18 +154,15 @@ public class CollectorRequestBuilderImpl implements CollectorRequestBuilder {
         allAttributes.putAll(interpolatedAttributes);
         allAttributes.putAll(runtimeAttributes);
 
-        // The runtime attributes may include objects which need to be marshaled.
-        // Only marshal these if the request is being executed at another location.
+        // For local execution (Default location), keep the original agent and raw
+        // attributes. SnmpCollector requires SnmpCollectionAgent, not CollectionAgentDTO.
+        // For remote execution (non-Default), convert to DTO for JAXB serialization.
         if (MonitoringLocationUtils.isDefaultLocationName(request.getLocation())) {
-            // As-is
             request.setAgent(agent);
             request.addAttributes(allAttributes);
         } else {
-            // Marshal
             request.setAgent(new CollectionAgentDTO(agent));
-            final Map<String, String> marshaledParms = serviceCollector.marshalParameters(allAttributes);
-            marshaledParms.forEach(request::addAttribute);
-            request.setAttributesNeedUnmarshaling(true);
+            request.addAttributes(allAttributes);
         }
 
         // Execute the request

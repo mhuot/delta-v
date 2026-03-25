@@ -32,6 +32,8 @@ import org.opennms.netmgt.collection.client.rpc.LocationAwareCollectorClientImpl
 import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
 import org.opennms.netmgt.snmp.proxy.common.LocationAwareSnmpClientRpcImpl;
 import org.opennms.netmgt.snmp.proxy.common.SnmpProxyRpcModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -52,13 +54,39 @@ import java.util.concurrent.Executors;
 @Configuration
 public class CollectdRpcConfiguration {
 
+    private static final Logger LOG = LoggerFactory.getLogger(CollectdRpcConfiguration.class);
+
     /**
      * ServiceCollectorRegistry that discovers ServiceCollector implementations
      * via {@link java.util.ServiceLoader}.
+     *
+     * <p>After loading, injects the {@link LocationAwareSnmpClient} into any
+     * {@link AbstractSnmpCollector} instances. In monolithic OpenNMS, the
+     * collector obtains this via {@code BeanUtils.getBean("daoContext", ...)}
+     * which relies on a legacy ApplicationContext that doesn't exist in
+     * Spring Boot.</p>
      */
     @Bean
-    public ServiceCollectorRegistry serviceCollectorRegistry() {
-        return new LocalServiceCollectorRegistry();
+    public ServiceCollectorRegistry serviceCollectorRegistry(LocationAwareSnmpClient snmpClient) {
+        LocalServiceCollectorRegistry registry = new LocalServiceCollectorRegistry();
+        // Inject the SNMP client into any SNMP collectors loaded via ServiceLoader.
+        // In monolithic OpenNMS, SnmpCollector obtains this via BeanUtils.getBean("daoContext", ...)
+        // which doesn't work in Spring Boot. Pre-inject it here.
+        for (String className : registry.getCollectorClassNames()) {
+            var collector = registry.getCollectorFutureByClassName(className).getNow(null);
+            if (collector != null) {
+                try {
+                    var method = collector.getClass().getMethod("setLocationAwareSnmpClient", LocationAwareSnmpClient.class);
+                    method.invoke(collector, snmpClient);
+                    LOG.info("Injected LocationAwareSnmpClient into {}", collector.getClass().getSimpleName());
+                } catch (NoSuchMethodException e) {
+                    // Not an SNMP collector — skip
+                } catch (Exception e) {
+                    LOG.warn("Failed to inject LocationAwareSnmpClient into {}", collector.getClass().getName(), e);
+                }
+            }
+        }
+        return registry;
     }
 
     /**

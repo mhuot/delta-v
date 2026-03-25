@@ -538,17 +538,22 @@ public class Collectd extends AbstractServiceDaemon implements
             }
 
             LOG.debug("getSpecificationsForInterface: address/service: {}/{} scheduled, interface does belong to package: {}", iface, svcName, wpkg.getName());
-            final var collector = m_collectdConfigFactory.getCollectors().stream().filter(c->c.getService().equals(svcName)).findFirst().orElse(null);
-            String className = collector == null? null : collector.getClassName();
-            if(className != null) {
-                final ScopeProvider scopeProvider = new FallBackScopeProvider(
-                    entityScopeProvider.getScopeProviderForNode(iface.getNodeId()),
-                    entityScopeProvider.getScopeProviderForInterface(iface.getNodeId(), InetAddressUtils.toIpAddrString(iface.getIpAddress()))
-                );
-                matchingPkgs.add(new CollectionSpecification(wpkg, svcName, getServiceCollector(svcName), instrumentation(), m_locationAwareCollectorClient, pollOutagesDao, className, scopeProvider));
-            } else {
+            final var collectorDef = m_collectdConfigFactory.getCollectors().stream().filter(c->c.getService().equals(svcName)).findFirst().orElse(null);
+            String className = collectorDef == null ? null : collectorDef.getClassName();
+            if(className == null) {
                 LOG.warn("The class for collector {} is not available yet.", svcName);
+                continue;
             }
+            final ServiceCollector svcCollector = getServiceCollector(svcName);
+            if (svcCollector == null) {
+                LOG.warn("getSpecificationsForInterface: collector instance for {} ({}) not loaded, skipping.", svcName, className);
+                continue;
+            }
+            final ScopeProvider scopeProvider = new FallBackScopeProvider(
+                entityScopeProvider.getScopeProviderForNode(iface.getNodeId()),
+                entityScopeProvider.getScopeProviderForInterface(iface.getNodeId(), InetAddressUtils.toIpAddrString(iface.getIpAddress()))
+            );
+            matchingPkgs.add(new CollectionSpecification(wpkg, svcName, svcCollector, instrumentation(), m_locationAwareCollectorClient, pollOutagesDao, className, scopeProvider));
         }
         return matchingPkgs;
     }
