@@ -1,0 +1,28 @@
+# Per-daemon image — extends daemon-base with daemon-specific libs and app classes.
+#
+# Build args:
+#   VERSION     — image version tag (e.g., 36.0.0-SNAPSHOT)
+#   DAEMON_NAME — daemon directory name in staging/ (e.g., alarmd)
+#   MAIN_CLASS  — Spring Boot main class (from .main_class file)
+#
+# Built automatically by build.sh for each of the 12 daemons.
+
+ARG VERSION
+FROM opennms/daemon-base:${VERSION}
+
+ARG DAEMON_NAME
+ARG MAIN_CLASS
+
+LABEL org.opencontainers.image.title="Delta-V ${DAEMON_NAME}" \
+      org.opencontainers.image.description="Spring Boot daemon: ${DAEMON_NAME}"
+
+# Bake the main class into the image — entrypoint.sh reads this
+ENV MAIN_CLASS=${MAIN_CLASS}
+
+# Daemon-specific libraries (not in the shared base)
+COPY staging/${DAEMON_NAME}/libs/ /opt/libs/daemon/
+
+# Thin application JAR (classes + resources only, ~18KB-200KB)
+COPY staging/${DAEMON_NAME}/app/ /opt/app/
+
+ENTRYPOINT ["/opt/entrypoint.sh"]
