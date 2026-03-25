@@ -5,8 +5,8 @@
 # + Discovery + Trapd + Syslogd + EventTranslator + Enlinkd
 # + Provisiond + Bsmd + PerspectivePollerd + Telemetryd
 #
-# Images: Uses Delta-V layered images (opennms/*-deltav) which bake all
-# modified JARs and features.xml into the image. Build with: ./build.sh deltav
+# Images: Each daemon has its own image (opennms/<daemon>:${VERSION}) built
+# from a shared daemon-base layer. Build with: ./build.sh deltav
 # Per-service config overlays remain as local bind mounts.
 #
 # Usage:
@@ -123,19 +123,16 @@ services:
 
   pollerd:
     profiles: [lite, full]
-    image: opennms/daemon-deltav-springboot:${VERSION}
+    image: opennms/pollerd:${VERSION}
     container_name: delta-v-pollerd
     hostname: pollerd
-    command: ["java", "-Xms512m", "-Xmx1g", "-XX:MaxMetaspaceSize=256m",
-              "-Dorg.opennms.core.ipc.twin.kafka.bootstrap.servers=kafka:9092",
-              "-Dorg.opennms.core.ipc.rpc.force-remote=true",
-              "-jar", "/opt/daemon-boot-pollerd.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
       kafka:
         condition: service_healthy
     environment:
+      JAVA_OPTS: "-Xms512m -Xmx1g -XX:MaxMetaspaceSize=256m -Dorg.opennms.core.ipc.twin.kafka.bootstrap.servers=kafka:9092 -Dorg.opennms.core.ipc.rpc.force-remote=true"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
       SPRING_DATASOURCE_USERNAME: opennms
       SPRING_DATASOURCE_PASSWORD: opennms
@@ -157,7 +154,7 @@ services:
 
   collectd:
     profiles: [lite, full]
-    image: opennms/daemon-deltav-springboot:${VERSION}
+    image: opennms/collectd:${VERSION}
     container_name: delta-v-collectd
     hostname: collectd
     depends_on:
@@ -165,10 +162,8 @@ services:
         condition: service_completed_successfully
       kafka:
         condition: service_healthy
-    command: ["java", "-Xms512m", "-Xmx1g",
-              "-Dorg.opennms.tsid.node-id=5",
-              "-jar", "/opt/daemon-boot-collectd.jar"]
     environment:
+      JAVA_OPTS: "-Xms512m -Xmx1g -Dorg.opennms.tsid.node-id=5"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
       SPRING_DATASOURCE_USERNAME: opennms
       SPRING_DATASOURCE_PASSWORD: opennms
@@ -186,16 +181,16 @@ services:
 
   discovery:
     profiles: [passive, full]
-    image: opennms/daemon-deltav-springboot:${VERSION}
+    image: opennms/discovery:${VERSION}
     container_name: delta-v-discovery
     hostname: discovery
-    command: ["java", "-Xms256m", "-Xmx512m", "-XX:MaxMetaspaceSize=256m", "-jar", "/opt/daemon-boot-discovery.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
       kafka:
         condition: service_healthy
     environment:
+      JAVA_OPTS: "-Xms256m -Xmx512m -XX:MaxMetaspaceSize=256m"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
       SPRING_DATASOURCE_USERNAME: opennms
       SPRING_DATASOURCE_PASSWORD: opennms
@@ -218,16 +213,16 @@ services:
 
   trapd:
     profiles: [passive, full]
-    image: opennms/daemon-deltav-springboot:${VERSION}
+    image: opennms/trapd:${VERSION}
     container_name: delta-v-trapd
     hostname: trapd
-    command: ["java", "-Xms256m", "-Xmx512m", "-XX:MaxMetaspaceSize=256m", "-jar", "/opt/daemon-boot-trapd.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
       kafka:
         condition: service_healthy
     environment:
+      JAVA_OPTS: "-Xms256m -Xmx512m -XX:MaxMetaspaceSize=256m"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
       SPRING_DATASOURCE_USERNAME: opennms
       SPRING_DATASOURCE_PASSWORD: opennms
@@ -249,16 +244,16 @@ services:
 
   syslogd:
     profiles: [passive, full]
-    image: opennms/daemon-deltav-springboot:${VERSION}
+    image: opennms/syslogd:${VERSION}
     container_name: delta-v-syslogd
     hostname: syslogd
-    command: ["java", "-Xms256m", "-Xmx512m", "-XX:MaxMetaspaceSize=256m", "-jar", "/opt/daemon-boot-syslogd.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
       kafka:
         condition: service_healthy
     environment:
+      JAVA_OPTS: "-Xms256m -Xmx512m -XX:MaxMetaspaceSize=256m"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
       SPRING_DATASOURCE_USERNAME: opennms
       SPRING_DATASOURCE_PASSWORD: opennms
@@ -281,16 +276,16 @@ services:
 
   eventtranslator:
     profiles: [passive, full]
-    image: opennms/daemon-deltav-springboot:${VERSION}
+    image: opennms/eventtranslator:${VERSION}
     container_name: delta-v-eventtranslator
     hostname: eventtranslator
-    command: ["java", "-Xms256m", "-Xmx512m", "-XX:MaxMetaspaceSize=256m", "-jar", "/opt/daemon-boot-eventtranslator.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
       kafka:
         condition: service_healthy
     environment:
+      JAVA_OPTS: "-Xms256m -Xmx512m -XX:MaxMetaspaceSize=256m"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
       SPRING_DATASOURCE_USERNAME: opennms
       SPRING_DATASOURCE_PASSWORD: opennms
@@ -310,19 +305,11 @@ services:
 
   enlinkd:
     profiles: [full]
-    image: opennms/daemon-deltav-springboot:${VERSION}
+    image: opennms/enlinkd:${VERSION}
     container_name: delta-v-enlinkd
     hostname: enlinkd
-    entrypoint: []
-    command:
-      - "java"
-      - "-Xms256m"
-      - "-Xmx512m"
-      - "-XX:MaxMetaspaceSize=256m"
-      - "-Dopennms.home=/opt/deltav"
-      - "-jar"
-      - "/opt/daemon-boot-enlinkd.jar"
     environment:
+      JAVA_OPTS: "-Xms256m -Xmx512m -XX:MaxMetaspaceSize=256m -Dopennms.home=/opt/deltav"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
       SPRING_DATASOURCE_USERNAME: opennms
       SPRING_DATASOURCE_PASSWORD: opennms
@@ -346,16 +333,16 @@ services:
 
   provisiond:
     profiles: [lite, passive, full]
-    image: opennms/daemon-deltav-springboot:${VERSION}
+    image: opennms/provisiond:${VERSION}
     container_name: delta-v-provisiond
     hostname: provisiond
-    command: ["java", "-Xms512m", "-Xmx1g", "-XX:MaxMetaspaceSize=256m", "-jar", "/opt/daemon-boot-provisiond.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
       kafka:
         condition: service_healthy
     environment:
+      JAVA_OPTS: "-Xms512m -Xmx1g -XX:MaxMetaspaceSize=256m"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
       SPRING_DATASOURCE_USERNAME: opennms
       SPRING_DATASOURCE_PASSWORD: opennms
@@ -379,18 +366,16 @@ services:
 
   bsmd:
     profiles: [lite, full]
-    image: opennms/daemon-deltav-springboot:${VERSION}
+    image: opennms/bsmd:${VERSION}
     container_name: delta-v-bsmd
     hostname: bsmd
-    command: ["java", "-Xms256m", "-Xmx512m", "-XX:MaxMetaspaceSize=256m",
-              "-Dorg.opennms.alarms.snapshot.sync.ms=10000",
-              "-jar", "/opt/daemon-boot-bsmd.jar"]
     depends_on:
       db-init:
         condition: service_completed_successfully
       kafka:
         condition: service_healthy
     environment:
+      JAVA_OPTS: "-Xms256m -Xmx512m -XX:MaxMetaspaceSize=256m -Dorg.opennms.alarms.snapshot.sync.ms=10000"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
       SPRING_DATASOURCE_USERNAME: opennms
       SPRING_DATASOURCE_PASSWORD: opennms
@@ -410,10 +395,7 @@ services:
 
   perspectivepollerd:
     profiles: [full]
-    image: opennms/daemon-deltav-springboot:${VERSION}
-    command: ["java", "-Xms512m", "-Xmx1g", "-XX:MaxMetaspaceSize=256m",
-              "-Dorg.opennms.core.ipc.rpc.force-remote=true",
-              "-jar", "/opt/daemon-boot-perspectivepollerd.jar"]
+    image: opennms/perspectivepollerd:${VERSION}
     container_name: delta-v-perspectivepollerd
     hostname: perspectivepollerd
     depends_on:
@@ -422,6 +404,7 @@ services:
       kafka:
         condition: service_healthy
     environment:
+      JAVA_OPTS: "-Xms512m -Xmx1g -XX:MaxMetaspaceSize=256m -Dorg.opennms.core.ipc.rpc.force-remote=true"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
       SPRING_DATASOURCE_USERNAME: opennms
       SPRING_DATASOURCE_PASSWORD: opennms
@@ -443,8 +426,7 @@ services:
 
   alarmd:
     profiles: [lite, passive, full]
-    image: opennms/daemon-deltav-springboot:${VERSION}
-    command: ["java", "-Xms512m", "-Xmx1g", "-XX:MaxMetaspaceSize=256m", "-jar", "/opt/daemon-boot-alarmd.jar"]
+    image: opennms/alarmd:${VERSION}
     container_name: delta-v-alarmd
     hostname: alarmd
     depends_on:
@@ -453,6 +435,7 @@ services:
       kafka:
         condition: service_healthy
     environment:
+      JAVA_OPTS: "-Xms512m -Xmx1g -XX:MaxMetaspaceSize=256m"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
       SPRING_DATASOURCE_USERNAME: opennms
       SPRING_DATASOURCE_PASSWORD: opennms
@@ -470,12 +453,7 @@ services:
 
   telemetryd:
     profiles: [full]
-    image: opennms/daemon-deltav-springboot:${VERSION}
-    command: ["java", "-Xms256m", "-Xmx512m", "-XX:MaxMetaspaceSize=256m",
-              "-Dorg.opennms.core.ipc.sink.kafka.bootstrap.servers=kafka:9092",
-              "-Dorg.opennms.core.ipc.sink.kafka.group.id=opennms-telemetryd-sink",
-              "-Dorg.opennms.core.ipc.twin.kafka.bootstrap.servers=kafka:9092",
-              "-jar", "/opt/daemon-boot-telemetryd.jar"]
+    image: opennms/telemetryd:${VERSION}
     container_name: delta-v-telemetryd
     hostname: telemetryd
     depends_on:
@@ -484,6 +462,7 @@ services:
       kafka:
         condition: service_healthy
     environment:
+      JAVA_OPTS: "-Xms256m -Xmx512m -XX:MaxMetaspaceSize=256m -Dorg.opennms.core.ipc.sink.kafka.bootstrap.servers=kafka:9092 -Dorg.opennms.core.ipc.sink.kafka.group.id=opennms-telemetryd-sink -Dorg.opennms.core.ipc.twin.kafka.bootstrap.servers=kafka:9092"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
       SPRING_DATASOURCE_USERNAME: opennms
       SPRING_DATASOURCE_PASSWORD: opennms
