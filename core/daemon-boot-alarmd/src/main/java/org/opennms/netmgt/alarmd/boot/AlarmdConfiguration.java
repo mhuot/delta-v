@@ -245,10 +245,11 @@ public class AlarmdConfiguration {
     }
 
     @Bean
-    public Alarmd alarmd(AlarmPersister alarmPersister) {
-        var alarmd = new Alarmd();
-        alarmd.setPersister(alarmPersister);
-        return alarmd;
+    public Alarmd alarmd(AlarmPersister alarmPersister,
+                         AlarmLifecycleListenerManager alarmLifecycleListenerManager,
+                         NorthbounderManager northbounderManager) {
+        return new Alarmd(alarmPersister, alarmLifecycleListenerManager, northbounderManager,
+                null, null);
     }
 
     @Bean

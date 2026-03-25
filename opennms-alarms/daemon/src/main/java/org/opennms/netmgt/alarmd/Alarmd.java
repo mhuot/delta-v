@@ -69,6 +69,20 @@ public class Alarmd extends AbstractServiceDaemon implements ThreadAwareEventLis
     @Autowired(required = false)
     private MessageBus m_messageBus;
 
+    public Alarmd(AlarmPersister persister,
+                  AlarmLifecycleListenerManager alarmLifecycleListenerManager,
+                  NorthbounderManager northbounderManager,
+                  DroolsAlarmContext droolsAlarmContext,
+                  MessageBus messageBus) {
+        super(NAME);
+        this.m_persister = persister;
+        this.m_alm = alarmLifecycleListenerManager;
+        this.m_northbounderManager = northbounderManager;
+        this.m_droolsAlarmContext = droolsAlarmContext;
+        this.m_messageBus = messageBus;
+    }
+
+    /** Legacy no-arg constructor for Karaf XML context. */
     public Alarmd() {
         super(NAME);
     }
@@ -106,20 +120,11 @@ public class Alarmd extends AbstractServiceDaemon implements ThreadAwareEventLis
         }
     }
 
-	/**
-     * <p>setPersister</p>
-     *
-     * @param persister a {@link org.opennms.netmgt.alarmd.AlarmPersister} object.
-     */
+    /** @deprecated Legacy setter for Karaf XML context. Use constructor injection. */
     public void setPersister(AlarmPersister persister) {
         this.m_persister = persister;
     }
 
-    /**
-     * <p>getPersister</p>
-     *
-     * @return a {@link org.opennms.netmgt.alarmd.AlarmPersister} object.
-     */
     public AlarmPersister getPersister() {
         return m_persister;
     }
@@ -156,10 +161,6 @@ public class Alarmd extends AbstractServiceDaemon implements ThreadAwareEventLis
     @Override
     public int getNumThreads() {
         return THREADS;
-    }
-
-    public void setMessageBus(MessageBus messageBus) {
-        m_messageBus = messageBus;
     }
 
 }

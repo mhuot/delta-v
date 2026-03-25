@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
- * This class is the main interface to the OpenNMS discovery service. The service 
+ * This class is the main interface to the OpenNMS discovery service. The service
  * delays the reading of configuration information until the service is started.
  *
  * @author <a href="mailto:weave@oculan.com">Brian Weaver </a>
@@ -63,9 +63,16 @@ public class Discovery extends AbstractServiceDaemon {
 
     private Timer discoveryTimer;
 
-    /**
-     * Constructs a new discovery instance.
-     */
+    public Discovery(DiscoveryConfigFactory discoveryConfigFactory,
+                     DiscoveryTaskExecutor discoveryTaskExecutor,
+                     EventForwarder eventForwarder) {
+        super(LOG4J_CATEGORY);
+        this.m_discoveryFactory = Objects.requireNonNull(discoveryConfigFactory);
+        this.m_discoveryTaskExecutor = Objects.requireNonNull(discoveryTaskExecutor);
+        this.m_eventForwarder = Objects.requireNonNull(eventForwarder);
+    }
+
+    /** Legacy no-arg constructor for Karaf XML context. */
     public Discovery() {
         super(LOG4J_CATEGORY);
     }
@@ -82,13 +89,12 @@ public class Discovery extends AbstractServiceDaemon {
         Objects.requireNonNull(m_discoveryFactory, "must set the discoveryFactory property");
 
         try {
-        	LOG.debug("Initializing configuration...");
-        	m_discoveryFactory.reload();
+            LOG.debug("Initializing configuration...");
+            m_discoveryFactory.reload();
         } catch (Throwable e) {
             LOG.debug("onInit: initialization failed", e);
             throw new IllegalStateException("Could not initialize discovery configuration.", e);
         }
-
     }
 
     /**
@@ -170,14 +176,17 @@ public class Discovery extends AbstractServiceDaemon {
         return LOG4J_CATEGORY;
     }
 
+    /** @deprecated Legacy setter for Karaf XML context. Use constructor injection. */
     public void setEventForwarder(EventForwarder eventForwarder) {
         m_eventForwarder = eventForwarder;
     }
 
+    /** @deprecated Legacy setter for Karaf XML context. Use constructor injection. */
     public void setDiscoveryFactory(DiscoveryConfigFactory discoveryFactory) {
         m_discoveryFactory = discoveryFactory;
     }
 
+    /** @deprecated Legacy setter for Karaf XML context. Use constructor injection. */
     public void setDiscoveryTaskExecutor(DiscoveryTaskExecutor discoveryTaskExecutor) {
         m_discoveryTaskExecutor = discoveryTaskExecutor;
     }

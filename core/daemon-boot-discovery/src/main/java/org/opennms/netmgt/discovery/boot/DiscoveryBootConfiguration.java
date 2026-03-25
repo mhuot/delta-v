@@ -23,7 +23,9 @@ import org.opennms.netmgt.icmp.proxy.PingProxyRpcModule;
 import org.opennms.netmgt.icmp.proxy.PingSweepRpcModule;
 import org.opennms.netmgt.provision.LocationAwareDetectorClient;
 import org.opennms.netmgt.provision.detector.client.rpc.DetectorClientRpcModule;
+import org.opennms.netmgt.events.api.EventForwarder;
 import org.opennms.netmgt.provision.detector.client.rpc.LocationAwareDetectorClientRpcImpl;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -126,10 +128,10 @@ public class DiscoveryBootConfiguration {
     }
 
     @Bean
-    public Discovery discovery() {
-        // @Autowired fields: discoveryConfigFactory, discoveryTaskExecutor,
-        //   eventForwarder (@Qualifier("eventIpcManager"))
-        return new Discovery();
+    public Discovery discovery(DiscoveryConfigFactory discoveryConfigFactory,
+                               DiscoveryTaskExecutorImpl discoveryTaskExecutor,
+                               @Qualifier("eventIpcManager") EventForwarder eventForwarder) {
+        return new Discovery(discoveryConfigFactory, discoveryTaskExecutor, eventForwarder);
     }
 
     @Bean

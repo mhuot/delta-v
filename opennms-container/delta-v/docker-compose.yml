@@ -214,6 +214,7 @@ services:
       timeout: 10s
       retries: 20
       start_period: 30s
+    stop_grace_period: 60s
 
   trapd:
     profiles: [passive, full]
@@ -374,6 +375,7 @@ services:
       timeout: 10s
       retries: 20
       start_period: 90s
+    stop_grace_period: 60s
 
   bsmd:
     profiles: [lite, full]
