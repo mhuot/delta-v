@@ -25,7 +25,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.base.Strings;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -37,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Year;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,8 +51,6 @@ public class AdminPageIT extends OpenNMSSeleniumIT {
         // OpenNMS System
         new String[] { "System Configuration", "//span[text()='OpenNMS Configuration']" },
         new String[] { "Configure Users, Groups and On-Call Roles", "//span[text()='Users and Groups']" },
-        new String[] { "Connect to Zenith", "//span[text()='Zenith Connect']" },
-
         // Provisioning
         new String[] { "Manage Provisioning Requisitions", "//h4[contains(text(), 'Requisitions (')]" },
         new String[] { "Import and Export Asset Information", "//span[text()='Import and Export Assets']" },
@@ -101,18 +99,8 @@ public class AdminPageIT extends OpenNMSSeleniumIT {
     };
 
     private void initAdminPageEntries() {
-        // Determine actual links displayed on the Admin page based on some configuration properties
         if (m_adminPageEntries.isEmpty()) {
-            boolean displayZenithConnect = Strings.nullToEmpty(System.getProperty("opennms.zenithConnect.enabled")).equals("true");
-
-            for (final String[] entry : m_adminPageEntriesAll) {
-                // omit this link if Zenith Connect is disabled
-                if (!displayZenithConnect && entry[0] != null && entry[0].equals("Connect to Zenith")) {
-                    continue;
-                }
-
-                m_adminPageEntries.add(entry);
-            }
+            m_adminPageEntries.addAll(Arrays.asList(m_adminPageEntriesAll));
         }
     }
 

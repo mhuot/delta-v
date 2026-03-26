@@ -62,10 +62,6 @@ import {
   getUsageStatisticsStatus,
   setUsageStatisticsStatus
 } from './usageStatisticsService'
-import {
-  addZenithRegistration,
-  getZenithRegistrations
-} from './zenithConnectService'
 
 export default {
   search,
@@ -116,7 +112,5 @@ export default {
   getUsageStatisticsMetadata, 
   getUsageStatisticsStatus,
   setUsageStatisticsStatus,
-  addZenithRegistration,
-  getZenithRegistrations,
   performLogout
 }
