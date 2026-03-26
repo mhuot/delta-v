@@ -30,6 +30,7 @@ import org.opennms.features.distributed.kvstore.json.noop.NoOpJsonStore;
 import org.opennms.netmgt.collection.api.PersisterFactory;
 import org.opennms.netmgt.config.PollerConfig;
 import org.opennms.netmgt.config.PollerConfigFactory;
+import org.opennms.netmgt.config.SnmpPeerFactory;
 import org.opennms.netmgt.config.dao.outages.api.ReadablePollOutagesDao;
 import org.opennms.netmgt.config.dao.outages.impl.OnmsPollOutagesDao;
 import org.opennms.netmgt.dao.api.MonitoredServiceDao;
@@ -99,6 +100,19 @@ public class PollerdDaemonConfiguration {
     public ReadablePollOutagesDao pollOutagesDao() throws IOException {
         LOG.info("Initializing OnmsPollOutagesDao with NoOpJsonStore");
         return new OnmsPollOutagesDao(new NoOpJsonStore());
+    }
+
+    /**
+     * Initializes the SNMP peer factory singleton from snmp-config.xml.
+     * Required by SnmpMonitorStrategy.getRuntimeAttributes() which calls
+     * SnmpPeerFactory.getInstance().getAgentConfig() to resolve SNMP
+     * credentials for each polled service.
+     */
+    @Bean
+    public SnmpPeerFactory snmpPeerFactory() throws IOException {
+        LOG.info("Initializing SnmpPeerFactory");
+        SnmpPeerFactory.init();
+        return SnmpPeerFactory.getInstance();
     }
 
     /**

@@ -28,6 +28,9 @@ import org.opennms.netmgt.collection.api.CollectionAgentFactory;
 import org.opennms.netmgt.collection.api.PersisterFactory;
 import org.opennms.netmgt.config.PollerConfig;
 import org.opennms.netmgt.config.PollerConfigFactory;
+import org.opennms.netmgt.config.SnmpPeerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.opennms.netmgt.dao.api.ApplicationDao;
 import org.opennms.netmgt.dao.api.MonitoredServiceDao;
 import org.opennms.netmgt.dao.api.MonitoringLocationDao;
@@ -64,6 +67,21 @@ import org.springframework.context.SmartLifecycle;
  */
 @Configuration
 public class PerspectivePollerdDaemonConfiguration {
+
+    private static final Logger LOG = LoggerFactory.getLogger(PerspectivePollerdDaemonConfiguration.class);
+
+    /**
+     * Initializes the SNMP peer factory singleton from snmp-config.xml.
+     * Required by SnmpMonitorStrategy.getRuntimeAttributes() which calls
+     * SnmpPeerFactory.getInstance().getAgentConfig() to resolve SNMP
+     * credentials for each polled service.
+     */
+    @Bean
+    public SnmpPeerFactory snmpPeerFactory() throws IOException {
+        LOG.info("Initializing SnmpPeerFactory");
+        SnmpPeerFactory.init();
+        return SnmpPeerFactory.getInstance();
+    }
 
     /**
      * Loads poller-configuration.xml via the singleton PollerConfigFactory.
