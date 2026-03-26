@@ -19,34 +19,42 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.web.rest.support.menu.model;
+package org.opennms.netmgt.scriptd.helper;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainMenu {
-    public String templateName;
-    public String baseHref;
-    public String homeUrl;
-    public String formattedDateTime;
-    public String formattedDate;
-    public String formattedTime;
-    public String noticeStatus;
-    public String username;
-    public String baseNodeUrl;
-    public Boolean displayAddNodeButton;
-    public Boolean sideMenuInitialExpand;
-    public String copyrightDates;
-    public String version;
+import org.opennms.netmgt.xml.event.Event;
+/**
+ * An EventFilter is a filter of Events
+ * An implementation of this interface is a class
+ * where you have some criteria to decide if the Event
+ * pass the filter or not
+ * 
+ * @author antonio
+ *
+ */
+public interface EventPolicyRule {
 
-    final public List<MenuEntry> menus = new ArrayList<>();
-    public MenuEntry helpMenu;
-    public MenuEntry selfServiceMenu;
-    public MenuEntry userNotificationMenu;
-    public MenuEntry provisionMenu;
-    public MenuEntry configurationMenu; // aka admin menu, the "cogs"
+	List<EventMatch> m_filter = new ArrayList<>();
+	List<Boolean> m_forwardes = new ArrayList<>();
 
-    public void addTopMenu(MenuEntry entry) {
-        this.menus.add(entry);
-    }
+	/**
+	 * 
+	 * Method to decide if the event 
+	 * should be forwarder
+	 * 
+	 * @return event
+	 * the filtered Event
+	 * that can be null or 
+	 * with parameter changes
+	 * 
+	 */
+
+	Event filter(Event event);
+	
+	void addForwardRule(EventMatch eventMatch);
+	
+	void addDropRule(EventMatch eventMatch);
+
 }

@@ -2027,18 +2027,11 @@
 
     <feature name="opennms-grpc-exporter" description="OpenNMS :: Grpc :: Exporter" version="36.0.0-SNAPSHOT">
         <feature version="2.0.0" dependency="true">opennms-integration-api</feature>
-        <feature>opennms-zenith-connect</feature>
+        <feature>opennms-core</feature>
         <bundle dependency="true">wrap:mvn:com.google.protobuf/protobuf-java/3.25.5</bundle>
         <bundle>mvn:org.mapstruct/mapstruct/1.5.2.Final</bundle>
         <bundle>mvn:org.opennms.core.grpc/org.opennms.core.grpc.osgi/36.0.0-SNAPSHOT</bundle>
         <bundle>mvn:org.opennms.features.grpc/org.opennms.features.grpc.exporter/36.0.0-SNAPSHOT</bundle>
-    </feature>
-
-    <feature name="opennms-zenith-connect" description="OpenNMS :: Zenith Connect" version="36.0.0-SNAPSHOT">
-        <bundle>mvn:org.opennms.features.distributed/org.opennms.features.distributed.kv-store.api/36.0.0-SNAPSHOT</bundle>
-        <bundle>mvn:org.opennms.features.distributed/org.opennms.features.distributed.kv-store.json.postgres/36.0.0-SNAPSHOT</bundle>
-        <bundle>mvn:org.opennms.features.zenith-connect/org.opennms.features.zenith-connect.persistence/36.0.0-SNAPSHOT</bundle>
-        <bundle>mvn:org.opennms.features.zenith-connect/org.opennms.features.zenith-connect.rest/36.0.0-SNAPSHOT</bundle>
     </feature>
 
     <feature name="opennms-elastic-client" description="OpenNMS :: Elastic Client" version="36.0.0-SNAPSHOT">
