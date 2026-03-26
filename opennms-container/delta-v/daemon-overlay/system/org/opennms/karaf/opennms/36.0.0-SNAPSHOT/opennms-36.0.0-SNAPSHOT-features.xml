@@ -2027,6 +2027,7 @@
 
     <feature name="opennms-grpc-exporter" description="OpenNMS :: Grpc :: Exporter" version="36.0.0-SNAPSHOT">
         <feature version="2.0.0" dependency="true">opennms-integration-api</feature>
+        <feature>opennms-core</feature>
         <bundle dependency="true">wrap:mvn:com.google.protobuf/protobuf-java/3.25.5</bundle>
         <bundle>mvn:org.mapstruct/mapstruct/1.5.2.Final</bundle>
         <bundle>mvn:org.opennms.core.grpc/org.opennms.core.grpc.osgi/36.0.0-SNAPSHOT</bundle>
