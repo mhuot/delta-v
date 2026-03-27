@@ -21,7 +21,7 @@
  */
 package org.opennms.netmgt.perspectivepoller.boot;
 
-import org.opennms.core.daemon.loader.LocalServiceMonitorRegistry;
+import org.opennms.core.daemon.common.registry.LocalServiceMonitorRegistry;
 import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.core.rpc.api.RpcClientFactory;
 import org.opennms.core.rpc.utils.RpcTargetHelper;
