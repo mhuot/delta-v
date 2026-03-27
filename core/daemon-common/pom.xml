@@ -318,12 +318,6 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!-- Detector Registry (ServiceDetectorRegistry interface, LocalServiceDetectorRegistry) -->
-        <dependency>
-            <groupId>org.opennms.core</groupId>
-            <artifactId>org.opennms.core.daemon-loader-shared</artifactId>
-            <version>${project.version}</version>
-        </dependency>
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-detector-registry</artifactId>

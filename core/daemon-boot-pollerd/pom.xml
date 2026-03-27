@@ -365,13 +365,6 @@
             </exclusions>
         </dependency>
 
-        <!-- Pollerd service monitor loader — LocalServiceMonitorRegistry -->
-        <dependency>
-            <groupId>org.opennms.core</groupId>
-            <artifactId>org.opennms.core.daemon-loader-pollerd</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
         <!-- NoOp JsonStore — used by OnmsPollOutagesDao in standalone mode
              (no distributed config sync needed) -->
         <dependency>

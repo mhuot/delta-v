@@ -19,26 +19,27 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.core.daemon.loader;
+package org.opennms.netmgt.poller.boot;
 
-import io.opentracing.Tracer;
-import io.opentracing.util.GlobalTracer;
-import org.opennms.core.tracing.api.TracerRegistry;
+import org.opennms.distributed.core.api.Identity;
 
 /**
- * No-op TracerRegistry for standalone daemon containers.
- * Returns the GlobalTracer (which defaults to NoopTracer).
- * Satisfies KafkaRpcClientFactory's @Autowired TracerRegistry.
+ * Simple Identity implementation for standalone daemon containers.
+ * Returns "pollerd" as the system ID and "Default" as the location.
  */
-public class NoOpTracerRegistry implements TracerRegistry {
-
+public class InlineIdentity implements Identity {
     @Override
-    public Tracer getTracer() {
-        return GlobalTracer.get();
+    public String getId() {
+        return "pollerd";
     }
 
     @Override
-    public void init(String serviceName) {
-        // No-op — standalone daemon containers don't use distributed tracing
+    public String getLocation() {
+        return "Default";
+    }
+
+    @Override
+    public String getType() {
+        return "OpenNMS";
     }
 }

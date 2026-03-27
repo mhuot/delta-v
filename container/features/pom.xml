@@ -965,23 +965,6 @@
       <scope>provided</scope>
     </dependency>
 
-    <!-- Daemon loader bundles (for opennms/daemon container) -->
-    <dependency>
-      <groupId>org.opennms.core</groupId>
-      <artifactId>org.opennms.core.daemon-loader-pollerd</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms.core</groupId>
-      <artifactId>org.opennms.core.daemon-loader-collectd</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.opennms.core</groupId>
-      <artifactId>org.opennms.core.daemon-loader-bsmd</artifactId>
-      <version>${project.version}</version>
-    </dependency>
   </dependencies>
 
   <!-- override a bad repo that's causing issues -->

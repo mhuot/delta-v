@@ -312,13 +312,6 @@
             </exclusions>
         </dependency>
 
-        <!-- Collectd service collector loader — LocalServiceCollectorRegistry -->
-        <dependency>
-            <groupId>org.opennms.core</groupId>
-            <artifactId>org.opennms.core.daemon-loader-collectd</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
         <!-- SNMP collector — SnmpCollector -->
         <dependency>
             <groupId>org.opennms.features.collection</groupId>

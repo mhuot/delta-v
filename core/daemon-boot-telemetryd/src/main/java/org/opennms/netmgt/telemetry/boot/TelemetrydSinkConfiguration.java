@@ -21,8 +21,6 @@
  */
 package org.opennms.netmgt.telemetry.boot;
 
-import org.opennms.core.daemon.loader.LocalMessageDispatcherFactory;
-import org.opennms.core.daemon.loader.TelemetryMessageConsumerManager;
 import org.opennms.core.ipc.sink.api.MessageConsumerManager;
 import org.opennms.core.ipc.sink.api.MessageDispatcherFactory;
 import org.springframework.context.annotation.Bean;
@@ -32,7 +30,7 @@ import org.springframework.context.annotation.Configuration;
  * Sink configuration for Telemetryd multi-bridge pattern.
  *
  * <p>Provides a {@link TelemetryMessageConsumerManager} that spawns one
- * {@link org.opennms.core.daemon.loader.KafkaSinkBridge} per telemetry protocol
+ * {@link KafkaSinkBridge} per telemetry protocol
  * (Netflow-5, IPFIX, sFlow, etc.). Each bridge consumes from its own Kafka
  * Sink topic (e.g., OpenNMS.Sink.Telemetry-Netflow-5).</p>
  *

@@ -294,13 +294,6 @@
             </exclusions>
         </dependency>
 
-        <!-- Telemetryd Kafka Sink bridge loader — TelemetryMessageConsumerManager, KafkaSinkBridge -->
-        <dependency>
-            <groupId>org.opennms.core</groupId>
-            <artifactId>daemon-loader-telemetryd</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
         <!-- Sink common — AbstractMessageDispatcherFactory, AbstractMessageConsumerManager -->
         <dependency>
             <groupId>org.opennms.core.ipc.sink</groupId>

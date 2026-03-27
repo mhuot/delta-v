@@ -25,7 +25,6 @@ import javax.sql.DataSource;
 
 import com.codahale.metrics.MetricRegistry;
 
-import org.opennms.core.daemon.loader.InlineIdentity;
 import org.opennms.core.ipc.twin.common.LocalTwinSubscriberImpl;
 import org.opennms.core.ipc.twin.kafka.publisher.KafkaTwinPublisher;
 import org.opennms.core.tracing.api.TracerRegistry;
