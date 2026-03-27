@@ -41,6 +41,9 @@
     <!-- Events -->
     <module>events</module>
 
+    <!-- Event Translator -->
+    <module>event-translator</module>
+
     <!-- Flows -->
     <module>flows</module>
 
