@@ -68,7 +68,7 @@ public class PollerdRpcConfiguration {
      * Executor for PollerClientRpcModule async response handling.
      * Satisfies the @Autowired @Qualifier("pollerExecutor") on PollerClientRpcModule.
      */
-    @Bean("pollerExecutor")
+    @Bean(name = "pollerExecutor")
     public Executor pollerExecutor() {
         return Executors.newCachedThreadPool();
     }

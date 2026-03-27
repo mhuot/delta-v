@@ -94,7 +94,7 @@ public class CollectdRpcConfiguration {
      * Satisfies the {@code @Autowired @Qualifier("collectorExecutor")} on
      * {@link CollectorClientRpcModule}.
      */
-    @Bean("collectorExecutor")
+    @Bean(name = "collectorExecutor")
     public Executor collectorExecutor() {
         return Executors.newCachedThreadPool();
     }
