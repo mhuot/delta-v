@@ -120,7 +120,6 @@
     <module>opennms-config</module>
     <module>opennms-config-model</module>
     <module>opennms-provision</module>
-    <module>opennms-services</module>
     <module>opennms-taglib</module>
     <module>opennms-jetty</module>
     <module>opennms-correlation</module>
@@ -3512,11 +3511,6 @@
       <dependency>
         <groupId>org.opennms</groupId>
         <artifactId>opennms-rrd-tcp</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.opennms</groupId>
-        <artifactId>opennms-services</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
