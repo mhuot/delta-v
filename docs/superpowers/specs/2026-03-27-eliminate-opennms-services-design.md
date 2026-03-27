@@ -38,7 +38,7 @@ Delete all 15 `daemon-loader-*` directories (7 active modules + 8 empty stubs fr
 | `LocalServiceDetectorRegistry` | daemon-loader-shared | ServiceLoader discovery for detectors |
 | `LocalServiceCollectorRegistry` | daemon-loader-collectd | ServiceLoader discovery for collectors |
 | `LocalServiceMonitorRegistry` | daemon-loader-pollerd (full version) | ServiceLoader + explicit registration for monitors |
-Package: `org.opennms.core.daemon.loader` -> `org.opennms.core.daemon.common`
+Package: `org.opennms.core.daemon.loader` -> `org.opennms.core.daemon.common.registry`
 
 Note: `StandalonePollContext` (from daemon-loader-pollerd) extends `DefaultPollContext` which moves to `features/poller/impl`. To avoid a circular dependency between `core/daemon-common` and `features/poller/impl`, `StandalonePollContext` moves into `features/poller/impl/` (not daemon-common) alongside `DefaultPollContext`.
 
@@ -167,6 +167,10 @@ Top-level feature module added to `features/pom.xml`.
 ## PR Strategy
 
 Single PR covering all phases. The extraction and deletion must be atomic — extracting without deleting creates a split-brain where classes exist in two places.
+
+## Risks
+
+**Split-package contamination:** `opennms-model-jakarta` and `opennms-model` (legacy) still coexist. The new `features/*/impl` modules must not transitively pull in the wrong model version. Verify POM exclusions and check that the runtime priority library pattern in Dockerfiles is not relied upon to mask a build-time mistake.
 
 ## Constraints
 
