@@ -67,8 +67,8 @@
 
     <!-- test dependencies -->
     <dependency>
-      <groupId>org.opennms</groupId>
-      <artifactId>opennms-services</artifactId>
+      <groupId>org.opennms.features.collection</groupId>
+      <artifactId>org.opennms.features.collection.impl</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

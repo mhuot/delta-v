@@ -38,8 +38,8 @@
     </dependency>
     <dependency>
       <!-- Required for the DefaultCollectionAgentFactory implementation -->
-      <groupId>org.opennms</groupId>
-      <artifactId>opennms-services</artifactId>
+      <groupId>org.opennms.features.collection</groupId>
+      <artifactId>org.opennms.features.collection.core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.opennms.features.telemetry</groupId>
