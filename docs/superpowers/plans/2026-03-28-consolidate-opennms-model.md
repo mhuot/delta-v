@@ -275,6 +275,8 @@ Expected: BUILD SUCCESS. If `OnmsAgent.java` or any other class fails due to sam
 git mv "$DST/OnmsAgent.java" "$SRC/OnmsAgent.java"
 ```
 
+**Important:** After moving property editors (`InetAddressTypeEditor`, `OnmsSeverityEditor`, `PrimaryTypeEditor`) to model-api, verify that Spring daemons still pick them up. If any daemon registers these via a `PropertyEditorRegistrar` bean that references them by class, the registrar must be able to find them on the classpath. Since model-api will be a dependency of every daemon (directly or transitively), this should work — but grep the daemon-boot modules for `PropertyEditorRegistrar` or `registerCustomEditor` to confirm no explicit registration references the old module coordinates.
+
 - [ ] **Step 4: Commit**
 
 ```bash
@@ -1105,6 +1107,8 @@ mvn dependency:tree -Dincludes=org.opennms:opennms-model 2>/dev/null | grep open
 ```
 
 Add `<exclusion>` for each path found. Repeat for all 8 modules.
+
+**Note:** The `mvn dependency:tree` audit is the authoritative check — it catches every transitive path. If a wildcard exclusion approach is available in the Maven version, it can simplify the POM, but the tree audit must still be run to confirm cleanliness.
 
 - [ ] **Step 3: Verify each module compiles without opennms-model**
 
