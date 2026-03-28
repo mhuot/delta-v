@@ -26,7 +26,7 @@ cd "$SCRIPT_DIR"
 
 # ── Configuration ──────────────────────────────────────────────────
 TRAP_HOST="localhost"
-TRAP_PORT="1162"
+TRAP_PORT="11162"                    # Minion's mapped trap port (11162 → 1162/udp)
 TRAP_COMMUNITY="public"
 NODE_SCAN_TIMEOUT=180
 ALARM_TIMEOUT=30
@@ -136,6 +136,12 @@ for svc in $REQUIRED_SERVICES; do
 done
 ok "All required services running"
 
+# Minion must be running for trap forwarding
+if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -qw "delta-v-minion"; then
+    err "Minion container is not running. Start with: docker start delta-v-minion"
+fi
+ok "Minion container running"
+
 # ── Start Kafka Consumers ─────────────────────────────────────────
 log "Starting Kafka event consumers..."
 
@@ -163,7 +169,7 @@ snmptrap -v 2c -c "$TRAP_COMMUNITY" "${TRAP_HOST}:${TRAP_PORT}" '' \
     1.3.6.1.6.3.1.1.5.1 \
     1.3.6.1.2.1.1.3.0 t 0
 
-ok "coldStart trap sent to ${TRAP_HOST}:${TRAP_PORT}"
+ok "coldStart trap sent to Minion at ${TRAP_HOST}:${TRAP_PORT}"
 
 if wait_for_kafka_event "$IPC_LOG" "nodeScanCompleted" "$NODE_SCAN_TIMEOUT" "nodeScanCompleted"; then
     ok "nodeScanCompleted received — node provisioned"
