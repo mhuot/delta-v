@@ -16,6 +16,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
+source "${SCRIPT_DIR}/test-lib.sh"
 
 # ── Configuration ──────────────────────────────────────────────────
 TRAP_HOST="localhost"
@@ -31,12 +32,14 @@ OUTAGE_TIMEOUT=180
 
 # ── Parse flags ────────────────────────────────────────────────────
 VERBOSE=false
-CLEANUP=false
+PRE_CLEAN=false
+POST_CLEANUP=false
 for arg in "$@"; do
     case "$arg" in
         --verbose) VERBOSE=true ;;
-        --cleanup) CLEANUP=true ;;
-        --help|-h) echo "Usage: $0 [--verbose] [--cleanup]"; exit 0 ;;
+        --pre-clean) PRE_CLEAN=true ;;
+        --post-cleanup) POST_CLEANUP=true ;;
+        --help|-h) echo "Usage: $0 [--verbose] [--pre-clean] [--post-cleanup]"; exit 0 ;;
     esac
 done
 
@@ -67,8 +70,8 @@ cleanup() {
         cat "$IPC_LOG" 2>/dev/null || true
     fi
 
-    if $CLEANUP; then
-        log "Cleaning up test data..."
+    if $POST_CLEANUP; then
+        log "Post-run cleanup (--post-cleanup): removing test data..."
         psql_query "DELETE FROM alarms WHERE eventuei LIKE '%syslogd/cloud/%'" 2>/dev/null || true
     fi
 
@@ -139,6 +142,15 @@ wait_for_healthy() {
     done
     return 1
 }
+
+# ── Pre-run cleanup (--pre-clean) ─────────────────────────────────
+if $PRE_CLEAN; then
+    log "Pre-run cleanup (--pre-clean): resetting DB..."
+    clean_all_nodes
+    clean_all_alarms
+    ok "Database cleaned"
+    log ""
+fi
 
 # ── Prerequisite Checks ───────────────────────────────────────────
 log "Checking prerequisites..."

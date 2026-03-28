@@ -19,7 +19,8 @@
 # Usage:
 #   ./test-enlinkd-e2e.sh              Run the test
 #   ./test-enlinkd-e2e.sh --verbose    Show diagnostic queries on failure
-#   ./test-enlinkd-e2e.sh --clean      Full pre-run cleanup (DB + restart daemons + clear Kafka)
+#   ./test-enlinkd-e2e.sh --pre-clean  Full pre-run cleanup (DB + restart daemons + clear Kafka)
+#   ./test-enlinkd-e2e.sh --post-cleanup  Delete test nodes and alarms after run
 #   ./test-enlinkd-e2e.sh --skip-provision  Skip Phase 1 if nodes already exist
 #
 # Prerequisites:
@@ -36,6 +37,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
+source "${SCRIPT_DIR}/test-lib.sh"
 
 # ── Configuration ──────────────────────────────────────────────────
 FOREIGN_SOURCE="mhuot-labs"
@@ -56,12 +58,14 @@ declare -A NODES=(
 
 # ── Parse flags ────────────────────────────────────────────────────
 VERBOSE=false
-CLEAN=false
+PRE_CLEAN=false
+POST_CLEANUP=false
 SKIP_PROVISION=false
 for arg in "$@"; do
     case "$arg" in
         --verbose) VERBOSE=true ;;
-        --clean) CLEAN=true ;;
+        --pre-clean) PRE_CLEAN=true ;;
+        --post-cleanup) POST_CLEANUP=true ;;
         --skip-provision) SKIP_PROVISION=true ;;
         --help|-h)
             sed -n '2,/^$/{ s/^# //; s/^#//; p }' "$0"
@@ -80,8 +84,11 @@ fail() { echo "  [FAIL] $*"; FAIL=$((FAIL + 1)); }
 err()  { echo "ERROR: $*" >&2; exit 2; }
 
 cleanup() {
-    : # DB cleanup happens at the start of each run (Phase 0b), not on exit.
-      # This preserves test results in the DB for post-run inspection.
+    if $POST_CLEANUP; then
+        log "Post-run cleanup (--post-cleanup): removing test data..."
+        clean_all_nodes
+        clean_all_alarms
+    fi
 }
 trap cleanup EXIT
 
@@ -171,43 +178,19 @@ done
 ok "Required services running (postgres, kafka, provisiond, enlinkd)"
 
 # ══════════════════════════════════════════════════════════════════
-# Pre-run cleanup (--clean): full reset for a pristine test run
+# Pre-run cleanup (--pre-clean): full reset for a pristine test run
 # ══════════════════════════════════════════════════════════════════
-if $CLEAN; then
+if $PRE_CLEAN; then
     log ""
-    log "Pre-run cleanup (--clean): resetting DB, daemons, and Kafka topics..."
+    log "Pre-run cleanup (--pre-clean): resetting DB, daemons, and Kafka topics..."
 
     # 1. Stop Enlinkd and Provisiond so they don't write while we clean
     log "  Stopping Enlinkd and Provisiond..."
     docker compose stop enlinkd provisiond 2>/dev/null || true
 
-    # 2. Wipe all mhuot-labs data from DB (FK-safe order)
-    MHUOT_IDS="SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}'"
-    PRIOR=$(psql_query "SELECT count(*) FROM node WHERE foreignsource = '${FOREIGN_SOURCE}'" || echo "0")
-    if [ "${PRIOR:-0}" -gt 0 ]; then
-        log "  Deleting ${PRIOR} mhuot-labs nodes and all dependent data..."
-        psql_query "DELETE FROM outages WHERE nodeid IN (${MHUOT_IDS})" || true
-        psql_query "DELETE FROM ifservices WHERE ipinterfaceid IN (SELECT id FROM ipinterface WHERE nodeid IN (${MHUOT_IDS}))" || true
-        psql_query "DELETE FROM alarms WHERE nodeid IN (${MHUOT_IDS})" || true
-        psql_query "DELETE FROM events WHERE nodeid IN (${MHUOT_IDS})" || true
-        psql_query "UPDATE ipinterface SET snmpinterfaceid = NULL WHERE nodeid IN (${MHUOT_IDS})" || true
-        psql_query "DELETE FROM snmpinterface WHERE nodeid IN (${MHUOT_IDS})" || true
-        psql_query "DELETE FROM ipinterface WHERE nodeid IN (${MHUOT_IDS})" || true
-        psql_query "DELETE FROM lldplink WHERE nodeid IN (${MHUOT_IDS})" || true
-        psql_query "DELETE FROM lldpelement WHERE nodeid IN (${MHUOT_IDS})" || true
-        psql_query "DELETE FROM cdplink WHERE nodeid IN (${MHUOT_IDS})" || true
-        psql_query "DELETE FROM cdpelement WHERE nodeid IN (${MHUOT_IDS})" || true
-        psql_query "DELETE FROM ospflink WHERE nodeid IN (${MHUOT_IDS})" || true
-        psql_query "DELETE FROM ospfelement WHERE nodeid IN (${MHUOT_IDS})" || true
-        psql_query "DELETE FROM isislink WHERE nodeid IN (${MHUOT_IDS})" || true
-        psql_query "DELETE FROM isiselement WHERE nodeid IN (${MHUOT_IDS})" || true
-        psql_query "DELETE FROM ipnettomedia WHERE sourcenodeid IN (${MHUOT_IDS})" || true
-        psql_query "DELETE FROM bridgemaclink WHERE nodeid IN (${MHUOT_IDS})" || true
-        psql_query "DELETE FROM bridgestplink WHERE nodeid IN (${MHUOT_IDS})" || true
-        psql_query "DELETE FROM bridgebridgelink WHERE nodeid IN (${MHUOT_IDS}) OR designatednodeid IN (${MHUOT_IDS})" || true
-        psql_query "DELETE FROM bridgeelement WHERE nodeid IN (${MHUOT_IDS})" || true
-        psql_query "DELETE FROM node WHERE foreignsource = '${FOREIGN_SOURCE}'" || true
-    fi
+    # 2. Wipe ALL nodes from DB (FK-safe order) — not just mhuot-labs
+    clean_all_nodes
+    clean_all_alarms
     ok "Database cleaned"
 
     # 3. Delete mhuot-labs RPC Kafka topics so no stale requests linger
@@ -340,47 +323,23 @@ else
 fi
 
 # ══════════════════════════════════════════════════════════════════
-# Phase 0b: Clean prior test data (lightweight — skipped if --clean already ran)
+# Phase 0b: Clean ALL prior node data (lightweight — skipped if --pre-clean already ran)
 # ══════════════════════════════════════════════════════════════════
-if ! $CLEAN; then
+if ! $PRE_CLEAN; then
     log ""
-    log "Phase 0b: Cleaning prior mhuot-labs test data from database..."
+    log "Phase 0b: Cleaning ALL prior node data from database..."
 
-    # Delete in FK-safe order (children first), scoped to mhuot-labs nodes only.
-    MHUOT_NODE_IDS="SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}'"
-    PRIOR_COUNT=$(psql_query "SELECT count(*) FROM node WHERE foreignsource = '${FOREIGN_SOURCE}'" || echo "0")
-
+    PRIOR_COUNT=$(psql_query "SELECT count(*) FROM node" || echo "0")
     if [ "${PRIOR_COUNT:-0}" -gt 0 ]; then
-        log "  Removing ${PRIOR_COUNT} prior mhuot-labs nodes and all dependent data..."
-        psql_query "DELETE FROM outages WHERE nodeid IN (${MHUOT_NODE_IDS})" || true
-        psql_query "DELETE FROM ifservices WHERE ipinterfaceid IN (SELECT id FROM ipinterface WHERE nodeid IN (${MHUOT_NODE_IDS}))" || true
-        psql_query "DELETE FROM alarms WHERE nodeid IN (${MHUOT_NODE_IDS})" || true
-        psql_query "DELETE FROM events WHERE nodeid IN (${MHUOT_NODE_IDS})" || true
-        psql_query "UPDATE ipinterface SET snmpinterfaceid = NULL WHERE nodeid IN (${MHUOT_NODE_IDS})" || true
-        psql_query "DELETE FROM snmpinterface WHERE nodeid IN (${MHUOT_NODE_IDS})" || true
-        psql_query "DELETE FROM ipinterface WHERE nodeid IN (${MHUOT_NODE_IDS})" || true
-        psql_query "DELETE FROM lldplink WHERE nodeid IN (${MHUOT_NODE_IDS})" || true
-        psql_query "DELETE FROM lldpelement WHERE nodeid IN (${MHUOT_NODE_IDS})" || true
-        psql_query "DELETE FROM cdplink WHERE nodeid IN (${MHUOT_NODE_IDS})" || true
-        psql_query "DELETE FROM cdpelement WHERE nodeid IN (${MHUOT_NODE_IDS})" || true
-        psql_query "DELETE FROM ospflink WHERE nodeid IN (${MHUOT_NODE_IDS})" || true
-        psql_query "DELETE FROM ospfelement WHERE nodeid IN (${MHUOT_NODE_IDS})" || true
-        psql_query "DELETE FROM isislink WHERE nodeid IN (${MHUOT_NODE_IDS})" || true
-        psql_query "DELETE FROM isiselement WHERE nodeid IN (${MHUOT_NODE_IDS})" || true
-        psql_query "DELETE FROM ipnettomedia WHERE sourcenodeid IN (${MHUOT_NODE_IDS})" || true
-        psql_query "DELETE FROM bridgemaclink WHERE nodeid IN (${MHUOT_NODE_IDS})" || true
-        psql_query "DELETE FROM bridgestplink WHERE nodeid IN (${MHUOT_NODE_IDS})" || true
-        psql_query "DELETE FROM bridgebridgelink WHERE nodeid IN (${MHUOT_NODE_IDS}) OR designatednodeid IN (${MHUOT_NODE_IDS})" || true
-        psql_query "DELETE FROM bridgeelement WHERE nodeid IN (${MHUOT_NODE_IDS})" || true
-        psql_query "DELETE FROM node WHERE foreignsource = '${FOREIGN_SOURCE}'" || true
+        clean_all_nodes
         ok "Prior test data cleaned (${PRIOR_COUNT} nodes removed)"
         PROVISIOND_NEEDS_RESTART=true
     else
-        ok "No prior mhuot-labs data to clean"
+        ok "No prior node data to clean"
     fi
 else
     log ""
-    log "Phase 0b: Skipped (already cleaned by --clean)"
+    log "Phase 0b: Skipped (already cleaned by --pre-clean)"
 fi
 
 # ══════════════════════════════════════════════════════════════════

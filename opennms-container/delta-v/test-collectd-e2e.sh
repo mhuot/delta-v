@@ -10,7 +10,8 @@
 # Usage:
 #   ./test-collectd-e2e.sh              Run the test
 #   ./test-collectd-e2e.sh --verbose    Show diagnostic queries on failure
-#   ./test-collectd-e2e.sh --clean      Full pre-run cleanup (DB + restart daemons)
+#   ./test-collectd-e2e.sh --pre-clean  Full pre-run cleanup (DB + restart daemons)
+#   ./test-collectd-e2e.sh --post-cleanup  Delete test nodes and alarms after run
 #   ./test-collectd-e2e.sh --skip-provision  Skip Phase 1 if nodes already exist
 #
 # Prerequisites:
@@ -27,6 +28,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
+source "${SCRIPT_DIR}/test-lib.sh"
 
 # ── Configuration ──────────────────────────────────────────────────
 FOREIGN_SOURCE="delta-v"
@@ -38,12 +40,14 @@ COLLECTION_POLL_INTERVAL=15 # seconds between DB checks
 
 # ── Parse flags ────────────────────────────────────────────────────
 VERBOSE=false
-CLEAN=false
+PRE_CLEAN=false
+POST_CLEANUP=false
 SKIP_PROVISION=false
 for arg in "$@"; do
     case "$arg" in
         --verbose) VERBOSE=true ;;
-        --clean) CLEAN=true ;;
+        --pre-clean) PRE_CLEAN=true ;;
+        --post-cleanup) POST_CLEANUP=true ;;
         --skip-provision) SKIP_PROVISION=true ;;
         --help|-h)
             sed -n '2,/^$/{ s/^# //; s/^#//; p }' "$0"
@@ -62,8 +66,11 @@ fail() { echo "  [FAIL] $*"; FAIL=$((FAIL + 1)); }
 err()  { echo "ERROR: $*" >&2; exit 2; }
 
 cleanup() {
-    : # DB cleanup happens at the start of each run, not on exit.
-      # This preserves test results for post-run inspection.
+    if $POST_CLEANUP; then
+        log "Post-run cleanup (--post-cleanup): removing test data..."
+        clean_all_nodes
+        clean_all_alarms
+    fi
 }
 trap cleanup EXIT
 
@@ -143,30 +150,19 @@ done
 ok "Required services running (postgres, kafka, provisiond, collectd)"
 
 # ══════════════════════════════════════════════════════════════════
-# Pre-run cleanup (--clean): full reset for a pristine test run
+# Pre-run cleanup (--pre-clean): full reset for a pristine test run
 # ══════════════════════════════════════════════════════════════════
-if $CLEAN; then
+if $PRE_CLEAN; then
     log ""
-    log "Pre-run cleanup (--clean): resetting DB and daemons..."
+    log "Pre-run cleanup (--pre-clean): resetting DB and daemons..."
 
     # 1. Stop Collectd and Provisiond so they don't write while we clean
     log "  Stopping Collectd and Provisiond..."
     docker compose stop collectd provisiond 2>/dev/null || true
 
-    # 2. Wipe delta-v node data from DB (FK-safe order)
-    DELTAV_IDS="SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}'"
-    PRIOR=$(psql_query "SELECT count(*) FROM node WHERE foreignsource = '${FOREIGN_SOURCE}'" || echo "0")
-    if [ "${PRIOR:-0}" -gt 0 ]; then
-        log "  Deleting ${PRIOR} delta-v nodes and dependent data..."
-        psql_query "DELETE FROM outages WHERE nodeid IN (${DELTAV_IDS})" || true
-        psql_query "DELETE FROM ifservices WHERE ipinterfaceid IN (SELECT id FROM ipinterface WHERE nodeid IN (${DELTAV_IDS}))" || true
-        psql_query "DELETE FROM alarms WHERE nodeid IN (${DELTAV_IDS})" || true
-        psql_query "DELETE FROM events WHERE nodeid IN (${DELTAV_IDS})" || true
-        psql_query "UPDATE ipinterface SET snmpinterfaceid = NULL WHERE nodeid IN (${DELTAV_IDS})" || true
-        psql_query "DELETE FROM snmpinterface WHERE nodeid IN (${DELTAV_IDS})" || true
-        psql_query "DELETE FROM ipinterface WHERE nodeid IN (${DELTAV_IDS})" || true
-        psql_query "DELETE FROM node WHERE foreignsource = '${FOREIGN_SOURCE}'" || true
-    fi
+    # 2. Wipe ALL nodes from DB (FK-safe order)
+    clean_all_nodes
+    clean_all_alarms
     ok "Database cleaned"
 
     # 3. Restart Collectd and Provisiond with fresh state
