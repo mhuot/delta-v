@@ -10,11 +10,10 @@ Delta-V has removed Apache Karaf/OSGi from the runtime architecture. All 12 serv
 
 **Why:** The monolithic Karaf container was a 4.75GB image carrying the full Sentinel runtime, OSGi framework, and ServiceMix-repackaged Spring 4.2.x — all dead weight for daemons that just need a JVM and a JAR. The Karaf deployment model also couples daemon lifecycles, prevents independent scaling, and makes dependency management painful (ServiceMix Spring 4.x conflicts with Spring Boot 4's Spring 7).
 
-**Where we are:** All 12 daemons migrated to Spring Boot 4. Layered JAR deduplication extracts shared dependencies (~80% overlap) into a common `daemon-base` Docker image (~419MB), with per-daemon overlay images adding only unique libraries. Each daemon starts in 2–4 seconds. The Karaf/Sentinel image is retired.
+**Where we are:** All 12 daemons migrated to Spring Boot 4. Layered JAR deduplication extracts shared dependencies (~80% overlap) into a common `daemon-base` Docker image (~374MB), with per-daemon overlay images adding only unique libraries. Each daemon starts in 2–4 seconds. The Karaf/Sentinel image is retired.
 
 **Where we're going:**
-- **The `opennms-services` monolith** is eliminated — each daemon's implementation lives in its own focused module
-- **ServiceMix Spring bundles** are removed from the dependency tree — no more exclusion blocks
+- **ServiceMix Spring bundles** are fully removed from the dependency tree — no more exclusion blocks
 - **Deferred items:** HW inventory adapter (Hibernate 7 entity issue), Minion echo probes, service detector RPC, MATE scopes
 
 ---
@@ -136,6 +135,7 @@ Delta-V has removed Apache Karaf/OSGi from the runtime architecture. All 12 serv
 | 03-25 | SpringServiceDaemon Standardization | All daemon lifecycle classes standardized on `SpringServiceDaemonSmartLifecycle` (PR #58) |
 | 03-25 | Layered JAR Deduplication | `daemon-base` shared image + 12 per-daemon overlay images, split-package classloading fix (PR #60) |
 | 03-26 | Zenith Connect Removal | Cloud registration feature fully removed — persistence, REST, UI, Karaf features (PR #63) |
+| 03-27 | Eliminate opennms-services | Monolith deleted; Poller/Collector/Translator extracted to focused modules (PR #65) |
 
 ### Superseded (2 docs)
 
@@ -157,21 +157,20 @@ Delta-V has removed Apache Karaf/OSGi from the runtime architecture. All 12 serv
 3. **Core container eliminated** — replaced by lightweight `db-init` Spring Boot app
 4. **Spring Boot 4 migration complete** — all 12 daemons migrated, 2–4s startup on jlink Alpine JRE
 5. **Karaf/Sentinel retired** — no OSGi runtime in production; Karaf remains only for Minion
-6. **Layered JAR deduplication** — shared `daemon-base` image + 12 per-daemon overlay images; split-package classloading fix for Hibernate 7
-7. **Kafka Sink bridge** — `daemon-sink-kafka` module consumes from Minion Sink topics (`OpenNMS.Sink.*`), reused by Trapd, Syslogd, and Telemetryd
-8. **Kafka RPC client** — `KafkaRpcClientConfiguration` in `daemon-common` sends RPC requests to Minions, used by Discovery, Provisiond, Pollerd, Collectd, Enlinkd, PerspectivePollerd
-9. **opennms-model-jakarta** — Jakarta Persistence entities with JPA AttributeConverters + JPA DAOs replacing Hibernate 3.6 UserTypes
-10. **Event-conf enrichment** — `EventConfEnrichmentService` in daemon-common loads alarm-data from PostgreSQL for all Spring Boot daemons
-11. **12 daemons deleted** — Notifd, Ackd, Actiond, Vacuumd, Statsd, Tl1d, Queued, RTCd, Ticketer, DHCPd, Scriptd, plus Zenith Connect feature
-12. **Minion RPC mandatory** — all polling/collection daemons use real Kafka RPC
-13. **End-to-end validated** — direct (11 tests), Minion (13 tests), and Enlinkd (20 tests — LLDP topology via remote Minion + Containerlab cEOS) pipelines passing
-14. **Legacy features removed** — Tl1d, Charts, Device Config Backup, Database Reports/Jasper, DHCP monitor, webapp, notifications, Zenith Connect, RPM/Debian packaging
-15. **Minion-only network ingress** — Eventd listeners deleted, Syslogd/Telemetryd consume via KafkaSinkBridge from Minion
-16. **Java 21 runtime** — all daemon + Minion containers run JRE 21
+6. **Layered JAR deduplication** — shared `daemon-base` image (~374MB) + 12 per-daemon overlay images; split-package classloading fix for Hibernate 7
+7. **opennms-services monolith eliminated** — Each daemon's implementation lives in its own focused module; ~120K lines of dead code removed.
+8. **Kafka Sink bridge** — `daemon-sink-kafka` module consumes from Minion Sink topics (`OpenNMS.Sink.*`), reused by Trapd, Syslogd, and Telemetryd
+9. **Kafka RPC client** — `KafkaRpcClientConfiguration` in `daemon-common` sends RPC requests to Minions, used by Discovery, Provisiond, Pollerd, Collectd, Enlinkd, PerspectivePollerd
+10. **opennms-model-jakarta** — Jakarta Persistence entities with JPA AttributeConverters + JPA DAOs replacing Hibernate 3.6 UserTypes
+11. **Event-conf enrichment** — `EventConfEnrichmentService` in daemon-common loads alarm-data from PostgreSQL for all Spring Boot daemons
+12. **12 daemons deleted** — Notifd, Ackd, Actiond, Vacuumd, Statsd, Tl1d, Queued, RTCd, Ticketer, DHCPd, Scriptd, plus Zenith Connect feature
+13. **Minion RPC mandatory** — all polling/collection daemons use real Kafka RPC
+14. **End-to-end validated** — direct (11 tests), Minion (13 tests), and Enlinkd (20 tests — LLDP topology via remote Minion + Containerlab cEOS) pipelines passing
+15. **Legacy features removed** — Tl1d, Charts, Device Config Backup, Database Reports/Jasper, DHCP monitor, webapp, notifications, Zenith Connect, RPM/Debian packaging
+16. **Minion-only network ingress** — Eventd listeners deleted, Syslogd/Telemetryd consume via KafkaSinkBridge from Minion
+17. **Java 21 runtime** — all daemon + Minion containers run JRE 21
 
 ### Remaining Work
-
-**Post-migration cleanup** — Eliminate the `opennms-services` monolith by extracting each daemon's implementation into focused modules. Remove ServiceMix Spring bundles from the dependency tree. Convert remaining `@Autowired` field injection to constructor injection. Split `commonConfigs.xml` per daemon. Consolidate `opennms-model` + `opennms-model-jakarta` to eliminate split-package.
 
 **Deferred** — HW inventory adapter (Hibernate 7 entity issue), Minion echo probes (replace with Kafka lag monitoring), service detector RPC, MATE scopes, Minion-Mandatory Architecture (non-distributable monitors, collector delegation).
 
@@ -186,7 +185,7 @@ OpenNMS Horizon is an enterprise-grade open-source network monitoring platform. 
 - **Each daemon runs in its own container** — independent scaling, isolation, and restartability
 - **Kafka-only event transport** — no ActiveMQ, no shared event bus
 - **Events never touch PostgreSQL** — only alarms are persisted to the database
-- **Layered Docker images** — shared `daemon-base` (~419MB) + 12 per-daemon overlay images on a 143MB jlink Alpine JRE; Minion on `opennms/minion-deltav`
+- **Layered Docker images** — shared `daemon-base` (~374MB) + 12 per-daemon overlay images on a 143MB jlink Alpine JRE; Minion on `opennms/minion-deltav`
 - **Spring Boot 4 migration complete** — all 12 daemons run as fat JARs (2–4s startup); Karaf/Sentinel retired from production
 - **One-shot database initialization** — `opennms/db-init` (312 MB) replaces the Core container for schema setup
 
