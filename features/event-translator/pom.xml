@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <groupId>org.opennms</groupId>
+    <artifactId>org.opennms.features</artifactId>
+    <version>36.0.0-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.opennms.features</groupId>
+  <artifactId>org.opennms.features.event-translator</artifactId>
+  <name>OpenNMS :: Features :: Event Translator</name>
+  <packaging>bundle</packaging>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-RequiredExecutionEnvironment>JavaSE-1.8</Bundle-RequiredExecutionEnvironment>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+            <Bundle-Version>${project.version}</Bundle-Version>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <dependencies>
+    <!-- Config (EventTranslatorConfig, EventTranslatorConfigFactory) -->
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-config</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- Model (EventBuilder, EventUtils, xml.event.*) -->
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-model</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- Core daemon (AbstractServiceDaemon, BaseOnmsMBean) -->
+    <dependency>
+      <groupId>org.opennms.core</groupId>
+      <artifactId>org.opennms.core.daemon</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- Core DB (DataSourceFactory) -->
+    <dependency>
+      <groupId>org.opennms.core</groupId>
+      <artifactId>org.opennms.core.db</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- Events API (EventIpcManager, EventConstants, EventListener, EventIpcManagerFactory) -->
+    <dependency>
+      <groupId>org.opennms.features.events</groupId>
+      <artifactId>org.opennms.features.events.api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- Logging -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+
+    <!-- commons-lang (NotImplementedException) -->
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+    </dependency>
+  </dependencies>
+</project>

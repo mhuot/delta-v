@@ -21,7 +21,7 @@
  */
 package org.opennms.core.daemon.common;
 
-import org.opennms.core.daemon.loader.LocalServiceDetectorRegistry;
+import org.opennms.core.daemon.common.registry.LocalServiceDetectorRegistry;
 import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.netmgt.provision.detector.registry.api.ServiceDetectorRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

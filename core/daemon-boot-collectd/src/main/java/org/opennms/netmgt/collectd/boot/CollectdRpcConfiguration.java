@@ -21,7 +21,7 @@
  */
 package org.opennms.netmgt.collectd.boot;
 
-import org.opennms.core.daemon.loader.LocalServiceCollectorRegistry;
+import org.opennms.core.daemon.common.registry.LocalServiceCollectorRegistry;
 import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.core.rpc.api.RpcClientFactory;
 import org.opennms.core.rpc.utils.RpcTargetHelper;
@@ -94,7 +94,7 @@ public class CollectdRpcConfiguration {
      * Satisfies the {@code @Autowired @Qualifier("collectorExecutor")} on
      * {@link CollectorClientRpcModule}.
      */
-    @Bean("collectorExecutor")
+    @Bean(name = "collectorExecutor")
     public Executor collectorExecutor() {
         return Executors.newCachedThreadPool();
     }

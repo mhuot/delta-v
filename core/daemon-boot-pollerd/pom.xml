@@ -182,8 +182,8 @@
 
         <!-- Poller implementation — Poller, QueryManagerDaoImpl, DefaultPollContext -->
         <dependency>
-            <groupId>org.opennms</groupId>
-            <artifactId>opennms-services</artifactId>
+            <groupId>org.opennms.features.poller</groupId>
+            <artifactId>org.opennms.features.poller.impl</artifactId>
             <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-aop</artifactId></exclusion>
@@ -215,6 +215,13 @@
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- Poll outages DAO — OnmsPollOutagesDao -->
+        <dependency>
+            <groupId>org.opennms</groupId>
+            <artifactId>org.opennms.config-dao.poll-outages.impl</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <!-- Poller RPC client — LocationAwarePollerClientImpl -->
@@ -363,13 +370,6 @@
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
             </exclusions>
-        </dependency>
-
-        <!-- Pollerd service monitor loader — LocalServiceMonitorRegistry -->
-        <dependency>
-            <groupId>org.opennms.core</groupId>
-            <artifactId>org.opennms.core.daemon-loader-pollerd</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <!-- NoOp JsonStore — used by OnmsPollOutagesDao in standalone mode

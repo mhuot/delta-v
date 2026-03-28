@@ -412,8 +412,8 @@
     </dependency>
     <dependency>
       <!--  Expose the test context for poller DAOs  -->
-      <groupId>org.opennms</groupId>
-      <artifactId>opennms-services</artifactId>
+      <groupId>org.opennms.features.poller</groupId>
+      <artifactId>org.opennms.features.poller.impl</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

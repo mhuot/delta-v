@@ -120,7 +120,6 @@
     <module>opennms-config</module>
     <module>opennms-config-model</module>
     <module>opennms-provision</module>
-    <module>opennms-services</module>
     <module>opennms-taglib</module>
     <module>opennms-jetty</module>
     <module>opennms-correlation</module>
@@ -2836,6 +2835,16 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.opennms.features.collection</groupId>
+        <artifactId>org.opennms.features.collection.snmp-collector</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.opennms.features.collection</groupId>
+        <artifactId>org.opennms.features.collection.impl</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.opennms.features.poller</groupId>
         <artifactId>org.opennms.features.poller.api</artifactId>
         <version>${project.version}</version>
@@ -2848,6 +2857,16 @@
       <dependency>
         <groupId>org.opennms.features.poller</groupId>
         <artifactId>org.opennms.features.poller.shell</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.opennms.features.poller</groupId>
+        <artifactId>org.opennms.features.poller.impl</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.opennms.features</groupId>
+        <artifactId>org.opennms.features.event-translator</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -3492,11 +3511,6 @@
       <dependency>
         <groupId>org.opennms</groupId>
         <artifactId>opennms-rrd-tcp</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.opennms</groupId>
-        <artifactId>opennms-services</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

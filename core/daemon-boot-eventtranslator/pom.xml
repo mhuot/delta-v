@@ -162,15 +162,24 @@
             <groupId>org.opennms.core</groupId>
             <artifactId>org.opennms.core.daemon-common</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.servicemix.bundles</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
-        <!-- EventTranslator implementation (via opennms-services) -->
+        <!-- EventTranslator implementation -->
         <dependency>
-            <groupId>org.opennms</groupId>
-            <artifactId>opennms-services</artifactId>
+            <groupId>org.opennms.features</groupId>
+            <artifactId>org.opennms.features.event-translator</artifactId>
             <version>${project.version}</version>
             <exclusions>
-                <!-- Exclude ALL ServiceMix Spring 4.2.x bundles — Spring Boot 4 provides Spring 7 -->
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-aop</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-aspects</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
@@ -187,26 +196,18 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-tx</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-web</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-webmvc</artifactId></exclusion>
-                <!-- Exclude old Spring Security that conflicts -->
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-security-core</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-security-config</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-security-web</artifactId></exclusion>
-                <!-- Exclude old Hibernate 3.x -->
                 <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
-                <!-- Exclude old SLF4J 1.7.x — Spring Boot 4 provides SLF4J 2.x -->
+                <exclusion><groupId>org.hibernate.javax.persistence</groupId><artifactId>hibernate-jpa-2.0-api</artifactId></exclusion>
                 <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion>
                 <exclusion><groupId>org.slf4j</groupId><artifactId>jcl-over-slf4j</artifactId></exclusion>
                 <exclusion><groupId>org.slf4j</groupId><artifactId>log4j-over-slf4j</artifactId></exclusion>
-                <!-- Exclude old javax.persistence API — Spring Boot 4 uses jakarta.persistence -->
-                <exclusion><groupId>org.hibernate.javax.persistence</groupId><artifactId>hibernate-jpa-2.0-api</artifactId></exclusion>
-                <!-- Exclude Karaf/OSGi logging — not needed in Spring Boot -->
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-log4j2</artifactId></exclusion>
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
-                <!-- Exclude commons-logging — Spring Boot uses jcl-over-slf4j -->
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
-                <!-- Exclude config-model which contains legacy OnmsMonitoringLocation with
-                     javax.persistence annotations — not needed here (no JPA) -->
-                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-config-model</artifactId></exclusion>
+                <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
             </exclusions>
         </dependency>
 

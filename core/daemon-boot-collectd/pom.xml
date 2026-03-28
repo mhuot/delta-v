@@ -189,8 +189,8 @@
 
         <!-- Collectd implementation — Collectd, DefaultCollectdInstrumentation -->
         <dependency>
-            <groupId>org.opennms</groupId>
-            <artifactId>opennms-services</artifactId>
+            <groupId>org.opennms.features.collection</groupId>
+            <artifactId>org.opennms.features.collection.impl</artifactId>
             <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-aop</artifactId></exclusion>
@@ -222,6 +222,13 @@
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- Poll outages DAO — OnmsPollOutagesDao -->
+        <dependency>
+            <groupId>org.opennms</groupId>
+            <artifactId>org.opennms.config-dao.poll-outages.impl</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <!-- Collector config — CollectdConfigFactory -->
@@ -310,13 +317,6 @@
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
             </exclusions>
-        </dependency>
-
-        <!-- Collectd service collector loader — LocalServiceCollectorRegistry -->
-        <dependency>
-            <groupId>org.opennms.core</groupId>
-            <artifactId>org.opennms.core.daemon-loader-collectd</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <!-- SNMP collector — SnmpCollector -->

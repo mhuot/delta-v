@@ -15,6 +15,7 @@
     <module>client-rpc</module>
     <module>collectors</module>
     <module>core</module>
+    <module>impl</module>
     <module>persistence-rrd</module>
     <module>persistence-tcp</module>
     <module>persistence-osgi</module>

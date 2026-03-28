@@ -231,13 +231,6 @@
             </exclusions>
         </dependency>
 
-        <!-- Shared daemon-loader (LocalServiceDetectorRegistry) -->
-        <dependency>
-            <groupId>org.opennms.core</groupId>
-            <artifactId>org.opennms.core.daemon-loader-shared</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
         <!-- MATE API (EntityScopeProvider, EmptyScope) -->
         <dependency>
             <groupId>org.opennms.core.mate</groupId>

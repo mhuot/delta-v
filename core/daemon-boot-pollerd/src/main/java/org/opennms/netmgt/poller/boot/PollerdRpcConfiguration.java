@@ -21,7 +21,7 @@
  */
 package org.opennms.netmgt.poller.boot;
 
-import org.opennms.core.daemon.loader.LocalServiceMonitorRegistry;
+import org.opennms.core.daemon.common.registry.LocalServiceMonitorRegistry;
 import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.core.rpc.api.RpcClientFactory;
 import org.opennms.core.rpc.utils.RpcTargetHelper;
@@ -68,7 +68,7 @@ public class PollerdRpcConfiguration {
      * Executor for PollerClientRpcModule async response handling.
      * Satisfies the @Autowired @Qualifier("pollerExecutor") on PollerClientRpcModule.
      */
-    @Bean("pollerExecutor")
+    @Bean(name = "pollerExecutor")
     public Executor pollerExecutor() {
         return Executors.newCachedThreadPool();
     }

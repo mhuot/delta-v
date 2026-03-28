@@ -160,10 +160,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.opennms</groupId>
-      <artifactId>opennms-services</artifactId>
-      <scope>test</scope>
-     </dependency>
+      <groupId>org.opennms.core.snmp</groupId>
+      <artifactId>org.opennms.core.snmp.api</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-library</artifactId>

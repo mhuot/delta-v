@@ -318,12 +318,6 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!-- Detector Registry (ServiceDetectorRegistry interface, LocalServiceDetectorRegistry) -->
-        <dependency>
-            <groupId>org.opennms.core</groupId>
-            <artifactId>org.opennms.core.daemon-loader-shared</artifactId>
-            <version>${project.version}</version>
-        </dependency>
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-detector-registry</artifactId>
@@ -343,6 +337,19 @@
                 <!-- opennms-model already on classpath with proper exclusions -->
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- Collection API (ServiceCollectorRegistry interface) -->
+        <dependency>
+            <groupId>org.opennms.features.collection</groupId>
+            <artifactId>org.opennms.features.collection.api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- Poller API (ServiceMonitorRegistry interface) -->
+        <dependency>
+            <groupId>org.opennms.features.poller</groupId>
+            <artifactId>org.opennms.features.poller.api</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <!-- Test -->
