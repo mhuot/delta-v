@@ -188,4 +188,14 @@ public class IpNetToMedia implements Serializable {
     public void setLastPollTime(Date lastPollTime) {
         m_lastPollTime = lastPollTime;
     }
+
+    public void merge(IpNetToMedia element) {
+        setNode(element.getNode());
+        setIfIndex(element.getIfIndex());
+        setPort(element.getPort());
+        setSourceNode(element.getSourceNode());
+        setSourceIfIndex(element.getSourceIfIndex());
+        setLastPollTime(element.getCreateTime());
+    }
+
 }

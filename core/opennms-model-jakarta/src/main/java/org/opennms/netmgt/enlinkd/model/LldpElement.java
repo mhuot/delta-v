@@ -130,4 +130,14 @@ public final class LldpElement implements Serializable {
     public void setLldpNodeLastPollTime(Date lldpNodeLastPollTime) {
         m_lldpNodeLastPollTime = lldpNodeLastPollTime;
     }
+
+    public void merge(LldpElement element) {
+        if (element == null)
+            return;
+        setLldpChassisId(element.getLldpChassisId());
+        setLldpChassisIdSubType(element.getLldpChassisIdSubType());
+        setLldpSysname(element.getLldpSysname());
+        setLldpNodeLastPollTime(element.getLldpNodeCreateTime());
+    }
+
 }

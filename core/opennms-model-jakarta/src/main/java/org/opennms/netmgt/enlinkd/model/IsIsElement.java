@@ -141,4 +141,14 @@ public final class IsIsElement implements Serializable {
     public void setIsisNodeLastPollTime(Date isisNodeLastPollTime) {
         m_isisNodeLastPollTime = isisNodeLastPollTime;
     }
+
+    public void merge(IsIsElement element) {
+        if (element == null)
+            return;
+        setIsisSysID(element.getIsisSysID());
+        setIsisSysAdminState(element.getIsisSysAdminState());
+
+        setIsisNodeLastPollTime(element.getIsisNodeCreateTime());
+    }
+
 }

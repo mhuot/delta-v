@@ -218,4 +218,17 @@ public final class OspfElement implements Serializable {
     public void setOspfNodeLastPollTime(Date ospfNodeLastPollTime) {
         m_ospfNodeLastPollTime = ospfNodeLastPollTime;
     }
+
+    public void merge(OspfElement element) {
+        if (element == null)
+            return;
+        setOspfRouterId(element.getOspfRouterId());
+        setOspfRouterIdIfindex(element.getOspfRouterIdIfindex());
+        setOspfRouterIdNetmask(element.getOspfRouterIdNetmask());
+        setOspfAdminStat(element.getOspfAdminStat());
+        setOspfASBdrRtrStatus(element.getOspfASBdrRtrStatus());
+        setOspfBdrRtrStatus(element.getOspfASBdrRtrStatus());
+        setOspfNodeLastPollTime(element.getOspfNodeCreateTime());
+    }
+
 }
