@@ -182,4 +182,18 @@ public class OspfArea implements Serializable {
         m_ospfAreaLastPollTime = ospfAreaLastPollTime;
         return this;
     }
+
+    public void merge(OspfArea area) {
+        if (area == null)
+            return;
+        setOspfAreaId(area.getOspfAreaId());
+        setOspfAuthType(area.getOspfAuthType());
+        setOspfImportAsExtern(area.getOspfImportAsExtern());
+        setOspfAreaBdrRtrCount(area.getOspfAreaBdrRtrCount());
+        setOspfAsBdrRtrCount(area.getOspfAsBdrRtrCount());
+        setOspfAreaLsaCount(area.getOspfAreaLsaCount());
+        setOspfAreaCreateTime(area.getOspfAreaCreateTime());
+        setOspfAreaLastPollTime(area.getOspfAreaCreateTime());
+    }
+
 }

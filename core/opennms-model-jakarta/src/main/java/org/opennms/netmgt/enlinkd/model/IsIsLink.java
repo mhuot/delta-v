@@ -237,4 +237,18 @@ public class IsIsLink implements Serializable {
     public void setIsisLinkLastPollTime(Date isisLinkLastPollTime) {
         m_isisLinkLastPollTime = isisLinkLastPollTime;
     }
+
+    public void merge(IsIsLink link) {
+        setIsisCircIfIndex(link.getIsisCircIfIndex());
+        setIsisCircAdminState(link.getIsisCircAdminState());
+
+        setIsisISAdjState(link.getIsisISAdjState());
+        setIsisISAdjNeighSNPAAddress(link.getIsisISAdjNeighSNPAAddress());
+        setIsisISAdjNeighSysType(link.getIsisISAdjNeighSysType());
+        setIsisISAdjNeighSysID(link.getIsisISAdjNeighSysID());
+        setIsisISAdjNbrExtendedCircID(link.getIsisISAdjNbrExtendedCircID());
+
+        setIsisLinkLastPollTime(link.getIsisLinkCreateTime());
+    }
+
 }

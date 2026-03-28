@@ -190,4 +190,24 @@ public class BridgeBridgeLink implements Serializable {
     public void setBridgeBridgeLinkLastPollTime(Date bridgeLinkLastPollTime) {
         m_bridgeBridgeLinkLastPollTime = bridgeLinkLastPollTime;
     }
+
+    public void merge(BridgeBridgeLink element) {
+        if (element == null)
+                return;
+
+        setBridgePortIfIndex(element.getBridgePortIfIndex());
+        setBridgePortIfName(element.getBridgePortIfName());
+        setVlan(element.getVlan());
+
+        setDesignatedNode(element.getDesignatedNode());
+        setDesignatedPort(element.getDesignatedPort());
+        setDesignatedPortIfIndex(element.getDesignatedPortIfIndex());
+        setDesignatedPortIfName(element.getDesignatedPortIfName());
+        setDesignatedVlan(element.getDesignatedVlan());
+        if (element.getBridgeBridgeLinkLastPollTime() == null)
+            setBridgeBridgeLinkLastPollTime(element.getBridgeBridgeLinkCreateTime());
+        else
+           setBridgeBridgeLinkLastPollTime(element.getBridgeBridgeLinkLastPollTime());
+    }
+
 }

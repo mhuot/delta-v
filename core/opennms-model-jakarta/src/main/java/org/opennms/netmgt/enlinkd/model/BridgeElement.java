@@ -243,4 +243,21 @@ public class BridgeElement implements Serializable {
     public void setBridgeNodeLastPollTime(Date bridgeNodeLastPollTime) {
         m_bridgeNodeLastPollTime = bridgeNodeLastPollTime;
     }
+
+    public void merge(BridgeElement element) {
+        if (element == null)
+            return;
+
+        setBaseBridgeAddress(element.getBaseBridgeAddress());
+        setBaseNumPorts(element.getBaseNumPorts());
+        setBaseType(element.getBaseType());
+
+        setStpProtocolSpecification(element.getStpProtocolSpecification());
+        setStpPriority(element.getStpPriority());
+        setStpDesignatedRoot(element.getStpDesignatedRoot());
+        setStpRootCost(element.getStpRootCost());
+        setStpRootPort(element.getStpRootPort());
+
+        setBridgeNodeLastPollTime(element.getBridgeNodeCreateTime());
+    }
 }

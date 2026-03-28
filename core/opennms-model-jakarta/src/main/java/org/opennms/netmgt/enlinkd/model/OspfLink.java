@@ -184,4 +184,21 @@ public class OspfLink implements Serializable {
     public void setOspfLinkLastPollTime(Date ospfLinkLastPollTime) {
         m_ospfLinkLastPollTime = ospfLinkLastPollTime;
     }
+
+    public void merge(OspfLink link) {
+        if (link == null)
+            return;
+        setOspfIpAddr(link.getOspfIpAddr());
+        setOspfIpMask(link.getOspfIpMask());
+        setOspfIfIndex(link.getOspfIfIndex());
+        setOspfAddressLessIndex(link.getOspfAddressLessIndex());
+        setOspfIfAreaId(link.getOspfIfAreaId());
+
+        setOspfRemRouterId(link.getOspfRemRouterId());
+        setOspfRemIpAddr(link.getOspfRemIpAddr());
+        setOspfRemAddressLessIndex(link.getOspfRemAddressLessIndex());
+
+        setOspfLinkLastPollTime(link.getOspfLinkCreateTime());
+    }
+
 }

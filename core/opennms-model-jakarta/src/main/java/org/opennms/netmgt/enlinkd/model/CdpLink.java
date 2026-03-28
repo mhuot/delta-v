@@ -244,4 +244,17 @@ public class CdpLink implements Serializable {
     public void setCdpLinkLastPollTime(Date cdpLinkLastPollTime) {
         m_cdpLinkLastPollTime = cdpLinkLastPollTime;
     }
+
+    public void merge(CdpLink link) {
+        if (link == null) return;
+        setCdpInterfaceName(link.getCdpInterfaceName());
+        setCdpCacheAddressType(link.getCdpCacheAddressType());
+        setCdpCacheAddress(link.getCdpCacheAddress());
+        setCdpCacheVersion(link.getCdpCacheVersion());
+        setCdpCacheDeviceId(link.getCdpCacheDeviceId());
+        setCdpCacheDevicePort(link.getCdpCacheDevicePort());
+        setCdpCacheDevicePlatform(link.getCdpCacheDevicePlatform());
+        setCdpLinkLastPollTime(link.getCdpLinkCreateTime());
+    }
+
 }

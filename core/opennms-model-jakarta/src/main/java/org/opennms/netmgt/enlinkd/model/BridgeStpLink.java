@@ -259,4 +259,22 @@ public class BridgeStpLink implements Serializable {
     public void setBridgeStpLinkLastPollTime(Date bridgeLinkLastPollTime) {
         m_bridgeStpLinkLastPollTime = bridgeLinkLastPollTime;
     }
+
+    public void merge(BridgeStpLink element) {
+        if (element == null)
+            return;
+
+        setStpPortState(element.getStpPortState());
+        setStpPortEnable(element.getStpPortEnable());
+        setStpPortIfIndex(element.getStpPortIfIndex());
+        setStpPortIfName(element.getStpPortIfName());
+        setVlan(element.getVlan());
+
+        setDesignatedRoot(element.getDesignatedRoot());
+        setDesignatedCost(element.getDesignatedCost());
+        setDesignatedBridge(element.getDesignatedBridge());
+        setDesignatedPort(element.getDesignatedPort());
+        setBridgeStpLinkLastPollTime(element.getBridgeStpLinkCreateTime());
+    }
+
 }

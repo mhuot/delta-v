@@ -176,4 +176,18 @@ public class BridgeMacLink implements Serializable {
     public void setBridgeMacLinkLastPollTime(Date bridgeMacLinkLastPollTime) {
         m_bridgeMacLinkLastPollTime = bridgeMacLinkLastPollTime;
     }
+
+    public void merge(BridgeMacLink element) {
+        if (element == null)
+            return;
+        setBridgePortIfIndex(element.getBridgePortIfIndex());
+        setBridgePortIfName(element.getBridgePortIfName());
+        setVlan(element.getVlan());
+        setLinkType(element.getLinkType());
+        if (element.getBridgeMacLinkLastPollTime() == null)
+            setBridgeMacLinkLastPollTime(element.getBridgeMacLinkCreateTime());
+        else
+            setBridgeMacLinkLastPollTime(element.getBridgeMacLinkLastPollTime());
+    }
+
 }

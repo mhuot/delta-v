@@ -154,4 +154,13 @@ public final class CdpElement implements Serializable {
     public void setCdpNodeLastPollTime(Date cdpNodeLastPollTime) {
         m_cdpNodeLastPollTime = cdpNodeLastPollTime;
     }
+
+    public void merge(CdpElement element) {
+        if (element == null)
+            return;
+        setCdpGlobalRun(element.getCdpGlobalRun());
+        setCdpGlobalDeviceId(element.getCdpGlobalDeviceId());
+        setCdpNodeLastPollTime(element.getCdpNodeCreateTime());
+    }
+
 }
