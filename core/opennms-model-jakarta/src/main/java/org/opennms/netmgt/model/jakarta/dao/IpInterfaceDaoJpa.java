@@ -87,8 +87,8 @@ public class IpInterfaceDaoJpa extends AbstractDaoJpa<OnmsIpInterface, Integer> 
 
     @Override
     public List<OnmsIpInterface> findByIpAddress(String ipAddress) {
-        throw new UnsupportedOperationException(
-                "IpInterfaceDaoJpa.findByIpAddress not implemented — not required by Provisiond");
+        return find("from OnmsIpInterface ipInterface where ipInterface.ipAddress = ?1",
+                InetAddressUtils.addr(ipAddress));
     }
 
     @Override
