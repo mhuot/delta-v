@@ -12,7 +12,8 @@
 # Usage:
 #   ./test-minion-e2e.sh              Run the test
 #   ./test-minion-e2e.sh --verbose    Show full Kafka event trace
-#   ./test-minion-e2e.sh --cleanup    Delete test data after run
+#   ./test-minion-e2e.sh --pre-clean  Full pre-run cleanup (delete all nodes and alarms)
+#   ./test-minion-e2e.sh --post-cleanup  Delete test data after run
 #
 # Prerequisites:
 #   - Delta-V deployed: docker compose up -d
@@ -28,6 +29,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
+source "${SCRIPT_DIR}/test-lib.sh"
 
 # ── Configuration ──────────────────────────────────────────────────
 # Traps go to the MINION, not directly to Trapd
@@ -45,9 +47,10 @@ usage() {
 Usage: ./test-minion-e2e.sh [options]
 
 Options:
-  --verbose    Show full Kafka event trace
-  --cleanup    Delete test alarms after test
-  --help       Show this help
+  --verbose       Show full Kafka event trace
+  --pre-clean     Full pre-run cleanup (delete all nodes and alarms)
+  --post-cleanup  Delete test alarms after test
+  --help          Show this help
 
 Prerequisites:
   - Delta-V deployed: docker compose up -d
@@ -58,11 +61,13 @@ USAGE
 
 # ── Parse flags ────────────────────────────────────────────────────
 VERBOSE=false
-CLEANUP=false
+PRE_CLEAN=false
+POST_CLEANUP=false
 for arg in "$@"; do
     case "$arg" in
         --verbose) VERBOSE=true ;;
-        --cleanup) CLEANUP=true ;;
+        --pre-clean) PRE_CLEAN=true ;;
+        --post-cleanup) POST_CLEANUP=true ;;
         --help|-h) usage; exit 0 ;;
     esac
 done
@@ -100,8 +105,8 @@ cleanup() {
         cat "$IPC_LOG" 2>/dev/null || true
     fi
 
-    if $CLEANUP; then
-        log "Cleaning up test data..."
+    if $POST_CLEANUP; then
+        log "Post-run cleanup (--post-cleanup): removing test data..."
         docker compose exec -T -e PGPASSWORD=opennms postgres \
             psql -U opennms -d opennms -q \
             -c "DELETE FROM alarms WHERE eventuei LIKE '%translator/traps/SNMP_Link%'" \
@@ -135,6 +140,15 @@ psql_query() {
     docker compose exec -T -e PGPASSWORD=opennms postgres \
         psql -U opennms -d opennms -t -A -c "$1" 2>/dev/null
 }
+
+# ── Pre-run cleanup (--pre-clean) ─────────────────────────────────
+if $PRE_CLEAN; then
+    log "Pre-run cleanup (--pre-clean): resetting DB..."
+    clean_all_nodes
+    clean_all_alarms
+    ok "Database cleaned"
+    log ""
+fi
 
 # ── Prerequisite Checks ───────────────────────────────────────────
 log "Checking prerequisites..."
