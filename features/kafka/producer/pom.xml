@@ -217,6 +217,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.opennms.integration.api</groupId>
+      <artifactId>api</artifactId>
+      <version>${opennmsApiVersion}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.awaitility</groupId>
       <artifactId>awaitility</artifactId>
       <scope>test</scope>
