@@ -1,4 +1,4 @@
-# Next Session: Consolidate opennms-model into opennms-model-jakarta
+# Next Session: Execute opennms-model Consolidation Plan
 
 > Copy everything below the line into the next Claude Code conversation.
 
@@ -6,38 +6,22 @@
 
 ## Context
 
-All 12 daemons run as standalone Spring Boot 4 apps with Hibernate 7 / Jakarta Persistence. All 6 E2E test suites pass (78/78). The codebase has a split-package problem between two model modules:
+Design and implementation plan are complete for consolidating the split-package model modules. All 12 daemons run as standalone Spring Boot 4 apps with Hibernate 7 / Jakarta Persistence. All 6 E2E test suites pass (78/78).
 
-- **`opennms-model`** (~121 classes, `javax.persistence`) — the legacy module pulled transitively by many modules. Contains entity classes AND non-entity types (enums like `OnmsSeverity`, utility types like `TroubleTicketState`). Depends on Hibernate 3.6.
-- **`opennms-model-jakarta`** (~30 classes, `jakarta.persistence`) — selective port of entity classes + JPA DAOs for Spring Boot daemons. Uses Hibernate 7.
-
-Both provide classes in the same package `org.opennms.netmgt.model`. This is mitigated by a priority classpath directory (`/opt/libs/priority/`) in Docker containers, but is fragile.
-
-**Goal:** Consolidate into a single model module so we can drop Hibernate 3.6 from the dependency tree entirely.
+**Spec:** `docs/superpowers/specs/2026-03-28-consolidate-opennms-model-design.md`
+**Plan:** `docs/superpowers/plans/2026-03-28-consolidate-opennms-model.md`
 
 ## What to Implement
 
-### Primary Task: Brainstorm and design the consolidation approach
+Execute the 21-task implementation plan. Three phases:
 
-Two candidate approaches (from prior analysis):
+1. **Phase 1 (Tasks 2-6):** Create `core/opennms-model-api` with ~30 persistence-free classes extracted from `opennms-model`. Update OSGi bundle metadata for re-export.
+2. **Phase 2 (Tasks 7-15):** Port all 17 remaining entity classes to `core/opennms-model-jakarta` (jakarta.persistence). Activate phantom fields. Add EventConf JAXB test.
+3. **Phase 3 (Tasks 16-21):** Clean all 12 daemon-boot POMs to depend on model-api + model-jakarta only. Remove priority classpath hack. Full E2E validation.
 
-**(A) Complete jakarta migration of all 121 classes** — Port every remaining class in `opennms-model` to jakarta annotations, merge into `opennms-model-jakarta`, drop `opennms-model` from daemon classpaths.
+## Execution Approach
 
-**(B) Split into `opennms-model-api` + `opennms-model-jakarta`** — Move non-entity classes (enums, utility types, ~105 classes with no JPA annotations) to a new `opennms-model-api` module. Make `opennms-model-jakarta` the sole entity provider. Drop `opennms-model` from daemon classpaths.
-
-Option (B) was previously recommended as cleaner long-term — non-entity types don't need JPA annotations at all, so they shouldn't live in a JPA module.
-
-### Key Questions to Resolve
-
-1. Which classes in `opennms-model` are pure enums/types (no JPA) vs. entity classes (need jakarta migration)?
-2. How many modules transitively depend on `opennms-model`? What's the blast radius?
-3. Can we do this incrementally (move classes in batches) or does it need to be atomic?
-4. What about the ~105 non-entity classes — do any have `@Entity`, `@Table`, or other JPA annotations that would need migration?
-5. Does anything outside the daemon-boot modules still need `opennms-model` (e.g., Minion, tests)?
-
-### Approach
-
-Use the **brainstorming** skill to explore both approaches, analyze the class inventory, and design the migration path. Then **writing-plans** for implementation.
+Use subagent-driven development (recommended by the plan) or inline execution. The plan has checkboxes for progress tracking.
 
 ## Current E2E Baseline (2026-03-28)
 
@@ -56,3 +40,4 @@ Use the **brainstorming** skill to explore both approaches, analyze the class in
 - Rebuild all 12 daemon-boot JARs before `./build.sh deltav`
 - Run `--pre-clean` on Enlinkd tests to avoid stale node interference
 - All 6 E2E suites must pass after consolidation — no regressions
+- Priority classpath hack removal in Phase 3 is the proof-of-cleanliness gate
