@@ -35,13 +35,13 @@ All 12 daemons have been migrated from Karaf to Spring Boot 4. Each runs as an i
 | Telemetryd         | Done   | #52  | Yes          | Telemetry ingestion bridge |
 | **Collectd**       | **Done** | **#56** | **Yes** | **SNMP data collection via Minion SNMP proxy** |
 
-### Collectd Migration Details
+### Shared Infrastructure (daemon-common)
 
-Collectd was the last daemon migrated to Spring Boot. Key architectural decisions:
+All 12 daemons share infrastructure from `core/daemon-common`:
 
-- **Two-layer SNMP collection**: `SnmpCollector` runs locally in the Collectd JVM (`force-remote=false`). Inside `collect()`, the `LocationAwareSnmpClient` sends individual SNMP walk requests via Kafka RPC to the Minion at the node's actual location. The Minion executes the walks and returns raw SNMP data.
-- **Time-series persistence**: Uses `InMemoryStorage` by default. The TSS pipeline (TimeseriesPersisterFactory → TimeseriesStorageManager → InMemoryStorage) is wired as a `PersisterFactory` bean.
-- **Legacy BeanUtils bypass**: `SnmpCollector` obtains `LocationAwareSnmpClient` via `BeanUtils.getBean("daoContext", ...)` in monolithic OpenNMS. In Spring Boot, the client is injected into ServiceLoader-loaded collectors at startup.
+- **BeanUtils bridge**: `BeanUtils` is registered as a Spring bean so legacy static lookups (`BeanUtils.getBean(...)`) route to the daemon's own ApplicationContext instead of falling through to the legacy `ContextRegistry` XML context chain.
+- **MATE EntityScopeProvider**: `DaemonEntityScopeProvider` resolves MATE metadata expressions (`${node:label}`, `${scv:alias:password}`, `${asset:region}`) in daemons with database access (Provisiond, Pollerd, Collectd, Enlinkd, PerspectivePollerd). Daemons without DAOs fall back to `NoOpEntityScopeProvider`.
+- **Secure Credentials Vault**: JCEKS-backed `SecureCredentialsVault` reads from `${opennms.home}/etc/scv.jce` for `${scv:...}` credential interpolation.
 - **Thresholding**: Stubbed with a no-op `ThresholdingService`. Full thresholding support is a follow-up task.
 
 ### Karaf Image Retirement
@@ -123,6 +123,26 @@ Web UI: **http://localhost:8980/opennms** (admin / admin)
 # Reset (destroy all data)
 ./deploy.sh reset
 ```
+
+## E2E Tests
+
+Six end-to-end test suites validate the full pipeline:
+
+```bash
+cd opennms-container/delta-v
+
+bash test-collectd-e2e.sh        # SNMP data collection via Minion
+bash test-minion-e2e.sh          # Trap → Minion → Kafka → Alarmd lifecycle
+bash test-syslog-e2e.sh          # Syslog → Minion → Kafka → Alarmd lifecycle
+bash test-passive-e2e.sh         # Passive status via EventTranslator + Pollerd
+bash test-enlinkd-e2e.sh         # LLDP/CDP link discovery on Containerlab cEOS
+bash test-e2e.sh                 # Full alarm create/clear via SNMP traps
+```
+
+All scripts support:
+- `--verbose` — show diagnostic output on failure
+- `--pre-clean` — delete all nodes and alarms from DB before running
+- `--post-cleanup` — delete test data after run
 
 ## Build Script Reference
 
