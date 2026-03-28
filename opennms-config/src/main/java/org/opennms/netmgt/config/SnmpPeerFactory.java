@@ -65,7 +65,6 @@ import org.opennms.netmgt.snmp.SnmpAgentConfig;
 import org.opennms.netmgt.snmp.SnmpConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.FatalBeanException;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
@@ -288,8 +287,8 @@ public class SnmpPeerFactory implements SnmpAgentConfigFactory {
                 } else {
                     LOG.warn("SnmpPeerFactory: EntityScopeProvider is null, SecureCredentialsVault not available for metadata interpolation");
                 }
-            } catch (FatalBeanException e) {
-                LOG.warn("SnmpPeerFactory: Error retrieving EntityScopeProvider bean");
+            } catch (Exception e) {
+                LOG.warn("SnmpPeerFactory: Error retrieving EntityScopeProvider bean: {}", e.getMessage());
             }
         }
 
