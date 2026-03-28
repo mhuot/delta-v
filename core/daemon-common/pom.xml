@@ -318,6 +318,25 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- SCV API + JCEKS implementation (for DaemonEntityScopeProvider) -->
+        <dependency>
+            <groupId>org.opennms.features.scv</groupId>
+            <artifactId>org.opennms.features.scv.api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opennms.features.scv</groupId>
+            <artifactId>org.opennms.features.scv.jceks-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Geohash (for DaemonEntityScopeProvider node geohash computation) -->
+        <dependency>
+            <groupId>ch.hsr</groupId>
+            <artifactId>geohash</artifactId>
+            <version>${geohashVersion}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-detector-registry</artifactId>
