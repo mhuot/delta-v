@@ -137,8 +137,8 @@ Clean DTOs/utilities (~11): `OnmsAgent`, `ResourceDTO`, `ResourceDTOCollection`,
 | `ResourceReference` | Standalone | |
 | `OnmsAcknowledgment` | References `OnmsAlarm` (already ported) | |
 | `RequisitionedCategoryAssociation` | References `OnmsNode`, `OnmsCategory` (both ported) | |
-| `EventConfEvent` | References `EventConfSource` | Bidirectional with `EventConfSource` — port together |
-| `EventConfSource` | References `EventConfEvent` | Bidirectional with `EventConfEvent` — port together |
+| `EventConfEvent` | References `EventConfSource` | Bidirectional with `EventConfSource` — port together. Has complex JAXB mappings to the eventconf.xml schema. Add a unit test in model-jakarta that unmarshals a sample eventconf.xml snippet to verify JAXB fidelity after the port. |
+| `EventConfSource` | References `EventConfEvent` | Bidirectional with `EventConfEvent` — port together. Same JAXB validation applies. |
 
 ### Tier 3 — Hardware inventory tree
 
