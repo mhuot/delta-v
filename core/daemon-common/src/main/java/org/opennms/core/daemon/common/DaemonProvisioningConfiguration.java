@@ -23,18 +23,19 @@ package org.opennms.core.daemon.common;
 
 import org.opennms.core.daemon.common.registry.LocalServiceDetectorRegistry;
 import org.opennms.core.mate.api.EntityScopeProvider;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.netmgt.provision.detector.registry.api.ServiceDetectorRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Shared provisioning infrastructure for all Spring Boot daemons.
+ * Shared infrastructure for all Spring Boot daemons.
  *
  * <p>Provides default beans that satisfy autowired dependencies in
- * provisioning-related classes (detector clients, import jobs, etc.).
- * Both beans use {@code @ConditionalOnMissingBean} so any daemon can
- * override with a real implementation.</p>
+ * provisioning-related classes and legacy static lookup bridges.
+ * Conditional beans use {@code @ConditionalOnMissingBean} so any daemon
+ * can override with a real implementation.</p>
  *
  * <ul>
  *   <li>{@link NoOpEntityScopeProvider} — disables MATE variable interpolation.
@@ -42,6 +43,8 @@ import org.springframework.context.annotation.Configuration;
  *       with a bean backed by database DAOs.</li>
  *   <li>{@link LocalServiceDetectorRegistry} — SPI-based detector discovery.
  *       Returns empty unless detector factory JARs are on the classpath.</li>
+ *   <li>{@link BeanUtils} — bridges legacy static bean lookups to this
+ *       daemon's ApplicationContext.</li>
  * </ul>
  */
 @Configuration
@@ -57,5 +60,21 @@ public class DaemonProvisioningConfiguration {
     @ConditionalOnMissingBean(ServiceDetectorRegistry.class)
     public ServiceDetectorRegistry serviceDetectorRegistry() {
         return new LocalServiceDetectorRegistry();
+    }
+
+    /**
+     * Bridges legacy {@link BeanUtils} static lookups to the daemon's Spring
+     * Boot ApplicationContext.
+     *
+     * <p>{@code BeanUtils} implements {@code ApplicationContextAware}. Registering
+     * it as a bean causes Spring to call {@code setApplicationContext()}, setting
+     * the static {@code m_context} field. This prevents the legacy fallback path
+     * through {@link org.opennms.core.spring.ContextRegistry} which would load
+     * {@code applicationContext-commonConfigs.xml} and fail on missing config
+     * files in per-daemon containers.</p>
+     */
+    @Bean
+    public BeanUtils beanUtils() {
+        return new BeanUtils();
     }
 }
