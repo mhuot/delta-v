@@ -145,6 +145,7 @@
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-log4j2</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -173,6 +174,7 @@
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-log4j2</artifactId></exclusion>
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -181,6 +183,9 @@
             <groupId>org.opennms</groupId>
             <artifactId>opennms-icmp-api</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+            </exclusions>
         </dependency>
 
         <!-- ICMP best-match pinger (BestMatchPingerFactory: JNA, pure Java) -->
@@ -188,6 +193,9 @@
             <groupId>org.opennms</groupId>
             <artifactId>opennms-icmp-best</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+            </exclusions>
         </dependency>
 
         <!-- ICMP proxy RPC (LocationAwarePingClientImpl, PingSweepRpcModule, PingProxyRpcModule) -->
@@ -204,6 +212,7 @@
                 <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion>
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -212,6 +221,9 @@
             <groupId>org.opennms</groupId>
             <artifactId>opennms-provision-api</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Detector RPC (LocationAwareDetectorClientRpcImpl, DetectorClientRpcModule) -->
@@ -228,6 +240,7 @@
                 <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion>
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -236,6 +249,9 @@
             <groupId>org.opennms.core.mate</groupId>
             <artifactId>org.opennms.core.mate.api</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Metrics (required by KafkaRpcClientFactory) -->
@@ -265,6 +281,7 @@
                 <exclusion><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-annotations</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-core</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -294,6 +311,7 @@
                 <exclusion><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-annotations</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-core</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -302,40 +320,23 @@
             <groupId>org.opennms</groupId>
             <artifactId>opennms-dao-api</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+            </exclusions>
         </dependency>
 
-        <!-- Model (OnmsDistPoller for system identity) -->
+        <!-- Jakarta entity classes and model API -->
         <dependency>
-            <groupId>org.opennms</groupId>
-            <artifactId>opennms-model</artifactId>
+            <groupId>org.opennms.core</groupId>
+            <artifactId>org.opennms.core.model-jakarta</artifactId>
             <version>${project.version}</version>
             <exclusions>
-                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-aop</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-aspects</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context-support</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-core</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-expression</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-instrument</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-jdbc</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-jms</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-messaging</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-orm</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-oxm</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-tx</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-web</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-webmvc</artifactId></exclusion>
-                <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
-                <exclusion><groupId>org.hibernate.javax.persistence</groupId><artifactId>hibernate-jpa-2.0-api</artifactId></exclusion>
-                <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion>
-                <exclusion><groupId>org.slf4j</groupId><artifactId>jcl-over-slf4j</artifactId></exclusion>
-                <exclusion><groupId>org.slf4j</groupId><artifactId>log4j-over-slf4j</artifactId></exclusion>
-                <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-log4j2</artifactId></exclusion>
-                <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
-                <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.opennms.core</groupId>
+            <artifactId>org.opennms.core.model-api</artifactId>
         </dependency>
 
         <!-- javax.persistence API (legacy classes need it loadable) -->
