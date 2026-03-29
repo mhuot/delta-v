@@ -162,6 +162,13 @@
             <groupId>org.opennms.core</groupId>
             <artifactId>org.opennms.core.model-jakarta</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.opennms.core</groupId>
+            <artifactId>org.opennms.core.model-api</artifactId>
         </dependency>
 
         <!-- Shared daemon infrastructure -->
@@ -174,6 +181,7 @@
                     <groupId>com.fasterxml.jackson.module</groupId>
                     <artifactId>jackson-module-scala_2.13</artifactId>
                 </exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -220,6 +228,7 @@
                 <!-- Exclude config-model which contains legacy OnmsMonitoringLocation with
                      javax.persistence annotations — not needed here (no JPA) -->
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-config-model</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -228,6 +237,9 @@
             <groupId>org.opennms.features.bsm</groupId>
             <artifactId>org.opennms.features.bsm.service.api</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.opennms.features.bsm</groupId>
@@ -271,6 +283,7 @@
                 <!-- Exclude config-model which contains legacy OnmsMonitoringLocation with
                      javax.persistence annotations — not needed here (no JPA) -->
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-config-model</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -317,6 +330,7 @@
                 <!-- Exclude config-model which contains legacy OnmsMonitoringLocation with
                      javax.persistence annotations — not needed here (no JPA) -->
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-config-model</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -329,6 +343,7 @@
                 <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion>
                 <exclusion><groupId>org.slf4j</groupId><artifactId>jcl-over-slf4j</artifactId></exclusion>
                 <exclusion><groupId>org.slf4j</groupId><artifactId>log4j-over-slf4j</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 

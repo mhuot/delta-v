@@ -169,7 +169,12 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.opennms.core</groupId>
+            <artifactId>org.opennms.core.model-api</artifactId>
         </dependency>
 
         <!-- Shared daemon infrastructure -->
@@ -182,6 +187,7 @@
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -204,6 +210,7 @@
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
                 <exclusion><groupId>org.apache.activemq</groupId><artifactId>activemq-camel</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -216,6 +223,7 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -228,6 +236,7 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -240,6 +249,7 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -254,6 +264,7 @@
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
                 <exclusion><groupId>org.hibernate.javax.persistence</groupId><artifactId>hibernate-jpa-2.0-api</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -266,6 +277,7 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -278,6 +290,7 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -288,6 +301,7 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -298,6 +312,7 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -308,6 +323,7 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -318,6 +334,7 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -328,6 +345,7 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -340,6 +358,7 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -350,6 +369,7 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -360,6 +380,7 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -370,6 +391,7 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -380,6 +402,7 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -390,6 +413,7 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -402,6 +426,7 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -414,6 +439,7 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -431,6 +457,7 @@
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
                 <exclusion><groupId>org.hibernate.javax.persistence</groupId><artifactId>hibernate-jpa-2.0-api</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -443,6 +470,7 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -464,6 +492,7 @@
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -485,9 +514,9 @@
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
-
         <!-- javax.persistence API — needed at runtime so legacy opennms-model classes
              on the classpath (pulled transitively for enums/utilities) don't cause
              ClassNotFoundException when Spring's classpath scanner encounters them.

@@ -165,6 +165,13 @@
             <groupId>org.opennms.core</groupId>
             <artifactId>org.opennms.core.model-jakarta</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.opennms.core</groupId>
+            <artifactId>org.opennms.core.model-api</artifactId>
         </dependency>
 
         <!-- Shared daemon infrastructure -->
@@ -177,6 +184,7 @@
                     <groupId>com.fasterxml.jackson.module</groupId>
                     <artifactId>jackson-module-scala_2.13</artifactId>
                 </exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -185,6 +193,9 @@
             <groupId>org.opennms.core</groupId>
             <artifactId>org.opennms.core.daemon-sink-kafka</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Collectd implementation — Collectd, DefaultCollectdInstrumentation -->
@@ -221,6 +232,7 @@
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -229,6 +241,9 @@
             <groupId>org.opennms</groupId>
             <artifactId>org.opennms.config-dao.poll-outages.impl</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Collector config — CollectdConfigFactory -->
@@ -265,6 +280,7 @@
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -273,6 +289,9 @@
             <groupId>org.opennms</groupId>
             <artifactId>opennms-config-api</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+            </exclusions>
         </dependency>
 
         <!-- DAO API — NodeDao, IpInterfaceDao, etc. -->
@@ -280,6 +299,9 @@
             <groupId>org.opennms</groupId>
             <artifactId>opennms-dao-api</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Collection RPC client — LocationAwareCollectorClientImpl, CollectorClientRpcModule -->
@@ -316,6 +338,7 @@
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -353,6 +376,7 @@
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -390,6 +414,7 @@
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -427,6 +452,7 @@
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -464,6 +490,7 @@
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -501,6 +528,7 @@
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -510,8 +538,10 @@
             <groupId>org.opennms.features.distributed</groupId>
             <artifactId>org.opennms.features.distributed.kv-store.json.noop</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+            </exclusions>
         </dependency>
-
         <!-- javax.persistence API — needed at runtime so legacy opennms-model classes
              on the classpath (pulled transitively for enums/utilities) don't cause
              ClassNotFoundException when Spring's classpath scanner encounters them.
