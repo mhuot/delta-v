@@ -43,6 +43,8 @@
               javassist.util.proxy,
               org.hibernate.proxy,
               org.opennms.netmgt.model;version="${project.version}",
+              org.opennms.netmgt.model.outage;version="${project.version}",
+              org.opennms.netmgt.model.perspectivepolling;version="${project.version}",
               *
             </Import-Package>
           </instructions>
@@ -54,7 +56,6 @@
     <dependency>
       <groupId>org.opennms.core</groupId>
       <artifactId>org.opennms.core.model-api</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opennms.dependencies</groupId>
