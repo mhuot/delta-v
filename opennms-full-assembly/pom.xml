@@ -411,7 +411,6 @@
                 <feature>postgresql</feature>
                 <feature>smack</feature>
                 <feature>spring-security-opennms</feature>
-                <feature>twitter4j</feature>
                 <feature>opennms-jaas-login-module</feature>
                 <feature>dashlet-alarms</feature>
                 <feature>dashlet-bsm</feature>
