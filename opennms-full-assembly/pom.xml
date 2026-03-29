@@ -409,7 +409,6 @@
                 <feature>opennms-osgi-core-rest</feature>
                 <feature>org.json</feature>
                 <feature>postgresql</feature>
-                <feature>smack</feature>
                 <feature>spring-security-opennms</feature>
                 <feature>twitter4j</feature>
                 <feature>opennms-jaas-login-module</feature>
