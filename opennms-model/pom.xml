@@ -42,6 +42,7 @@
             <Import-Package>
               javassist.util.proxy,
               org.hibernate.proxy,
+              org.opennms.netmgt.model;version="${project.version}",
               *
             </Import-Package>
           </instructions>
@@ -50,6 +51,11 @@
     </plugins>
   </build>
   <dependencies>
+    <dependency>
+      <groupId>org.opennms.core</groupId>
+      <artifactId>org.opennms.core.model-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.opennms.dependencies</groupId>
       <artifactId>hibernate-dependencies</artifactId>
