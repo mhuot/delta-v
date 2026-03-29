@@ -484,13 +484,6 @@ public class OnmsMonitoredService extends OnmsEntity implements Serializable, Co
         return getServiceType().getId();
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public void visit(EntityVisitor visitor) {
-        visitor.visitMonitoredService(this);
-        visitor.visitMonitoredServiceComplete(this);
-    }
-
     /**
      * <p>getServiceName</p>
      *

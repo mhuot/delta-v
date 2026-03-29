@@ -70,8 +70,6 @@ import org.hibernate.annotations.Filter;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.events.api.EventConstants;
 import org.opennms.netmgt.events.api.EventForwarder;
-import org.opennms.netmgt.model.events.AddEventVisitor;
-import org.opennms.netmgt.model.events.DeleteEventVisitor;
 import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.model.events.NodeLabelChangedEventBuilder;
 import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
@@ -1048,22 +1046,6 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
         .toString();
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public void visit(EntityVisitor visitor) {
-        visitor.visitNode(this);
-
-        for (OnmsIpInterface iface : getIpInterfaces()) {
-            iface.visit(visitor);
-        }
-
-        for (OnmsSnmpInterface snmpIface : getSnmpInterfaces()) {
-            snmpIface.visit(visitor);
-        }
-
-        visitor.visitNodeComplete(this);
-    }
-
     /**
      * <p>addSnmpInterface</p>
      *
@@ -1483,7 +1465,7 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
             if (scannedIface == null) {
                 if (deleteMissing) {
                     it.remove();
-                    dbIface.visit(new DeleteEventVisitor(eventForwarder));
+                    // Visitor-based event firing removed — jakarta entities drop visit()
                 }else if(scannedPrimaryIf != null && dbIface.isPrimary()){
                     dbIface.setIsSnmpPrimary(PrimaryType.SECONDARY);
                     oldPrimaryInterface = dbIface;
@@ -1509,7 +1491,7 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
             if (iface.getIfIndex() != null) {
                 iface.setSnmpInterface(getSnmpInterfaceWithIfIndex(iface.getIfIndex()));
             }
-            iface.visit(new AddEventVisitor(eventForwarder));
+            // Visitor-based event firing removed — jakarta entities drop visit()
         }
 
         if(oldPrimaryInterface != null && scannedPrimaryIf != null){

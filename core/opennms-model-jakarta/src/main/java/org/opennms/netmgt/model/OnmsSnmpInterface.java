@@ -600,13 +600,6 @@ public class OnmsSnmpInterface extends OnmsEntity implements Serializable {
             .toString();
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public void visit(EntityVisitor visitor) {
-        visitor.visitSnmpInterface(this);
-        visitor.visitSnmpInterfaceComplete(this);
-    }
-
     /**
      * <p>getIpInterfaces</p>
      *

@@ -57,8 +57,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.hibernate.annotations.Cascade;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.events.api.EventForwarder;
-import org.opennms.netmgt.model.events.AddEventVisitor;
-import org.opennms.netmgt.model.events.DeleteEventVisitor;
 import org.opennms.netmgt.model.jakarta.converter.InetAddressConverter;
 
 import com.google.common.base.MoreObjects;
@@ -490,18 +488,6 @@ public class OnmsIpInterface extends OnmsEntity implements Serializable {
         .toString();
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public void visit(EntityVisitor visitor) {
-        visitor.visitIpInterface(this);
-
-        for (OnmsMonitoredService monSvc : getMonitoredServices()) {
-            monSvc.visit(visitor);
-        }
-
-        visitor.visitIpInterfaceComplete(this);
-    }
-
     /**
      * <p>getIpAddress</p>
      *
@@ -637,7 +623,7 @@ public class OnmsIpInterface extends OnmsEntity implements Serializable {
                 if (deleteMissing) {
                     // there is no scanned service... delete it from the database
                     it.remove();
-                    svc.visit(new DeleteEventVisitor(eventForwarder));
+                    // Visitor-based event firing removed — jakarta entities drop visit()
                 }
             }
             else {
@@ -655,7 +641,7 @@ public class OnmsIpInterface extends OnmsEntity implements Serializable {
         for (OnmsMonitoredService svc : newServices) {
             svc.setIpInterface(this);
             getMonitoredServices().add(svc);
-            svc.visit(new AddEventVisitor(eventForwarder));
+            // Visitor-based event firing removed — jakarta entities drop visit()
         }
     }
 
