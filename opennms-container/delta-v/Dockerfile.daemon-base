@@ -19,15 +19,10 @@ COPY staging/shared-external/ /opt/libs/external/
 # Layer 2: project-internal libraries (changes with code — daemon-common, model)
 COPY staging/shared-internal/ /opt/libs/internal/
 
-# Layer 3: priority libraries — loaded FIRST on the classpath to win split-package
-# races (e.g., model-jakarta must load before legacy opennms-model so Hibernate 7
-# sees @jakarta.persistence.Entity instead of @javax.persistence.Entity)
-COPY staging/shared-priority/ /opt/libs/priority/
-
 # Shared entrypoint for all daemons (--chmod avoids needing root for RUN chmod)
 COPY --chmod=755 entrypoint.sh /opt/entrypoint.sh
 
 # Pre-create directories for per-daemon layers
 USER root
-RUN mkdir -p /opt/libs/daemon /opt/libs/priority /opt/app && chown opennms:opennms /opt/libs/daemon /opt/libs/priority /opt/app
+RUN mkdir -p /opt/libs/daemon /opt/app && chown opennms:opennms /opt/libs/daemon /opt/app
 USER opennms
