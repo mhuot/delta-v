@@ -337,9 +337,9 @@ public class OnmsIpInterface extends OnmsEntity implements Serializable {
         m_requisitionedMetaData.add(onmsMetaData);
     }
 
-    // OnmsMetaData is not yet migrated to Jakarta Persistence (@Embeddable).
-    @Transient
     @JsonIgnore
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name="ipInterface_metadata", joinColumns = @JoinColumn(name = "id"))
     public List<OnmsMetaData> getMetaData() {
         return m_metaData;
     }

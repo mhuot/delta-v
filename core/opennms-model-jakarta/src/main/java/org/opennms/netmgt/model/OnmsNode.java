@@ -794,8 +794,11 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
      * @return a {@link org.opennms.netmgt.model.PathElement} object.
      */
     @JsonIgnore
-    // PathElement is not yet migrated to Jakarta Persistence (@Embeddable).
-    @Transient
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name="ipAddress", column=@Column(name="criticalPathIp", table="pathOutage")),
+        @AttributeOverride(name="serviceName", column=@Column(name="criticalPathServiceName", table="pathOutage"))
+    })
     public PathElement getPathElement() {
         return m_pathElement;
     }
@@ -943,8 +946,8 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
     }
 
     @JsonIgnore
-    // OnmsMetaData is not yet migrated to Jakarta Persistence (@Embeddable).
-    @Transient
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name="node_metadata", joinColumns = @JoinColumn(name = "id"))
     public List<OnmsMetaData> getMetaData() {
         return m_metaData;
     }
