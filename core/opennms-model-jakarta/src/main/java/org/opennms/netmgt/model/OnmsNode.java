@@ -770,8 +770,7 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
      *
      * @return a {@link org.opennms.netmgt.model.OnmsAssetRecord} object.
      */
-    // OnmsAssetRecord is not yet migrated to Jakarta Persistence.
-    @Transient
+    @OneToOne(mappedBy="node", cascade = CascadeType.ALL, fetch=FetchType.LAZY)
     public OnmsAssetRecord getAssetRecord() {
         return m_assetRecord;
     }
