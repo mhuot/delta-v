@@ -44,6 +44,10 @@
             <artifactId>org.opennms.core.api</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.opennms</groupId>
+            <artifactId>opennms-util</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.opennms.dependencies</groupId>
             <artifactId>jaxb-dependencies</artifactId>
             <type>pom</type>
