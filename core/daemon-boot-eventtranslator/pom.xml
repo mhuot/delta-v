@@ -175,6 +175,15 @@
             </exclusions>
         </dependency>
 
+        <!-- Model API — provides ServiceDaemon interface required by AbstractServiceDaemon/EventTranslator.
+             ServiceDaemon was moved here from opennms-model in consolidation PR #73;
+             opennms-model is excluded from event-translator so this must be explicit. -->
+        <dependency>
+            <groupId>org.opennms.core</groupId>
+            <artifactId>org.opennms.core.model-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- EventTranslator implementation -->
         <dependency>
             <groupId>org.opennms.features</groupId>
