@@ -334,9 +334,9 @@ public class OnmsMonitoredService extends OnmsEntity implements Serializable, Co
         m_notify = notify;
     }
 
-    // OnmsMetaData is not yet migrated to Jakarta Persistence (@Embeddable).
-    @Transient
     @JsonIgnore
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name="ifServices_metadata", joinColumns = @JoinColumn(name = "id"))
     public List<OnmsMetaData> getMetaData() {
         return m_metaData;
     }
@@ -482,13 +482,6 @@ public class OnmsMonitoredService extends OnmsEntity implements Serializable, Co
     @JsonIgnore
     public Integer getServiceId() {
         return getServiceType().getId();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void visit(EntityVisitor visitor) {
-        visitor.visitMonitoredService(this);
-        visitor.visitMonitoredServiceComplete(this);
     }
 
     /**

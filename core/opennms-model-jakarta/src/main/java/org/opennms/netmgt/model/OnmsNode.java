@@ -70,8 +70,6 @@ import org.hibernate.annotations.Filter;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.events.api.EventConstants;
 import org.opennms.netmgt.events.api.EventForwarder;
-import org.opennms.netmgt.model.events.AddEventVisitor;
-import org.opennms.netmgt.model.events.DeleteEventVisitor;
 import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.model.events.NodeLabelChangedEventBuilder;
 import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
@@ -772,8 +770,7 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
      *
      * @return a {@link org.opennms.netmgt.model.OnmsAssetRecord} object.
      */
-    // OnmsAssetRecord is not yet migrated to Jakarta Persistence.
-    @Transient
+    @OneToOne(mappedBy="node", cascade = CascadeType.ALL, fetch=FetchType.LAZY)
     public OnmsAssetRecord getAssetRecord() {
         return m_assetRecord;
     }
@@ -796,8 +793,11 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
      * @return a {@link org.opennms.netmgt.model.PathElement} object.
      */
     @JsonIgnore
-    // PathElement is not yet migrated to Jakarta Persistence (@Embeddable).
-    @Transient
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name="ipAddress", column=@Column(name="criticalPathIp", table="pathOutage")),
+        @AttributeOverride(name="serviceName", column=@Column(name="criticalPathServiceName", table="pathOutage"))
+    })
     public PathElement getPathElement() {
         return m_pathElement;
     }
@@ -945,8 +945,8 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
     }
 
     @JsonIgnore
-    // OnmsMetaData is not yet migrated to Jakarta Persistence (@Embeddable).
-    @Transient
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name="node_metadata", joinColumns = @JoinColumn(name = "id"))
     public List<OnmsMetaData> getMetaData() {
         return m_metaData;
     }
@@ -1046,22 +1046,6 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
         .add("lastIngressFlow", m_lastIngressFlow)
         .add("lastEgressFlow", m_lastEgressFlow)
         .toString();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void visit(EntityVisitor visitor) {
-        visitor.visitNode(this);
-
-        for (OnmsIpInterface iface : getIpInterfaces()) {
-            iface.visit(visitor);
-        }
-
-        for (OnmsSnmpInterface snmpIface : getSnmpInterfaces()) {
-            snmpIface.visit(visitor);
-        }
-
-        visitor.visitNodeComplete(this);
     }
 
     /**
@@ -1483,7 +1467,7 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
             if (scannedIface == null) {
                 if (deleteMissing) {
                     it.remove();
-                    dbIface.visit(new DeleteEventVisitor(eventForwarder));
+                    // Visitor-based event firing removed — jakarta entities drop visit()
                 }else if(scannedPrimaryIf != null && dbIface.isPrimary()){
                     dbIface.setIsSnmpPrimary(PrimaryType.SECONDARY);
                     oldPrimaryInterface = dbIface;
@@ -1509,7 +1493,7 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
             if (iface.getIfIndex() != null) {
                 iface.setSnmpInterface(getSnmpInterfaceWithIfIndex(iface.getIfIndex()));
             }
-            iface.visit(new AddEventVisitor(eventForwarder));
+            // Visitor-based event firing removed — jakarta entities drop visit()
         }
 
         if(oldPrimaryInterface != null && scannedPrimaryIf != null){

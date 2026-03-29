@@ -83,7 +83,7 @@ STAGING="${SCRIPT_DIR}/staging"
 EXTRACT_DIR="${SCRIPT_DIR}/.extract-tmp"
 
 rm -rf "${STAGING}" "${EXTRACT_DIR}"
-mkdir -p "${STAGING}/shared-external" "${STAGING}/shared-internal" "${STAGING}/shared-priority"
+mkdir -p "${STAGING}/shared-external" "${STAGING}/shared-internal"
 mkdir -p "${EXTRACT_DIR}"
 
 # ---------------------------------------------------------------------------
@@ -165,7 +165,6 @@ first_lib="${EXTRACT_DIR}/${first_daemon}/lib"
 
 shared_external_count=0
 shared_internal_count=0
-shared_priority_count=0
 
 # Build a set of shared JAR names for fast lookup
 declare -A SHARED_SET
@@ -173,35 +172,9 @@ for name in "${shared_jars[@]}"; do
     SHARED_SET[$name]=1
 done
 
-# JARs that must load BEFORE the legacy opennms-model to win the split-package
-# race.  Both opennms-model (javax.persistence) and opennms-model-jakarta
-# (jakarta.persistence) provide org.opennms.netmgt.model entity classes.
-# With wildcard classpath expansion, filesystem alphabetical order determines
-# which class is loaded first.  "opennms-model-*" sorts before
-# "org.opennms.core.model-jakarta-*", so the javax version wins and
-# Hibernate 7 never registers the entities.  Placing model-jakarta in a
-# higher-priority classpath directory (/opt/libs/priority) solves this.
-declare -A PRIORITY_PATTERNS
-PRIORITY_PATTERNS=(
-    [model-jakarta]=1
-)
-
-is_priority_jar() {
-    local jar_name="$1"
-    for pattern in "${!PRIORITY_PATTERNS[@]}"; do
-        if [[ "${jar_name}" == *"${pattern}"* ]]; then
-            return 0
-        fi
-    done
-    return 1
-}
-
 for name in "${shared_jars[@]}"; do
-    if is_priority_jar "${name}"; then
-        cp "${first_lib}/${name}" "${STAGING}/shared-priority/"
-        shared_priority_count=$(( shared_priority_count + 1 ))
     # Internal: starts with org.opennms. or opennms-
-    elif [[ "${name}" == org.opennms.* ]] || [[ "${name}" == opennms-* ]]; then
+    if [[ "${name}" == org.opennms.* ]] || [[ "${name}" == opennms-* ]]; then
         cp "${first_lib}/${name}" "${STAGING}/shared-internal/"
         shared_internal_count=$(( shared_internal_count + 1 ))
     else
@@ -210,7 +183,6 @@ for name in "${shared_jars[@]}"; do
     fi
 done
 
-echo "  shared-priority: ${shared_priority_count} JARs (loaded first to win split-package race)"
 echo "  shared-external: ${shared_external_count} JARs"
 echo "  shared-internal: ${shared_internal_count} JARs"
 echo ""
@@ -222,22 +194,15 @@ echo "--- Staging per-daemon unique libs and app JARs ---"
 for daemon in "${DAEMONS[@]}"; do
     lib_dir="${EXTRACT_DIR}/${daemon}/lib"
     daemon_libs_dir="${STAGING}/${daemon}/libs"
-    daemon_priority_dir="${STAGING}/${daemon}/priority"
     daemon_app_dir="${STAGING}/${daemon}/app"
-    mkdir -p "${daemon_libs_dir}" "${daemon_priority_dir}" "${daemon_app_dir}"
+    mkdir -p "${daemon_libs_dir}" "${daemon_app_dir}"
 
     unique_count=0
-    priority_count=0
     for jar_file in "${lib_dir}"/*.jar; do
         name="$(basename "${jar_file}")"
         if [[ -z "${SHARED_SET[$name]+x}" ]]; then
-            if is_priority_jar "${name}"; then
-                cp "${jar_file}" "${daemon_priority_dir}/"
-                priority_count=$(( priority_count + 1 ))
-            else
-                cp "${jar_file}" "${daemon_libs_dir}/"
-                unique_count=$(( unique_count + 1 ))
-            fi
+            cp "${jar_file}" "${daemon_libs_dir}/"
+            unique_count=$(( unique_count + 1 ))
         fi
     done
 
@@ -248,9 +213,7 @@ for daemon in "${DAEMONS[@]}"; do
         thin_jar_count=$(( thin_jar_count + 1 ))
     done
 
-    local_info="${unique_count} unique libs, ${thin_jar_count} app JAR(s)"
-    [[ ${priority_count} -gt 0 ]] && local_info="${local_info}, ${priority_count} priority"
-    echo "  ${daemon}: ${local_info}"
+    echo "  ${daemon}: ${unique_count} unique libs, ${thin_jar_count} app JAR(s)"
 done
 echo ""
 
@@ -290,7 +253,6 @@ rm -rf "${EXTRACT_DIR}"
 echo "==========================================="
 echo "  SUMMARY"
 echo "==========================================="
-echo "  shared-priority : ${shared_priority_count} JARs"
 echo "  shared-external : ${shared_external_count} JARs"
 echo "  shared-internal : ${shared_internal_count} JARs"
 echo "  shared total    : ${#shared_jars[@]} JARs"
