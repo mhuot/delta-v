@@ -87,9 +87,15 @@ Delete:
 
 Delete all ~362 `OSGI-INF/blueprint/*.xml` files in `src/` directories across the source tree (not `target/`). These are OSGi service wiring definitions. No Spring Boot daemon loads them.
 
-Execution: `find . -path '*/src/*/OSGI-INF/blueprint' -type d -exec rm -rf {} +`
+Also delete `META-INF/spring/*.xml` files used by the old Spring-DM (OSGi) extender. These are strictly OSGi-related Spring context files that the Spring-DM extender loaded inside the Karaf container. Spring Boot does not use this mechanism.
 
-After deletion, remove empty `OSGI-INF/` parent directories where no other content remains.
+Execution:
+```bash
+find . -path '*/src/*/OSGI-INF/blueprint' -type d -exec rm -rf {} +
+find . -path '*/src/*/META-INF/spring' -type d -exec rm -rf {} +
+```
+
+After deletion, remove empty `OSGI-INF/` and `META-INF/` parent directories where no other content remains.
 
 #### 1d. Karaf-specific top-level modules
 
@@ -129,7 +135,7 @@ In root `pom.xml`:
 2. **Assemble**: `build.sh deltav` produces all 12 daemon boot JARs
 3. **Deploy**: `deploy.sh up full` - all 12 containers start, pass `/actuator/health`
 4. **E2E tests**: Run all 6 E2E test suites (trapd, alarmd, pollerd, collectd, enlinkd, provisiond) to catch runtime transitive dependency failures
-5. **Transitive dependency audit**: Run `mvn dependency:tree` on all daemon-boot modules before and after, diff output to confirm no resolved artifacts were lost
+5. **Transitive dependency audit**: Run `mvn dependency:tree` on all daemon-boot modules before and after, diff output. Specifically watch for `org.apache.karaf.*` and `org.apache.servicemix.*` artifacts — these are the most likely hidden transitive dependencies that need explicit replacement or exclusion in the Spring Boot 4 world.
 
 If an E2E test fails due to a missing transitive dependency from a deleted module, **replace the dependency** rather than keeping the deleted module.
 
@@ -165,10 +171,12 @@ Detailed spec written when Phase 2 is complete.
 
 21 factory/config classes from opennms-config are used across 9 daemon boot modules. Each gets replaced according to the config strategy:
 
-- `SnmpPeerFactory` (5 daemons) - file-based XML reader in daemon-common
+- `SnmpPeerFactory` (5 daemons) - file-based XML reader in daemon-common **(prioritize first — unlocks 5 modules)**
 - `PollerConfigFactory` (2 daemons) - file-based XML reader
 - `CollectdConfigFactory` + data collection configs (1 daemon) - file-based XML readers
 - Per-daemon configs (syslogd, trapd, discovery, enlinkd, etc.) - `@Value` properties or file-based readers
+
+Prioritize `SnmpPeerFactory` replacement early in Phase 4 — it is the single highest-fanout dependency (collectd, enlinkd, perspectivepollerd, pollerd, provisiond) and unlocks the migration for the largest number of modules.
 
 Each daemon's config replacement is an independent PR. After all consumers are migrated, delete `opennms-config/`.
 
