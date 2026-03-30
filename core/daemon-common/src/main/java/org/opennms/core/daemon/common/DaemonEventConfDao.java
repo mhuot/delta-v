@@ -21,13 +21,17 @@
  */
 package org.opennms.core.daemon.common;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.opennms.core.xml.JaxbUtils;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+
 import org.opennms.netmgt.config.api.EventConfDao;
 import org.opennms.netmgt.model.EventConfEvent;
 import org.opennms.netmgt.xml.eventconf.Event;
@@ -54,6 +58,17 @@ import org.slf4j.LoggerFactory;
 public class DaemonEventConfDao implements EventConfDao {
 
     private static final Logger LOG = LoggerFactory.getLogger(DaemonEventConfDao.class);
+
+    /** Standard JAXB context for Event.class only — avoids EclipseLink MOXy's
+     *  package scanning which triggers ClassNotFoundException for opennms-model types. */
+    private static final JAXBContext EVENT_JAXB_CONTEXT;
+    static {
+        try {
+            EVENT_JAXB_CONTEXT = JAXBContext.newInstance(Event.class);
+        } catch (JAXBException e) {
+            throw new ExceptionInInitializerError("Failed to create JAXBContext for Event: " + e.getMessage());
+        }
+    }
 
     private volatile Events events;
 
@@ -100,7 +115,8 @@ public class DaemonEventConfDao implements EventConfDao {
                 String xmlContent = dbEvent.getXmlContent();
                 if (xmlContent != null && !xmlContent.trim().isEmpty()) {
                     try {
-                        Event event = JaxbUtils.unmarshal(Event.class, xmlContent);
+                        Unmarshaller unmarshaller = EVENT_JAXB_CONTEXT.createUnmarshaller();
+                        Event event = (Event) unmarshaller.unmarshal(new StringReader(xmlContent));
                         if (event != null) {
                             eventsForSource.addEvent(event);
                         }
