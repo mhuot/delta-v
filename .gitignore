@@ -80,3 +80,14 @@ core/web-assets/.eslintcache
 
 # Git worktrees
 .worktrees/
+
+# AI tools
+.agents/
+.claude/
+.cursor/
+.aider*
+.copilot/
+.gemini/
+_bmad/
+_bmad-output/
+

@@ -1633,13 +1633,6 @@
         <feature>opennms-mate-api</feature>
         <bundle>mvn:org.opennms.core.mate/org.opennms.core.mate.shell-commands/36.0.0-SNAPSHOT</bundle>
     </feature>
-    <feature name="ifttt-integration" version="36.0.0-SNAPSHOT" description="OpenNMS :: Features :: IFTTT Integration">
-        <details>OpenNMS is the world's first enterprise grade network management platform developed under the open source model. It consists of a community supported open-source project as well as a commercial services, training and support organization.</details>
-        <feature version="31.1">guava</feature>
-        <feature>opennms-dao-api</feature>
-        <feature>opennms-mate-api</feature>
-        <bundle>mvn:org.opennms.features/org.opennms.features.ifttt/36.0.0-SNAPSHOT</bundle>
-    </feature>
     <feature name="org.opennms.features.topologies.service.api" version="36.0.0-SNAPSHOT" description="OpenNMS :: Features :: Topologies :: Service :: API">
         <details>OpenNMS is the world's first enterprise grade network management platform developed under the open source model. It consists of a community supported open-source project as well as a commercial services, training and support organization.</details>
         <feature version="31.1">guava</feature>
