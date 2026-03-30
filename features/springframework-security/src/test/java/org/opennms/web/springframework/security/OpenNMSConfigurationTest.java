@@ -31,7 +31,7 @@ import javax.security.auth.login.Configuration;
 import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 
 import org.junit.Test;
-import org.opennms.bootstrap.OpenNMSProxyLoginModule;
+
 
 public class OpenNMSConfigurationTest {
 
@@ -84,7 +84,7 @@ public class OpenNMSConfigurationTest {
         // Requests for "opennms" should be handled by the OpenNMSConfiguration
         AppConfigurationEntry[] entries = Configuration.getConfiguration().getAppConfigurationEntry("opennms");
         assertEquals(1, entries.length);
-        assertEquals(OpenNMSProxyLoginModule.class.getName(), entries[0].getLoginModuleName());
+        assertEquals("org.opennms.bootstrap.OpenNMSProxyLoginModule", entries[0].getLoginModuleName());
 
         // Other requests should be passed to both the original and the Karaf configs.
         entries = Configuration.getConfiguration().getAppConfigurationEntry("realm1");
