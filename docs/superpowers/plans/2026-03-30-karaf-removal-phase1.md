@@ -236,12 +236,14 @@ these. Cleaned opennms-jetty reference from integration-tests/config."
 find . -path '*/src/*/OSGI-INF/blueprint' -type d \
   -not -path '*/target/*' \
   -not -path '*/.claude/*' \
+  -not -path '*/.git/*' \
   -exec rm -rf {} + 2>/dev/null
 
 # Remove empty OSGI-INF parents
 find . -path '*/src/*/OSGI-INF' -type d -empty \
   -not -path '*/target/*' \
   -not -path '*/.claude/*' \
+  -not -path '*/.git/*' \
   -exec rmdir {} + 2>/dev/null
 ```
 
@@ -374,13 +376,25 @@ paxCdiVersion (line ~1906)
 paxExamVersion (line ~1907)
 ```
 
-**For each property**, before removing, verify no POM in the reactor still references it:
+**Batch-verify all properties** before removing. Use this loop to check which ones still have active consumers:
 
 ```bash
-grep -r "propertyName" --include="pom.xml" . | grep -v target/ | grep -v '.claude/'
+for prop in maven.karaf.plugin.version karaf.servicemix.specs.version \
+  karafVersion karafSshdVersion opennms.osgi.version osgiVersion \
+  osgiAnnotationVersion osgiCompendiumVersion osgiEnterpriseVersion \
+  osgiServiceJdbcVersion osgiJaxRsVersion osgiUtilFunctionVersion \
+  osgiUtilPromiseVersion eclipseOsgiVersion felixCmJsonVersion \
+  felixConfigadminVersion felixConfigadminPluginInterpolationVersion \
+  felixCoordinatorVersion felixConfiguratorVersion felixConverterVersion \
+  felixFileinstallVersion felixMetatypeVersion paxLoggingVersion \
+  paxSwissboxVersion paxSwissboxOptionalJclVersion paxUrlAetherVersion \
+  paxWebVersion paxCdiVersion paxExamVersion; do
+  count=$(grep -r "\${${prop}}" --include="pom.xml" . | grep -v target/ | grep -v '.claude/' | grep -v 'pom.xml:.*<.*\.version>' | wc -l | tr -d ' ')
+  echo "$prop: $count references"
+done
 ```
 
-If a property IS still referenced by a non-deleted module, leave it for now and note it for Phase 2.
+Properties with 0 references outside their own definition are safe to remove. If a property IS still referenced by a non-deleted module, leave it for now and note it for Phase 2.
 
 - [ ] **Step 2: Remove OSGi managed dependencies**
 
@@ -503,10 +517,11 @@ If any daemon-boot module lost a needed transitive dependency, add it as an expl
 
 ### Task 10: Docker Deploy and E2E Verification
 
-- [ ] **Step 1: Rebuild all daemon boot JARs for Docker**
+- [ ] **Step 1: Full reactor build**
+
+Since Phase 1 is a massive reactor change (deleting many modules), a root-level `mvn install` is safer than targeted `-am` builds. It ensures the parent POM and shared dependencies are correctly installed in the local repository after the structural changes.
 
 ```bash
-# Per memory: always rebuild ALL 12 daemon boot JARs before build.sh
 make build
 ```
 
