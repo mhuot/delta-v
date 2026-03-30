@@ -48,7 +48,7 @@ import org.opennms.netmgt.bsm.service.BusinessServiceManager;
 import org.opennms.netmgt.bsm.service.BusinessServiceStateMachine;
 import org.opennms.netmgt.bsm.service.internal.BusinessServiceManagerImpl;
 import org.opennms.netmgt.bsm.service.internal.DefaultBusinessServiceStateMachine;
-import org.opennms.netmgt.config.DefaultEventConfDao;
+import org.opennms.core.daemon.common.DaemonEventConfDao;
 import org.opennms.netmgt.config.api.EventConfDao;
 import org.opennms.netmgt.events.api.AnnotationBasedEventListenerAdapter;
 import org.opennms.netmgt.events.api.EventIpcManager;
@@ -62,6 +62,7 @@ import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsMemo;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsMonitoringSystem;
+import org.opennms.netmgt.model.OnmsAssetRecord;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsReductionKeyMemo;
 import org.opennms.netmgt.model.OnmsServiceType;
@@ -135,6 +136,7 @@ public class BsmdConfiguration {
             OnmsMonitoredService.class.getName(),
             OnmsMonitoringSystem.class.getName(),
             OnmsNode.class.getName(),
+            OnmsAssetRecord.class.getName(),
             OnmsReductionKeyMemo.class.getName(),
             OnmsServiceType.class.getName(),
             OnmsSnmpInterface.class.getName(),
@@ -277,7 +279,7 @@ public class BsmdConfiguration {
      */
     @Bean
     public EventConfDao eventConfDao() {
-        return new DefaultEventConfDao();
+        return new DaemonEventConfDao();
     }
 
     /**

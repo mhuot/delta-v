@@ -29,7 +29,7 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
-import org.opennms.netmgt.config.DefaultEventConfDao;
+import org.opennms.netmgt.config.api.EventConfDao;
 import org.opennms.netmgt.model.EventConfEvent;
 import org.opennms.netmgt.model.EventConfSource;
 import org.opennms.netmgt.xml.event.AlarmData;
@@ -59,10 +59,10 @@ public class EventConfEnrichmentService {
 
     private static final Logger LOG = LoggerFactory.getLogger(EventConfEnrichmentService.class);
 
-    private final DefaultEventConfDao eventConfDao;
+    private final DaemonEventConfDao eventConfDao;
 
     public EventConfEnrichmentService(DataSource dataSource) {
-        this.eventConfDao = new DefaultEventConfDao();
+        this.eventConfDao = new DaemonEventConfDao();
         List<EventConfEvent> events = loadEventConfFromDb(new JdbcTemplate(dataSource));
         if (!events.isEmpty()) {
             eventConfDao.loadEventsFromDB(events);
@@ -76,7 +76,7 @@ public class EventConfEnrichmentService {
      * Returns the underlying EventConfDao for use by components that need
      * direct access to event configuration lookups (e.g., KafkaEventForwarder).
      */
-    public DefaultEventConfDao getEventConfDao() {
+    public EventConfDao getEventConfDao() {
         return eventConfDao;
     }
 

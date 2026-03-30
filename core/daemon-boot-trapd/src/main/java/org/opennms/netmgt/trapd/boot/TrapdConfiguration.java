@@ -2,7 +2,7 @@ package org.opennms.netmgt.trapd.boot;
 
 import javax.sql.DataSource;
 
-import org.opennms.netmgt.config.DefaultEventConfDao;
+import org.opennms.core.daemon.common.DaemonEventConfDao;
 import org.opennms.netmgt.config.api.EventConfDao;
 import org.opennms.netmgt.dao.api.DistPollerDao;
 import org.opennms.netmgt.dao.api.InterfaceToNodeCache;
@@ -37,7 +37,7 @@ public class TrapdConfiguration {
 
     @Bean
     public EventConfDao eventConfDao() {
-        return new DefaultEventConfDao();
+        return new DaemonEventConfDao();
     }
 
     @Bean
