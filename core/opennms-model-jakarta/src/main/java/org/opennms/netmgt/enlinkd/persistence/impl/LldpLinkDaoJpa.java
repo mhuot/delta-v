@@ -21,6 +21,8 @@
  */
 package org.opennms.netmgt.enlinkd.persistence.impl;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.List;
 
@@ -107,10 +109,17 @@ public class LldpLinkDaoJpa extends AbstractDaoJpa<LldpLink, Integer> implements
             return snmpIfaces.get(0).getIfIndex();
         }
 
+        InetAddress portAddr;
+        try {
+            portAddr = InetAddress.getByName(portId);
+        } catch (UnknownHostException e) {
+            return -1;
+        }
+
         List<OnmsIpInterface> ipIfaces = entityManager().createQuery(
                 "SELECT i FROM OnmsIpInterface i WHERE i.node.id = ?1 AND i.ipAddress = ?2")
                 .setParameter(1, nodeId)
-                .setParameter(2, portId)
+                .setParameter(2, portAddr)
                 .getResultList();
         if (ipIfaces.size() == 1) {
             OnmsIpInterface ipIf = ipIfaces.get(0);

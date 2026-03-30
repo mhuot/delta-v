@@ -36,6 +36,7 @@ import org.opennms.netmgt.model.OnmsDistPoller;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsMonitoringSystem;
+import org.opennms.netmgt.model.OnmsAssetRecord;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsServiceType;
 import org.opennms.netmgt.model.OnmsSnmpInterface;
@@ -107,6 +108,7 @@ public class CollectdJpaConfiguration {
     public PersistenceManagedTypes persistenceManagedTypes() {
         return PersistenceManagedTypes.of(
             OnmsNode.class.getName(),
+            OnmsAssetRecord.class.getName(),
             OnmsIpInterface.class.getName(),
             OnmsMonitoredService.class.getName(),
             OnmsServiceType.class.getName(),

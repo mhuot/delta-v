@@ -42,6 +42,7 @@ import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsMemo;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsMonitoringSystem;
+import org.opennms.netmgt.model.OnmsAssetRecord;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsReductionKeyMemo;
 import org.opennms.netmgt.model.OnmsServiceType;
@@ -112,6 +113,7 @@ public class AlarmdConfiguration {
             OnmsMonitoredService.class.getName(),
             OnmsMonitoringSystem.class.getName(),
             OnmsNode.class.getName(),
+            OnmsAssetRecord.class.getName(),
             OnmsReductionKeyMemo.class.getName(),
             OnmsServiceType.class.getName(),
             OnmsSnmpInterface.class.getName(),
