@@ -1133,9 +1133,6 @@
                 <exclude>src/site/site.xml</exclude>
                 <exclude>src/test/resources/test-data.sql</exclude>
 
-                <!-- don't need this can o' worms for now -->
-                <exclude>opennms-base-assembly/src/main/filtered/etc</exclude>
-                <exclude>opennms-base-assembly/src/main/resources</exclude>
 
                 <!-- BSD + GPL, see header for details -->
                 <exclude>core/test-api/dns/**/DNSServer.java</exclude>
@@ -3259,11 +3256,6 @@
       </dependency>
       <dependency>
         <groupId>org.opennms</groupId>
-        <artifactId>opennms-base-assembly</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.opennms</groupId>
         <artifactId>opennms-detector-bsf</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -3351,13 +3343,6 @@
       </dependency>
       <dependency>
         <groupId>org.opennms</groupId>
-        <artifactId>opennms-full-assembly</artifactId>
-        <version>${project.version}</version>
-        <type>tar.gz</type>
-        <classifier>dist</classifier>
-      </dependency>
-      <dependency>
-        <groupId>org.opennms</groupId>
         <artifactId>opennms-icmp-api</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -3394,11 +3379,6 @@
       <dependency>
         <groupId>org.opennms.features</groupId>
         <artifactId>opennms-integration-rt</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.opennms</groupId>
-        <artifactId>opennms-install</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
