@@ -82,11 +82,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.opennms</groupId>
-      <artifactId>opennms-jetty</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.opennms.features.events</groupId>
       <artifactId>org.opennms.features.events.traps</artifactId>
       <scope>test</scope>
