@@ -9,7 +9,7 @@
   <groupId>org.opennms.features.telemetry.protocols.sflow</groupId>
   <artifactId>org.opennms.features.telemetry.protocols.sflow.parser</artifactId>
   <name>OpenNMS :: Features :: Telemetry :: Protocols :: SFlow :: Parser</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

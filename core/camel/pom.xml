@@ -9,7 +9,7 @@
   <groupId>org.opennms.core</groupId>
   <artifactId>org.opennms.core.camel</artifactId>
   <name>OpenNMS :: Core :: Camel</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

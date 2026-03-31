@@ -9,7 +9,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opennms.features.rest</groupId>
     <artifactId>org.opennms.features.rest.common</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: REST :: Common</name>
     <build>
         <plugins>

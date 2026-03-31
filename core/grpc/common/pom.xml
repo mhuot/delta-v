@@ -12,7 +12,7 @@
   <groupId>org.opennms.core.grpc</groupId>
   <artifactId>org.opennms.core.grpc.common</artifactId>
   <name>OpenNMS :: Core :: GRPC :: Common</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
 
   <build>
     <plugins>

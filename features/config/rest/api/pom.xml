@@ -10,7 +10,7 @@
     <groupId>org.opennms.features.config.rest</groupId>
     <artifactId>org.opennms.features.config.rest.api</artifactId>
     <name>OpenNMS :: Features :: Config :: Rest :: API</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

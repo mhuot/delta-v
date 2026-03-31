@@ -9,7 +9,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opennms.features.distributed</groupId>
     <artifactId>org.opennms.features.distributed.collection</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Distributed :: Collection</name>
     <build>
         <plugins>

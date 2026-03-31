@@ -19,7 +19,7 @@
 
     <name>OpenNMS :: Features :: Dashlets :: Summary</name>
 
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <dependencies>
 
         <dependency>

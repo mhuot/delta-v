@@ -12,7 +12,7 @@
   <groupId>org.opennms.core</groupId>
   <artifactId>org.opennms.core.encrypt-util</artifactId>
   <name>OpenNMS :: Core :: Encrypt :: Util</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

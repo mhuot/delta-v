@@ -8,7 +8,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features</groupId>
   <artifactId>org.opennms.features.mib-compiler</artifactId>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <name>OpenNMS :: Features :: MIB-Compiler</name>
 
   <description>Standalong MIB-Compiler based on JSMILib</description>

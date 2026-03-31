@@ -9,7 +9,7 @@
   <groupId>org.opennms.protocols</groupId>
   <artifactId>org.opennms.protocols.xml</artifactId>
   <name>OpenNMS :: Protocols :: XML Collector</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

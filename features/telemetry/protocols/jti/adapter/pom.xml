@@ -9,7 +9,7 @@
   <groupId>org.opennms.features.telemetry.protocols.jti</groupId>
   <artifactId>org.opennms.features.telemetry.protocols.jti.adapter</artifactId>
   <name>OpenNMS :: Features :: Telemetry :: Protocols :: JTI :: Adapter</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <extensions>
       <extension>

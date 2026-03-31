@@ -11,7 +11,7 @@
   <groupId>org.opennms.core.ipc.grpc</groupId>
   <artifactId>org.opennms.core.ipc.grpc.server</artifactId>
   <name>OpenNMS :: Core :: IPC :: GRPC :: Server</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
 
   <build>
     <plugins>

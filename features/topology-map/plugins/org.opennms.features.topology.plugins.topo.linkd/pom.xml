@@ -19,7 +19,7 @@
 
   <name>OpenNMS :: Features :: Topology :: Plugins :: Linkd</name>
 
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
 
   <dependencies>
     <!--

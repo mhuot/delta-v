@@ -9,7 +9,7 @@
   <artifactId>opennms-detector-lineoriented</artifactId>
   <name>OpenNMS :: Provisioning :: LineOriented Detectors</name>
   <url>http://www.opennms.org</url>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

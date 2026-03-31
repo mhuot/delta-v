@@ -9,7 +9,7 @@
   <groupId>org.opennms.features.endpoints.grafana</groupId>
   <artifactId>org.opennms.features.endpoints.grafana.service</artifactId>
   <name>OpenNMS :: Features :: Endpoints :: Grafana :: Service</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

@@ -8,7 +8,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features.bsm</groupId>
   <artifactId>org.opennms.features.bsm.daemon</artifactId>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <name>OpenNMS :: Features :: BSM :: Daemon</name>
   <build>
     <plugins>

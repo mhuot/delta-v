@@ -10,7 +10,7 @@
   <groupId>org.opennms.features</groupId>
   <artifactId>org.opennms.features.timeseries.shell</artifactId>
   <name>OpenNMS :: Features :: Timeseries :: Shell Commands</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
 
   <build>
     <plugins>

@@ -15,7 +15,7 @@
         Core module which provides features to install to listen for rest related services,
         such as @Path annotated interfaces.
     </description>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <properties>
         <bundle.namespace>org.opennms.osgi.core.rest</bundle.namespace>
         <bundle.symbolicName>${bundle.namespace}</bundle.symbolicName>

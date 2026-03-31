@@ -18,7 +18,7 @@
 
   <name>OpenNMS :: Features :: AMQP :: Alarm Northbounder</name>
 
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
 
   <build>
     <plugins>

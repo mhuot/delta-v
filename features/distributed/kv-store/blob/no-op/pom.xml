@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.opennms.features.distributed.kv-store.blob.no-op</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Distributed :: Key Value Store :: Blob :: No-Op</name>
     <build>
         <plugins>

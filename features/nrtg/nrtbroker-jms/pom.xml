@@ -8,7 +8,7 @@
   </parent>
   <groupId>org.opennms.features.nrtg</groupId>
   <artifactId>nrtg-nrtbroker-jms</artifactId>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <properties>
     <bundle.symbolicName>org.opennms.features.nrtg.nrtbroker.jms</bundle.symbolicName>
     <bundle.namespace>org.opennms.nrtg.nrtbroker.jms</bundle.namespace>

@@ -9,7 +9,7 @@
   <groupId>org.opennms.tests</groupId>
   <artifactId>org.opennms.tests.mock-snmp-agent</artifactId>
   <name>OpenNMS :: Tests :: Mock SNMP Agent</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

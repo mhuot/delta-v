@@ -9,7 +9,7 @@
   <groupId>org.opennms.features.telemetry.distributed</groupId>
   <artifactId>org.opennms.features.telemetry.distributed.minion</artifactId>
   <name>OpenNMS :: Features :: Telemetry :: Distributed :: Minion</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

@@ -12,7 +12,7 @@
   <groupId>org.opennms.core.snmp</groupId>
   <artifactId>org.opennms.core.snmp.profile-mapper</artifactId>
   <name>OpenNMS :: Core :: SNMP :: Profile Mapper</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

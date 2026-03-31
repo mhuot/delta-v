@@ -9,7 +9,7 @@
   <groupId>org.opennms.features.graphml</groupId>
   <artifactId>org.opennms.features.graphml.service</artifactId>
   <name>OpenNMS :: Features :: GraphML :: Service</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

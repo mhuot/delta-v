@@ -8,7 +8,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features.situation-feedback.rest</groupId>
   <artifactId>org.opennms.features.situation-feedback.rest.impl</artifactId>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <name>OpenNMS :: Features :: Situation-Feedback :: ReST :: Impl.</name>
   <dependencies>
     <dependency>

@@ -14,7 +14,7 @@
   <groupId>org.opennms.features.topology.plugins.topo</groupId>
   <artifactId>asset</artifactId>
   <name>OpenNMS :: Features :: Topology :: Plugins :: Asset</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

@@ -14,7 +14,7 @@
   <groupId>org.opennms.features.enlinkd</groupId>
   <artifactId>org.opennms.features.enlinkd.generator</artifactId>
   <name>OpenNMS :: Features :: Enlinkd :: Topology Generator</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

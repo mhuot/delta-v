@@ -11,7 +11,7 @@
 
   <groupId>org.opennms.core.grpc</groupId>
   <artifactId>org.opennms.core.grpc.osgi</artifactId>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <name>OpenNMS :: GRPC :: OSGI :: Shaded </name>
   <build>
     <defaultGoal>install</defaultGoal>

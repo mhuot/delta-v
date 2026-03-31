@@ -9,7 +9,7 @@
   <groupId>org.opennms.core.ipc.rpc</groupId>
   <artifactId>org.opennms.core.ipc.rpc.api</artifactId>
   <name>OpenNMS :: Core :: IPC :: RPC :: API</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

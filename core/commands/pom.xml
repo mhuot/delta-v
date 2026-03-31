@@ -13,7 +13,7 @@
 
   <name>OpenNMS :: Core :: Shell Commands</name>
 
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
 
   <build>
     <plugins>

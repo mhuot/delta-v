@@ -9,7 +9,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opennms.features.minion.heartbeat</groupId>
     <artifactId>org.opennms.features.minion.heartbeat.consumer</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Minion :: Heartbeat :: Consumer</name>
 
     <build>

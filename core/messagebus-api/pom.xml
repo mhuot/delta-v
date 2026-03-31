@@ -9,7 +9,7 @@
         <version>36.0.0-SNAPSHOT</version>
     </parent>
     <artifactId>org.opennms.core.messagebus.api</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <name>OpenNMS :: Core :: MessageBus :: API</name>
     <description>IPC MessageBus API for inter-daemon communication.</description>
     <build>

@@ -12,7 +12,7 @@
   <groupId>org.opennms.features.telemetry.protocols.bmp.persistence</groupId>
   <artifactId>org.opennms.features.telemetry.protocols.bmp.persistence.api</artifactId>
   <name>OpenNMS :: Features :: Telemetry :: Bmp :: Persistence :: Api</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

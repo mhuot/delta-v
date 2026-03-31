@@ -10,7 +10,7 @@
   <groupId>org.opennms.core.snmp</groupId>
   <artifactId>org.opennms.core.snmp.joesnmp</artifactId>
   <name>OpenNMS :: Core :: SNMP :: JoeSNMP</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

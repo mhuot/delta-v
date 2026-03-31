@@ -10,7 +10,7 @@
   <groupId>org.opennms.features.collection</groupId>
   <artifactId>org.opennms.features.collection.commands</artifactId>
   <name>OpenNMS :: Features :: Collection :: Shell Commands</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
 
   <build>
     <plugins>

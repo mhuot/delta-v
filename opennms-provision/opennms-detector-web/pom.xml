@@ -9,7 +9,7 @@
   <artifactId>opennms-detector-web</artifactId>
   <name>OpenNMS :: Provisioning :: Web Detector (httpclient)</name>
   <url>http://www.opennms.org</url>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

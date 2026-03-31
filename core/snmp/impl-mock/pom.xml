@@ -10,7 +10,7 @@
   <groupId>org.opennms.core.snmp</groupId>
   <artifactId>org.opennms.core.snmp.implementations.mock</artifactId>
   <name>OpenNMS :: Core :: SNMP :: Mock Implementation</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

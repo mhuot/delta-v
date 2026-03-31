@@ -9,7 +9,7 @@
   <groupId>org.opennms.features.distributed</groupId>
   <artifactId>org.opennms.features.distributed.dao-distributed</artifactId>
   <name>OpenNMS :: Features :: Distributed :: DAO :: Distributed</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

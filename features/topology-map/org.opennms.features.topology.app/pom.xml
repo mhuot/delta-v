@@ -15,7 +15,7 @@
 
     <name>${bundle.symbolicName}</name>
 
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <properties>
         <bundle.symbolicName>org.opennms.features.topology.app</bundle.symbolicName>

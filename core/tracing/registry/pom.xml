@@ -9,7 +9,7 @@
   <groupId>org.opennms.core.tracing</groupId>
   <artifactId>org.opennms.core.tracing.registry</artifactId>
   <name>OpenNMS :: Core :: Tracing :: Registry </name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

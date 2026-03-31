@@ -14,7 +14,7 @@
   <groupId>org.opennms.features.enlinkd</groupId>
   <artifactId>org.opennms.features.enlinkd.shell</artifactId>
   <name>OpenNMS :: Features :: Enlinkd :: Shell Commands</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

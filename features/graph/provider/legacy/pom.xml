@@ -11,7 +11,7 @@
     <artifactId>org.opennms.features.graph.provider.legacy</artifactId>
     <name>OpenNMS :: Features :: Graph :: Provider :: Legacy</name>
     <description>Adapter for the (legacy) TopologyProvider API (Topology API -> Graph API)</description>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <build>
         <plugins>
             <plugin>

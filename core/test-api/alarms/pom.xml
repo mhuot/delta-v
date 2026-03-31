@@ -9,7 +9,7 @@
   <groupId>org.opennms.core.test-api</groupId>
   <artifactId>org.opennms.core.test-api.alarm</artifactId>
   <name>OpenNMS :: Core :: Test API :: Alarms</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

@@ -12,7 +12,7 @@
   <description>
     This module adds RADIUS support to OpenNMS.
   </description>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

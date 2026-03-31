@@ -8,7 +8,7 @@
     </parent>
     <groupId>org.opennms.features</groupId>
     <artifactId>org.opennms.features.name-cutter</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Name Cutter</name>
 
     <build>

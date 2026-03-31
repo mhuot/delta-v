@@ -9,7 +9,7 @@
   <groupId>org.opennms.core.mate</groupId>
   <artifactId>org.opennms.core.mate.shell-commands</artifactId>
   <name>OpenNMS :: Core :: Mate :: Shell-Commands</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

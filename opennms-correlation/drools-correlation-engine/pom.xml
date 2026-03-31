@@ -40,7 +40,7 @@
   <artifactId>drools-correlation-engine</artifactId>
   <name>OpenNMS :: Correlation :: Drools Engine</name>
   <url>http://maven.apache.org</url>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

@@ -11,7 +11,7 @@
   <groupId>org.opennms.core.tracing</groupId>
   <artifactId>org.opennms.core.tracing.jaeger-tracer</artifactId>
   <name>OpenNMS :: Core :: Tracing :: Jaeger Tracer</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

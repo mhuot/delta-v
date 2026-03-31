@@ -10,7 +10,7 @@
   <groupId>org.opennms.core.snmp</groupId>
   <artifactId>org.opennms.core.snmp.api</artifactId>
   <name>OpenNMS :: Core :: SNMP :: API</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

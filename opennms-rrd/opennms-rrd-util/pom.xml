@@ -9,7 +9,7 @@
     <artifactId>opennms-rrd-util</artifactId>
     <name>OpenNMS :: RRD :: ORM</name>
     <description>JRB/RRD Utilities.</description>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <build>
         <plugins>
             <plugin>

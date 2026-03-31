@@ -12,7 +12,7 @@
     <groupId>org.opennms.features.telemetry</groupId>
     <artifactId>org.opennms.features.telemetry.connectors</artifactId>
     <name>OpenNMS :: Features :: Telemetry :: Connectors</name>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <build>
         <plugins>
             <plugin>

@@ -9,7 +9,7 @@
   <groupId>org.opennms.features.collection</groupId>
   <artifactId>org.opennms.features.collection.client-rpc</artifactId>
   <name>OpenNMS :: Features :: Collection :: RPC Client</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

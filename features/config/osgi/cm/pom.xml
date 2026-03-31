@@ -12,7 +12,7 @@
     <groupId>org.opennms.features.config.osgi</groupId>
     <artifactId>org.opennms.features.config.osgi.cm</artifactId>
     <name>OpenNMS :: Features :: Config :: Configuration for Osgi :: CM Integration</name>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <dependencies>
 
         <dependency>

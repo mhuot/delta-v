@@ -9,7 +9,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opennms.features</groupId>
     <artifactId>org.opennms.features.rest-provider</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: REST Provider</name>
     <build>
         <plugins>

@@ -9,7 +9,7 @@
   <groupId>org.opennms.core.snmp</groupId>
   <artifactId>org.opennms.core.snmp.proxy.rpc-impl</artifactId>
   <name>OpenNMS :: Core :: SNMP :: Proxy :: RPC Impl.</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

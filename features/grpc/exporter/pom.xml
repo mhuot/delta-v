@@ -12,7 +12,7 @@
     <groupId>org.opennms.features.grpc</groupId>
     <artifactId>org.opennms.features.grpc.exporter</artifactId>
     <name>OpenNMS :: Features :: Grpc :: Exporter</name>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <properties>
         <protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
     </properties>

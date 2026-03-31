@@ -11,7 +11,7 @@
 
     <groupId>org.opennms.core.ipc.twin.jms</groupId>
     <artifactId>org.opennms.core.ipc.twin.jms.publisher</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <name>OpenNMS :: Core :: IPC :: Twin :: JMS :: Publisher</name>
     <build>
         <plugins>

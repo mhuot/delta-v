@@ -9,7 +9,7 @@
   <groupId>org.opennms.core.ipc.sink</groupId>
   <artifactId>org.opennms.core.ipc.sink.api</artifactId>
   <name>OpenNMS :: Core :: IPC :: Sink :: API</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

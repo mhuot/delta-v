@@ -9,7 +9,7 @@
   <groupId>org.opennms.core.snmp</groupId>
   <artifactId>org.opennms.core.snmp.implementations.snmp4j</artifactId>
   <name>OpenNMS :: Core :: SNMP :: SNMP4J Implementation</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

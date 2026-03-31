@@ -9,7 +9,7 @@
   <artifactId>opennms-rrd-model</artifactId>
   <name>OpenNMS :: RRD :: ORM</name>
   <description>Object-relational mapping for RRD data.</description>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

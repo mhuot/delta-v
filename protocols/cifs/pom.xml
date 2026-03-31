@@ -10,7 +10,7 @@
     <groupId>org.opennms.protocols</groupId>
     <artifactId>org.opennms.protocols.cifs</artifactId>
     <name>OpenNMS :: Protocols :: CIFS</name>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <build>
         <plugins>

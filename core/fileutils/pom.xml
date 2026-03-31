@@ -11,7 +11,7 @@
 
     <groupId>org.opennms.core</groupId>
     <artifactId>org.opennms.core.fileutils</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <name>OpenNMS :: Core :: File Utils</name>
     <build>
         <plugins>

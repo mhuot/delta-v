@@ -9,7 +9,7 @@
   <groupId>org.opennms.features.events</groupId>
   <artifactId>org.opennms.features.events.syslog</artifactId>
   <name>OpenNMS :: Features :: Events :: Syslog Daemon</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

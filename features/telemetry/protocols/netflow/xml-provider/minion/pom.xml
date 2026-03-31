@@ -9,7 +9,7 @@
     <groupId>org.opennms.features.telemetry.protocols.netflow.xml</groupId>
     <artifactId>org.opennms.features.telemetry.protocols.netflow.xml.minion</artifactId>
     <name>OpenNMS :: Features :: Telemetry :: Protocols :: Netflow :: XML :: Minion</name>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <build>
         <plugins>
             <plugin>

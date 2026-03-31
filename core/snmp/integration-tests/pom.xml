@@ -10,7 +10,7 @@
   <groupId>org.opennms.core.snmp</groupId>
   <artifactId>org.opennms.core.snmp.integration-tests</artifactId>
   <name>OpenNMS :: Core :: SNMP :: Integration Tests</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

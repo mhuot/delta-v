@@ -15,7 +15,7 @@
   <groupId>org.opennms.features.topology.plugins.topo</groupId>
   <artifactId>org.opennms.features.topology.plugins.topo.bsm</artifactId>
   <name>OpenNMS :: Features :: Topology :: Plugins :: BSM</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <dependencies>
     <dependency>
       <groupId>org.opennms.features.topology</groupId>

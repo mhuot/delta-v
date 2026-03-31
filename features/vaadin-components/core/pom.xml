@@ -14,7 +14,7 @@
         <bundle.namespace>org.opennms.features.vaadin.components.core</bundle.namespace>
     </properties>
     <name>OpenNMS :: Features :: Vaadin :: Components :: Core</name>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <build>
         <plugins>
             <plugin>

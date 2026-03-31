@@ -9,7 +9,7 @@
         <version>36.0.0-SNAPSHOT</version>
     </parent>
     <artifactId>org.opennms.core.tsid</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <name>OpenNMS :: Core :: TSID</name>
     <description>Time-Sorted ID generation (Snowflake-style) for events and messages.</description>
     <build>

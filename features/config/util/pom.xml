@@ -8,7 +8,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features.config</groupId>
   <artifactId>org.opennms.features.config.util</artifactId>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <name>OpenNMS :: Features :: Config :: Util (No OpenNMS dependencies)</name>
   <properties>
     <!-- Misc. -->

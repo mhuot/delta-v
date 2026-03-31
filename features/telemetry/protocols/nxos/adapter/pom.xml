@@ -9,7 +9,7 @@
   <groupId>org.opennms.features.telemetry.protocols.nxos</groupId>
   <artifactId>org.opennms.features.telemetry.protocols.nxos.adapter</artifactId>
   <name>OpenNMS :: Features :: Telemetry :: Protocols :: NX-OS Telemetry :: Adapter</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

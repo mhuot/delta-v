@@ -9,7 +9,7 @@
   <groupId>org.opennms.features.poller</groupId>
   <artifactId>org.opennms.features.poller.shell</artifactId>
   <name>OpenNMS :: Features :: Poller :: Shell</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

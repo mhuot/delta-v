@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opennms.features.enlinkd</groupId>
     <artifactId>org.opennms.features.enlinkd.api</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Enlinkd :: API</name>
     <build>
         <plugins>

@@ -9,7 +9,7 @@
   <groupId>org.opennms.features.executor-factory</groupId>
   <artifactId>org.opennms.features.executor-factory.cassandra</artifactId>
   <name>OpenNMS :: Features :: Executor Factory :: Cassandra</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

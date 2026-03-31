@@ -8,7 +8,7 @@
   </parent>
   <artifactId>opennms-R</artifactId>
   <name>OpenNMS :: Integrations :: R Interface</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

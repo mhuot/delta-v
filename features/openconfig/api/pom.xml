@@ -12,7 +12,7 @@
   <groupId>org.opennms.features.openconfig</groupId>
   <artifactId>org.opennms.features.openconfig.api</artifactId>
   <name>OpenNMS :: Features :: OpenConfig :: API</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
 
   <build>
     <plugins>

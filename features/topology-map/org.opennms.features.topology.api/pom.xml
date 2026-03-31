@@ -19,7 +19,7 @@
 
   <name>${bundle.symbolicName}</name>
 
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
 
   <dependencies>
     <!--

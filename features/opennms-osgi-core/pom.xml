@@ -18,7 +18,7 @@
     <groupId>org.opennms.osgi</groupId>
     <artifactId>opennms-osgi-core</artifactId>
     <name>${bundle.symbolicName}</name>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <build>
         <plugins>

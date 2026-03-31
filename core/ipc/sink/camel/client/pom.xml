@@ -10,7 +10,7 @@
   <groupId>org.opennms.core.ipc.sink.camel</groupId>
   <artifactId>org.opennms.core.ipc.sink.camel.client</artifactId>
   <name>OpenNMS :: Core :: IPC :: Sink :: Camel :: Client</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <properties>
     <skipITs>true</skipITs>
   </properties>

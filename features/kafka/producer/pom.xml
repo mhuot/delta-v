@@ -18,7 +18,7 @@
 
   <name>OpenNMS :: Features :: Kafka :: Producer</name>
 
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
 
   <build>
     <extensions>

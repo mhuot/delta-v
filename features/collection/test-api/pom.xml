@@ -9,7 +9,7 @@
   <groupId>org.opennms.features.collection</groupId>
   <artifactId>org.opennms.features.collection.test-api</artifactId>
   <name>OpenNMS :: Features :: Collection :: Test API</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

@@ -19,7 +19,7 @@
     </properties>
 
     <name>OpenNMS :: Features :: Vaadin :: Components :: Graph</name>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <build>
         <resources>

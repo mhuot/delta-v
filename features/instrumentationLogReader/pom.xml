@@ -8,7 +8,7 @@
   </parent>
   <groupId>org.opennms.features</groupId>
   <artifactId>org.opennms.features.instrumentationLogReader</artifactId>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <name>OpenNMS :: Features :: Instrumentation Log Reader</name>
   <url>http://maven.apache.org</url>
   <properties>

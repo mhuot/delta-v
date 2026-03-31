@@ -8,7 +8,7 @@
     </parent>
     <groupId>org.opennms.features.vaadin-components</groupId>
     <artifactId>extender-service</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Vaadin :: Extender Service</name>
     <description>Vaadin Extender bootstrapping Vaadin apps</description>
     <build>

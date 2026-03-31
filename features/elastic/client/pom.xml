@@ -11,7 +11,7 @@
     <groupId>org.opennms.features.elastic</groupId>
     <artifactId>org.opennms.features.elastic.client</artifactId>
     <name>OpenNMS :: ElasticSearch :: Client</name>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <build>
         <plugins>

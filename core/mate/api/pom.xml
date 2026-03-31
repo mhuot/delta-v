@@ -9,7 +9,7 @@
   <groupId>org.opennms.core.mate</groupId>
   <artifactId>org.opennms.core.mate.api</artifactId>
   <name>OpenNMS :: Core :: Mate :: API</name>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>
