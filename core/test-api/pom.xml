@@ -20,7 +20,6 @@
     <module>elasticsearch</module>
     <module>http</module>
     <module>kafka</module>
-    <module>karaf</module>
     <module>lib</module>
     <module>rest</module>
     <module>services</module>
