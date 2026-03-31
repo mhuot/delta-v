@@ -91,3 +91,12 @@ core/web-assets/.eslintcache
 _bmad/
 _bmad-output/
 
+# Credentials & Secrets
+.env
+.env.*
+*.pem
+*.key
+*.jks
+*.p12
+auth.json
+
