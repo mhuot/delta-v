@@ -21,14 +21,5 @@
     <module>compiled</module>
   </modules>
 
-<dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.apache.karaf.shell</groupId>
-        <artifactId>org.apache.karaf.shell.core</artifactId>
-        <version>${karafVersion}</version>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
 
 </project>
