@@ -10,6 +10,11 @@
   <name>OpenNMS :: Model :: Config DAO :: API</name>
 <dependencies>
     <dependency>
+      <groupId>org.opennms.core.snmp</groupId>
+      <artifactId>org.opennms.core.snmp.api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.opennms</groupId>
       <artifactId>opennms-config-jaxb</artifactId>
     </dependency>

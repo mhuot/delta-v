@@ -1,6 +1,13 @@
 package org.opennms.netmgt.trapd.boot;
 
+import java.io.File;
+import java.io.IOException;
+
 import javax.sql.DataSource;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 
 import org.opennms.core.daemon.common.DaemonEventConfDao;
 import org.opennms.netmgt.config.api.EventConfDao;
@@ -10,6 +17,9 @@ import org.opennms.netmgt.config.TrapdConfig;
 import org.opennms.netmgt.trapd.TrapdConfigBean;
 import org.opennms.netmgt.trapd.TrapSinkConsumer;
 import org.opennms.netmgt.trapd.TrapSinkModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,8 +40,25 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class TrapdConfiguration {
 
+    private static final Logger LOG = LoggerFactory.getLogger(TrapdConfiguration.class);
+
+    private static final XmlMapper XML_MAPPER;
+    static {
+        XML_MAPPER = new XmlMapper();
+        XML_MAPPER.registerModule(new JaxbAnnotationModule());
+        XML_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
     @Bean
-    public TrapdConfig trapdConfig() {
+    public TrapdConfig trapdConfig(@Value("${opennms.home}") String opennmsHome) throws IOException {
+        var configFile = new File(opennmsHome, "etc/trapd-configuration.xml");
+        if (configFile.exists()) {
+            LOG.info("Loading trapd configuration from {}", configFile);
+            var xmlConfig = XML_MAPPER.readValue(configFile,
+                    org.opennms.netmgt.config.trapd.TrapdConfiguration.class);
+            return new TrapdConfigBean(xmlConfig);
+        }
+        LOG.warn("trapd-configuration.xml not found at {}, using defaults", configFile);
         return new TrapdConfigBean();
     }
 
