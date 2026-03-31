@@ -32,9 +32,9 @@ declare -A KARAF_PORTS=(
 do_up() {
     log "Starting Delta-V (version $VERSION)..."
 
-    # Check images exist (Delta-V layered images, not base images)
-    for img in "opennms/daemon-deltav:$VERSION" "opennms/minion-deltav:$VERSION"; do
-        docker image inspect "$img" >/dev/null 2>&1 || err "Image $img not found. Run ./build.sh first."
+    # Check a sample daemon image exists (Delta-V layered images)
+    for img in "opennms/trapd:$VERSION" "opennms/minion-deltav:$VERSION"; do
+        docker image inspect "$img" >/dev/null 2>&1 || err "Image $img not found. Run ./build.sh deltav first."
     done
 
     local profile="${1:-}"

@@ -67,29 +67,8 @@ do_compile() {
 }
 
 do_assemble() {
-    log "Building Karaf container modules (shared + karaf + features)..."
-    cd "$REPO_ROOT"
-    ./maven/bin/mvn -DskipTests -pl container/shared,container/karaf,container/features clean install
-
-    log "Building Sentinel and Minion features modules..."
-    cd "$REPO_ROOT"
-    ./maven/bin/mvn -DskipTests -pl features/container/sentinel,features/container/minion,features/minion/core/repository,features/minion/repository clean install
-
-    log "Building Sentinel assembly..."
-    cd "$REPO_ROOT/opennms-assemblies/sentinel"
-    ../../maven/bin/mvn -DskipTests clean install
-
-    log "Building Minion assembly..."
-    cd "$REPO_ROOT/opennms-assemblies/minion"
-    ../../maven/bin/mvn -DskipTests clean install
-
-    log "Building Daemon assembly..."
-    cd "$REPO_ROOT/opennms-assemblies/daemon"
-    ../../maven/bin/mvn -DskipTests clean install
-
-    log "Building Alarmd assembly..."
-    cd "$REPO_ROOT/opennms-assemblies/alarmd"
-    ../../maven/bin/mvn -DskipTests clean install
+    log "Karaf assembly removed — Delta-V uses Spring Boot daemons."
+    log "Use './build.sh deltav' to build daemon images."
 }
 
 do_db_init_image() {
@@ -112,29 +91,8 @@ do_jre_image() {
 }
 
 do_images() {
-    local make_args="DOCKER_REGISTRY=$DOCKER_REGISTRY DOCKER_ORG=$DOCKER_ORG"
-    [ "${1:-}" = "push" ] && make_args="$make_args DOCKER_FLAGS=--push"
-
-    # The legacy Horizon webapp image (opennms-full-assembly) is not built by Delta-V.
-    # Delta-V uses Spring Boot daemons, not the monolithic Karaf webapp.
-
-    # The sentinel Makefile tags as opennms/sentinel, but the Delta-V
-    # docker-compose expects opennms/daemon. Build then re-tag.
-    log "Building Daemon image (opennms/daemon:$VERSION)..."
-    cd "$REPO_ROOT/opennms-container/sentinel"
-    make image $make_args
-    docker image tag "opennms/sentinel:$VERSION" "opennms/daemon:$VERSION"
-    docker image tag "opennms/sentinel:$VERSION" "opennms/daemon:latest"
-
-    # Build Minion base image
-    log "Building Minion image (opennms/minion:$VERSION)..."
-    cd "$REPO_ROOT/opennms-container/minion"
-    make image $make_args
-
-    do_db_init_image
-
-    log "Docker images built:"
-    docker images --format "  {{.Repository}}:{{.Tag}}\t{{.Size}}" | grep -E "(horizon|daemon|sentinel|minion|db-init)" | head -20
+    log "Karaf-era images removed — Delta-V uses Spring Boot daemons."
+    log "Use './build.sh deltav' to build daemon images."
 }
 
 do_deltav_images() {
@@ -270,8 +228,6 @@ main() {
     case "${1:-all}" in
         all)
             do_compile
-            do_assemble
-            do_images
             if ! docker image inspect opennms/jre-deltav:21 >/dev/null 2>&1; then
                 do_jre_image
             fi

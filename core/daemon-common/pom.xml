@@ -358,13 +358,13 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!-- JAXB API — provides javax.xml.bind for DaemonEventConfDao's eventconf
+        <!-- JAXB — provides javax.xml.bind for DaemonEventConfDao's eventconf
              XML unmarshalling. Uses standard JAXB (not EclipseLink MOXy) to avoid
              class-scanning that triggers ClassNotFoundException for opennms-model
              types. At compile time, javax.xml.bind is used (matching Event class
-             annotations). At runtime, the Jakarta transformer converts both this
-             code and the Event class to jakarta.xml.bind, so the 4.0.x API must
-             also be on the classpath. -->
+             annotations). The Jakarta transformer converts to jakarta.xml.bind in
+             the fat JAR. The 4.0.x runtime must be compile scope so it ends up in
+             the same classloader directory as daemon-common at runtime. -->
         <dependency>
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
@@ -373,12 +373,10 @@
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>jaxb-runtime</artifactId>
-            <scope>runtime</scope>
         </dependency>
 
         <!-- Test -->
