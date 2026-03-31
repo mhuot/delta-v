@@ -9,7 +9,6 @@
   </parent>
   <groupId>org.opennms.features.nrtg</groupId>
   <artifactId>nrtg-nrtbroker-local</artifactId>
-  <packaging>bundle</packaging>
   <properties>
     <bundle.symbolicName>org.opennms.features.nrtg.nrtbroker.local</bundle.symbolicName>
     <bundle.namespace>org.opennms.nrtg.nrtbroker.local</bundle.namespace>

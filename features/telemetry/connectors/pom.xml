@@ -12,24 +12,7 @@
     <groupId>org.opennms.features.telemetry</groupId>
     <artifactId>org.opennms.features.telemetry.connectors</artifactId>
     <name>OpenNMS :: Features :: Telemetry :: Connectors</name>
-    <packaging>bundle</packaging>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Bundle-RequiredExecutionEnvironment>JavaSE-1.8</Bundle-RequiredExecutionEnvironment>
-                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                        <Bundle-Version>${project.version}</Bundle-Version>
-                    </instructions>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-    <dependencies>
+<dependencies>
 
         <dependency>
             <groupId>org.opennms.features.telemetry</groupId>
@@ -102,8 +85,6 @@
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
-
-
 
     </dependencies>
 

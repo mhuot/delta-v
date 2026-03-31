@@ -10,7 +10,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.core.tracing</groupId>
   <artifactId>org.opennms.core.tracing.jaeger-osgi</artifactId>
-  <packaging>bundle</packaging>
   <name>OpenNMS :: Core :: Tracing :: Jaeger :: OSGi wrapper</name>
   <description>OSGi wrapper for Jaeger Tracer.</description>
 
@@ -52,31 +51,6 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <extensions>true</extensions>
-        <configuration>
-          <instructions>
-            <Import-Package>
-              io.opentracing.util,
-              io.opentracing,
-              io.opentracing.propagation,
-              io.opentracing.tag,
-              javax.net,
-              javax.net.ssl
-            </Import-Package>
-            <Export-Package>
-              io.jaegertracing,
-              io.jaegertracing.internal,
-              io.jaegertracing.internal.propagation,
-              io.jaegertracing.internal.reporters,
-              io.jaegertracing.spi
-            </Export-Package>
-          </instructions>
-          <unpackBundle>true</unpackBundle>
-        </configuration>
       </plugin>
     </plugins>
   </build>

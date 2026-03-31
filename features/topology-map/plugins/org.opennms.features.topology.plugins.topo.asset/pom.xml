@@ -14,23 +14,7 @@
   <groupId>org.opennms.features.topology.plugins.topo</groupId>
   <artifactId>asset</artifactId>
   <name>OpenNMS :: Features :: Topology :: Plugins :: Asset</name>
-  <packaging>bundle</packaging>
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <configuration>
-          <instructions>
-            <Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
-            <Bundle-Version>${project.version}</Bundle-Version>
-            <Karaf-Commands>*</Karaf-Commands>
-          </instructions>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-  <dependencies>
+<dependencies>
     <!-- | uncomment to add all imported (non-local) bundles to your compilation classpath <dependency> <type>pom</type> <groupId>${parent.groupId}</groupId> <artifactId>provision</artifactId> 
       <optional>true</optional> </dependency> -->
     <dependency>

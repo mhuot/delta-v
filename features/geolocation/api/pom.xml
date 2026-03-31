@@ -8,7 +8,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features.geolocation</groupId>
   <artifactId>org.opennms.features.geolocation.api</artifactId>
-  <packaging>bundle</packaging>
   <name>OpenNMS :: Features :: Geolocation :: API</name>
   <description>Geolocation Services</description>
   <properties>

@@ -19,7 +19,6 @@
 
   <name>OpenNMS :: Features :: Topology :: Plugins :: Layout</name>
 
-  <packaging>bundle</packaging>
 
   <dependencies>
     <!--

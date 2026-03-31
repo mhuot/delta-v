@@ -10,7 +10,6 @@
     </parent>
     <groupId>org.opennms.features</groupId>
     <artifactId>jmxconfiggenerator</artifactId>
-    <packaging>bundle</packaging>
     <name>OpenNMS :: Features :: JMX Config Generator</name>
     <url>http://www.opennms.org</url>
 
@@ -25,11 +24,6 @@
             </resource>
         </resources>
         <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-            </plugin>
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

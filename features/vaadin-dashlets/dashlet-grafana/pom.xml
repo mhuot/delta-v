@@ -20,7 +20,6 @@
 
     <name>OpenNMS :: Features :: Dashlets :: Grafana</name>
 
-    <packaging>bundle</packaging>
     <dependencies>
         <dependency>
             <groupId>org.opennms.features</groupId>

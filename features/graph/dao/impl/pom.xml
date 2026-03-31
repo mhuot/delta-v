@@ -10,7 +10,6 @@
     <groupId>org.opennms.features.graph.dao</groupId>
     <artifactId>org.opennms.features.graph.dao.impl</artifactId>
     <name>OpenNMS :: Features :: Graph :: DAO :: Impl</name>
-    <packaging>jar</packaging>
     <dependencies>
         <dependency>
             <groupId>org.opennms.features.graph.dao</groupId>

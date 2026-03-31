@@ -15,7 +15,6 @@
     <groupId>org.opennms.features.topology.plugins</groupId>
     <artifactId>org.opennms.features.topology.plugins.browsers</artifactId>
     <name>OpenNMS :: Features :: Topology :: Plugins :: Browsers</name>
-    <packaging>bundle</packaging>
     <dependencies>
         <!--
          | uncomment to add all imported (non-local) bundles to your compilation classpath

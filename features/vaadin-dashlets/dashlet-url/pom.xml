@@ -20,7 +20,6 @@
 
     <name>OpenNMS :: Features :: Dashlets :: URL</name>
 
-    <packaging>bundle</packaging>
     <dependencies>
 
         <dependency>

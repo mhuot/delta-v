@@ -13,7 +13,6 @@
 
     <groupId>org.opennms.core</groupId>
     <artifactId>org.opennms.core.daemon-sink-kafka</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Core :: Daemon Sink :: Kafka</name>
     <description>
         Shared Kafka Sink bridge infrastructure for Spring Boot daemon containers.

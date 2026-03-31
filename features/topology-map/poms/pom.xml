@@ -21,26 +21,5 @@
     <module>compiled</module>
   </modules>
 
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.felix</groupId>
-          <artifactId>maven-bundle-plugin</artifactId>
-          <extensions>true</extensions>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
-
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.apache.karaf.shell</groupId>
-        <artifactId>org.apache.karaf.shell.core</artifactId>
-        <version>${karafVersion}</version>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
 
 </project>

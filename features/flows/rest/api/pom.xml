@@ -8,7 +8,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features.flows.rest</groupId>
   <artifactId>org.opennms.features.flows.rest.api</artifactId>
-  <packaging>bundle</packaging>
   <name>OpenNMS :: Features :: Flows :: ReST :: API</name>
   <dependencies>
     <dependency>

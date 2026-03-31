@@ -10,27 +10,8 @@
   <groupId>org.opennms.features.collection</groupId>
   <artifactId>org.opennms.features.collection.commands</artifactId>
   <name>OpenNMS :: Features :: Collection :: Shell Commands</name>
-  <packaging>bundle</packaging>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <extensions>true</extensions>
-        <configuration>
-          <instructions>
-            <Bundle-RequiredExecutionEnvironment>JavaSE-1.8</Bundle-RequiredExecutionEnvironment>
-            <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
-            <Bundle-Version>${project.version}</Bundle-Version>
-            <Karaf-Commands>*</Karaf-Commands>
-          </instructions>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-
-  <dependencies>
+<dependencies>
     <dependency>
       <groupId>org.opennms.features.collection</groupId>
       <artifactId>org.opennms.features.collection.api</artifactId>

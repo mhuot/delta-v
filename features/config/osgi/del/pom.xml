@@ -12,7 +12,6 @@
     <groupId>org.opennms.features.config.osgi</groupId>
     <artifactId>org.opennms.features.config.osgi.del</artifactId>
     <name>OpenNMS :: Features :: Config :: Configuration for Osgi :: Delegation</name>
-    <packaging>bundle</packaging>
     <dependencies>
         <!-- Caution! Bundles here need to be available very early in the startup order.
              Otherwise we will block the start of ConfigurationAdmin.
@@ -35,23 +34,5 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                        <Bundle-Version>${project.version}</Bundle-Version>
-                        <Export-Package>org.opennms.features.config.osgi.del*;version=${project.version};-noimport:=true</Export-Package>
-                        <Bundle-Activator>org.opennms.features.config.osgi.del.Activator</Bundle-Activator>
-                    </instructions>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>

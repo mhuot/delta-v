@@ -12,7 +12,6 @@
   <artifactId>jest-complete-osgi</artifactId>
   <name>jest-complete-osgi</name>
   <description>shaded osgi bundle containing complete jest implementation</description>
-  <packaging>bundle</packaging>
 
   <build>
 
@@ -53,82 +52,6 @@
         </executions>
       </plugin>
 
-
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <extensions>true</extensions>
-        <configuration>
-          <instructions>
-            <unpackBundle>true</unpackBundle>
-            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-            <Bundle-Version>${project.version}</Bundle-Version>
-            <Export-Package>
-              io.searchbox.action;version="${jestVersion}",
-              io.searchbox.annotations;version="${jestVersion}",
-              io.searchbox.client;version="${jestVersion}",
-              io.searchbox.client.config;version="${jestVersion}",
-              io.searchbox.client.config.discovery;version="${jestVersion}",
-              io.searchbox.client.config.exception;version="${jestVersion}",
-              io.searchbox.client.config.idle;version="${jestVersion}",
-              io.searchbox.client.http;version="${jestVersion}",
-              io.searchbox.client.http.apache;version="${jestVersion}",
-              io.searchbox.cloning;version="${jestVersion}",
-              io.searchbox.cluster;version="${jestVersion}",
-              io.searchbox.cluster.reroute;version="${jestVersion}",
-              io.searchbox.core;version="${jestVersion}",
-              io.searchbox.core.search.aggregation;version="${jestVersion}",
-              io.searchbox.core.search.sort;version="${jestVersion}",
-              io.searchbox.indices;version="${jestVersion}",
-              io.searchbox.indices.aliases;version="${jestVersion}",
-              io.searchbox.indices.mapping;version="${jestVersion}",
-              io.searchbox.indices.reindex;version="${jestVersion}",
-              io.searchbox.indices.script;version="${jestVersion}",
-              io.searchbox.indices.settings;version="${jestVersion}",
-              io.searchbox.indices.template;version="${jestVersion}",
-              io.searchbox.indices.type;version="${jestVersion}",
-              io.searchbox.params;version="${jestVersion}",
-              io.searchbox.snapshot;version="${jestVersion}",
-              io.searchbox.strings;version="${jestVersion}"
-            </Export-Package>
-            <Import-Package>
-              com.google.common.base;version="${guavaOsgiVersion}",
-              com.google.common.collect;version="${guavaOsgiVersion}",
-              com.google.common.io;version="${guavaOsgiVersion}",
-              com.google.common.reflect;version="${guavaOsgiVersion}",
-              com.google.common.util.concurrent;version="${guavaOsgiVersion}",
-              com.google.gson,
-              com.google.gson.annotations,
-              org.apache.http,
-              org.apache.http.auth,
-              org.apache.http.client,
-              org.apache.http.client.config,
-              org.apache.http.client.entity,
-              org.apache.http.client.methods,
-              org.apache.http.client.protocol,
-              org.apache.http.concurrent,
-              org.apache.http.config,
-              org.apache.http.conn,
-              org.apache.http.conn.routing,
-              org.apache.http.conn.socket,
-              org.apache.http.conn.ssl,
-              org.apache.http.entity,
-              org.apache.http.impl.auth,
-              org.apache.http.impl.client,
-              org.apache.http.impl.conn,
-              org.apache.http.impl.nio.client,
-              org.apache.http.impl.nio.conn,
-              org.apache.http.impl.nio.reactor,
-              org.apache.http.nio.conn,
-              org.apache.http.nio.conn.ssl,
-              org.apache.http.nio.reactor,
-              org.apache.http.protocol,
-              org.apache.http.util,
-              org.slf4j,
-            </Import-Package>
-          </instructions>
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
@@ -147,7 +70,6 @@
   </build>
 
   <dependencies>
-
 
     <dependency>
       <groupId>io.searchbox</groupId>

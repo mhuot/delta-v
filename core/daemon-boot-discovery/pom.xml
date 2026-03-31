@@ -13,7 +13,6 @@
 
     <groupId>org.opennms.core</groupId>
     <artifactId>org.opennms.core.daemon-boot-discovery</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Core :: Daemon Boot :: Discovery</name>
 
     <properties>

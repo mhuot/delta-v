@@ -10,7 +10,6 @@
     </parent>
     <groupId>org.opennms.features.events</groupId>
     <artifactId>org.opennms.features.events.kafka-consumer</artifactId>
-    <packaging>bundle</packaging>
     <name>OpenNMS :: Features :: Events :: Kafka Consumer</name>
     <dependencies>
         <dependency>
@@ -65,13 +64,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-            </plugin>
-        </plugins>
-    </build>
 </project>

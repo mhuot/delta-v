@@ -10,32 +10,13 @@
     </parent>
     <groupId>org.opennms.features</groupId>
     <artifactId>ui-extension</artifactId>
-    <packaging>bundle</packaging>
     <name>OpenNMS :: Features :: UI Extension</name>
 
     <properties>
         <maven.compiler.release>17</maven.compiler.release>
     </properties>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Bundle-RequiredExecutionEnvironment>JavaSE-1.8</Bundle-RequiredExecutionEnvironment>
-                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                        <Bundle-Version>${project.version}</Bundle-Version>
-                        <Karaf-Commands>*</Karaf-Commands>
-                    </instructions>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
-    <dependencies>
+<dependencies>
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-web-api</artifactId>
