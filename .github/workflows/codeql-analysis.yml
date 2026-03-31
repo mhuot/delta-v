@@ -25,6 +25,16 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        fetch-depth: 0
+
+    - name: Set up Java JDK
+      if: matrix.language == 'java-kotlin'
+      uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+      with:
+        java-version: '21'
+        distribution: temurin
+        cache: maven
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
@@ -34,7 +44,14 @@ jobs:
         # https://docs.github.com/en/code-security/codeql-cli/getting-started-with-the-codeql-cli/preparing-your-code-for-codeql-analysis
         queries: security-extended,security-and-quality
 
-    - name: Autobuild
+    - name: Manual Build (Java)
+      if: matrix.language == 'java-kotlin'
+      run: |
+        ulimit -n 65536 || true
+        ./mvnw -B -DskipTests clean install
+
+    - name: Autobuild (Non-Java)
+      if: matrix.language != 'java-kotlin'
       uses: github/codeql-action/autobuild@v3
 
     - name: Perform CodeQL Analysis
