@@ -21,9 +21,15 @@
  */
 package org.opennms.netmgt.poller.boot;
 
+import java.io.File;
 import java.io.IOException;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
+
 import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
+import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.core.tsid.TsidFactory;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.features.distributed.kvstore.json.noop.NoOpJsonStore;
@@ -31,6 +37,8 @@ import org.opennms.netmgt.collection.api.PersisterFactory;
 import org.opennms.netmgt.config.PollerConfig;
 import org.opennms.netmgt.config.PollerConfigFactory;
 import org.opennms.netmgt.config.SnmpPeerFactory;
+import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
+import org.opennms.netmgt.config.snmp.SnmpConfig;
 import org.opennms.netmgt.config.dao.outages.api.ReadablePollOutagesDao;
 import org.opennms.netmgt.config.dao.outages.impl.OnmsPollOutagesDao;
 import org.opennms.netmgt.dao.api.MonitoredServiceDao;
@@ -45,6 +53,7 @@ import org.opennms.netmgt.poller.pollables.PollableNetwork;
 import org.opennms.netmgt.threshd.api.ThresholdingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
@@ -73,6 +82,16 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class PollerdDaemonConfiguration {
 
     private static final Logger LOG = LoggerFactory.getLogger(PollerdDaemonConfiguration.class);
+
+    private static final XmlMapper XML_MAPPER;
+    static {
+        XML_MAPPER = XmlMapper.builder().defaultUseWrapper(false).build();
+        XML_MAPPER.registerModule(new JaxbAnnotationModule());
+        XML_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
+    @Value("${opennms.home:/opt/deltav}")
+    private String opennmsHome;
 
     /**
      * Loads poller-configuration.xml via the singleton PollerConfigFactory.
@@ -103,16 +122,19 @@ public class PollerdDaemonConfiguration {
     }
 
     /**
-     * Initializes the SNMP peer factory singleton from snmp-config.xml.
+     * Initializes the SNMP peer factory from snmp-config.xml via Jackson XmlMapper.
      * Required by SnmpMonitorStrategy.getRuntimeAttributes() which calls
      * SnmpPeerFactory.getInstance().getAgentConfig() to resolve SNMP
      * credentials for each polled service.
      */
     @Bean
-    public SnmpPeerFactory snmpPeerFactory() throws IOException {
-        LOG.info("Initializing SnmpPeerFactory");
-        SnmpPeerFactory.init();
-        return SnmpPeerFactory.getInstance();
+    public SnmpAgentConfigFactory snmpPeerFactory(EntityScopeProvider entityScopeProvider) throws IOException {
+        var configFile = new File(opennmsHome, "etc/snmp-config.xml");
+        LOG.info("Loading SnmpPeerFactory from {}", configFile);
+        var config = XML_MAPPER.readValue(configFile, SnmpConfig.class);
+        var factory = new SnmpPeerFactory(config, entityScopeProvider, null);
+        SnmpPeerFactory.setInstance(factory);
+        return factory;
     }
 
     /**

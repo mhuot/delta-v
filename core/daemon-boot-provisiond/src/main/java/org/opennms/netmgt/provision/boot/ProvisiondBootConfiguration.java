@@ -1,5 +1,6 @@
 package org.opennms.netmgt.provision.boot;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -8,8 +9,14 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import javax.sql.DataSource;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
+
 import org.opennms.netmgt.config.SnmpAssetAdapterConfig;
 import org.opennms.netmgt.config.SnmpAssetAdapterConfigFactory;
+import org.opennms.netmgt.config.SnmpPeerFactory;
+import org.opennms.netmgt.config.snmp.SnmpConfig;
 import org.opennms.netmgt.config.snmpmetadata.SnmpMetadataConfigDao;
 import org.opennms.netmgt.provision.SnmpAssetProvisioningAdapter;
 import org.opennms.netmgt.provision.SnmpMetadataProvisioningAdapter;
@@ -90,6 +97,8 @@ import org.opennms.netmgt.provision.service.lifecycle.LifeCycleRepository;
 import org.opennms.netmgt.snmp.SnmpProfileMapper;
 import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
 import org.opennms.netmgt.snmp.proxy.common.LocationAwareSnmpClientRpcImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.quartz.Scheduler;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -114,6 +123,15 @@ import org.springframework.transaction.support.TransactionTemplate;
  */
 @Configuration
 public class ProvisiondBootConfiguration {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ProvisiondBootConfiguration.class);
+
+    private static final XmlMapper XML_MAPPER;
+    static {
+        XML_MAPPER = XmlMapper.builder().defaultUseWrapper(false).build();
+        XML_MAPPER.registerModule(new JaxbAnnotationModule());
+        XML_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
 
     @Value("${opennms.home:/opt/deltav}")
     private String opennmsHome;
@@ -200,13 +218,13 @@ public class ProvisiondBootConfiguration {
     // ===================================================================
 
     @Bean
-    public SnmpPeerFactoryInitializer snmpPeerFactoryInitializer() {
-        return new SnmpPeerFactoryInitializer();
-    }
-
-    @Bean
-    public SnmpAgentConfigFactory snmpPeerFactory(SnmpPeerFactoryInitializer init) {
-        return init.getInstance();
+    public SnmpAgentConfigFactory snmpPeerFactory(EntityScopeProvider entityScopeProvider) throws IOException {
+        var configFile = new File(opennmsHome, "etc/snmp-config.xml");
+        LOG.info("Loading SnmpPeerFactory from {}", configFile);
+        var config = XML_MAPPER.readValue(configFile, SnmpConfig.class);
+        var factory = new SnmpPeerFactory(config, entityScopeProvider, null);
+        SnmpPeerFactory.setInstance(factory);
+        return factory;
     }
 
     @Bean

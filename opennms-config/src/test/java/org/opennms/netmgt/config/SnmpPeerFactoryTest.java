@@ -39,7 +39,9 @@ import org.opennms.core.mate.api.SecureCredentialsVaultScope;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.core.utils.LocationUtils;
-import org.opennms.core.xml.JaxbUtils;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import org.opennms.features.scv.api.Credentials;
 import org.opennms.features.scv.api.SecureCredentialsVault;
 import org.opennms.features.scv.jceks.JCEKSSecureCredentialsVault;
@@ -54,6 +56,15 @@ import org.springframework.core.io.InputStreamResource;
 import junit.framework.TestCase;
 
 public class SnmpPeerFactoryTest extends TestCase {
+
+    private static final XmlMapper XML_MAPPER;
+    static {
+        XML_MAPPER = XmlMapper.builder()
+                .defaultUseWrapper(false)
+                .build();
+        XML_MAPPER.registerModule(new JaxbAnnotationModule());
+        XML_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
 
     private int m_version;
 
@@ -548,7 +559,7 @@ public class SnmpPeerFactoryTest extends TestCase {
             snmpPeerFactory.saveDefinition(defB);
             snmpPeerFactory.saveCurrent();
 
-            final SnmpConfig snmpConfig1 = JaxbUtils.unmarshal(SnmpConfig.class, snmpPeerFactory.getSnmpConfigAsString());
+            final SnmpConfig snmpConfig1 = XML_MAPPER.readValue(snmpPeerFactory.getSnmpConfigAsString(), SnmpConfig.class);
 
             assertEquals(1, snmpConfig1.getDefinitions().size());
             assertEquals("${scv:myAuthPassphrase:password}", snmpConfig1.getDefinitions().get(0).getAuthPassphrase());
@@ -566,7 +577,7 @@ public class SnmpPeerFactoryTest extends TestCase {
             snmpPeerFactory.saveDefinition(defC);
             snmpPeerFactory.saveCurrent();
 
-            final SnmpConfig snmpConfig2 = JaxbUtils.unmarshal(SnmpConfig.class, snmpPeerFactory.getSnmpConfigAsString());
+            final SnmpConfig snmpConfig2 = XML_MAPPER.readValue(snmpPeerFactory.getSnmpConfigAsString(), SnmpConfig.class);
             assertEquals(2, snmpConfig2.getDefinitions().size());
         }
     }

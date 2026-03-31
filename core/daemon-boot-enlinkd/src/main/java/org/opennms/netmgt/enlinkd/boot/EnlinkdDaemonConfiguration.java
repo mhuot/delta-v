@@ -21,16 +21,23 @@
  */
 package org.opennms.netmgt.enlinkd.boot;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 
 import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
+import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.core.rpc.api.RpcClientFactory;
 import org.opennms.netmgt.config.EnhancedLinkdConfig;
 import org.opennms.netmgt.config.EnhancedLinkdConfigFactory;
 import org.opennms.netmgt.config.SnmpPeerFactory;
+import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
+import org.opennms.netmgt.config.snmp.SnmpConfig;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.enlinkd.BridgeOnmsTopologyUpdater;
@@ -116,6 +123,13 @@ public class EnlinkdDaemonConfiguration {
 
     private static final Logger LOG = LoggerFactory.getLogger(EnlinkdDaemonConfiguration.class);
 
+    private static final XmlMapper XML_MAPPER;
+    static {
+        XML_MAPPER = XmlMapper.builder().defaultUseWrapper(false).build();
+        XML_MAPPER.registerModule(new JaxbAnnotationModule());
+        XML_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
     @Value("${opennms.home:/opt/deltav}")
     private String opennmsHome;
 
@@ -124,10 +138,13 @@ public class EnlinkdDaemonConfiguration {
     // ── 2. SNMP ──────────────────────────────────────────────────────
 
     @Bean
-    public SnmpPeerFactory snmpPeerFactory() throws IOException {
-        LOG.info("Initializing SnmpPeerFactory");
-        SnmpPeerFactory.init();
-        return SnmpPeerFactory.getInstance();
+    public SnmpAgentConfigFactory snmpPeerFactory(EntityScopeProvider entityScopeProvider) throws IOException {
+        var configFile = new File(opennmsHome, "etc/snmp-config.xml");
+        LOG.info("Loading SnmpPeerFactory from {}", configFile);
+        var config = XML_MAPPER.readValue(configFile, SnmpConfig.class);
+        var factory = new SnmpPeerFactory(config, entityScopeProvider, null);
+        SnmpPeerFactory.setInstance(factory);
+        return factory;
     }
 
     @Bean
