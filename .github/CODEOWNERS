@@ -2,17 +2,17 @@
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-codeowners
 
 # Default owners for all files
-*       @opennms/maintainers
+*       @pbrane
 
 # CI/CD and GitHub configuration
-.github/workflows/  @opennms/devops
-.github/dependabot.yml @opennms/devops
+.github/workflows/  @pbrane
+.github/dependabot.yml @pbrane
 
 # Core build system
-pom.xml     @opennms/maintainers
-Makefile    @opennms/maintainers
-mvnw        @opennms/maintainers
+pom.xml     @pbrane
+Makefile    @pbrane
+mvnw        @pbrane
 
 # Deployment and Orchestration
-opennms-container/  @opennms/devops
-container/          @opennms/devops
+opennms-container/  @pbrane
+container/          @pbrane
