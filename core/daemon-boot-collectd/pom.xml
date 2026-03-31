@@ -245,7 +245,21 @@
             </exclusions>
         </dependency>
 
-        <!-- Collector config — CollectdConfigFactory -->
+        <!-- FilterDaoFactory, JdbcFilterDao -->
+        <dependency>
+            <groupId>org.opennms.core</groupId>
+            <artifactId>org.opennms.core.filter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- SnmpPeerFactory -->
+        <dependency>
+            <groupId>org.opennms.core.snmp</groupId>
+            <artifactId>org.opennms.core.snmp.config</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- DataCollectionConfigFactory, DefaultDataCollectionConfigDao, DefaultResourceTypesDao (still in opennms-config) -->
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-config</artifactId>

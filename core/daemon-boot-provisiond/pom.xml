@@ -315,6 +315,13 @@
             </exclusions>
         </dependency>
         -->
+        <!-- SnmpPeerFactory -->
+        <dependency>
+            <groupId>org.opennms.core.snmp</groupId>
+            <artifactId>org.opennms.core.snmp.config</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-snmp-asset-provisioning-adapter</artifactId>

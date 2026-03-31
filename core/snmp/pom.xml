@@ -19,6 +19,7 @@
     <module>integration-tests</module>
     <module>commands</module>
 
+    <module>config</module>
     <module>proxy-rpc-impl</module>
     <module>proxy-rpc-tests</module>
     <module>profile-mapper</module>

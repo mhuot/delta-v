@@ -21,24 +21,23 @@
  */
 package org.opennms.netmgt.filter;
 
-import org.opennms.core.db.DataSourceFactory;
-import org.opennms.netmgt.config.DatabaseSchemaConfigFactory;
 import org.opennms.netmgt.filter.api.FilterDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessResourceFailureException;
 
 /**
  * <p>FilterDaoFactory class.</p>
  *
+ * Static singleton holder for FilterDao. Daemon-boot modules call
+ * {@link #setInstance(FilterDao)} with a Spring-constructed JdbcFilterDao
+ * during startup.
+ *
  * @author <a href="mailto:dj@opennms.org">DJ Gregor</a>
- * @version $Id: $
  */
 public class FilterDaoFactory {
     private static final Logger LOG = LoggerFactory.getLogger(FilterDaoFactory.class);
     private static FilterDao m_filterDao;
 
-    // Only static methods, so don't let the constructor be called
     private FilterDaoFactory() {
     }
 
@@ -49,9 +48,8 @@ public class FilterDaoFactory {
      */
     public static FilterDao getInstance() {
         if (m_filterDao == null) {
-            init();
+            throw new IllegalStateException("FilterDaoFactory not initialized — call setInstance() first");
         }
-        
         return m_filterDao;
     }
 
@@ -64,29 +62,4 @@ public class FilterDaoFactory {
         LOG.debug("setInstance({})", filterDao);
         m_filterDao = filterDao;
     }
-
-    /**
-     * <p>init</p>
-     */
-    protected static synchronized void init() {
-        if (m_filterDao != null) {
-            return;
-        }
-        
-        JdbcFilterDao jdbcFilterDao = new JdbcFilterDao();
-        
-        jdbcFilterDao.setDataSource(DataSourceFactory.getInstance());
-        
-        try {
-            DatabaseSchemaConfigFactory.init();
-        } catch (Throwable e) {
-            throw new DataAccessResourceFailureException("Could not initialize DatabaseSchemaConfigFactory: " + e, e);
-        }
-        jdbcFilterDao.setDatabaseSchemaConfigFactory(DatabaseSchemaConfigFactory.getInstance());
-        
-        jdbcFilterDao.afterPropertiesSet();
-        
-        setInstance(jdbcFilterDao);
-    }
-
 }
