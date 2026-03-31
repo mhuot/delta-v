@@ -21,13 +21,15 @@
  */
 package org.opennms.core.daemon.common;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.opennms.core.xml.JaxbUtils;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
+
 import org.opennms.netmgt.config.api.EventConfDao;
 import org.opennms.netmgt.model.EventConfEvent;
 import org.opennms.netmgt.xml.eventconf.Event;
@@ -54,6 +56,14 @@ import org.slf4j.LoggerFactory;
 public class DaemonEventConfDao implements EventConfDao {
 
     private static final Logger LOG = LoggerFactory.getLogger(DaemonEventConfDao.class);
+
+    private static final XmlMapper XML_MAPPER;
+    static {
+        XML_MAPPER = new XmlMapper();
+        XML_MAPPER.registerModule(new JaxbAnnotationModule());
+        XML_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        XML_MAPPER.setDefaultUseWrapper(false);
+    }
 
     private volatile Events events;
 
@@ -100,11 +110,7 @@ public class DaemonEventConfDao implements EventConfDao {
                 String xmlContent = dbEvent.getXmlContent();
                 if (xmlContent != null && !xmlContent.trim().isEmpty()) {
                     try {
-                        // TODO: Replace JaxbUtils with Jackson XmlMapper to eliminate
-                        // EclipseLink MOXy class-scanning and javax/jakarta classpath issues.
-                        // JaxbUtils works in the Karaf-era classpath but fails in Spring Boot
-                        // daemons due to ResourceTypeUtils ClassNotFoundException.
-                        Event event = JaxbUtils.unmarshal(Event.class, xmlContent);
+                        Event event = XML_MAPPER.readValue(xmlContent, Event.class);
                         if (event != null) {
                             eventsForSource.addEvent(event);
                         }

@@ -83,6 +83,16 @@
                 <artifactId>jackson-module-parameter-names</artifactId>
                 <version>2.19.4</version>
             </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-xml</artifactId>
+                <version>2.19.4</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.module</groupId>
+                <artifactId>jackson-module-jaxb-annotations</artifactId>
+                <version>2.19.4</version>
+            </dependency>
             <!-- Pin jboss-logging 3.6.1.Final — parent POM manages 3.5.3 which
                  lacks Logger.getMessageLogger(MethodHandles.Lookup,...) required
                  by Hibernate 7 / Spring Boot 4 -->
@@ -158,6 +168,18 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- Jackson XML — replaces JaxbUtils for eventconf XML deserialization.
+             jackson-module-jaxb-annotations reads existing javax.xml.bind
+             annotations on opennms-config-model Event class. -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-xml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-jaxb-annotations</artifactId>
         </dependency>
 
         <!-- Database -->
