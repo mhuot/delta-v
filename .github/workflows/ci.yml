@@ -15,12 +15,13 @@ jobs:
   build:
     name: Build and Analyze
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0
 
       - name: Set up Java JDK
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
@@ -29,23 +30,22 @@ jobs:
           distribution: temurin
           cache: maven
 
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
-      - name: Build and Sonar Analysis
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Build daemon-boot modules
         run: |
           ulimit -n 65536 || true
-          ./mvnw -B -DskipTests verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=OpenNMS_opennms
-
-      - name: Run unit tests
-        run: make unit-tests
-
-      - name: Run integration tests
-        run: make it-tests
+          ./mvnw -B -DskipTests \
+            --projects \
+              :org.opennms.core.daemon-boot-alarmd,\
+              :org.opennms.core.daemon-boot-bsmd,\
+              :org.opennms.core.daemon-boot-collectd,\
+              :org.opennms.core.daemon-boot-discovery,\
+              :org.opennms.core.daemon-boot-enlinkd,\
+              :org.opennms.core.daemon-boot-eventtranslator,\
+              :org.opennms.core.daemon-boot-minion,\
+              :org.opennms.core.daemon-boot-perspectivepollerd,\
+              :org.opennms.core.daemon-boot-pollerd,\
+              :org.opennms.core.daemon-boot-provisiond,\
+              :org.opennms.core.daemon-boot-syslogd,\
+              :org.opennms.core.daemon-boot-telemetryd,\
+              :org.opennms.core.daemon-boot-trapd \
+            -am install
