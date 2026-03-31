@@ -97,7 +97,9 @@ public class DefaultTroubleTicketProxy implements TroubleTicketProxy {
 
     public static EventBuilder createEventBuilder(String uei, OnmsAlarm alarm, Map<String, String> attributes) {
         EventBuilder bldr = new EventBuilder(uei, "AlarmUI");
-        bldr.setNode(alarm.getNode());
+        if (alarm.getNode() != null) {
+            bldr.setNodeid(alarm.getNode().getId().longValue());
+        }
         bldr.setInterface(alarm.getIpAddr());
         bldr.setService(alarm.getServiceType() == null ? null : alarm.getServiceType().getName());
         bldr.addParam(EventConstants.PARM_ALARM_UEI, alarm.getUei());

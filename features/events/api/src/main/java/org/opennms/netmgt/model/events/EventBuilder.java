@@ -31,9 +31,6 @@ import java.util.List;
 import org.opennms.core.time.ZonedDateTimeBuilder;
 import org.opennms.core.utils.StringUtils;
 import org.opennms.netmgt.events.api.EventConstants;
-import org.opennms.netmgt.model.OnmsIpInterface;
-import org.opennms.netmgt.model.OnmsMonitoredService;
-import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsSeverity;
 import org.opennms.netmgt.xml.event.AlarmData;
 import org.opennms.netmgt.xml.event.Event;
@@ -46,9 +43,6 @@ import org.opennms.netmgt.xml.event.Snmp;
 import org.opennms.netmgt.xml.event.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.PropertyAccessorFactory;
 
 /**
  * <p>EventBuilder class.</p>
@@ -455,9 +449,8 @@ public class EventBuilder {
      * @return a {@link org.opennms.netmgt.model.events.EventBuilder} object.
      */
     public EventBuilder addParam(final String parmName, final Collection<String> vals) {
-        final String val = org.springframework.util.StringUtils.collectionToCommaDelimitedString(vals);
+        final String val = String.join(",", vals);
         return addParam(parmName, val);
-        
     }
 
     /**
@@ -473,51 +466,6 @@ public class EventBuilder {
         return this;
     }
     
-    /**
-     * <p>setNode</p>
-     *
-     * @param node a {@link org.opennms.netmgt.model.OnmsNode} object.
-     * @return a {@link org.opennms.netmgt.model.events.EventBuilder} object.
-     */
-    public EventBuilder setNode(final OnmsNode node) {
-        if (node != null) {
-            m_event.setNodeid(node.getId().longValue());
-        }
-        return this;
-    }
-    
-    /**
-     * <p>setIpInterface</p>
-     *
-     * @param iface a {@link org.opennms.netmgt.model.OnmsIpInterface} object.
-     * @return a {@link org.opennms.netmgt.model.events.EventBuilder} object.
-     */
-    public EventBuilder setIpInterface(final OnmsIpInterface iface) {
-        if (iface != null) {
-            if (iface.getNode() != null) {
-                m_event.setNodeid(iface.getNode().getId().longValue());
-            }
-            m_event.setInterfaceAddress(iface.getIpAddress());
-        }
-        return this;
-    }
-    
-    /**
-     * <p>setMonitoredService</p>
-     *
-     * @param monitoredService a {@link org.opennms.netmgt.model.OnmsMonitoredService} object.
-     * @return a {@link org.opennms.netmgt.model.events.EventBuilder} object.
-     */
-    public EventBuilder setMonitoredService(final OnmsMonitoredService monitoredService) {
-        if (monitoredService != null) {
-            m_event.setNodeid(monitoredService.getNodeId().longValue());
-            m_event.setInterfaceAddress(monitoredService.getIpAddress());
-            m_event.setService(monitoredService.getServiceName());
-        }
-        return this;
-    }
-
-
     /**
      * <p>setSnmpVersion</p>
      *
@@ -619,10 +567,17 @@ public class EventBuilder {
                 addParam(pair[0], pair[1].replaceFirst("[(]\\w+,\\w+[)]", ""));
             }
         } else {
-            final BeanWrapper w = PropertyAccessorFactory.forBeanPropertyAccess(m_event);
             try {
-                w.setPropertyValue(name, val);
-            } catch (final BeansException e) {
+                java.beans.PropertyDescriptor[] descriptors =
+                        java.beans.Introspector.getBeanInfo(m_event.getClass()).getPropertyDescriptors();
+                for (java.beans.PropertyDescriptor pd : descriptors) {
+                    if (pd.getName().equals(name) && pd.getWriteMethod() != null) {
+                        pd.getWriteMethod().invoke(m_event, val);
+                        return;
+                    }
+                }
+                LOG.warn("No writable property '{}' found on Event", name);
+            } catch (final Exception e) {
                 LOG.warn("Could not set field on event: {}", name, e);
             }
         }
