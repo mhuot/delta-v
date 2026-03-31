@@ -30,7 +30,6 @@ import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 import javax.security.auth.login.Configuration;
 
-import org.opennms.bootstrap.OpenNMSProxyLoginModule;
 import org.opennms.core.sysprops.SystemProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,7 +96,7 @@ public class OpenNMSConfiguration extends Configuration {
         LOG.debug("getAppConfigurationEntry(" + name +")");
         if ("opennms".equals(name)) {
             LOG.debug("getAppConfigurationEntry: Overriding.");
-            return new AppConfigurationEntry[] { new AppConfigurationEntry(OpenNMSProxyLoginModule.class.getName(), LoginModuleControlFlag.REQUIRED, Collections.emptyMap()) };
+            return new AppConfigurationEntry[] { new AppConfigurationEntry("org.opennms.bootstrap.OpenNMSProxyLoginModule", LoginModuleControlFlag.REQUIRED, Collections.emptyMap()) };
         } else {
             LOG.debug("getAppConfigurationEntry: Passing through.");
             return m_delegates.stream()

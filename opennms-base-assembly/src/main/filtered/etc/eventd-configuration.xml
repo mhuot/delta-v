@@ -1,2 +1,0 @@
-<EventdConfiguration xmlns="http://xmlns.opennms.org/xsd/config/eventd" getNextEventID="SELECT nextval('eventsNxtId')">
-</EventdConfiguration>

@@ -95,7 +95,6 @@
     <!-- new structure -->
     <module>dependencies</module>
     <module>core</module>
-    <module>container</module>
     <module>features</module>
     <module>integrations</module>
     <module>protocols</module>
@@ -105,10 +104,8 @@
 
     <!-- old structure -->
     <module>opennms-util</module>
-    <module>opennms-bootstrap</module>
     <module>opennms-model</module>
     <module>opennms-alarms</module>
-    <module>opennms-config-tester</module>
     <module>opennms-dao-api</module>
     <module>opennms-dao</module>
     <module>opennms-dao-mock</module>
@@ -121,7 +118,6 @@
     <module>opennms-config-model</module>
     <module>opennms-provision</module>
     <module>opennms-taglib</module>
-    <module>opennms-jetty</module>
     <module>opennms-correlation</module>
     <module>opennms-web-api</module>
     <module>opennms-web-dependencies</module>
@@ -1134,9 +1130,6 @@
                 <exclude>src/site/site.xml</exclude>
                 <exclude>src/test/resources/test-data.sql</exclude>
 
-                <!-- don't need this can o' worms for now -->
-                <exclude>opennms-base-assembly/src/main/filtered/etc</exclude>
-                <exclude>opennms-base-assembly/src/main/resources</exclude>
 
                 <!-- BSD + GPL, see header for details -->
                 <exclude>core/test-api/dns/**/DNSServer.java</exclude>
@@ -1865,28 +1858,15 @@
     <junit5Version>5.9.2</junit5Version>
     <junit5PlatformVersion>1.9.2</junit5PlatformVersion>
     <karafVersion>4.4.9</karafVersion>
-    <!-- BEGIN: versions must match versions provided by embedded Karaf -->
-    <eclipseOsgiVersion>3.18.0</eclipseOsgiVersion>
-    <felixCmJsonVersion>1.0.8</felixCmJsonVersion>
     <felixConfigadminVersion>1.9.26</felixConfigadminVersion>
-    <felixConfigadminPluginInterpolationVersion>1.2.8</felixConfigadminPluginInterpolationVersion>
-    <felixCoordinatorVersion>1.0.2</felixCoordinatorVersion>
-    <felixConfiguratorVersion>1.0.16</felixConfiguratorVersion>
-    <felixConverterVersion>1.0.14</felixConverterVersion>
-    <felixFileinstallVersion>3.7.4</felixFileinstallVersion>
     <felixMetatypeVersion>1.2.4</felixMetatypeVersion>
     <istackCommonsRuntimeVersion>3.0.12</istackCommonsRuntimeVersion>
     <jansiVersion>2.4.2</jansiVersion>
     <jlineVersion>3.30.6</jlineVersion>
-    <osgiUtilFunctionVersion>1.2.0</osgiUtilFunctionVersion>
-    <osgiUtilPromiseVersion>1.3.0</osgiUtilPromiseVersion>
-    <paxLoggingVersion>2.3.0</paxLoggingVersion>
     <paxSwissboxVersion>1.9.0</paxSwissboxVersion>
     <paxSwissboxOptionalJclVersion>1.8.5</paxSwissboxOptionalJclVersion>
-    <paxUrlAetherVersion>2.6.17</paxUrlAetherVersion>
     <paxWebVersion>8.0.34</paxWebVersion>
     <slingJohnzonVersion>1.2.16</slingJohnzonVersion>
-    <!-- END: versions must match versions provided by embedded Karaf -->
     <kafkaBundleVersion>3.6.2_1</kafkaBundleVersion>
     <kafkaVersion>3.6.2</kafkaVersion>
     <kotlinVersion>1.9.10</kotlinVersion>
@@ -1917,10 +1897,8 @@
     <opennmsApiVersion>2.0.0</opennmsApiVersion>
     <opennmsApiVersionOsgi>2.0.0</opennmsApiVersionOsgi>
     <osgiVersion>8.0.0</osgiVersion>
-    <osgiAnnotationVersion>8.0.0</osgiAnnotationVersion>
     <osgiCompendiumVersion>7.0.0</osgiCompendiumVersion>
     <osgiEnterpriseVersion>7.0.0</osgiEnterpriseVersion>
-    <osgiServiceJdbcVersion>1.0.1</osgiServiceJdbcVersion>
     <owaspEncoderVersion>1.2.3</owaspEncoderVersion>
     <owaspHtmlSanitizerVersion>20211018.2</owaspHtmlSanitizerVersion>
     <osgiJaxRsVersion>1.1.0.ONMS</osgiJaxRsVersion>
@@ -2343,20 +2321,6 @@
       <properties>
         <skipPdfGeneration>false</skipPdfGeneration>
       </properties>
-    </profile>
-    <profile>
-      <id>smoke</id>
-      <activation>
-        <property>
-          <name>smoke</name>
-        </property>
-      </activation>
-      <properties>
-        <build.skip.tarball>true</build.skip.tarball>
-      </properties>
-      <modules>
-        <module>smoke-test</module>
-      </modules>
     </profile>
     <profile>
       <id>jdk7+</id>
@@ -3193,11 +3157,6 @@
       </dependency>
       <dependency>
         <groupId>org.opennms</groupId>
-        <artifactId>opennms-bootstrap</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.opennms</groupId>
         <artifactId>opennms-config-api</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -3221,12 +3180,6 @@
         <artifactId>opennms-config-model</artifactId>
         <version>${project.version}</version>
         <classifier>xsds</classifier>
-      </dependency>
-      <dependency>
-        <groupId>org.opennms</groupId>
-        <artifactId>opennms-config-tester</artifactId>
-        <version>${project.version}</version>
-        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.opennms</groupId>
@@ -3256,11 +3209,6 @@
       <dependency>
         <groupId>org.opennms</groupId>
         <artifactId>opennms-dao-mock</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.opennms</groupId>
-        <artifactId>opennms-base-assembly</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -3352,13 +3300,6 @@
       </dependency>
       <dependency>
         <groupId>org.opennms</groupId>
-        <artifactId>opennms-full-assembly</artifactId>
-        <version>${project.version}</version>
-        <type>tar.gz</type>
-        <classifier>dist</classifier>
-      </dependency>
-      <dependency>
-        <groupId>org.opennms</groupId>
         <artifactId>opennms-icmp-api</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -3398,20 +3339,10 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.opennms</groupId>
-        <artifactId>opennms-install</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.opennms.dependencies</groupId>
         <artifactId>cxf-dependencies</artifactId>
         <version>${project.version}</version>
         <type>pom</type>
-      </dependency>
-      <dependency>
-        <groupId>org.opennms</groupId>
-        <artifactId>opennms-jetty</artifactId>
-        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.opennms.dependencies</groupId>
@@ -4815,11 +4746,6 @@
         <groupId>org.osgi</groupId>
         <artifactId>osgi.cmpn</artifactId>
         <version>${osgiCompendiumVersion}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.osgi</groupId>
-        <artifactId>osgi.annotation</artifactId>
-        <version>${osgiAnnotationVersion}</version>
       </dependency>
       <dependency>
         <groupId>org.osgi</groupId>

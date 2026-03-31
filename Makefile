@@ -10,20 +10,16 @@
 #   make unit-tests                     Build and run all unit tests
 #   make it-tests                       Build and run all integration tests
 #   make all-test                       Build and run all tests (unit + integration)
-#   make assemble                       Assemble distribution (default profile)
-#   make assemble PROFILE=dir|full|fulldir
 #
 # Overridable variables (set on command line or in environment):
-#   MODULE       Maven --projects selector, e.g. :opennms-dao or groupId:artifactId
+#   MODULE       Maven module selector, e.g. :opennms-dao or groupId:artifactId
 #   TEST         Test class name for test-class target (suffix IT = integration test)
-#   PROFILE      Assembly profile: default | dir | full | fulldir (default: dir)
 #   MAVEN_FLAGS  Extra Maven flags (default: -DskipTests -B)
 #   MAVEN_OPTS   JVM options for Maven (has a sensible default below)
 # ==============================================================================
 
 MODULE      ?=
 TEST        ?=
-PROFILE     ?= dir
 MAVEN_FLAGS ?= -DskipTests -B
 MAVEN_OPTS  ?= -Xmx3g \
                -XX:ReservedCodeCacheSize=512m \
@@ -44,7 +40,7 @@ COMMON      := --color=always \
 
 export MAVEN_OPTS
 
-.PHONY: help build module dependents test-class test ui assemble clean
+.PHONY: help build module dependents test-class test ui clean
 
 .DEFAULT_GOAL := help
 
@@ -55,7 +51,6 @@ help: ## Show this help
 	@echo "Variables (override on command line):"
 	@echo "  MODULE       Maven module selector (e.g. :opennms-dao)          (current: $(MODULE))"
 	@echo "  TEST         Test class name (suffix IT = integration test)     (current: $(TEST))"
-	@echo "  PROFILE      Assembly profile: default | dir | full | fulldir  (current: $(PROFILE))"
 	@echo "  MAVEN_FLAGS  Extra Maven flags                                  (current: $(MAVEN_FLAGS))"
 	@echo "  MAVEN_OPTS   JVM options passed to Maven"
 
@@ -113,12 +108,6 @@ all-tests: ## Build and run all tests (unit + integration)
 
 ui: ## Install, build, and test the Vue UI
 	cd ui && pnpm install && pnpm build && pnpm test
-
-assemble: ## Assemble the distribution; set PROFILE=dir|full|fulldir (default: dir)
-	cd opennms-full-assembly && \
-	$(CURDIR)/mvnw $(MAVEN_FLAGS) $(COMMON) \
-	  -Dbuild.profile=$(PROFILE) \
-	  install
 
 clean: ## Remove all build artifacts
 	$(MVN) -B clean

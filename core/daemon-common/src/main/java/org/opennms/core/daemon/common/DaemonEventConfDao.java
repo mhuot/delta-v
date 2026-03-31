@@ -100,6 +100,10 @@ public class DaemonEventConfDao implements EventConfDao {
                 String xmlContent = dbEvent.getXmlContent();
                 if (xmlContent != null && !xmlContent.trim().isEmpty()) {
                     try {
+                        // TODO: Replace JaxbUtils with Jackson XmlMapper to eliminate
+                        // EclipseLink MOXy class-scanning and javax/jakarta classpath issues.
+                        // JaxbUtils works in the Karaf-era classpath but fails in Spring Boot
+                        // daemons due to ResourceTypeUtils ClassNotFoundException.
                         Event event = JaxbUtils.unmarshal(Event.class, xmlContent);
                         if (event != null) {
                             eventsForSource.addEvent(event);
