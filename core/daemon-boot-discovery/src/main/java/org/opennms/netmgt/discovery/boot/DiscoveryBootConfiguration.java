@@ -1,14 +1,22 @@
 package org.opennms.netmgt.discovery.boot;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import javax.sql.DataSource;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
+
 import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
 import org.opennms.core.daemon.common.JdbcDistPollerDao;
 import org.opennms.core.daemon.common.JdbcInterfaceToNodeCache;
 import org.opennms.netmgt.config.DiscoveryConfigFactory;
+import org.opennms.netmgt.config.api.DiscoveryConfigurationFactory;
+import org.opennms.netmgt.config.discovery.DiscoveryConfiguration;
 import org.opennms.netmgt.dao.api.DistPollerDao;
 import org.opennms.netmgt.dao.api.InterfaceToNodeCache;
 import org.opennms.netmgt.discovery.Discovery;
@@ -25,7 +33,10 @@ import org.opennms.netmgt.provision.LocationAwareDetectorClient;
 import org.opennms.netmgt.provision.detector.client.rpc.DetectorClientRpcModule;
 import org.opennms.netmgt.events.api.EventForwarder;
 import org.opennms.netmgt.provision.detector.client.rpc.LocationAwareDetectorClientRpcImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,6 +48,15 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class DiscoveryBootConfiguration {
+
+    private static final Logger LOG = LoggerFactory.getLogger(DiscoveryBootConfiguration.class);
+
+    private static final XmlMapper XML_MAPPER;
+    static {
+        XML_MAPPER = new XmlMapper();
+        XML_MAPPER.registerModule(new JaxbAnnotationModule());
+        XML_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
 
     // -- DAO / Cache --
 
@@ -53,12 +73,21 @@ public class DiscoveryBootConfiguration {
     // -- Discovery Config --
 
     /**
-     * Reads discovery-configuration.xml from ${opennms.home}/etc/.
-     * The Docker overlay MUST include this file or startup will fail with IOException.
+     * Reads discovery-configuration.xml via Jackson XmlMapper, then wraps the
+     * deserialized model in {@link DiscoveryConfigFactory} for backward
+     * compatibility with feature-module code that still references the concrete
+     * class (RangeChunker, DiscoveryTaskExecutorImpl).
      */
     @Bean
-    public DiscoveryConfigFactory discoveryConfigFactory() throws Exception {
-        return new DiscoveryConfigFactory();
+    public DiscoveryConfigurationFactory discoveryConfigFactory(
+            @Value("${opennms.home}") String opennmsHome) throws IOException {
+        var configFile = new File(opennmsHome, "etc/discovery-configuration.xml");
+        if (!configFile.exists()) {
+            throw new IOException("discovery-configuration.xml not found at " + configFile);
+        }
+        LOG.info("Loading discovery configuration from {}", configFile);
+        var model = XML_MAPPER.readValue(configFile, DiscoveryConfiguration.class);
+        return new DiscoveryConfigFactory(model);
     }
 
     // -- ICMP Ping RPC --
@@ -128,7 +157,7 @@ public class DiscoveryBootConfiguration {
     }
 
     @Bean
-    public Discovery discovery(DiscoveryConfigFactory discoveryConfigFactory,
+    public Discovery discovery(DiscoveryConfigurationFactory discoveryConfigFactory,
                                DiscoveryTaskExecutorImpl discoveryTaskExecutor,
                                @Qualifier("eventIpcManager") EventForwarder eventForwarder) {
         return new Discovery(discoveryConfigFactory, discoveryTaskExecutor, eventForwarder);
