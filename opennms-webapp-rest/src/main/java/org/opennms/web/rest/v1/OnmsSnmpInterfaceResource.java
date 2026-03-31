@@ -241,7 +241,7 @@ public class OnmsSnmpInterfaceResource extends OnmsRestService {
             if (params.containsKey("collect")) { // TODO Is this still valid if the interface was not modified ?
                 // we've updated the collection flag so we need to send an event to redo collection
                 final EventBuilder bldr = new EventBuilder(EventConstants.REINITIALIZE_PRIMARY_SNMP_INTERFACE_EVENT_UEI, "ReST");
-                bldr.setNode(node);
+                bldr.setNodeid(node.getId().longValue());
                 // Bug NMS-4432 says that sometimes the primary SNMP interface is null
                 // so we need to check for that before we set the interface
                 final OnmsIpInterface iface = node.getPrimaryInterface();

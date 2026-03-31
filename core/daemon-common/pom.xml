@@ -241,7 +241,9 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!-- Model (OnmsDistPoller, OnmsMonitoringSystem) -->
+        <!-- Model (OnmsDistPoller, OnmsMonitoringSystem, entity types for DaemonEntityScopeProvider).
+             At runtime, daemon-boot modules exclude opennms-model and use model-jakarta instead.
+             Can't switch to model-jakarta here due to cycle: model-jakarta → daemon-common. -->
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-model</artifactId>

@@ -191,7 +191,7 @@ public class Benchmark implements Action {
                     nodeDao.delete(node);
 
                     EventBuilder eventBuilder = new EventBuilder(EventConstants.NODE_DELETED_EVENT_UEI, Benchmark.class.getCanonicalName())
-                            .setNode(node);
+                            .setNodeid(node.getId().longValue());
                     eventBuilder.addParam(EventConstants.PARM_NODE_LABEL, node.getLabel());
                     eventsToSend.add(eventBuilder.getEvent());
                 });
@@ -231,7 +231,7 @@ public class Benchmark implements Action {
                 allMonitoredServiceIds.add(svcICMP.getId());
 
                 EventBuilder eventBuilder = new EventBuilder(EventConstants.NODE_GAINED_SERVICE_EVENT_UEI, "benchmark")
-                        .setNode(node)
+                        .setNodeid(node.getId().longValue())
                         .setInterface(iface.getIpAddress())
                         .setService(svcICMP.getServiceName());
                 eventBuilder.addParam(EventConstants.PARM_NODE_LABEL, node.getLabel());
