@@ -26,7 +26,7 @@ import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import org.opennms.netmgt.config.DiscoveryConfigFactory;
+import org.opennms.netmgt.config.api.DiscoveryConfigurationFactory;
 import org.opennms.netmgt.daemon.AbstractServiceDaemon;
 import org.opennms.netmgt.events.api.EventConstants;
 import org.opennms.netmgt.events.api.EventForwarder;
@@ -52,7 +52,7 @@ public class Discovery extends AbstractServiceDaemon {
     protected static final String LOG4J_CATEGORY = "discovery";
 
     @Autowired
-    private DiscoveryConfigFactory m_discoveryFactory;
+    private DiscoveryConfigurationFactory m_discoveryFactory;
 
     @Autowired
     private DiscoveryTaskExecutor m_discoveryTaskExecutor;
@@ -63,7 +63,7 @@ public class Discovery extends AbstractServiceDaemon {
 
     private Timer discoveryTimer;
 
-    public Discovery(DiscoveryConfigFactory discoveryConfigFactory,
+    public Discovery(DiscoveryConfigurationFactory discoveryConfigFactory,
                      DiscoveryTaskExecutor discoveryTaskExecutor,
                      EventForwarder eventForwarder) {
         super(LOG4J_CATEGORY);
@@ -182,7 +182,7 @@ public class Discovery extends AbstractServiceDaemon {
     }
 
     /** @deprecated Legacy setter for Karaf XML context. Use constructor injection. */
-    public void setDiscoveryFactory(DiscoveryConfigFactory discoveryFactory) {
+    public void setDiscoveryFactory(DiscoveryConfigurationFactory discoveryFactory) {
         m_discoveryFactory = discoveryFactory;
     }
 

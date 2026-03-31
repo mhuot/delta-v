@@ -21,6 +21,7 @@
  */
 package org.opennms.netmgt.config.api;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Iterator;
 import java.util.List;
@@ -122,4 +123,13 @@ public interface DiscoveryConfigurationFactory {
 	 * @return a long
 	 */
 	long getInitialSleepTime();
+
+	/**
+	 * Reload configuration from disk.
+	 *
+	 * @throws IOException if the configuration cannot be read
+	 */
+	default void reload() throws IOException {
+		// Default no-op — Spring Boot daemons load config at bean creation time.
+	}
 }
