@@ -12,7 +12,6 @@
   <description>
     This module adds RADIUS support to OpenNMS.
   </description>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms</groupId>

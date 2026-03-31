@@ -9,7 +9,6 @@
   <artifactId>opennms-detector-jmx</artifactId>
   <name>OpenNMS :: Provisioning :: JMX Detectors</name>
   <url>http://www.opennms.org</url>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>com.google.guava</groupId>

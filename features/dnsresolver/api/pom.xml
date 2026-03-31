@@ -9,5 +9,4 @@
   <groupId>org.opennms.features.dnsresolver</groupId>
   <artifactId>org.opennms.features.dnsresolver.api</artifactId>
   <name>OpenNMS :: Features :: DNS Resolver :: API</name>
-  <packaging>jar</packaging>
 </project>

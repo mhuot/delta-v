@@ -10,7 +10,6 @@
     </parent>
     <groupId>org.opennms.features.events</groupId>
     <artifactId>org.opennms.features.events.kafka-consumer</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Events :: Kafka Consumer</name>
     <dependencies>
         <dependency>

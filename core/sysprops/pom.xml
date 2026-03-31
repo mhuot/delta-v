@@ -9,7 +9,6 @@
   <groupId>org.opennms.core</groupId>
   <artifactId>org.opennms.core.sysprops</artifactId>
   <name>OpenNMS :: Core :: Systemproperties</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.slf4j</groupId>

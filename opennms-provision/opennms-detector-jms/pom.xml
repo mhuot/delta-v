@@ -9,7 +9,6 @@
   <artifactId>opennms-detector-jms</artifactId>
   <name>OpenNMS :: Provisioning :: JMS Detectors</name>
   <url>http://www.opennms.org</url>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms</groupId>

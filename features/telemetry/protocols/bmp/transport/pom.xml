@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.telemetry.protocols.bmp</groupId>
   <artifactId>org.opennms.features.telemetry.protocols.bmp.transport</artifactId>
   <name>OpenNMS :: Features :: Telemetry :: Protocols :: BMP :: Transport</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>com.google.protobuf</groupId>

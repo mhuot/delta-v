@@ -10,7 +10,6 @@
     <groupId>org.opennms.features.dnsresolver</groupId>
     <artifactId>org.opennms.features.dnsresolver.netty</artifactId>
     <name>OpenNMS :: Features :: DNS Resolver :: Netty</name>
-    <packaging>jar</packaging>
 <dependencies>
         <dependency>
             <groupId>org.opennms.features.dnsresolver</groupId>

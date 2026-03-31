@@ -11,7 +11,6 @@
 
   <groupId>org.opennms.features.events.sink</groupId>
   <artifactId>org.opennms.features.events.sink.command</artifactId>
-  <packaging>jar</packaging>
   <name>OpenNMS :: Features :: Events :: Sink :: Shell Commands</name>
 <dependencies>
     <dependency>

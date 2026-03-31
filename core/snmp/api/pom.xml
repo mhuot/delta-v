@@ -10,7 +10,6 @@
   <groupId>org.opennms.core.snmp</groupId>
   <artifactId>org.opennms.core.snmp.api</artifactId>
   <name>OpenNMS :: Core :: SNMP :: API</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.slf4j</groupId>

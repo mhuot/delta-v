@@ -12,7 +12,6 @@
     <artifactId>org.opennms.features.usageanalytics.impl</artifactId>
     <name>OpenNMS :: Features :: Usage Analytics :: Impl</name>
 
-    <packaging>jar</packaging>
     <modelVersion>4.0.0</modelVersion>
 
 <dependencies>

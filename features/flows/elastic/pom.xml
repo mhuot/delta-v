@@ -8,7 +8,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features.flows</groupId>
   <artifactId>org.opennms.features.flows.elastic</artifactId>
-  <packaging>jar</packaging>
   <name>OpenNMS :: Features :: Flows :: Elastic</name>
   <properties>
     <skipITs>true</skipITs>

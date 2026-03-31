@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.collection</groupId>
   <artifactId>org.opennms.features.collection.persistence.osgi</artifactId>
   <name>OpenNMS :: Features :: Collection :: OSGI Persistence</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.features.collection</groupId>

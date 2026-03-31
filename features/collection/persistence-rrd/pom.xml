@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.collection</groupId>
   <artifactId>org.opennms.features.collection.persistence.rrd</artifactId>
   <name>OpenNMS :: Features :: Collection :: RRD Persistence</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.features.collection</groupId>

@@ -9,7 +9,6 @@
   <groupId>org.opennms.tests</groupId>
   <artifactId>org.opennms.tests.dao</artifactId>
   <name>OpenNMS :: Tests :: DAOs</name>
-  <packaging>jar</packaging>
   <dependencies>
     <dependency>
       <groupId>org.opennms</groupId>

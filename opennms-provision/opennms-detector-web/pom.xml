@@ -9,7 +9,6 @@
   <artifactId>opennms-detector-web</artifactId>
   <name>OpenNMS :: Provisioning :: Web Detector (httpclient)</name>
   <url>http://www.opennms.org</url>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.core</groupId>

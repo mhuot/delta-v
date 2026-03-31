@@ -40,7 +40,6 @@
   <artifactId>opennms-correlator</artifactId>
   <name>OpenNMS :: Correlation :: Correlator</name>
   <url>http://maven.apache.org</url>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.core.test-api</groupId>

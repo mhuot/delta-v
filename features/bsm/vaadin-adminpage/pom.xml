@@ -9,7 +9,6 @@
     </parent>
     <groupId>org.opennms.features.bsm</groupId>
     <artifactId>vaadin-adminpage</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: BSM :: Vaadin Adminpage</name>
     <properties>
         <bundle.symbolicName>org.opennms.features.bsm.vaadin.adminpage</bundle.symbolicName>

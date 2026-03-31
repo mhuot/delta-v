@@ -9,7 +9,6 @@
   <groupId>org.opennms.features</groupId>
   <artifactId>newts-repository-converter</artifactId>
   <name>RRD / JRobin to NewTS Conversion/Migration Tool</name>
-  <packaging>jar</packaging>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>

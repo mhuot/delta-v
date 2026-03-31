@@ -9,7 +9,6 @@
   <artifactId>opennms-detector-datagram</artifactId>
   <name>OpenNMS :: Provisioning :: Datagram Detectors</name>
   <url>http://www.opennms.org</url>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms</groupId>

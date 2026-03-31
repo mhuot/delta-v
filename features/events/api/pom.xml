@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.events</groupId>
   <artifactId>org.opennms.features.events.api</artifactId>
   <name>OpenNMS :: Features :: Events :: API</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.apache.commons</groupId>

@@ -9,7 +9,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>dominion-grpc-client</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Minion :: Dominion :: gRPC Client</name>
 
 <dependencies>

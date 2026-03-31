@@ -10,7 +10,6 @@
     </parent>
     <groupId>org.opennms.features</groupId>
     <artifactId>vaadin-dashboard</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Dashboard</name>
     <description>
         OpenNMS Vaadin Dashboard

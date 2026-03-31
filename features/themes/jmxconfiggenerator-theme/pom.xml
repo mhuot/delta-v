@@ -9,7 +9,6 @@
     </parent>
     <groupId>org.opennms.features.themes</groupId>
     <artifactId>jmxconfiggenerator-theme</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Vaadin :: Theme :: JMX Configuration Generator</name>
     <properties>
         <bundle.symbolicname>org.opennms.features.topology.themes.jmxconfiggenerator-theme</bundle.symbolicname>

@@ -7,7 +7,6 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>org.opennms.features.enlinkd.adapters.updaters.isis</artifactId>
-  <packaging>jar</packaging>
   <name>OpenNMS :: Features :: Enlinkd :: Adapters :: Updaters :: IS-IS</name>
 <dependencies>
     <dependency>

@@ -8,7 +8,6 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>opennms-taglib</artifactId>
     <name>OpenNMS Taglib</name>
-    <packaging>jar</packaging>
     <dependencies>
 
         <dependency>

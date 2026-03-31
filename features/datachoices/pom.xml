@@ -9,7 +9,6 @@
     </parent>
     <groupId>org.opennms.features</groupId>
     <artifactId>datachoices</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Data Choices</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

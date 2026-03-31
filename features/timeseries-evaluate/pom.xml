@@ -9,7 +9,6 @@
   <groupId>org.opennms.features</groupId>
   <artifactId>org.opennms.features.timeseries-evaluate</artifactId>
   <name>OpenNMS :: Features :: Timeseries Evaluate</name>
-  <packaging>jar</packaging>
 <dependencies>
     <!-- APIs we implement -->
     <dependency>

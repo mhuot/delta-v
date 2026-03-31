@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.collection</groupId>
   <artifactId>org.opennms.features.collection.impl</artifactId>
   <name>OpenNMS :: Features :: Collection :: Implementation</name>
-  <packaging>jar</packaging>
 <dependencies>
     <!-- Collection API, core, snmp-collector, client-rpc -->
     <dependency>

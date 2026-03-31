@@ -8,7 +8,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features.search</groupId>
   <artifactId>org.opennms.features.search.service</artifactId>
-  <packaging>jar</packaging>
   <name>OpenNMS :: Features :: search :: Service</name>
 <dependencies>
     <dependency>

@@ -9,5 +9,4 @@
   <groupId>org.opennms.features.poller</groupId>
   <artifactId>org.opennms.features.poller.runtime</artifactId>
   <name>OpenNMS :: Features :: Poller :: Runtime</name>
-  <packaging>jar</packaging>
 </project>

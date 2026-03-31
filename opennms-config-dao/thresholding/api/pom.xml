@@ -9,7 +9,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.opennms.config-dao.thresholding.api</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Config DAO :: Thresholding :: API</name>
 <dependencies>
         <dependency>

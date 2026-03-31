@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.events</groupId>
   <artifactId>org.opennms.features.events.traps</artifactId>
   <name>OpenNMS :: Features :: Events :: Trap Daemon</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.core</groupId>

@@ -18,7 +18,6 @@
     <groupId>org.opennms.osgi</groupId>
     <artifactId>opennms-osgi-core</artifactId>
     <name>${bundle.symbolicName}</name>
-    <packaging>jar</packaging>
 
 <dependencies>
         <dependency>

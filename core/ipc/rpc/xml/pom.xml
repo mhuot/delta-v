@@ -9,7 +9,6 @@
   <groupId>org.opennms.core.ipc.rpc</groupId>
   <artifactId>org.opennms.core.ipc.rpc.xml</artifactId>
   <name>OpenNMS :: Core :: IPC :: RPC :: XML</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.core.ipc.rpc</groupId>

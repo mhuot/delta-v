@@ -9,7 +9,6 @@
   <groupId>org.opennms.dependencies</groupId>
   <artifactId>eclipse-npn-alpn</artifactId>
   <name>OpenNMS :: Dependencies :: Eclipse NPN and ALPN</name>
-  <packaging>jar</packaging>
   <description>
     This module provides repacked versions of some Netty
     dependencies from Eclipse that have broken manifests.

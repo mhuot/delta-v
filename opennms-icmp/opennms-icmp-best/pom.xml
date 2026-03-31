@@ -8,7 +8,6 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>opennms-icmp-best</artifactId>
   <name>OpenNMS ICMP Pinger - dynamic implementation</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms</groupId>

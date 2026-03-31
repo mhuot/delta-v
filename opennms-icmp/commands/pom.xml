@@ -8,7 +8,6 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>opennms-icmp-commands</artifactId>
   <name>OpenNMS :: Core :: ICMP :: Shell Commands</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms</groupId>

@@ -10,7 +10,6 @@
   <groupId>org.opennms.core.snmp</groupId>
   <artifactId>org.opennms.core.snmp.integration-tests</artifactId>
   <name>OpenNMS :: Core :: SNMP :: Integration Tests</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.core.snmp</groupId>

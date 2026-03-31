@@ -18,7 +18,6 @@
 
   <name>OpenNMS :: Features :: AMQP :: Event Receiver</name>
 
-  <packaging>jar</packaging>
 
   <build>
     <plugins>

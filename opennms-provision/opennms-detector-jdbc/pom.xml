@@ -9,7 +9,6 @@
   <artifactId>opennms-detector-jdbc</artifactId>
   <name>OpenNMS :: Provisioning :: JDBC Detector</name>
   <url>http://www.opennms.org</url>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms</groupId>

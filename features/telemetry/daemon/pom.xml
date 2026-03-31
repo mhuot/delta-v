@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.telemetry</groupId>
   <artifactId>org.opennms.features.telemetry.daemon</artifactId>
   <name>OpenNMS :: Features :: Telemetry :: Daemon</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.core</groupId>

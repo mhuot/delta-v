@@ -8,7 +8,6 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>opennms-model</artifactId>
   <name>OpenNMS :: Model :: Objects</name>
-  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

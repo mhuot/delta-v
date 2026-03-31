@@ -9,7 +9,6 @@
   <groupId>org.opennms.core</groupId>
   <artifactId>org.opennms.core.xml</artifactId>
   <name>OpenNMS :: Core :: XML</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.core</groupId>

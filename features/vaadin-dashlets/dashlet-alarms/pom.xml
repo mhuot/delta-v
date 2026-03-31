@@ -19,7 +19,6 @@
 
     <name>OpenNMS :: Features :: Dashlets :: Alarms</name>
 
-    <packaging>jar</packaging>
     <dependencies>
 
         <dependency>

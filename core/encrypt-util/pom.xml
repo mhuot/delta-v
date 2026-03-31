@@ -12,7 +12,6 @@
   <groupId>org.opennms.core</groupId>
   <artifactId>org.opennms.core.encrypt-util</artifactId>
   <name>OpenNMS :: Core :: Encrypt :: Util</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.features.scv</groupId>

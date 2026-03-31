@@ -11,7 +11,6 @@
     <artifactId>org.opennms.features.graph.provider.topology</artifactId>
     <name>OpenNMS :: Features :: Graph :: Provider :: Topology</name>
     <description>Exposes GraphContainerProvider to the (legacy) TopologyProvider API (Graph API -> Topology API)</description>
-    <packaging>jar</packaging>
 <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>

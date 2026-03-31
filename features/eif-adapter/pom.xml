@@ -18,7 +18,6 @@
 
   <name>OpenNMS :: Features :: EIF Adapter</name>
 
-  <packaging>jar</packaging>
 
 <dependencies>
     <dependency>

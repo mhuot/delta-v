@@ -9,7 +9,6 @@
     <groupId>org.opennms.core.ipc.rpc</groupId>
     <artifactId>org.opennms.core.ipc.rpc.kafka</artifactId>
     <name>OpenNMS :: Core :: IPC :: RPC :: Kafka</name>
-    <packaging>jar</packaging>
     <build>
       <!-- Enable below extension and plugin when you need to generate java source files from proto -->
 

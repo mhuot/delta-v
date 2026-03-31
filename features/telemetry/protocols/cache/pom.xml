@@ -9,7 +9,6 @@
     <groupId>org.opennms.features.telemetry.protocols</groupId>
     <artifactId>org.opennms.features.telemetry.protocols.cache</artifactId>
     <name>OpenNMS :: Features :: Telemetry :: Protocols :: Cache</name>
-    <packaging>jar</packaging>
 <dependencies>
         <dependency>
             <groupId>org.opennms.features.telemetry</groupId>

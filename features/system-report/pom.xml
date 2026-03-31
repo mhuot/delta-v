@@ -9,7 +9,6 @@
   <groupId>org.opennms.features</groupId>
   <artifactId>org.opennms.features.system-report</artifactId>
   <name>OpenNMS :: Features :: System Report</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms</groupId>

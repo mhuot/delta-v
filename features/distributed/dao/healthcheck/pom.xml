@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.distributed</groupId>
   <artifactId>org.opennms.features.distributed.dao-healthcheck</artifactId>
   <name>OpenNMS :: Features :: Distributed :: DAO :: Health Check</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.core.health</groupId>

@@ -9,7 +9,6 @@
     <artifactId>opennms-rrd-util</artifactId>
     <name>OpenNMS :: RRD :: ORM</name>
     <description>JRB/RRD Utilities.</description>
-    <packaging>jar</packaging>
 <dependencies>
         <dependency>
             <groupId>org.opennms</groupId>

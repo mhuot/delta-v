@@ -10,7 +10,6 @@
     <groupId>org.opennms.features.graph.provider</groupId>
     <artifactId>org.opennms.features.graph.provider.application</artifactId>
     <name>OpenNMS :: Features :: Graph :: Provider :: Application</name>
-    <packaging>jar</packaging>
 <dependencies>
         <dependency>
             <groupId>org.opennms.features.graph</groupId>

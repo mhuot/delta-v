@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.telemetry.protocols.bmp</groupId>
   <artifactId>org.opennms.features.telemetry.protocols.bmp.parser</artifactId>
   <name>OpenNMS :: Features :: Telemetry :: Protocols :: BMP :: Parser</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.features.telemetry</groupId>

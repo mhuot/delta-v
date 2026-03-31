@@ -9,7 +9,6 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opennms.features.scv</groupId>
     <artifactId>org.opennms.features.scv.jceks-impl</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: SCV :: JCEKS Impl.</name>
 <dependencies>
         <dependency>

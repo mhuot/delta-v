@@ -10,7 +10,6 @@
     <groupId>org.opennms.features.graph</groupId>
     <artifactId>org.opennms.features.graph.shell</artifactId>
     <name>OpenNMS :: Features :: Graph :: Shell Commands</name>
-    <packaging>jar</packaging>
 <dependencies>
         <dependency>
             <groupId>org.opennms.features.graph</groupId>

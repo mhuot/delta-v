@@ -7,7 +7,6 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>org.opennms.features.bsm.service.impl</artifactId>
-  <packaging>jar</packaging>
   <name>OpenNMS :: Features :: BSM :: Service :: Impl</name>
 <dependencies>
     <dependency>

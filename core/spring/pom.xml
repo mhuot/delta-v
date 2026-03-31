@@ -9,7 +9,6 @@
   <groupId>org.opennms.core</groupId>
   <artifactId>org.opennms.core.spring</artifactId>
   <name>OpenNMS :: Core :: Spring</name>
-  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

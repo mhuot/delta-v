@@ -12,7 +12,6 @@
   <groupId>org.opennms.features.openconfig</groupId>
   <artifactId>org.opennms.features.openconfig.common</artifactId>
   <name>OpenNMS :: Features :: OpenConfig :: Common</name>
-  <packaging>jar</packaging>
 
   <build>
     <!-- Enable below extension and plugin when you need to generate java source files from proto -->

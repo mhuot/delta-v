@@ -10,7 +10,6 @@
     <groupId>org.opennms.core.ipc.common</groupId>
     <artifactId>org.opennms.core.ipc.common.kafka</artifactId>
     <name>OpenNMS :: Core :: IPC :: Common :: Kafka</name>
-    <packaging>jar</packaging>
     <properties>
       <skipITs>true</skipITs>
     </properties>

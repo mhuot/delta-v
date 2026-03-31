@@ -9,7 +9,6 @@
   <groupId>org.opennms.core</groupId>
   <artifactId>org.opennms.core.web</artifactId>
   <name>OpenNMS :: Core :: Web</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>

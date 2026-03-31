@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.telemetry</groupId>
   <artifactId>org.opennms.features.telemetry.itests</artifactId>
   <name>OpenNMS :: Features :: Telemetry :: Integration Tests</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.features.telemetry</groupId>

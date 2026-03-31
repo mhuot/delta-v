@@ -15,7 +15,6 @@
         <bundle.namespace>org.opennms.features.vaadin.components.header</bundle.namespace>
     </properties>
     <name>OpenNMS :: Features :: Vaadin :: Components :: Header</name>
-    <packaging>jar</packaging>
     <build>
         <resources>
             <resource>

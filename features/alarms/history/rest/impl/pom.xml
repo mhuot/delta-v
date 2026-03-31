@@ -8,7 +8,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features.alarms.history.rest</groupId>
   <artifactId>org.opennms.features.alarms.history.rest.impl</artifactId>
-  <packaging>jar</packaging>
   <name>OpenNMS :: Features :: Alarms :: History :: REST :: Impl.</name>
 
 <dependencies>

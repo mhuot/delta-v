@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.telemetry.protocols.netflow</groupId>
   <artifactId>org.opennms.features.telemetry.protocols.netflow.parser</artifactId>
   <name>OpenNMS :: Features :: Telemetry :: Protocols :: Netflow :: Parser</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.core.ipc.twin</groupId>

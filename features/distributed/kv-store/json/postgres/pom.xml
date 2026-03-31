@@ -9,7 +9,6 @@
     </parent>
     <artifactId>org.opennms.features.distributed.kv-store.json.postgres</artifactId>
     <modelVersion>4.0.0</modelVersion>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Distributed :: Key Value Store :: JSON :: Postgres</name>
 <dependencies>
         <dependency>

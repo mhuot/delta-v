@@ -15,7 +15,6 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opennms.features.scv</groupId>
     <artifactId>org.opennms.features.scv.api</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: SCV :: API</name>
 
 </project>

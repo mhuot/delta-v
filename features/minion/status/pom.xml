@@ -8,7 +8,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.opennms.features.minion.status</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Minion :: Status</name>
 
 <dependencies>

@@ -9,7 +9,6 @@
   <groupId>org.opennms.features</groupId>
   <artifactId>org.opennms.features.newts</artifactId>
   <name>OpenNMS :: Features :: Newts</name>
-  <packaging>jar</packaging>
 <dependencies>
     <!-- APIs we implement -->
     <dependency>

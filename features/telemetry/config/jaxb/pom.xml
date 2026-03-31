@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.telemetry.config</groupId>
   <artifactId>org.opennms.features.telemetry.config.jaxb</artifactId>
   <name>OpenNMS :: Features :: Telemetry :: Config :: JAXB</name>
-  <packaging>jar</packaging>
   <build>
     <plugins>
 <!--  No need to generate xsds everytime, use pre-compiled one

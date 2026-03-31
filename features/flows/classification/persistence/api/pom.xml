@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.flows.classification.persistence</groupId>
   <artifactId>org.opennms.features.flows.classification.persistence.api</artifactId>
   <name>OpenNMS :: Features :: Flows :: Classification :: Persistence :: Api</name>
-  <packaging>jar</packaging>
   <dependencies>
       <dependency>
         <groupId>org.opennms</groupId>

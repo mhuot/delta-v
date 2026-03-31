@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.poller</groupId>
   <artifactId>org.opennms.features.poller.impl</artifactId>
   <name>OpenNMS :: Features :: Poller :: Implementation</name>
-  <packaging>jar</packaging>
 <dependencies>
     <!-- Poller API and client-rpc -->
     <dependency>

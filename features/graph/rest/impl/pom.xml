@@ -10,7 +10,6 @@
     <groupId>org.opennms.features.graph.rest</groupId>
     <artifactId>org.opennms.features.graph.rest.impl</artifactId>
     <name>OpenNMS :: Features :: Graph :: Rest :: Impl</name>
-    <packaging>jar</packaging>
 <dependencies>
         <dependency>
             <groupId>org.opennms.features.graph.rest</groupId>

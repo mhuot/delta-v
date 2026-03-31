@@ -10,7 +10,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features.events</groupId>
   <artifactId>org.opennms.features.events.collector</artifactId>
-  <packaging>jar</packaging>
   <name>OpenNMS :: Features :: Events :: Collector</name>
 
 <dependencies>

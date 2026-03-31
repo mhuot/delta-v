@@ -19,7 +19,6 @@
     </properties>
 
     <name>OpenNMS :: Features :: Vaadin :: Components :: Graph</name>
-    <packaging>jar</packaging>
 
     <build>
         <resources>

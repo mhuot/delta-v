@@ -9,7 +9,6 @@
   <groupId>org.opennms.core</groupId>
   <artifactId>org.opennms.core.schema</artifactId>
   <name>OpenNMS :: Core :: Schema</name>
-  <packaging>jar</packaging>
   <build>
     <testResources>
       <testResource>

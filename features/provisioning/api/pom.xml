@@ -9,5 +9,4 @@
   <groupId>org.opennms.features.provisioning</groupId>
   <artifactId>org.opennms.features.provisioning.api</artifactId>
   <name>OpenNMS :: Features :: Provisioning :: API</name>
-  <packaging>jar</packaging>
 </project>

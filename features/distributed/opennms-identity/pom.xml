@@ -12,7 +12,6 @@
   <groupId>org.opennms.features.distributed</groupId>
   <artifactId>org.opennms.features.distributed.opennms-identity</artifactId>
   <name>OpenNMS :: Features :: OpenNMS Identity</name>
-  <packaging>jar</packaging>
 
 <dependencies>
     <dependency>

@@ -10,7 +10,6 @@
 	<groupId>org.opennms.core</groupId>
 	<artifactId>org.opennms.core.config</artifactId>
 	<name>OpenNMS :: Core :: Configuration</name>
-	<packaging>jar</packaging>
 <dependencies>
 		<dependency>
 			<groupId>org.opennms.dependencies</groupId>

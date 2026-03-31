@@ -9,7 +9,6 @@
   <groupId>org.opennms.core.tracing</groupId>
   <artifactId>org.opennms.core.tracing.api</artifactId>
   <name>OpenNMS :: Core :: Tracing :: API </name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>io.opentracing</groupId>

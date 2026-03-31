@@ -8,7 +8,6 @@
   </parent>
   <groupId>org.opennms.features.nrtg</groupId>
   <artifactId>nrtg-web</artifactId>
-  <packaging>jar</packaging>
   <properties>
     <bundle.symbolicName>org.opennms.features.nrtg.web</bundle.symbolicName>
     <bundle.namespace>org.opennms.nrtg.web</bundle.namespace>

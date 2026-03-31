@@ -9,7 +9,6 @@
   <groupId>org.opennms.core.ipc.rpc</groupId>
   <artifactId>org.opennms.core.ipc.rpc.common</artifactId>
   <name>OpenNMS :: Core :: IPC :: RPC :: Common</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.core.ipc.rpc</groupId>

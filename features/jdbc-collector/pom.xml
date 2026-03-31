@@ -9,7 +9,6 @@
   <groupId>org.opennms.features</groupId>
   <artifactId>org.opennms.features.jdbc-collector</artifactId>
   <name>OpenNMS :: Features :: JDBC Collector</name>
-  <packaging>jar</packaging>
   <build>
     <plugins>
 <!-- // don't generate, just include a pre-generated version of the XSD

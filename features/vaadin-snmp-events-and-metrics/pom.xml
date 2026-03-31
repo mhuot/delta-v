@@ -10,7 +10,6 @@
   </parent>
   <groupId>org.opennms.features</groupId>
   <artifactId>vaadin-snmp-events-and-metrics</artifactId>
-  <packaging>jar</packaging>
   <name>OpenNMS :: Features :: SNMP Events and Metrics Admin UI</name>
   <description>
     OpenNMS Vaadin Administration UI for handling SNMP related configuration files for events and data collection.

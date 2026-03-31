@@ -8,7 +8,6 @@
   </parent>
   <groupId>org.opennms.features.nrtg</groupId>
   <artifactId>nrtg-system-exports</artifactId>
-  <packaging>jar</packaging>
   <properties>
     <bundle.symbolicName>org.opennms.features.nrtg.systemexports</bundle.symbolicName>
     <bundle.namespace>org.opennms.features.nrtg.systemexports</bundle.namespace>

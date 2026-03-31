@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.endpoints.grafana</groupId>
   <artifactId>org.opennms.features.endpoints.grafana.api</artifactId>
   <name>OpenNMS :: Features :: Endpoints :: Grafana :: API</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms</groupId>

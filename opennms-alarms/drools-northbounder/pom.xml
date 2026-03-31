@@ -8,7 +8,6 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>opennms-alarm-northbounder-drools</artifactId>
   <name>OpenNMS :: Alarms :: Northbounder :: Drools</name>
-  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

@@ -9,7 +9,6 @@
   <groupId>org.opennms.core</groupId>
   <artifactId>org.opennms.core.runtime</artifactId>
   <name>OpenNMS :: Core :: Runtime</name>
-  <packaging>jar</packaging>
   <build>
     <resources>
       <resource>

@@ -10,7 +10,6 @@
   <groupId>org.opennms.features.poller.monitors</groupId>
   <artifactId>org.opennms.features.poller.monitors.core</artifactId>
   <name>OpenNMS :: Features :: Poller :: Monitors :: Core</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.dependencies</groupId>

@@ -10,7 +10,6 @@
     <groupId>org.opennms.features.config.rest</groupId>
     <artifactId>org.opennms.features.config.rest.impl</artifactId>
     <name>OpenNMS :: Features :: Config :: Rest :: Impl</name>
-  <packaging>jar</packaging> 
 <dependencies>
     <!-- APIs we implement -->
     <dependency>

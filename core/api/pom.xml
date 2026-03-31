@@ -9,7 +9,6 @@
   <groupId>org.opennms.core</groupId>
   <artifactId>org.opennms.core.api</artifactId>
   <name>OpenNMS :: Core :: API</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.slf4j</groupId>

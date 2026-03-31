@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.telemetry</groupId>
   <artifactId>org.opennms.features.telemetry.shell</artifactId>
   <name>OpenNMS :: Features :: Telemetry :: Shell</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.features.telemetry</groupId>

@@ -10,7 +10,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.core.health</groupId>
   <artifactId>org.opennms.core.health.rest-cxf</artifactId>
-  <packaging>jar</packaging>
   <name>OpenNMS :: Feature :: Health :: ReST Service</name>
 
 <dependencies>

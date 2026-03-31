@@ -10,7 +10,6 @@
     <groupId>org.opennms.features.graph.provider</groupId>
     <artifactId>org.opennms.features.graph.provider.graphml</artifactId>
     <name>OpenNMS :: Features :: Graph :: Provider :: GraphML</name>
-    <packaging>jar</packaging>
 <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>

@@ -8,7 +8,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>shell</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Distributed :: Core :: Shell</name>
 <dependencies>
         <dependency>

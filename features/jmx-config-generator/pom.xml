@@ -10,7 +10,6 @@
     </parent>
     <groupId>org.opennms.features</groupId>
     <artifactId>jmxconfiggenerator</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: JMX Config Generator</name>
     <url>http://www.opennms.org</url>
 

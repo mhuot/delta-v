@@ -8,7 +8,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features.rest</groupId>
   <artifactId>org.opennms.features.rest.model</artifactId>
-  <packaging>jar</packaging>
   <name>OpenNMS :: Features :: REST :: Model</name>
 
 <dependencies>

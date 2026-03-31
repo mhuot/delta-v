@@ -9,7 +9,6 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opennms.features.distributed</groupId>
     <artifactId>org.opennms.features.distributed.serviceregistry</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Distributed :: Service Registry</name>
     <description>Bundle to bootstrap the Service Registry to make onmsgi:* work in sentinel</description>
 <dependencies>

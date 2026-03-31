@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.poller</groupId>
   <artifactId>org.opennms.features.poller.client-rpc</artifactId>
   <name>OpenNMS :: Features :: Poller :: RPC Client</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.features.poller</groupId>

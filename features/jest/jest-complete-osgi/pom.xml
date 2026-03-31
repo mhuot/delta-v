@@ -12,7 +12,6 @@
   <artifactId>jest-complete-osgi</artifactId>
   <name>jest-complete-osgi</name>
   <description>shaded osgi bundle containing complete jest implementation</description>
-  <packaging>jar</packaging>
 
   <build>
 

@@ -8,7 +8,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features.config</groupId>
   <artifactId>org.opennms.features.config.mock</artifactId>
-  <packaging>jar</packaging>
   <name>OpenNMS :: Features :: Config :: Mock</name>
   <properties>
     <!-- Misc. -->

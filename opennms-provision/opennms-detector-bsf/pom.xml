@@ -9,7 +9,6 @@
   <artifactId>opennms-detector-bsf</artifactId>
   <name>OpenNMS :: Provisioning :: BSF Detectors</name>
   <url>http://www.opennms.org</url>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>bsf</groupId>

@@ -9,7 +9,6 @@
   <groupId>org.opennms.core</groupId>
   <artifactId>org.opennms.core.spring-web</artifactId>
   <name>OpenNMS :: Core :: Spring Web Library</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.dependencies</groupId>

@@ -11,7 +11,6 @@
 
     <groupId>org.opennms.features.scv</groupId>
     <artifactId>org.opennms.features.scv.rest</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: SCV :: Rest</name>
 
 <dependencies>

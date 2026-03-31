@@ -9,7 +9,6 @@
   <groupId>org.opennms.core</groupId>
   <artifactId>org.opennms.core.upgrade</artifactId>
   <name>OpenNMS :: Core :: Upgrade</name>
-  <packaging>jar</packaging>
   <dependencies>
     <!-- Upgrade API Dependencies -->
     <dependency>

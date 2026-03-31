@@ -9,7 +9,6 @@
     </parent>
     <groupId>org.opennms.features</groupId>
     <artifactId>vaadin-jmxconfiggenerator</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: JMX Config Generator :: Web UI</name>
     <url>http://www.opennms.org</url>
     <properties>

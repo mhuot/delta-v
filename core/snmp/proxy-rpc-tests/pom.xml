@@ -9,7 +9,6 @@
   <groupId>org.opennms.core.snmp</groupId>
   <artifactId>org.opennms.core.snmp.proxy.rpc-tests</artifactId>
   <name>OpenNMS :: Core :: SNMP :: Proxy :: RPC Tests</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.features.distributed</groupId>

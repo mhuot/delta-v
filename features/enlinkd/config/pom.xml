@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.enlinkd</groupId>
   <artifactId>org.opennms.features.enlinkd.config</artifactId>
   <name>OpenNMS :: Features :: Enlinkd :: Config </name>
-  <packaging>jar</packaging>
   <build>
     <plugins>
 <!--  No need to generate xsds everytime, use pre-compiled one

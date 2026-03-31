@@ -20,7 +20,6 @@
 
     <name>OpenNMS :: Features :: Dashlets :: RTC</name>
 
-    <packaging>jar</packaging>
     <dependencies>
 
         <dependency>

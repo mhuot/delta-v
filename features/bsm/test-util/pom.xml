@@ -9,7 +9,6 @@
     </parent>
     <groupId>org.opennms.features.bsm</groupId>
     <artifactId>test-util</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: BSM :: Test Util</name>
     <dependencies>
         <dependency>

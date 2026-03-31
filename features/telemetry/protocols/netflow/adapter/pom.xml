@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.telemetry.protocols.netflow</groupId>
   <artifactId>org.opennms.features.telemetry.protocols.netflow.adapter</artifactId>
   <name>OpenNMS :: Features :: Telemetry :: Protocols :: Netflow :: Adapter</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.features.telemetry</groupId>

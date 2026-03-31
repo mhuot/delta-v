@@ -9,7 +9,6 @@
   <groupId>org.opennms.core</groupId>
   <artifactId>org.opennms.core.icmp-jna</artifactId>
   <name>OpenNMS :: Core :: ICMP JNA</name>
-  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

@@ -9,7 +9,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features.topology</groupId>
   <artifactId>org.opennms.features.topology.persistence.impl</artifactId>
-  <packaging>jar</packaging>
   <name>OpenNMS :: Features :: Topology :: Persistence :: Impl</name>
 <dependencies>
     <dependency>

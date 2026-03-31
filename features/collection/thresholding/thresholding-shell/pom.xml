@@ -9,7 +9,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.opennms.features.collection.thresholding.shell</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Collection :: Thresholding :: Shell</name>
 <dependencies>
         <dependency>

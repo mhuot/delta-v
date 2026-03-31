@@ -9,7 +9,6 @@
   <groupId>org.opennms</groupId>
   <artifactId>org.opennms.ui</artifactId>
   <name>OpenNMS :: UI (SPA)</name>
-  <packaging>jar</packaging>
 
   <properties>
     <skipNodeJSBuild>false</skipNodeJSBuild>

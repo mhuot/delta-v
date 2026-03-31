@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.collection</groupId>
   <artifactId>org.opennms.features.collection.snmp-collector</artifactId>
   <name>OpenNMS :: Features :: SNMP Collector</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms</groupId>

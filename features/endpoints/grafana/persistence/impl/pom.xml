@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.endpoints.grafana.persistence</groupId>
   <artifactId>org.opennms.features.endpoints.grafana.persistence.impl</artifactId>
   <name>OpenNMS :: Features :: Endpoints :: Grafana :: Persistence :: Impl</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.features.endpoints.grafana.persistence</groupId>

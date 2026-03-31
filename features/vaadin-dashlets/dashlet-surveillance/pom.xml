@@ -20,7 +20,6 @@
 
     <name>OpenNMS :: Features :: Dashlets :: Surveillance</name>
 
-    <packaging>jar</packaging>
     <dependencies>
 
         <dependency>

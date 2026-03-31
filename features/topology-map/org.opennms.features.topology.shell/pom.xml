@@ -15,7 +15,6 @@
   <groupId>org.opennms.features.topology</groupId>
   <artifactId>org.opennms.features.topology.shell</artifactId>
   <name>OpenNMS :: Features :: Topology :: Shell Commands</name>
-  <packaging>jar</packaging>
 <dependencies>
     <!--
      | uncomment to add all imported (non-local) bundles to your compilation classpath

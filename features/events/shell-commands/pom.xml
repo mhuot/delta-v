@@ -10,7 +10,6 @@
   <groupId>org.opennms.features.events</groupId>
   <artifactId>org.opennms.features.events.commands</artifactId>
   <name>OpenNMS :: Features :: Events :: Shell Commands</name>
-  <packaging>jar</packaging>
 
 <dependencies>
     <dependency>

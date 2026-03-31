@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.telemetry</groupId>
   <artifactId>org.opennms.features.telemetry.common</artifactId>
   <name>OpenNMS :: Features :: Telemetry :: Common</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.osgi</groupId>

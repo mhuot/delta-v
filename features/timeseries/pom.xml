@@ -9,7 +9,6 @@
   <groupId>org.opennms.features</groupId>
   <artifactId>org.opennms.features.timeseries</artifactId>
   <name>OpenNMS :: Features :: Timeseries</name>
-  <packaging>jar</packaging>
 <dependencies>
     <!-- APIs we implement -->
     <dependency>

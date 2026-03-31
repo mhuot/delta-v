@@ -18,7 +18,6 @@
 
   <name>OpenNMS :: Features :: Karaf Health</name>
 
-  <packaging>jar</packaging>
 
 <dependencies>
         <dependency>

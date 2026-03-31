@@ -9,5 +9,4 @@
   <groupId>org.opennms.features.telemetry.config</groupId>
   <artifactId>org.opennms.features.telemetry.config.api</artifactId>
   <name>OpenNMS :: Features :: Telemetry :: Config :: API</name>
-  <packaging>jar</packaging>
 </project>

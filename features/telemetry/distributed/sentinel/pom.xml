@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.telemetry.distributed</groupId>
   <artifactId>org.opennms.features.telemetry.distributed.sentinel</artifactId>
   <name>OpenNMS :: Features :: Telemetry :: Distributed :: Sentinel</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.features.telemetry.distributed</groupId>

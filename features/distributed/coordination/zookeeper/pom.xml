@@ -9,7 +9,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>coordination-zookeeper</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Distributed :: Coordination :: Zookeeper</name>
 <dependencies>
         <dependency>

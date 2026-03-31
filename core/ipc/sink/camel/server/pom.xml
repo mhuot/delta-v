@@ -10,7 +10,6 @@
   <groupId>org.opennms.core.ipc.sink.camel</groupId>
   <artifactId>org.opennms.core.ipc.sink.camel.server</artifactId>
   <name>OpenNMS :: Core :: IPC :: Sink :: Camel :: Server</name>
-  <packaging>jar</packaging>
   <properties>
     <skipITs>true</skipITs>
   </properties>

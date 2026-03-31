@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.poller</groupId>
   <artifactId>org.opennms.features.poller.shell</artifactId>
   <name>OpenNMS :: Features :: Poller :: Shell</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.apache.karaf.shell</groupId>

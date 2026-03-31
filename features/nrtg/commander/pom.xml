@@ -8,7 +8,6 @@
   </parent>
   <groupId>org.opennms.features.nrtg</groupId>
   <artifactId>nrtg-commander</artifactId>
-  <packaging>jar</packaging>
   <properties>
     <bundle.symbolicName>org.opennms.features.nrtg.commander</bundle.symbolicName>
     <!-- refactor code so namespace matches symbolic name -->

@@ -9,7 +9,6 @@
   <groupId>org.opennms.core</groupId>
   <artifactId>org.opennms.core.db</artifactId>
   <name>OpenNMS :: Core :: Database Access API</name>
-  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

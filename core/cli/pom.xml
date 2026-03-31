@@ -8,7 +8,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.core</groupId>
   <artifactId>org.opennms.core.cli</artifactId>
-  <packaging>jar</packaging>
   <name>OpenNMS :: Core :: CLI Tools</name>
   <build>
     <resources>

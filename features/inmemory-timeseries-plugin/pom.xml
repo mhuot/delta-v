@@ -8,7 +8,6 @@
     </parent>
     <groupId>org.opennms.features</groupId>
     <artifactId>inmemory-timeseries-plugin</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: InMemory TimeSeries Plugin</name>
 <dependencies>
         <dependency>

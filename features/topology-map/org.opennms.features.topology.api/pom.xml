@@ -19,7 +19,6 @@
 
   <name>${bundle.symbolicName}</name>
 
-  <packaging>jar</packaging>
 
   <dependencies>
     <!--

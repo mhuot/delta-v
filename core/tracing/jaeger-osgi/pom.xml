@@ -10,7 +10,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.core.tracing</groupId>
   <artifactId>org.opennms.core.tracing.jaeger-osgi</artifactId>
-  <packaging>jar</packaging>
   <name>OpenNMS :: Core :: Tracing :: Jaeger :: OSGi wrapper</name>
   <description>OSGi wrapper for Jaeger Tracer.</description>
 

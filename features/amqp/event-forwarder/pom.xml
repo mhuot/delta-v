@@ -18,7 +18,6 @@
 
   <name>OpenNMS :: Features :: AMQP :: Event Forwarder</name>
 
-  <packaging>jar</packaging>
 
   <build>
     <plugins>

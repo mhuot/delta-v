@@ -10,7 +10,6 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opennms.core</groupId>
     <artifactId>org.opennms.core.model-api</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Core :: Model API</name>
     <description>
         Persistence-free shared types (enums, interfaces, value types, DTOs)

@@ -10,7 +10,6 @@
     </parent>
     <groupId>org.opennms.features</groupId>
     <artifactId>vaadin-surveillance-views</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Surveillance Views</name>
     <description>
         OpenNMS Vaadin Surveillance Views

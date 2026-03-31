@@ -14,7 +14,6 @@
   <groupId>org.opennms.features.topology</groupId>
   <artifactId>org.opennms.features.topology.link</artifactId>
   <name>${bundle.symbolicName}</name>
-  <packaging>jar</packaging>
   <dependencies>
     <!--
      | uncomment to add all imported (non-local) bundles to your compilation classpath

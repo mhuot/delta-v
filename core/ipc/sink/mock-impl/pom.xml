@@ -9,7 +9,6 @@
   <groupId>org.opennms.core.ipc.sink</groupId>
   <artifactId>org.opennms.core.ipc.sink.mock-impl</artifactId>
   <name>OpenNMS :: Core :: IPC :: Sink :: Mock Impl.</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.osgi</groupId>

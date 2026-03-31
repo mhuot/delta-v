@@ -19,7 +19,6 @@
   <groupId>org.opennms.features.topology.plugins.topo</groupId>
   <artifactId>org.opennms.features.topology.plugins.topo.pathoutage</artifactId>
   <name>OpenNMS :: Features :: Topology :: Plugins :: PathOutage</name>
-  <packaging>jar</packaging>
   <dependencies>
 
     <!-- Embedded in jar (not provided) -->

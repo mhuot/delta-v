@@ -8,6 +8,5 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features.alarms.history</groupId>
   <artifactId>org.opennms.features.alarms.history.api</artifactId>
-  <packaging>jar</packaging>
   <name>OpenNMS :: Features :: Alarms :: History :: API</name>
 </project>

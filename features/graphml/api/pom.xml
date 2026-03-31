@@ -9,7 +9,6 @@
   <groupId>org.opennms.features.graphml</groupId>
   <artifactId>org.opennms.features.graphml.api</artifactId>
   <name>OpenNMS :: Features :: GraphML :: API</name>
-  <packaging>jar</packaging>
   <dependencies>
     <dependency>
       <groupId>org.opennms.dependencies</groupId>

@@ -9,7 +9,6 @@
   <groupId>org.opennms.features</groupId>
   <artifactId>org.opennms.features.prometheus-collector</artifactId>
   <name>OpenNMS :: Features :: Prometheus Collector</name>
-  <packaging>jar</packaging>
   <build>
     <plugins>
       <plugin>

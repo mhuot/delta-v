@@ -9,7 +9,6 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opennms.features.flows.classification</groupId>
     <artifactId>org.opennms.features.flows.classification.shell</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Flows :: Classification :: Shell Commands</name>
 <dependencies>
         <dependency>

@@ -9,7 +9,6 @@
   <groupId>org.opennms.core</groupId>
   <artifactId>org.opennms.core.web-assets</artifactId>
   <name>OpenNMS Web UI Assets (JavaScript &amp; CSS)</name>
-  <packaging>jar</packaging>
 
   <properties>
     <skipNodeJSBuild>false</skipNodeJSBuild>

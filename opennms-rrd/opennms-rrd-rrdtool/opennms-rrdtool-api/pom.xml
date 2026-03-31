@@ -8,7 +8,6 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>opennms-rrdtool-api</artifactId>
   <name>OpenNMS :: RRD :: RRDTool :: Interface</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.dependencies</groupId>

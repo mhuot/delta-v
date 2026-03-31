@@ -9,7 +9,6 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opennms.features.minion.heartbeat</groupId>
     <artifactId>org.opennms.features.minion.heartbeat.producer</artifactId>
-    <packaging>jar</packaging>
     <name>OpenNMS :: Features :: Minion :: Heartbeat :: Producer</name>
 
 <dependencies>

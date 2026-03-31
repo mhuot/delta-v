@@ -11,7 +11,6 @@
 
     <groupId>org.opennms.features.themes</groupId>
     <artifactId>dashboard-theme</artifactId>
-    <packaging>jar</packaging>
 
     <name>OpenNMS :: Features :: Vaadin :: Theme :: Dashboard</name>
 

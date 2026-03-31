@@ -13,7 +13,6 @@
 
   <name>OpenNMS :: Core :: SNMP :: Shell Commands</name>
 
-  <packaging>jar</packaging>
 
 <dependencies>
     <dependency>

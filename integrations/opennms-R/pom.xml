@@ -8,7 +8,6 @@
   </parent>
   <artifactId>opennms-R</artifactId>
   <name>OpenNMS :: Integrations :: R Interface</name>
-  <packaging>jar</packaging>
 <dependencies>
     <dependency>
       <groupId>org.opennms.dependencies</groupId>
