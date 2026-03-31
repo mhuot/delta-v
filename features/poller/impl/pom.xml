@@ -48,7 +48,14 @@
       <version>${project.version}</version>
     </dependency>
 
-    <!-- Config -->
+    <!-- Poller Config (PollerConfig, PollerConfigFactory) -->
+    <dependency>
+      <groupId>org.opennms.features.poller</groupId>
+      <artifactId>org.opennms.features.poller.config</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- Config (other config factories still in opennms-config) -->
     <dependency>
       <groupId>org.opennms</groupId>
       <artifactId>opennms-config</artifactId>

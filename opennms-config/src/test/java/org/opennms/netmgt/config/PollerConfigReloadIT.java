@@ -43,6 +43,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
+
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -51,16 +55,25 @@ import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.config.poller.Package;
+import org.opennms.netmgt.config.poller.PollerConfiguration;
 import org.opennms.netmgt.filter.FilterDaoFactory;
 import org.opennms.netmgt.filter.api.FilterDao;
 import org.opennms.netmgt.filter.api.FilterParseException;
 
 public class PollerConfigReloadIT {
 
+    private static final XmlMapper XML_MAPPER;
+    static {
+        XML_MAPPER = XmlMapper.builder().defaultUseWrapper(false).build();
+        XML_MAPPER.registerModule(new JaxbAnnotationModule());
+        XML_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
     private PollerConfigManager pollerConfigManager;
 
     private File includeUrlFile;
 
+    private FilterDao mockFilterDao;
 
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
@@ -69,8 +82,8 @@ public class PollerConfigReloadIT {
     public void setup() throws IOException {
         includeUrlFile = tempFolder.newFile("poller-config-include-url.txt");
         fillInitialData(includeUrlFile);
-        InputStream configStream = setIncludeUrlFileInConfig(PollerConfigReloadIT.class.getResource("/poller-configuration.xml"));;
-        FilterDao mockFilterDao = mock(FilterDao.class);
+        InputStream configStream = setIncludeUrlFileInConfig(PollerConfigReloadIT.class.getResource("/poller-configuration.xml"));
+        mockFilterDao = mock(FilterDao.class);
         List<InetAddress> inetAddressList = new ArrayList<>();
         inetAddressList.add(InetAddressUtils.addr("127.0.0.5"));
         inetAddressList.add(InetAddressUtils.addr("128.0.1.10"));
@@ -78,13 +91,13 @@ public class PollerConfigReloadIT {
         inetAddressList.add(InetAddressUtils.addr("128.0.1.12"));
         when(mockFilterDao.getActiveIPAddressList(Mockito.anyString())).thenReturn(inetAddressList);
         FilterDaoFactory.setInstance(mockFilterDao);
-        pollerConfigManager = new TestPollerConfigFactory(configStream);
+        pollerConfigManager = new TestPollerConfigFactory(configStream, mockFilterDao);
     }
 
     private static class TestPollerConfigFactory extends PollerConfigManager {
 
-        private TestPollerConfigFactory(InputStream stream) {
-            super(stream);
+        private TestPollerConfigFactory(InputStream stream, FilterDao filterDao) throws IOException {
+            super(XML_MAPPER.readValue(stream, org.opennms.netmgt.config.poller.PollerConfiguration.class), filterDao);
         }
 
         @Override
@@ -151,7 +164,10 @@ public class PollerConfigReloadIT {
         IOUtils.copy(new FileInputStream(PollerConfigReloadIT.class.getResource("/poller-configuration-valid1.xml").getFile()), new FileOutputStream(temporaryFile));
         long lastModified = temporaryFile.lastModified();
 
-        PollerConfigFactory.init();
+        var config = XML_MAPPER.readValue(temporaryFile, org.opennms.netmgt.config.poller.PollerConfiguration.class);
+        PollerConfigFactory.validate(config, filterDao);
+        var factory = new PollerConfigFactory(temporaryFile.lastModified(), config, filterDao);
+        PollerConfigFactory.setInstance(factory);
 
         assertEquals("IPADDR IPLIKE 1.*.*.*", PollerConfigFactory.getInstance().getPackage("example1").getFilter().getContent());
 

@@ -26,8 +26,6 @@ import static org.opennms.core.utils.InetAddressUtils.addr;
 import static org.opennms.core.utils.InetAddressUtils.toIpAddrBytes;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,10 +49,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.ListUtils;
-import org.apache.commons.io.IOUtils;
 import org.opennms.core.network.IpListFromUrl;
 import org.opennms.core.utils.ByteArrayComparator;
-import org.opennms.core.xml.JaxbUtils;
 import org.opennms.netmgt.config.poller.CriticalService;
 import org.opennms.netmgt.config.poller.ExcludeRange;
 import org.opennms.netmgt.config.poller.IncludeRange;
@@ -64,7 +60,7 @@ import org.opennms.netmgt.config.poller.Package;
 import org.opennms.netmgt.config.poller.Parameter;
 import org.opennms.netmgt.config.poller.PollerConfiguration;
 import org.opennms.netmgt.config.poller.Service;
-import org.opennms.netmgt.filter.FilterDaoFactory;
+import org.opennms.netmgt.filter.api.FilterDao;
 import org.opennms.netmgt.model.ServiceSelector;
 import org.opennms.netmgt.poller.ServiceMonitor;
 import org.opennms.netmgt.poller.ServiceMonitorLocator;
@@ -73,6 +69,10 @@ import org.opennms.netmgt.poller.support.DefaultServiceMonitorRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 
@@ -235,9 +235,20 @@ abstract public class PollerConfigManager implements PollerConfig  {
 
 
     private static final Logger LOG = LoggerFactory.getLogger(PollerConfigManager.class);
+
+    private static final XmlMapper XML_MAPPER;
+    static {
+        XML_MAPPER = XmlMapper.builder().defaultUseWrapper(false).build();
+        XML_MAPPER.registerModule(new JaxbAnnotationModule());
+        XML_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        XML_MAPPER.configure(SerializationFeature.INDENT_OUTPUT, true);
+    }
+
     private final ReadWriteLock m_globalLock = new ReentrantReadWriteLock();
     private final Lock m_readLock = m_globalLock.readLock();
     private final Lock m_writeLock = m_globalLock.writeLock();
+
+    protected final FilterDao m_filterDao;
 
     private List<Package> externalPackages = new ArrayList<>();
     private List<Package> mergedPackages = new ArrayList<>();
@@ -260,18 +271,14 @@ abstract public class PollerConfigManager implements PollerConfig  {
     private static final ServiceMonitorRegistry s_serviceMonitorRegistry = new DefaultServiceMonitorRegistry();
 
     /**
-     * <p>Constructor for PollerConfigManager.</p>
+     * Constructor accepting a pre-parsed configuration and injected FilterDao.
      *
-     * @param stream a {@link java.io.InputStream} object.
+     * @param config the parsed PollerConfiguration (from Jackson XmlMapper)
+     * @param filterDao the FilterDao for evaluating filter rules
      */
-    public PollerConfigManager(final InputStream stream) {
-        InputStreamReader isr = null;
-        try {
-            isr = new InputStreamReader(stream);
-            m_config = JaxbUtils.unmarshal(PollerConfiguration.class, isr);
-        } finally {
-            IOUtils.closeQuietly(isr);
-        }
+    public PollerConfigManager(final PollerConfiguration config, final FilterDao filterDao) {
+        m_config = requireNonNull(config);
+        m_filterDao = requireNonNull(filterDao);
         setUpInternalData();
     }
 
@@ -365,7 +372,7 @@ abstract public class PollerConfigManager implements PollerConfig  {
             // marshal to a string first, then write the string to the file. This
             // way the original config
             // isn't lost if the XML from the marshal is hosed.
-            saveXml(JaxbUtils.marshal(m_config));
+            saveXml(XML_MAPPER.writeValueAsString(m_config));
 
             update();
         } finally {
@@ -631,7 +638,7 @@ abstract public class PollerConfigManager implements PollerConfig  {
             getReadLock().lock();
             final String filterRules = pkg.getFilter().getContent();
             LOG.debug("createPackageIpMap: package is {}. filter rules are {}", pkg.getName(), filterRules);
-            return FilterDaoFactory.getInstance().getActiveIPAddressList(filterRules);
+            return m_filterDao.getActiveIPAddressList(filterRules);
         } finally {
             getReadLock().unlock();
         }
@@ -646,7 +653,7 @@ abstract public class PollerConfigManager implements PollerConfig  {
      */
     @Override
     public void rebuildPackageIpListMap() {
-        FilterDaoFactory.getInstance().flushActiveIpAddressListCache();
+        m_filterDao.flushActiveIpAddressListCache();
         createPackageIpListMap();
     }
 
@@ -1175,8 +1182,8 @@ abstract public class PollerConfigManager implements PollerConfig  {
                     final ServiceMonitorLocator locator = new DefaultServiceMonitorLocator(monitor.getService(), monitor.getClassName());
                     locators.add(locator);
                     LOG.debug("Loaded monitor for service: {}, class-name: {}", monitor.getService(), monitor.getClassName());
-                } catch (ConfigObjectRetrievalFailureException e) {
-                    LOG.warn("{} {}", e.getMessage(), e.getRootCause(), e);
+                } catch (RuntimeException e) {
+                    LOG.warn("Failed to load monitor for service: {}, class-name: {}", monitor.getService(), monitor.getClassName(), e);
                 }
             }
         } finally {

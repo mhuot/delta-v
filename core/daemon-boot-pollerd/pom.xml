@@ -273,7 +273,14 @@
             </exclusions>
         </dependency>
 
-        <!-- Poller config — PollerConfigFactory, PollOutagesConfigManager -->
+        <!-- Poller config — PollerConfig, PollerConfigFactory -->
+        <dependency>
+            <groupId>org.opennms.features.poller</groupId>
+            <artifactId>org.opennms.features.poller.config</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- FilterDaoFactory, JdbcFilterDao, SnmpPeerFactory (still in opennms-config) -->
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-config</artifactId>

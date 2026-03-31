@@ -22,69 +22,57 @@
 package org.opennms.netmgt.config;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 
-import org.apache.commons.io.IOUtils;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
+
 import org.opennms.core.utils.ConfigFileConstants;
-import org.opennms.core.xml.JaxbUtils;
 import org.opennms.netmgt.config.poller.PollerConfiguration;
-import org.opennms.netmgt.filter.FilterDaoFactory;
+import org.opennms.netmgt.filter.api.FilterDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This is the singleton class used to load the configuration for the OpenNMS
- * Poller service from the poller-configuration XML file.
+ * Singleton factory for the OpenNMS Poller configuration.
  *
- * A mapping of the configured URLs to the iplist they contain is built at
- * init() time so as to avoid numerous file reads.
+ * <p>Loads poller-configuration.xml and exposes a {@link PollerConfig} interface
+ * for the Poller daemon. Uses Jackson XmlMapper for XML parsing and constructor-injected
+ * {@link FilterDao} for filter rule validation and IP address resolution.</p>
  *
- * <strong>Note: </strong>Users of this class should make sure the
- * <em>init()</em> is called before calling any other method to ensure the
- * config is loaded before accessing other convenience methods.
- *
- * @author <a href="mailto:jamesz@opennms.com">James Zuo </a>
- * @author <a href="mailto:mike@opennms.org">Mike Davidson </a>
- * @author <a href="mailto:sowmya@opennms.org">Sowmya Nataraj </a>
- * @author <a href="http://www.opennms.org/">OpenNMS </a>
+ * <p>Daemon-boot modules create instances via the
+ * {@link #PollerConfigFactory(long, PollerConfiguration, FilterDao)} constructor
+ * and register them via {@link #setInstance(PollerConfig)}.</p>
  */
 public final class PollerConfigFactory extends PollerConfigManager {
     private static final Logger LOG = LoggerFactory.getLogger(PollerConfigFactory.class);
-    /**
-     * The singleton instance of this factory
-     */
+
+    private static final XmlMapper XML_MAPPER;
+    static {
+        XML_MAPPER = XmlMapper.builder().defaultUseWrapper(false).build();
+        XML_MAPPER.registerModule(new JaxbAnnotationModule());
+        XML_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
     private static PollerConfig m_singleton = null;
-
-    /**
-     * This member is set to true if the configuration file has been loaded.
-     */
     private static boolean m_loaded = false;
-    
-    /**
-     * Loaded version
-     */
     private long m_currentVersion = -1L;
-
-    /**
-     * Poller config file
-     */
     private static File m_pollerConfigFile;
 
     /**
-     * <p>Constructor for PollerConfigFactory.</p>
+     * Constructor accepting a pre-parsed configuration and injected FilterDao.
      *
-     * @param currentVersion a long.
-     * @param stream a {@link java.io.InputStream} object.
+     * @param currentVersion file modification timestamp for change detection
+     * @param config         the parsed PollerConfiguration (from Jackson XmlMapper)
+     * @param filterDao      the FilterDao for evaluating filter rules
      */
-    public PollerConfigFactory(final long currentVersion, final InputStream stream) {
-        super(stream);
+    public PollerConfigFactory(final long currentVersion, final PollerConfiguration config, final FilterDao filterDao) {
+        super(config, filterDao);
         m_currentVersion = currentVersion;
     }
 
@@ -100,41 +88,14 @@ public final class PollerConfigFactory extends PollerConfigManager {
     }
 
     /**
-     * Load the config from the default config file and create the singleton
-     * instance of this factory.
+     * Validates filter rules and ds-name lengths for each package/service.
      *
-     * @exception java.io.IOException
-     *                Thrown if the specified config file cannot be read
-     * @throws java.io.IOException if any.
+     * @param config    the configuration to validate
+     * @param filterDao the FilterDao to use for rule validation
      */
-    public static synchronized void init() throws IOException {
-        if (m_loaded) {
-            // init already called - return
-            // to reload, reload() will need to be called
-            return;
-        }
-
-        final File cfgFile = getPollerConfigFile();
-
-        LOG.debug("init: config file path: {}", cfgFile.getPath());
-
-        InputStream stream = null;
-        PollerConfigFactory config = null;
-        try {
-            stream = new FileInputStream(cfgFile);
-            config = new PollerConfigFactory(cfgFile.lastModified(), stream);
-        } finally {
-            IOUtils.closeQuietly(stream);
-        }
-
-        validate(config.getLocalConfiguration());
-
-        setInstance(config);
-    }
-
-    private static void validate(PollerConfiguration config) {
+    public static void validate(final PollerConfiguration config, final FilterDao filterDao) {
         for (final org.opennms.netmgt.config.poller.Package pollerPackage : config.getPackages()) {
-            FilterDaoFactory.getInstance().validateRule(pollerPackage.getFilter().getContent());
+            filterDao.validateRule(pollerPackage.getFilter().getContent());
             for (final org.opennms.netmgt.config.poller.Service service : pollerPackage.getServices()) {
                 for (final org.opennms.netmgt.config.poller.Parameter parm : service.getParameters()) {
                     if (parm.getKey().equals("ds-name")) {
@@ -150,43 +111,29 @@ public final class PollerConfigFactory extends PollerConfigManager {
     }
 
     /**
-     * Reload the config from the default config file
-     *
-     * @exception java.io.IOException
-     *                Thrown if the specified config file cannot be read/loaded
-     * @throws java.io.IOException if any.
-     */
-    public static synchronized void reload() throws IOException {
-        init();
-        getInstance().update();
-    }
-
-    /**
      * Return the singleton instance of this factory.
      *
      * @return The current factory instance.
-     * @throws java.lang.IllegalStateException
-     *             Thrown if the factory has not yet been initialized.
+     * @throws IllegalStateException if the factory has not been initialized.
      */
     public static synchronized PollerConfig getInstance() {
         if (!m_loaded) {
             throw new IllegalStateException("The factory has not been initialized");
         }
-
         return m_singleton;
     }
-    
+
     /**
-     * <p>setInstance</p>
+     * Set the singleton instance. Called by daemon-boot after constructing
+     * with Jackson XmlMapper + FilterDao.
      *
-     * @param instance a {@link org.opennms.netmgt.config.PollerConfig} object.
+     * @param instance the PollerConfig to register as singleton
      */
     public static synchronized void setInstance(final PollerConfig instance) {
         m_singleton = instance;
         m_loaded = true;
     }
 
-    /** {@inheritDoc} */
     @Override
     protected void saveXml(final String xml) throws IOException {
         if (xml != null) {
@@ -206,11 +153,6 @@ public final class PollerConfigFactory extends PollerConfigManager {
         }
     }
 
-    /**
-     * <p>update</p>
-     *
-     * @throws java.io.IOException if any.
-     */
     @Override
     public void update() throws IOException {
         getWriteLock().lock();
@@ -218,23 +160,11 @@ public final class PollerConfigFactory extends PollerConfigManager {
             final File cfgFile = getPollerConfigFile();
             if (cfgFile.lastModified() > m_currentVersion) {
                 m_currentVersion = cfgFile.lastModified();
-                LOG.debug("init: config file path: {}", cfgFile.getPath());
-                InputStream stream = null;
-                InputStreamReader sr = null;
-                try {
-                    stream = new FileInputStream(cfgFile);
-                    sr = new InputStreamReader(stream);
-                    final PollerConfiguration config = JaxbUtils.unmarshal(PollerConfiguration.class, sr);
-
-                    validate(config);
-
-                    m_config = config;
-                } finally {
-                    IOUtils.closeQuietly(sr);
-                    IOUtils.closeQuietly(stream);
-                }
-                init();
-                LOG.debug("init: finished loading config file: {}", cfgFile.getPath());
+                LOG.debug("update: reloading config file: {}", cfgFile.getPath());
+                final PollerConfiguration config = XML_MAPPER.readValue(cfgFile, PollerConfiguration.class);
+                validate(config, m_filterDao);
+                m_config = config;
+                LOG.debug("update: finished reloading config file: {}", cfgFile.getPath());
             }
         } finally {
             getWriteLock().unlock();

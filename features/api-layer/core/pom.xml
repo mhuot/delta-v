@@ -62,6 +62,11 @@
             <artifactId>opennms-config-model</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.opennms.features.poller</groupId>
+            <artifactId>org.opennms.features.poller.config</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-config</artifactId>
         </dependency>

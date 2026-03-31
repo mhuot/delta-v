@@ -45,7 +45,10 @@ import org.mockito.Mockito;
 import org.opennms.core.db.DataSourceFactory;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.utils.InetAddressUtils;
-import org.opennms.core.xml.JaxbUtils;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
+
 import org.opennms.netmgt.config.poller.Downtime;
 import org.opennms.netmgt.config.poller.Filter;
 import org.opennms.netmgt.config.poller.IncludeRange;
@@ -100,17 +103,24 @@ public class PollerConfigFactoryIT {
         MockLogAppender.assertNoWarningsOrGreater();
     }
     
+    private static final XmlMapper XML_MAPPER;
+    static {
+        XML_MAPPER = XmlMapper.builder().defaultUseWrapper(false).build();
+        XML_MAPPER.registerModule(new JaxbAnnotationModule());
+        XML_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
     static class TestPollerConfigManager extends PollerConfigManager {
         private String m_xml;
 
         public TestPollerConfigManager(String xml) throws IOException {
-            super(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+            super(XML_MAPPER.readValue(xml, PollerConfiguration.class), FilterDaoFactory.getInstance());
             save();
         }
 
         @Override
         public void update() throws IOException {
-            m_config = JaxbUtils.unmarshal(PollerConfiguration.class, m_xml);
+            m_config = XML_MAPPER.readValue(m_xml, PollerConfiguration.class);
             super.update();
         }
 

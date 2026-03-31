@@ -35,6 +35,8 @@ import org.opennms.netmgt.collection.api.PersisterFactory;
 import org.opennms.netmgt.config.PollerConfig;
 import org.opennms.netmgt.config.PollerConfigFactory;
 import org.opennms.netmgt.config.SnmpPeerFactory;
+import org.opennms.netmgt.config.poller.PollerConfiguration;
+import org.opennms.netmgt.filter.api.FilterDao;
 import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 import org.opennms.netmgt.config.snmp.SnmpConfig;
 import org.slf4j.Logger;
@@ -53,7 +55,6 @@ import org.opennms.netmgt.threshd.api.ThresholdingService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
 import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
 import org.springframework.context.SmartLifecycle;
 
@@ -69,10 +70,9 @@ import org.springframework.context.SmartLifecycle;
  * locations to detect location-specific outages. It shares poller-configuration.xml
  * with Pollerd but uses its own scheduling and outage tracking logic.</p>
  *
- * <p>Bean ordering: {@link PollerConfigFactory#init()} calls
- * {@code FilterDaoFactory.getInstance()} internally, so the
- * {@code filterDaoInitializer} bean in {@link PerspectivePollerdJpaConfiguration}
- * must be initialized first. This is enforced via {@code @DependsOn}.</p>
+ * <p>The {@link PollerConfigFactory} is created with a constructor-injected
+ * {@link FilterDao}, eliminating the hidden {@code FilterDaoFactory.getInstance()}
+ * coupling and the need for {@code @DependsOn} bean ordering.</p>
  */
 @Configuration
 public class PerspectivePollerdDaemonConfiguration {
@@ -106,18 +106,18 @@ public class PerspectivePollerdDaemonConfiguration {
     }
 
     /**
-     * Loads poller-configuration.xml via the singleton PollerConfigFactory.
-     *
-     * <p>Must run after FilterDaoFactory initialization because
-     * {@code PollerConfigFactory.init()} validates filter rules against
-     * {@code FilterDaoFactory.getInstance()}.</p>
+     * Loads poller-configuration.xml via Jackson XmlMapper and creates a
+     * PollerConfigFactory with constructor-injected FilterDao.
      */
     @Bean
-    @DependsOn("filterDaoInitializer")
-    public PollerConfig pollerConfig() throws IOException {
-        LOG.info("Initializing PollerConfigFactory");
-        PollerConfigFactory.init();
-        return PollerConfigFactory.getInstance();
+    public PollerConfig pollerConfig(FilterDao filterDao) throws IOException {
+        var configFile = new java.io.File(opennmsHome, "etc/poller-configuration.xml");
+        LOG.info("Loading PollerConfigFactory from {}", configFile);
+        var config = XML_MAPPER.readValue(configFile, PollerConfiguration.class);
+        PollerConfigFactory.validate(config, filterDao);
+        var factory = new PollerConfigFactory(configFile.lastModified(), config, filterDao);
+        PollerConfigFactory.setInstance(factory);
+        return factory;
     }
 
     /**

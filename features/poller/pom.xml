@@ -13,6 +13,7 @@
   <modules>
     <module>api</module>
     <module>client-rpc</module>
+    <module>config</module>
     <module>impl</module>
     <module>monitors</module>
     <module>runtime</module>

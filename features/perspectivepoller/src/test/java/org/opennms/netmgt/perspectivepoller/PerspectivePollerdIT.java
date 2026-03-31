@@ -55,7 +55,12 @@ import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
 import org.opennms.core.tracing.api.TracerRegistry;
 import org.opennms.netmgt.collection.api.CollectionAgentFactory;
 import org.opennms.netmgt.collection.api.PersisterFactory;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
+
 import org.opennms.netmgt.config.PollerConfigFactory;
+import org.opennms.netmgt.config.poller.PollerConfiguration;
 import org.opennms.netmgt.config.dao.thresholding.api.OverrideableThreshdDao;
 import org.opennms.netmgt.config.dao.thresholding.api.OverrideableThresholdingDao;
 import org.opennms.netmgt.config.poller.Package;
@@ -175,7 +180,11 @@ public class PerspectivePollerdIT implements InitializingBean, TemporaryDatabase
         this.eventIpcManager.setEventWriteHook(this.database::writeEvent);
 
         PollerConfigFactory.setPollerConfigFile(POLLER_CONFIG_1);
-        PollerConfigFactory.setInstance(new PollerConfigFactory(-1L, new FileInputStream(POLLER_CONFIG_1)));
+        XmlMapper xmlMapper = XmlMapper.builder().defaultUseWrapper(false).build();
+        xmlMapper.registerModule(new JaxbAnnotationModule());
+        xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        var pollerConfig = xmlMapper.readValue(POLLER_CONFIG_1, PollerConfiguration.class);
+        PollerConfigFactory.setInstance(new PollerConfigFactory(-1L, pollerConfig, FilterDaoFactory.getInstance()));
 
         this.databasePopulator.getTransactionTemplate().execute(transactionStatus -> {
             this.node1icmp = this.databasePopulator.getNode1().getPrimaryInterface().getMonitoredServiceByServiceType("ICMP");

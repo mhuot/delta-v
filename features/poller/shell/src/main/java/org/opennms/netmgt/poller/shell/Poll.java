@@ -50,6 +50,7 @@ import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.core.xml.JaxbUtils;
 import org.opennms.netmgt.config.PollerConfig;
 import org.opennms.netmgt.config.ReadOnlyPollerConfigManager;
+import org.opennms.netmgt.filter.FilterDaoFactory;
 import org.opennms.netmgt.config.poller.Package;
 import org.opennms.netmgt.config.poller.Parameter;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
@@ -230,7 +231,7 @@ public class Poll implements Action {
     }
 
     private String retrieveClassName(final InetAddress ipAddress, final String packageName, final String serviceName) throws Exception {
-        final PollerConfig pollerConfig = ReadOnlyPollerConfigManager.create();
+        final PollerConfig pollerConfig = ReadOnlyPollerConfigManager.create(FilterDaoFactory.getInstance());
 
         final org.opennms.netmgt.config.poller.Package pkg = packageName == null ? pollerConfig.getFirstLocalPackageMatch(InetAddressUtils.str(ipAddress)) : pollerConfig.getPackage(packageName);
         if (pkg == null) {
@@ -266,7 +267,7 @@ public class Poll implements Action {
             return parameters;
         }
 
-        final PollerConfig pollerConfig = ReadOnlyPollerConfigManager.create();
+        final PollerConfig pollerConfig = ReadOnlyPollerConfigManager.create(FilterDaoFactory.getInstance());
 
         final org.opennms.netmgt.config.poller.Package pkg = packageName == null ? pollerConfig.getFirstLocalPackageMatch(InetAddressUtils.str(ipAddress)) : pollerConfig.getPackage(packageName);
         if (pkg == null) {
