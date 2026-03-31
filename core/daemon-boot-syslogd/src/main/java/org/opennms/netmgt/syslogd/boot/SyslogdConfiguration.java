@@ -1,17 +1,28 @@
 package org.opennms.netmgt.syslogd.boot;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+
 import javax.sql.DataSource;
 
 import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 
 import org.opennms.core.daemon.common.JdbcDistPollerDao;
 import org.opennms.core.daemon.common.JdbcInterfaceToNodeCache;
-import org.opennms.netmgt.config.SyslogdConfigFactory;
 import org.opennms.netmgt.config.SyslogdConfig;
+import org.opennms.netmgt.config.syslogd.SyslogdConfigurationGroup;
+import org.opennms.netmgt.config.syslogd.HideMatch;
+import org.opennms.netmgt.config.syslogd.UeiMatch;
 import org.opennms.netmgt.dao.api.DistPollerDao;
 import org.opennms.netmgt.dao.api.InterfaceToNodeCache;
 import org.opennms.netmgt.provision.LocationAwareDnsLookupClient;
 import org.opennms.netmgt.syslogd.SyslogSinkConsumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,12 +39,58 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SyslogdConfiguration {
 
+    private static final Logger LOG = LoggerFactory.getLogger(SyslogdConfiguration.class);
+
+    private static final XmlMapper XML_MAPPER;
+    static {
+        XML_MAPPER = new XmlMapper();
+        XML_MAPPER.registerModule(new JaxbAnnotationModule());
+        XML_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
     @Value("${opennms.syslogd.dnscache.config:maximumSize=1000,expireAfterWrite=8h}")
     private String dnsCacheConfig;
 
     @Bean
-    public SyslogdConfig syslogdConfig() throws Exception {
-        return new SyslogdConfigFactory();
+    public SyslogdConfig syslogdConfig(@Value("${opennms.home}") String opennmsHome) throws IOException {
+        var configFile = new File(opennmsHome, "etc/syslogd-configuration.xml");
+        if (!configFile.exists()) {
+            throw new IOException("syslogd-configuration.xml not found at " + configFile);
+        }
+        LOG.info("Loading syslogd configuration from {}", configFile);
+        var xmlConfig = XML_MAPPER.readValue(configFile,
+                org.opennms.netmgt.config.syslogd.SyslogdConfiguration.class);
+
+        // Process <import-file> directives — merge UEI matches and hide matches
+        // from included files into the main configuration.
+        var configDir = configFile.getParentFile();
+        for (String fileName : xmlConfig.getImportFiles()) {
+            var includeFile = new File(configDir, fileName);
+            if (!includeFile.exists()) {
+                LOG.warn("Import file {} not found, skipping", includeFile);
+                continue;
+            }
+            LOG.info("Loading syslogd import file {}", includeFile);
+            var includeCfg = XML_MAPPER.readValue(includeFile, SyslogdConfigurationGroup.class);
+            if (includeCfg.getUeiMatches() != null) {
+                if (xmlConfig.getUeiMatches() == null) {
+                    xmlConfig.setUeiMatches(new ArrayList<>());
+                }
+                for (UeiMatch ueiMatch : includeCfg.getUeiMatches()) {
+                    xmlConfig.addUeiMatch(ueiMatch);
+                }
+            }
+            if (includeCfg.getHideMatches() != null) {
+                if (xmlConfig.getHideMatches() == null) {
+                    xmlConfig.setHideMatches(new ArrayList<>());
+                }
+                for (HideMatch hideMatch : includeCfg.getHideMatches()) {
+                    xmlConfig.addHideMatch(hideMatch);
+                }
+            }
+        }
+
+        return new SyslogdConfigAdapter(xmlConfig);
     }
 
     @Bean
