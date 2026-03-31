@@ -10,10 +10,11 @@
   <artifactId>org.opennms.features.discovery</artifactId>
   <name>OpenNMS :: Features :: Discovery</name>
 <dependencies>
+    <!-- DiscoveryConfigurationFactory interface + config model classes -->
     <dependency>
       <groupId>org.opennms</groupId>
-      <artifactId>opennms-config</artifactId>
-      <scope>compile</scope>
+      <artifactId>opennms-config-api</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opennms.core</groupId>
