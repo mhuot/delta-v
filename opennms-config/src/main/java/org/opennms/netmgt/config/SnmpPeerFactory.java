@@ -29,9 +29,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.io.UnsupportedEncodingException;
-import java.io.Writer;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -41,19 +40,14 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.commons.io.IOUtils;
 import org.opennms.core.config.api.TextEncryptor;
 import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.core.mate.api.Interpolator;
 import org.opennms.core.mate.api.Scope;
-import org.opennms.core.spring.BeanUtils;
-import org.opennms.core.spring.FileReloadCallback;
-import org.opennms.core.spring.FileReloadContainer;
 import org.opennms.core.utils.ByteArrayComparator;
 import org.opennms.core.utils.ConfigFileConstants;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.core.utils.LocationUtils;
-import org.opennms.core.xml.JaxbUtils;
 import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 import org.opennms.netmgt.config.snmp.AddressSnmpConfigVisitor;
 import org.opennms.netmgt.config.snmp.Configuration;
@@ -68,6 +62,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
@@ -93,6 +91,15 @@ public class SnmpPeerFactory implements SnmpAgentConfigFactory {
     private static final String SNMP_ENCRYPTION_CONTEXT = "snmp-config";
     protected static final String ENCRYPTION_ENABLED = "org.opennms.snmp.encryption.enabled";
 
+    private static final XmlMapper XML_MAPPER;
+    static {
+        XML_MAPPER = XmlMapper.builder()
+                .defaultUseWrapper(false)
+                .build();
+        XML_MAPPER.registerModule(new JaxbAnnotationModule());
+        XML_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
     private static File s_configFile;
 
     /**
@@ -112,9 +119,7 @@ public class SnmpPeerFactory implements SnmpAgentConfigFactory {
      */
     private SnmpConfig m_config;
 
-    private FileReloadContainer<SnmpConfig> m_container;
-
-    private FileReloadCallback<SnmpConfig> m_callback;
+    private EntityScopeProvider entityScopeProvider;
 
     private TextEncryptor textEncryptor;
 
@@ -129,26 +134,18 @@ public class SnmpPeerFactory implements SnmpAgentConfigFactory {
      */
     public SnmpPeerFactory(final Resource resource) {
         LOG.debug("creating new instance for resource {}: {}", resource, this);
-
-        final SnmpConfig config = JaxbUtils.unmarshal(SnmpConfig.class, resource);
         try {
-            final File file = resource.getFile();
-            if (file != null) {
-                m_callback = new FileReloadCallback<SnmpConfig>() {
-                    @Override
-                    public SnmpConfig reload(final SnmpConfig object, final Resource resource) throws IOException {
-                        return JaxbUtils.unmarshal(SnmpConfig.class, resource);
-                    }
-                };
-                m_container = new FileReloadContainer<SnmpConfig>(config, resource, m_callback);
-                return;
-            }
-        } catch (final IOException e) {
-            LOG.debug("No file associated with resource {}, skipping reload container initialization. Reason: ", resource, e.getMessage());
+            m_config = XML_MAPPER.readValue(resource.getInputStream(), SnmpConfig.class);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to load SnmpConfig from " + resource, e);
         }
+    }
 
-        // if we fall through to here, then the file was null, or something else went wrong store the config directly
+    public SnmpPeerFactory(SnmpConfig config, EntityScopeProvider entityScopeProvider, TextEncryptor textEncryptor) {
+        LOG.debug("creating new instance from pre-loaded SnmpConfig: {}", this);
         m_config = config;
+        this.entityScopeProvider = entityScopeProvider;
+        this.textEncryptor = textEncryptor;
     }
 
     private Lock getReadLock() {
@@ -174,7 +171,6 @@ public class SnmpPeerFactory implements SnmpAgentConfigFactory {
     }
 
     private void encryptSnmpConfig() {
-        initializeTextEncryptor();
         if (textEncryptor != null) {
             try {
                 s_singleton.saveCurrent();
@@ -249,49 +245,25 @@ public class SnmpPeerFactory implements SnmpAgentConfigFactory {
     }
 
     public void saveToFile(final File file) throws UnsupportedEncodingException, FileNotFoundException, IOException {
-        // Marshal to a string first, then write the string to the file. This
-        // way the original config isn't lost if the XML from the marshal is hosed.
         getWriteLock().lock();
         try {
             final String marshalledConfig = getSnmpConfigAsString();
-
-            FileOutputStream out = null;
-            Writer fileWriter = null;
-            try {
-                if (marshalledConfig != null) {
-                    out = new FileOutputStream(file);
-                    fileWriter = new OutputStreamWriter(out, StandardCharsets.UTF_8);
-                    fileWriter.write(marshalledConfig);
-                    fileWriter.flush();
-                    fileWriter.close();
-                    if (m_container != null) {
-                        m_container.reload();
-                    }
+            if (marshalledConfig != null) {
+                try (var out = new FileOutputStream(file);
+                     var writer = new OutputStreamWriter(out, StandardCharsets.UTF_8)) {
+                    writer.write(marshalledConfig);
+                    writer.flush();
                 }
-            } finally {
-                IOUtils.closeQuietly(fileWriter);
-                IOUtils.closeQuietly(out);
             }
         } finally {
             getWriteLock().unlock();
         }
     }
 
-    private static synchronized Scope getSecureCredentialsScope() {
-        if (secureCredentialsVaultScope == null) {
-            try {
-                final EntityScopeProvider entityScopeProvider = BeanUtils.getBean("daoContext", "entityScopeProvider", EntityScopeProvider.class);
-
-                if (entityScopeProvider != null) {
-                    secureCredentialsVaultScope = entityScopeProvider.getScopeForScv();
-                } else {
-                    LOG.warn("SnmpPeerFactory: EntityScopeProvider is null, SecureCredentialsVault not available for metadata interpolation");
-                }
-            } catch (Exception e) {
-                LOG.warn("SnmpPeerFactory: Error retrieving EntityScopeProvider bean: {}", e.getMessage());
-            }
+    private Scope getSecureCredentialsScope() {
+        if (secureCredentialsVaultScope == null && entityScopeProvider != null) {
+            secureCredentialsVaultScope = entityScopeProvider.getScopeForScv();
         }
-
         return secureCredentialsVaultScope;
     }
 
@@ -501,14 +473,8 @@ public class SnmpPeerFactory implements SnmpAgentConfigFactory {
     public SnmpConfig getSnmpConfig() {
         getReadLock().lock();
         try {
-            if (m_container == null) {
-                decryptSnmpConfig(m_config);
-                return m_config;
-            } else {
-                SnmpConfig config = m_container.getObject();
-                decryptSnmpConfig(config);
-                return config;
-            }
+            decryptSnmpConfig(m_config);
+            return m_config;
         } finally {
             getReadLock().unlock();
         }
@@ -670,26 +636,17 @@ public class SnmpPeerFactory implements SnmpAgentConfigFactory {
      * @return Marshalled SnmpConfig
      */
     public String getSnmpConfigAsString() {
-        String marshalledConfig = null;
-        StringWriter writer = null;
         SnmpConfig snmpConfig = getSnmpConfig();
         encryptSnmpConfig(snmpConfig);
         try {
-            writer = new StringWriter();
-            JaxbUtils.marshal(snmpConfig, writer);
-            marshalledConfig = writer.toString();
-        } finally {
-            IOUtils.closeQuietly(writer);
+            return XML_MAPPER.writeValueAsString(snmpConfig);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize SnmpConfig to XML", e);
         }
-        return marshalledConfig;
     }
 
     private void encryptSnmpConfig(SnmpConfig snmpConfig) {
-        if (!encryptionEnabled) {
-            return;
-        }
-        initializeTextEncryptor();
-        if (textEncryptor == null) {
+        if (!encryptionEnabled || textEncryptor == null) {
             return;
         }
         encryptConfig(snmpConfig);
@@ -700,11 +657,7 @@ public class SnmpPeerFactory implements SnmpAgentConfigFactory {
     }
 
     private void decryptSnmpConfig(SnmpConfig snmpConfig) {
-        if (!encryptionEnabled) {
-            return;
-        }
-        initializeTextEncryptor();
-        if (textEncryptor == null) {
+        if (!encryptionEnabled || textEncryptor == null) {
             return;
         }
         decryptConfig(snmpConfig);
@@ -768,16 +721,6 @@ public class SnmpPeerFactory implements SnmpAgentConfigFactory {
             LOG.error("Exception while trying to encrypt snmp config", e);
         }
 
-    }
-
-    private void initializeTextEncryptor() {
-        if (textEncryptor == null) {
-            try {
-                textEncryptor = BeanUtils.getBean("daoContext", "textEncryptor", TextEncryptor.class);
-            } catch (Exception e) {
-                LOG.warn("Exception while trying to get textEncryptor", e);
-            }
-        }
     }
 
     @VisibleForTesting
