@@ -10,10 +10,10 @@
   <artifactId>org.opennms.features.event-translator</artifactId>
   <name>OpenNMS :: Features :: Event Translator</name>
 <dependencies>
-    <!-- Config (EventTranslatorConfig, EventTranslatorConfigFactory) -->
+    <!-- Config API (EventTranslatorConfig interface) -->
     <dependency>
       <groupId>org.opennms</groupId>
-      <artifactId>opennms-config</artifactId>
+      <artifactId>opennms-config-api</artifactId>
       <version>${project.version}</version>
     </dependency>
 

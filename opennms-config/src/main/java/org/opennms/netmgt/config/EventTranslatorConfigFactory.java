@@ -126,10 +126,23 @@ public final class EventTranslatorConfigFactory implements EventTranslatorConfig
      *
      * @param rdr a {@link java.io.Reader} object.
      * @param dbConnFactory a {@link javax.sql.DataSource} object.
-     * @throws IOException 
+     * @throws IOException
      */
     public EventTranslatorConfigFactory(InputStream rdr, DataSource dbConnFactory) throws IOException {
         unmarshall(rdr, dbConnFactory);
+    }
+
+    /**
+     * Construct from a pre-deserialized configuration model.
+     * Used by Spring Boot daemon-boot modules that load XML via Jackson XmlMapper
+     * instead of JAXB.
+     *
+     * @param config the deserialized configuration model
+     * @param dbConnFactory the DataSource for SQL-based translations
+     */
+    public EventTranslatorConfigFactory(EventTranslatorConfiguration config, DataSource dbConnFactory) {
+        m_config = config;
+        m_dbConnFactory = dbConnFactory;
     }
 
     private synchronized void unmarshall(InputStream stream, DataSource dbConnFactory) throws IOException {

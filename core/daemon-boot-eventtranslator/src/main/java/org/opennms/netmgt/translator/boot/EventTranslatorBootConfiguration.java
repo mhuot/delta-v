@@ -21,19 +21,34 @@
  */
 package org.opennms.netmgt.translator.boot;
 
+import java.io.File;
+import java.io.IOException;
+
 import javax.sql.DataSource;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
+
 import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
-import org.opennms.core.db.DataSourceFactory;
+import org.opennms.netmgt.config.EventTranslatorConfig;
 import org.opennms.netmgt.config.EventTranslatorConfigFactory;
+import org.opennms.netmgt.config.translator.EventTranslatorConfiguration;
 import org.opennms.netmgt.events.api.EventIpcManager;
 import org.opennms.netmgt.translator.EventTranslator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
  * Spring Boot configuration for EventTranslator.
+ *
+ * <p>Loads {@code translator-configuration.xml} via Jackson XmlMapper and passes
+ * the deserialized model to {@link EventTranslatorConfigFactory}, which contains
+ * the translation engine (spec matching, SQL value resolution, event cloning).</p>
  *
  * <p>Event enrichment (alarm-data, severity) is handled at the transport layer
  * by {@code KafkaEventTransportConfiguration} which wires {@code EventConfEnrichmentService}
@@ -42,17 +57,34 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class EventTranslatorBootConfiguration {
 
+    private static final Logger LOG = LoggerFactory.getLogger(EventTranslatorBootConfiguration.class);
+
+    private static final XmlMapper XML_MAPPER;
+    static {
+        XML_MAPPER = new XmlMapper();
+        XML_MAPPER.registerModule(new JaxbAnnotationModule());
+        XML_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
     @Bean
-    public EventTranslatorConfigFactory eventTranslatorConfig(DataSource dataSource) throws Exception {
-        DataSourceFactory.setInstance(dataSource);
-        EventTranslatorConfigFactory.init();
-        return (EventTranslatorConfigFactory) EventTranslatorConfigFactory.getInstance();
+    public EventTranslatorConfig eventTranslatorConfig(
+            @Value("${opennms.home}") String opennmsHome,
+            DataSource dataSource) throws IOException {
+        var configFile = new File(opennmsHome, "etc/translator-configuration.xml");
+        if (!configFile.exists()) {
+            throw new IOException("translator-configuration.xml not found at " + configFile);
+        }
+        LOG.info("Loading event translator configuration from {}", configFile);
+        var config = XML_MAPPER.readValue(configFile, EventTranslatorConfiguration.class);
+        var factory = new EventTranslatorConfigFactory(config, dataSource);
+        EventTranslatorConfigFactory.setInstance(factory);
+        return factory;
     }
 
     @Bean
     public EventTranslator eventTranslator(
             EventIpcManager eventIpcManager,
-            EventTranslatorConfigFactory config,
+            EventTranslatorConfig config,
             DataSource dataSource) {
         var translator = new EventTranslator();
         translator.setEventManager(eventIpcManager);
