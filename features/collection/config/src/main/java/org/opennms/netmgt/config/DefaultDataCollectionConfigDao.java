@@ -58,17 +58,17 @@ import org.slf4j.LoggerFactory;
 
 /**
  * DefaultDataCollectionConfigDao
- * 
+ *
  * <p>This class is the main repository for SNMP data collection configuration
  * information used by the SNMP service monitor. When this class is loaded it
- * reads the SNNMP data collection configuration into memory.</p>
+ * reads the SNMP data collection configuration into memory.</p>
  *
  * @author <a href="mail:agalue@opennms.org">Alejandro Galue</a>
  */
 public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<DatacollectionConfig, DatacollectionConfig> implements DataCollectionConfigDao {
-    
+
     public static final Logger LOG = LoggerFactory.getLogger(DefaultDataCollectionConfigDao.class);
-    
+
     private String m_configDirectory;
 
     private List<String> dataCollectionGroups = new ArrayList<>();
@@ -178,7 +178,6 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
             return new ArrayList<>();
         }
 
-        // Retrieve the appropriate Collection object
         final SnmpCollection collection = getSnmpCollection(getContainer(), cName);
         if (collection == null) {
             return Collections.emptyList();
@@ -189,40 +188,6 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
             return Collections.emptyList();
         }
 
-        // First build a list of SystemDef objects which "match" the passed
-        // sysoid and IP address parameters. The SystemDef object must match
-        // on both the sysoid AND the IP address.
-        //
-        // SYSOID MATCH
-        //
-        // A SystemDef object's sysoid value may be a complete system object
-        // identifier or it may be a mask (a partial sysoid).
-        //
-        // If the sysoid is not a mask, the 'aSysoid' string must equal the
-        // sysoid value exactly in order to match.
-        //
-        // If the sysoid is a mask, the 'aSysoid' string need only start with
-        // the sysoid mask value in order to match
-        //
-        // For example, a sysoid mask of ".1.3.6.1.4.1.11." would match any
-        // Hewlett-Packard product which had this sysoid prefix (which should
-        // include all of them).
-        //
-        // IPADDRESS MATCH
-        //
-        // In order to match on IP Address one of the following must be true:
-        // 
-        // The SystemDef's IP address list (ipList) must contain the 'anAddress'
-        // parm (must be an exact match)
-        //
-        // OR
-        //
-        // The 'anAddress' parm must have the same prefix as one of the
-        // SystemDef's IP address mask list (maskList) entries.
-        //
-        // NOTE: A SystemDef object which contains an empty IP list and
-        // an empty Mask list matches ALL IP addresses (default is INCLUDE).
-
         final List<SystemDef> systemList = new ArrayList<>();
 
         for (final SystemDef system : systems.getSystemDefs()) {
@@ -232,11 +197,9 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
             }
         }
 
-        // Next build list of Mib objects to collect from the list of matching SystemDefs
         final List<MibObject> mibObjectList = new ArrayList<>();
 
         for (final SystemDef system : systemList) {
-            // Next process each of the SystemDef's groups
             for (final String grpName : system.getCollect().getIncludeGroups()) {
                 processGroupName(cName, grpName, ifType, mibObjectList);
             }
@@ -315,10 +278,6 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
             throw new RuntimeException("Configuration error, failed to retrieve path to RRD repository.");
         }
 
-        /*
-         * TODO: make a path utils class that has the below in it strip the
-         * File.separator char off of the end of the path.
-         */
         if (rrdPath.endsWith(File.separator)) {
             return rrdPath.substring(0, (rrdPath.length() - File.separator.length()));
         }
@@ -334,33 +293,11 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
         return null;
     }
 
-    /**
-     * Private utility method used by the getMibObjectList() method. This method
-     * takes a group name and a list of MibObject objects as arguments and adds
-     * all of the MibObjects associated with the group to the object list. If
-     * the passed group consists of any additional sub-groups, then this method
-     * will be called recursively for each sub-group until the entire
-     * log.debug("processGroupName: adding MIB objects from group: " +
-     * groupName); group is processed.
-     * 
-     * @param cName
-     *            Collection name
-     * @param groupName
-     *            Name of the group to process
-     * @param ifType
-     *            Interface type
-     * @param mibObjectList
-     *            List of MibObject objects being built.
-     */
     private void processGroupName(final String cName, final String groupName, final int ifType, final List<MibObject> mibObjectList) {
-        // Using the collector name retrieve the group map
         final Map<String, Group> groupMap = getCollectionGroupMap(getContainer()).get(cName);
 
-        // Next use the groupName to access the Group object
         final Group group = groupMap.get(groupName);
 
-        // Verify that we have a valid Group object...generate
-        // warning message if not...
         if (group == null) {
             LOG.warn("DataCollectionConfigFactory.processGroupName: unable to retrieve group information for group name '{}': check DataCollection.xml file.", groupName);
             return;
@@ -368,22 +305,10 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
 
         LOG.debug("processGroupName:  processing group: {} groupIfType: {} ifType: {}", groupName, group.getIfType(), ifType);
 
-        // Process any sub-groups contained within this group
         for (final String includeGroup : group.getIncludeGroups()) {
             processGroupName(cName, includeGroup, ifType, mibObjectList);
         }
 
-        // Add this group's objects to the object list provided
-        // that the group's ifType string does not exclude the
-        // provided ifType parm.
-        //
-        // ifType parm of -1 indicates that only node-level
-        // objects are to be added
-        //
-        // Any other ifType parm value must be compared with
-        // the group's ifType value to verify that they match
-        // (if group's ifType is "all" then the objects will
-        // automatically be added.
         final String ifTypeStr = String.valueOf(ifType);
         String groupIfType = group.getIfType();
 
@@ -400,25 +325,9 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
             } else if (ifType == ALL_IF_ATTRIBUTES) {
                 addGroupObjects = true;
             } else {
-                // First determine if the group's ifType value contains
-                // a single type value or a list of values. In the case
-                // of a list the ifType values will be delimited by commas.
                 boolean isList = false;
                 if (groupIfType.indexOf(',') != -1) isList = true;
 
-                // Next compare the provided ifType parameter with the
-                // group's ifType value to determine if the group's OIDs
-                // should be added to the MIB object list.
-                //
-                // If the group ifType value is a single value then only
-                // a simple comparison is needed to see if there is an
-                // exact match.
-                //
-                // In the case of the group ifType value being a list
-                // of ifType values it is more complicated...each comma
-                // delimited substring which starts with the provided
-                // ifType parm must be extracted and compared until an
-                // EXACT match is found..
                 if (!isList) {
                     if (ifTypeStr.equals(groupIfType)) addGroupObjects = true;
                 } else {
@@ -426,18 +335,12 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
                     while (tmpIndex != -1) {
                         groupIfType = groupIfType.substring(tmpIndex);
 
-                        // get substring starting at tmpIndex to
-                        // either the end of the groupIfType string
-                        // or to the first comma after tmpIndex
                         final int nextComma = groupIfType.indexOf(',');
 
                         String parsedType = null;
-                        if (nextComma == -1) // No comma, this is last type
-                            // value
-                        {
+                        if (nextComma == -1) {
                             parsedType = groupIfType;
-                        } else // Found comma
-                        {
+                        } else {
                             parsedType = groupIfType.substring(0, nextComma);
                         }
                         if (ifTypeStr.equals(parsedType)) {
@@ -445,13 +348,8 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
                             break;
                         }
 
-                        // No more commas indicates no more ifType values to
-                        // compare...we're done
                         if (nextComma == -1) break;
 
-                        // Get next substring and reset tmpIndex to
-                        // once again point to the first occurrence of
-                        // the ifType string parm.
                         groupIfType = groupIfType.substring(nextComma + 1);
                         tmpIndex = groupIfType.indexOf(ifTypeStr);
                     }
@@ -477,25 +375,12 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
         for (final String includeGroup : group.getIncludeGroups()) {
             processGroupForProperties(cName, includeGroup, mibObjProperties);
         }
-        group.getProperties().forEach(p -> p.setGroupName(groupName)); // Set the group at run time.
+        group.getProperties().forEach(p -> p.setGroupName(groupName));
         mibObjProperties.addAll(group.getProperties());
     }
 
-    /**
-     * Takes a list of MibObj objects iterates over them
-     * creating corresponding MibObject objects and adding them to the supplied
-     * MibObject list.
-     * @param groupName TODO
-     * @param groupIfType TODO
-     * @param objectList
-     *            List of MibObject objects parsed from
-     *            'datacollection-config.xml'
-     * @param mibObjectList
-     *            List of MibObject objects currently being built
-     */
     private void processObjectList(final String groupName, final String groupIfType, final List<MibObj> objectList, final List<MibObject> mibObjectList) {
         for (final MibObj mibObj : objectList) {
-            // Create a MibObject from the XML MibObj
             final MibObject aMibObject = new MibObject();
             aMibObject.setGroupName(groupName);
             aMibObject.setGroupIfType(groupIfType);
@@ -511,7 +396,6 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
                 aMibObject.setResourceType(resourceType);
             }
 
-            // Add the MIB object provided it isn't already in the list
             if (!mibObjectList.contains(aMibObject)) {
                 mibObjectList.add(aMibObject);
             }
@@ -519,30 +403,9 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
     }
 
     private static Map<String,Map<String,Group>> getCollectionGroupMap(FileReloadContainer<DatacollectionConfig> container) {
-        // Build collection map which is a hash map of Collection
-        // objects indexed by collection name...also build
-        // collection group map which is a hash map indexed
-        // by collection name with a hash map as the value
-        // containing a map of the collections's group names
-        // to the Group object containing all the information
-        // for that group. So the associations are:
-        //
-        // CollectionMap
-        // collectionName -> Collection
-        //
-        // CollectionGroupMap
-        // collectionName -> groupMap
-        // 
-        // GroupMap
-        // groupMapName -> Group
-        //
-        // This is parsed and built at initialization for
-        // faster processing at run-timne.
-        // 
         final Map<String,Map<String,Group>> collectionGroupMap = new HashMap<String,Map<String,Group>>();
 
         for (final SnmpCollection collection : container.getObject().getSnmpCollections()) {
-            // Build group map for this collection
             final Map<String,Group> groupMap = new HashMap<String,Group>();
 
             final Groups groups = collection.getGroups();
@@ -575,13 +438,11 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
                         if (MibObject.INSTANCE_IFINDEX.equals(instance)) continue;
                         if (allowedResourceTypes.contains(instance))     continue;
                         try {
-                            // Check to see if the value is a non-negative integer
                             if (Integer.parseInt(instance.trim()) >= 0) {
                                 continue;
                             }
                         } catch (NumberFormatException e) {}
 
-                        // XXX this should be a better exception
                         throw new IllegalArgumentException("instance '" + instance + "' invalid in mibObj definition for OID '" + mibObj.getOid() + "' in collection '" + collection.getName() + "' for group '" + group.getName() + "'.  Allowable instance values: " + allowableValues);
                     }
                 }
@@ -590,10 +451,8 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
     }
 
     private boolean systemDefMatches(SystemDef system, String aSysoid, String anAddress) {
-        // Match on sysoid?
         boolean bMatchSysoid = false;
 
-        // Retrieve sysoid for this SystemDef and/ set the isMask boolean.
         boolean isMask = false;
         String currSysoid = null;
         SystemDefChoice sysChoice = system.getSystemDefChoice();
@@ -607,15 +466,11 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
 
         if (currSysoid != null) {
             if (isMask) {
-                // SystemDef's sysoid is a mask, 'aSysoid' need only
-                // start with the sysoid mask in order to match
                 if (aSysoid.startsWith(currSysoid)) {
                     LOG.debug("getMibObjectList: includes sysoid {} for system <name>: {}", aSysoid, system.getName());
                     bMatchSysoid = true;
                 }
             } else {
-                // System's sysoid is not a mask, 'aSysoid' must
-                // match the sysoid exactly.
                 if (aSysoid.equals(currSysoid)) {
                     LOG.debug("getMibObjectList: includes sysoid {} for system <name>: {}", aSysoid, system.getName());
                     bMatchSysoid = true;
@@ -623,8 +478,7 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
             }
         }
 
-        // Match on ipAddress?
-        boolean bMatchIPAddress = true; // default is INCLUDE
+        boolean bMatchIPAddress = true;
         if (bMatchSysoid == true) {
             if (anAddress != null) {
                 List<String> addrList = null;
@@ -634,13 +488,10 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
                     maskList = system.getIpList().getIpAddressMasks();
                 }
 
-                // If either Address list or Mask list exist then 'anAddress'
-                // must be included by one of them
                 if (addrList != null && addrList.size() > 0 || maskList != null && maskList.size() > 0) {
                     bMatchIPAddress = false;
                 }
 
-                // First see if address is in list of specific addresses
                 if (addrList != null && addrList.size() > 0) {
                     if (addrList.contains(anAddress)) {
                         LOG.debug("getMibObjectList: addrList exists and does include IP address {} for system <name>: {}", anAddress, system.getName());
@@ -648,9 +499,7 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
                     }
                 }
 
-                // If still no match, see if address matches any of the masks
                 if (bMatchIPAddress == false) {
-
                     if (maskList != null && maskList.size() > 0) {
                         for (final String currMask : maskList) {
                             if (anAddress.indexOf(currMask) == 0) {
@@ -663,7 +512,7 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
                 }
             }
         }
-        
+
         return bMatchSysoid && bMatchIPAddress;
     }
 
@@ -671,7 +520,7 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
     public DatacollectionConfig getRootDataCollection() {
         return getContainer().getObject();
     }
-    
+
     @Override
     public List<String> getAvailableDataCollectionGroups() {
         return dataCollectionGroups;
@@ -705,15 +554,14 @@ public class DefaultDataCollectionConfigDao extends AbstractJaxbConfigDao<Dataco
 
     @Override
     public void reload() {
-        getContainer().reload(); // The idea is to force the reload if this is called, and the update flags must be updated
+        getContainer().reload();
     }
 
     @Override
     public Date getLastUpdate() {
-        getContainer().getObject(); // This should trigger the reload if the file was changed, and this should trigger the update the lastUpdate flag as well.
+        getContainer().getObject();
         return new Date(getContainer().getLastUpdate());
     }
-
 
     private void initExtensions() {
         m_extContainer = new ConfigReloadContainer.Builder<>(DataCollectionGroups.class)

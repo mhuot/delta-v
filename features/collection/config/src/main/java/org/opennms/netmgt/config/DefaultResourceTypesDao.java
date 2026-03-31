@@ -84,8 +84,6 @@ public class DefaultResourceTypesDao extends AbstractMergingJaxbConfigDao<Resour
         final Date lastUpdateOfResourceTypes = super.getLastUpdate();
 
         if (lastUpdateOfDcConfig.after(lastUpdateOfResourceTypes)) {
-            // The data-collection configuration has been updated more recently
-            // than the resource types configuration, so use that date instead
             return lastUpdateOfDcConfig;
         } else {
             return lastUpdateOfResourceTypes;
