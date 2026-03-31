@@ -47,22 +47,8 @@ jobs:
       if: matrix.language == 'java-kotlin'
       run: |
         ulimit -n 65536 || true
-        ./mvnw -B -DskipTests \
-          --projects \
-            :org.opennms.core.daemon-boot-alarmd,\
-            :org.opennms.core.daemon-boot-bsmd,\
-            :org.opennms.core.daemon-boot-collectd,\
-            :org.opennms.core.daemon-boot-discovery,\
-            :org.opennms.core.daemon-boot-enlinkd,\
-            :org.opennms.core.daemon-boot-eventtranslator,\
-            :org.opennms.core.daemon-boot-minion,\
-            :org.opennms.core.daemon-boot-perspectivepollerd,\
-            :org.opennms.core.daemon-boot-pollerd,\
-            :org.opennms.core.daemon-boot-provisiond,\
-            :org.opennms.core.daemon-boot-syslogd,\
-            :org.opennms.core.daemon-boot-telemetryd,\
-            :org.opennms.core.daemon-boot-trapd \
-          -am install
+        DAEMON_BOOTS=":org.opennms.core.daemon-boot-alarmd,:org.opennms.core.daemon-boot-bsmd,:org.opennms.core.daemon-boot-collectd,:org.opennms.core.daemon-boot-discovery,:org.opennms.core.daemon-boot-enlinkd,:org.opennms.core.daemon-boot-eventtranslator,:org.opennms.core.daemon-boot-minion,:org.opennms.core.daemon-boot-perspectivepollerd,:org.opennms.core.daemon-boot-pollerd,:org.opennms.core.daemon-boot-provisiond,:org.opennms.core.daemon-boot-syslogd,:org.opennms.core.daemon-boot-telemetryd,:org.opennms.core.daemon-boot-trapd"
+        ./mvnw -B -DskipTests --projects "${DAEMON_BOOTS}" -am install
 
     - name: Autobuild (Non-Java)
       if: matrix.language != 'java-kotlin'
