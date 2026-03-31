@@ -24,6 +24,18 @@
     </plugins>
   </build>
   <dependencies>
+    <!-- FilterDaoFactory, JdbcFilterDao — moved to core/filter -->
+    <dependency>
+      <groupId>org.opennms.core</groupId>
+      <artifactId>org.opennms.core.filter</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- SnmpPeerFactory, SnmpConfigManager, SnmpEventInfo — moved to core/snmp/config -->
+    <dependency>
+      <groupId>org.opennms.core.snmp</groupId>
+      <artifactId>org.opennms.core.snmp.config</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.opennms.dependencies</groupId>
       <artifactId>hibernate-dependencies</artifactId>
