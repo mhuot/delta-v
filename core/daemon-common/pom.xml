@@ -358,31 +358,21 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!-- JAXB — provides javax.xml.bind for DaemonEventConfDao's eventconf
-             XML unmarshalling. Uses standard JAXB (not EclipseLink MOXy) to avoid
-             class-scanning that triggers ClassNotFoundException for opennms-model
-             types. At compile time, javax.xml.bind is used (matching Event class
-             annotations). The Jakarta transformer converts to jakarta.xml.bind in
-             the fat JAR. The 4.0.x runtime must be compile scope so it ends up in
-             the same classloader directory as daemon-common at runtime. -->
-        <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-            <version>2.3.1</version>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.xml.bind</groupId>
-            <artifactId>jakarta.xml.bind-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jaxb</groupId>
-            <artifactId>jaxb-runtime</artifactId>
-        </dependency>
-
         <!-- Test -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Jakarta XML Bind + Activation — needed by Hibernate 7's persistence.xml parser at test time -->
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
