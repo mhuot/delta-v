@@ -11,20 +11,7 @@
     <artifactId>org.opennms.features.graph.rest.impl</artifactId>
     <name>OpenNMS :: Features :: Graph :: Rest :: Impl</name>
     <packaging>jar</packaging>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <configuration>
-                    <instructions>
-                        <Private-Package>org.opennms.netmgt.graph.rest.impl*</Private-Package>
-                    </instructions>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-    <dependencies>
+<dependencies>
         <dependency>
             <groupId>org.opennms.features.graph.rest</groupId>
             <artifactId>org.opennms.features.graph.rest.api</artifactId>

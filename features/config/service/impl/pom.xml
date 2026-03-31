@@ -10,20 +10,7 @@
     <artifactId>org.opennms.features.config.service.impl</artifactId>
     <name>OpenNMS :: Features :: Config :: Service :: Impl</name>
     <packaging>jar</packaging>
-    <build>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.felix</groupId>
-          <artifactId>maven-bundle-plugin</artifactId>
-          <extensions>true</extensions>
-          <configuration>
-            <instructions>
-            </instructions>
-          </configuration>
-        </plugin>
-      </plugins>
-    </build>
-    <dependencies>
+<dependencies>
       <!-- APIs we implement -->
       <dependency>
           <groupId>org.opennms.features.config.service</groupId>

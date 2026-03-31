@@ -10,27 +10,7 @@
   <artifactId>org.opennms.core.test-api.ssh</artifactId>
   <name>OpenNMS :: Core :: Test API :: SSH</name>
   <packaging>jar</packaging>
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <extensions>true</extensions>
-        <configuration>
-          <instructions>
-            <Bundle-RequiredExecutionEnvironment>JavaSE-1.8</Bundle-RequiredExecutionEnvironment>
-            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-            <Bundle-Version>${project.version}</Bundle-Version>
-            <Export-Package>
-              org.opennms.core.test.ssh.annotations.*;version="${project.version}",
-              org.opennms.core.test.ssh.*;version="${project.version}"
-            </Export-Package>
-          </instructions>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-  <dependencies>
+<dependencies>
 	<dependency>
 	  <groupId>org.apache.sshd</groupId>
 	  <artifactId>sshd-core</artifactId>

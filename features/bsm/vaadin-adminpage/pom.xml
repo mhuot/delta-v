@@ -15,23 +15,7 @@
         <bundle.symbolicName>org.opennms.features.bsm.vaadin.adminpage</bundle.symbolicName>
         <bundle.namespace>org.opennms.features.bsm.vaadin.adminpage</bundle.namespace>
     </properties>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <configuration>
-                    <instructions>
-                        <Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
-                        <Bundle-Version>${project.version}</Bundle-Version>
-                        <Vaadin-Package-Version>1</Vaadin-Package-Version>
-                        <Vaadin-Widgetsets>org.opennms.vaadin.DefaultWidgetset</Vaadin-Widgetsets>
-                    </instructions>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-    <dependencies>
+<dependencies>
        <dependency>
 			<groupId>org.opennms.features</groupId>
 	      	<artifactId>vaadin</artifactId>

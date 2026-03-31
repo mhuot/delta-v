@@ -56,32 +56,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <extensions>true</extensions>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>bundle</goal>
-            </goals>
-            <configuration>
-              <instructions>
-                <Bundle-RequiredExecutionEnvironment>JavaSE-1.8</Bundle-RequiredExecutionEnvironment>
-                <Bundle-Version>${project.version}</Bundle-Version>
-                <Import-Package>
-                  javax.net.ssl
-                </Import-Package>
-                <Export-Package>
-                  org.eclipse.jetty.npn;uses:="javax.net.ssl";version="1.1.1",
-                  org.eclipse.jetty.alpn;uses:="javax.net.ssl";version="1.1.3"
-                </Export-Package>
-              </instructions>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
   </build>
   <dependencies>

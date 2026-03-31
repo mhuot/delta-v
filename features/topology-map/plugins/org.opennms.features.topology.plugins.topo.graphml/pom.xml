@@ -15,21 +15,7 @@
   <artifactId>graphml</artifactId>
   <name>OpenNMS :: Features :: Topology :: Plugins :: GraphML</name>
   <packaging>jar</packaging>
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <configuration>
-          <instructions>
-            <Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
-            <Bundle-Version>${project.version}</Bundle-Version>
-          </instructions>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-  <dependencies>
+<dependencies>
     <!--
      | uncomment to add all imported (non-local) bundles to your compilation classpath
     <dependency>
