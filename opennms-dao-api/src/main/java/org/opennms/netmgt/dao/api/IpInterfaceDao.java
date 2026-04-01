@@ -36,7 +36,7 @@ import org.opennms.netmgt.model.OnmsNode;
  * @author David Hustace
  * @author Matt Brozowski
  */
-public interface IpInterfaceDao extends LegacyOnmsDao<OnmsIpInterface, Integer> {
+public interface IpInterfaceDao extends OnmsDao<OnmsIpInterface, Integer> {
 
     /**
      * <p>get</p>

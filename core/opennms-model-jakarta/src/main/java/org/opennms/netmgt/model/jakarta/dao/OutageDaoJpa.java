@@ -43,7 +43,6 @@ import org.opennms.core.criteria.restrictions.Restriction;
 import org.opennms.core.daemon.common.AbstractDaoJpa;
 import org.opennms.netmgt.dao.api.OutageDao;
 import org.opennms.netmgt.model.HeatMapElement;
-import org.opennms.netmgt.model.OnmsCriteria;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsOutage;
 import org.opennms.netmgt.model.ServiceSelector;
@@ -201,20 +200,6 @@ public class OutageDaoJpa extends AbstractDaoJpa<OnmsOutage, Integer> implements
             case FULL_JOIN: return "FULL JOIN";
             default: return "JOIN";
         }
-    }
-
-    // ---- LegacyOnmsDao methods -- not used by Pollerd ----
-
-    @Override
-    public List<OnmsOutage> findMatching(OnmsCriteria criteria) {
-        throw new UnsupportedOperationException(
-                "findMatching(OnmsCriteria) is not supported in OutageDaoJpa -- use Criteria or HQL queries");
-    }
-
-    @Override
-    public int countMatching(OnmsCriteria onmsCrit) {
-        throw new UnsupportedOperationException(
-                "countMatching(OnmsCriteria) is not supported in OutageDaoJpa -- use Criteria or HQL queries");
     }
 
     // ---- OutageDao methods not used by Pollerd ----

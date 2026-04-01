@@ -26,7 +26,6 @@ import java.util.List;
 
 import org.opennms.core.daemon.common.AbstractDaoJpa;
 import org.opennms.netmgt.dao.api.SnmpInterfaceDao;
-import org.opennms.netmgt.model.OnmsCriteria;
 import org.opennms.netmgt.model.OnmsSnmpInterface;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,20 +51,6 @@ public class SnmpInterfaceDaoJpa extends AbstractDaoJpa<OnmsSnmpInterface, Integ
         return findUnique(
                 "from OnmsSnmpInterface si where si.node.id = ?1 and si.ifIndex = ?2",
                 nodeId, ifIndex);
-    }
-
-    // ---- LegacyOnmsDao methods — not used by Provisiond ----
-
-    @Override
-    public List<OnmsSnmpInterface> findMatching(OnmsCriteria criteria) {
-        throw new UnsupportedOperationException(
-                "SnmpInterfaceDaoJpa.findMatching(OnmsCriteria) not implemented — not required by Provisiond");
-    }
-
-    @Override
-    public int countMatching(OnmsCriteria onmsCrit) {
-        throw new UnsupportedOperationException(
-                "SnmpInterfaceDaoJpa.countMatching(OnmsCriteria) not implemented — not required by Provisiond");
     }
 
     // ---- SnmpInterfaceDao methods — not used by Provisiond ----

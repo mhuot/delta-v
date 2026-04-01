@@ -12,12 +12,13 @@
     </parent>
 
     <groupId>org.opennms.core</groupId>
-    <artifactId>org.opennms.core.model-jakarta</artifactId>
-    <name>OpenNMS :: Core :: Model Jakarta</name>
+    <artifactId>org.opennms.core.dao-jpa-support</artifactId>
+    <name>OpenNMS :: Core :: DAO JPA Support</name>
     <description>
-        Jakarta Persistence entity classes for Spring Boot 4 daemons.
-        Same package (org.opennms.netmgt.model) as legacy opennms-model,
-        different module. Only one should be on the classpath at runtime.
+        JPA base classes for Spring Boot daemon DAOs.
+        Extracted from daemon-common to break the cycle:
+        model-jakarta → daemon-common → opennms-model.
+        model-jakarta depends on this module instead of daemon-common.
     </description>
 
     <properties>
@@ -36,33 +37,11 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <!-- Pin jboss-logging 3.6.1.Final for Hibernate 7 compatibility -->
             <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>1.5.32</version>
-            </dependency>
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-core</artifactId>
-                <version>1.5.32</version>
-            </dependency>
-            <!-- Pin Jackson 2.19.4 — parent POM manages 2.16.2 which lacks JsonFormat$Shape.POJO
-                 required by Spring Boot 4.0.3. Explicit entries here override the parent's
-                 managed versions even though the Spring Boot BOM is imported first. -->
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>2.19.4</version>
+                <groupId>org.jboss.logging</groupId>
+                <artifactId>jboss-logging</artifactId>
+                <version>3.6.1.Final</version>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
@@ -98,83 +77,75 @@
     </dependencyManagement>
 
     <dependencies>
-        <!-- Jakarta Persistence API (from Spring Boot 4 BOM) -->
+        <!-- Jakarta Persistence API -->
         <dependency>
             <groupId>jakarta.persistence</groupId>
             <artifactId>jakarta.persistence-api</artifactId>
         </dependency>
 
-        <!-- Hibernate 7 core — for @Filter, @Formula, @SQLRestriction annotations -->
+        <!-- Hibernate 7 — for Hibernate.initialize() in AbstractDaoJpa -->
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-core</artifactId>
         </dependency>
 
-        <!-- AbstractDaoJpa base class (extracted from daemon-common to break cycle) -->
+        <!-- OpenNMS Criteria framework -->
         <dependency>
             <groupId>org.opennms.core</groupId>
-            <artifactId>org.opennms.core.dao-jpa-support</artifactId>
-            <version>${project.version}</version>
+            <artifactId>org.opennms.core.criteria</artifactId>
         </dependency>
 
-        <!-- DAO interfaces (AlarmDao, NodeDao, DistPollerDao, ServiceTypeDao) -->
-        <!-- CategoryDao.getCriterionForCategorySetsUnion returns List<Criterion> (Hibernate 3.x type).
-             CategoryDaoJpa.getCriterionForCategorySetsUnion throws UnsupportedOperationException but
-             the compiler still needs the type. org.hibernate:hibernate-core (3.x) does not come
-             through transitively because upstream exclusions in opennms-model and opennms-dao-api
-             strip it before Maven's resolver sees it; the provided-scope dep below supplies it only
-             at compile time. -->
+        <!-- OnmsDao interface (which references OnmsCriteria via default methods) -->
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-dao-api</artifactId>
             <version>${project.version}</version>
             <exclusions>
-                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
                 <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
                 <exclusion><groupId>org.hibernate.javax.persistence</groupId><artifactId>hibernate-jpa-2.0-api</artifactId></exclusion>
             </exclusions>
         </dependency>
 
-        <!-- Events API (EventConstants, EventForwarder, EventDatabaseConstants) -->
+        <!-- SLF4J -->
         <dependency>
-            <groupId>org.opennms.features.events</groupId>
-            <artifactId>org.opennms.features.events.api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <!-- Hibernate 3.x — compile-only for CategoryDao.getCriterionForCategorySetsUnion return type.
-             The method always throws UnsupportedOperationException in CategoryDaoJpa; the jar is
-             needed only so javac can resolve org.hibernate.criterion.Criterion. It is excluded from
-             every other transitive path (opennms-dao-api, opennms-model) and absent from the
-             Spring Boot BOM, so an explicit provided-scope entry is the only reliable option.
-             It does NOT enter the fat JAR — spring-boot-maven-plugin only packages compile/runtime deps. -->
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <version>${hibernateVersion}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- Enlinkd enum types are now defined as inner classes in our Jakarta entities.
-             No dependency on enlinkd-persistence-api needed. -->
-
-        <!-- Jackson for @JsonIgnoreProperties -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
 
         <!-- Test -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.junit.vintage</groupId>
-                    <artifactId>junit-vintage-engine</artifactId>
-                </exclusion>
-            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Jakarta XML Bind — needed by Hibernate 7's persistence.xml parser at test time -->
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>4.0.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+            <version>4.0.5</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.activation</groupId>
+            <artifactId>jakarta.activation-api</artifactId>
+            <version>2.1.3</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

@@ -144,7 +144,6 @@
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-log4j2</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
-                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -242,9 +241,6 @@
             <groupId>org.opennms.core</groupId>
             <artifactId>org.opennms.core.model-jakarta</artifactId>
             <version>${project.version}</version>
-            <exclusions>
-                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.opennms.core</groupId>
