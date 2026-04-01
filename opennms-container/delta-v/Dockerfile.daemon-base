@@ -13,6 +13,12 @@ FROM ${JRE_IMAGE}
 LABEL org.opencontainers.image.title="Delta-V Daemon Base" \
       org.opencontainers.image.description="Shared dependency layer for all Spring Boot daemons"
 
+# Layer 0: Priority classpath — model-jakarta MUST load before opennms-model
+# to ensure Hibernate 7 sees jakarta.persistence annotations, not javax.persistence.
+# The * wildcard in -cp expands in filesystem (inode) order which is non-deterministic,
+# so model-jakarta gets its own classpath segment that is listed first.
+COPY staging/priority/ /opt/libs/priority/
+
 # Layer 1: 3rd-party libraries (rarely changes — Spring, Hibernate, Kafka, Jackson)
 COPY staging/shared-external/ /opt/libs/external/
 

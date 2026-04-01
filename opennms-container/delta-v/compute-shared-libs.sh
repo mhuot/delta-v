@@ -83,7 +83,7 @@ STAGING="${SCRIPT_DIR}/staging"
 EXTRACT_DIR="${SCRIPT_DIR}/.extract-tmp"
 
 rm -rf "${STAGING}" "${EXTRACT_DIR}"
-mkdir -p "${STAGING}/shared-external" "${STAGING}/shared-internal"
+mkdir -p "${STAGING}/shared-external" "${STAGING}/shared-internal" "${STAGING}/priority"
 mkdir -p "${EXTRACT_DIR}"
 
 # ---------------------------------------------------------------------------
@@ -188,6 +188,35 @@ echo "  shared-internal: ${shared_internal_count} JARs"
 echo ""
 
 # ---------------------------------------------------------------------------
+# Step 4b: Move model-jakarta to priority classpath
+# ---------------------------------------------------------------------------
+# model-jakarta MUST load before opennms-model on the classpath so that
+# Hibernate 7 sees jakarta.persistence @Entity annotations instead of the
+# legacy javax.persistence ones from opennms-model. The -cp wildcard (*)
+# expands in filesystem inode order (non-deterministic on Linux), so we
+# place model-jakarta in a separate /opt/libs/priority/ directory that is
+# listed first in the -cp argument.
+echo "--- Moving model-jakarta to priority classpath ---"
+priority_count=0
+for jar_file in "${STAGING}/shared-internal"/org.opennms.core.model-jakarta-*.jar; do
+    if [[ -f "${jar_file}" ]]; then
+        mv "${jar_file}" "${STAGING}/priority/"
+        echo "  moved: $(basename "${jar_file}")"
+        priority_count=$(( priority_count + 1 ))
+    fi
+done
+# Also move dao-jpa-support (depends on model-jakarta, contains @Repository DAOs)
+for jar_file in "${STAGING}/shared-internal"/org.opennms.core.dao-jpa-support-*.jar; do
+    if [[ -f "${jar_file}" ]]; then
+        mv "${jar_file}" "${STAGING}/priority/"
+        echo "  moved: $(basename "${jar_file}")"
+        priority_count=$(( priority_count + 1 ))
+    fi
+done
+echo "  priority: ${priority_count} JARs"
+echo ""
+
+# ---------------------------------------------------------------------------
 # Step 5: Stage per-daemon unique libs and thin app JAR
 # ---------------------------------------------------------------------------
 echo "--- Staging per-daemon unique libs and app JARs ---"
@@ -253,8 +282,9 @@ rm -rf "${EXTRACT_DIR}"
 echo "==========================================="
 echo "  SUMMARY"
 echo "==========================================="
+echo "  priority        : ${priority_count} JARs (model-jakarta, loaded first)"
 echo "  shared-external : ${shared_external_count} JARs"
-echo "  shared-internal : ${shared_internal_count} JARs"
+echo "  shared-internal : $(( shared_internal_count - priority_count )) JARs"
 echo "  shared total    : ${#shared_jars[@]} JARs"
 echo ""
 printf "  %-22s %s\n" "DAEMON" "UNIQUE LIBS"
