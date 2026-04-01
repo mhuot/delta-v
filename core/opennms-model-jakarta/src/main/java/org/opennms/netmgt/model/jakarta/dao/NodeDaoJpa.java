@@ -196,11 +196,15 @@ public class NodeDaoJpa extends AbstractDaoJpa<OnmsNode, Integer> implements Nod
 
     @Override
     public void deleteObsoleteInterfaces(Integer nodeId, Date scanStamp) {
-        // Delete monitored services on obsolete interfaces first (FK constraint)
+        // Hibernate 7 bulk DELETE cannot resolve implicit joins through associations
+        // when cascading to @ManyToMany join tables (application_service_map).
+        // Use ms.id IN (subquery) so the cascade DELETE only sees a trivial WHERE clause.
         entityManager().createQuery(
-                "delete from OnmsMonitoredService ms where ms.ipInterface.node.id = ?1 " +
-                "and ms.ipInterface.snmpPrimary != 'P' " +
-                "and (ms.ipInterface.ipLastCapsdPoll is null or ms.ipInterface.ipLastCapsdPoll < ?2)")
+                "delete from OnmsMonitoredService ms where ms.id in " +
+                "(select ms2.id from OnmsMonitoredService ms2 " +
+                "where ms2.ipInterface.node.id = ?1 " +
+                "and ms2.ipInterface.snmpPrimary != 'P' " +
+                "and (ms2.ipInterface.ipLastCapsdPoll is null or ms2.ipInterface.ipLastCapsdPoll < ?2))")
                 .setParameter(1, nodeId)
                 .setParameter(2, scanStamp)
                 .executeUpdate();

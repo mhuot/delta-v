@@ -106,6 +106,12 @@
             </exclusions>
         </dependency>
 
+        <!-- Spring Transaction (for UpsertTemplate) -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+        </dependency>
+
         <!-- SLF4J -->
         <dependency>
             <groupId>org.slf4j</groupId>
