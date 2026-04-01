@@ -95,13 +95,12 @@
             <artifactId>org.opennms.core.criteria</artifactId>
         </dependency>
 
-        <!-- OnmsDao interface -->
+        <!-- OnmsDao interface (which references OnmsCriteria via default methods) -->
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-dao-api</artifactId>
             <version>${project.version}</version>
             <exclusions>
-                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
                 <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
                 <exclusion><groupId>org.hibernate.javax.persistence</groupId><artifactId>hibernate-jpa-2.0-api</artifactId></exclusion>
             </exclusions>
