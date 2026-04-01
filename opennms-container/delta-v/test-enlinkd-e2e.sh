@@ -223,11 +223,13 @@ log "Phase 0: Ensuring provisioning configuration..."
 
 PROVISIOND_NEEDS_RESTART=false
 
-# ── Requisition: etc/imports/mhuot-labs.xml ──
-mkdir -p etc/imports
-if [ ! -f "etc/imports/mhuot-labs.xml" ]; then
-    log "  Creating requisition: etc/imports/mhuot-labs.xml"
-    cat > "etc/imports/mhuot-labs.xml" <<'REQEOF'
+# ── Requisition: provisiond-overlay/etc/imports/mhuot-labs.xml ──
+# NOTE: The container sees provisiond-overlay/etc/imports/ (not etc/imports/).
+# On macOS Docker Desktop the parent bind mount shadows the child.
+mkdir -p provisiond-overlay/etc/imports
+if [ ! -f "provisiond-overlay/etc/imports/mhuot-labs.xml" ]; then
+    log "  Creating requisition: provisiond-overlay/etc/imports/mhuot-labs.xml"
+    cat > "provisiond-overlay/etc/imports/mhuot-labs.xml" <<'REQEOF'
 <model-import xmlns="http://xmlns.opennms.org/xsd/config/model-import"
               date-stamp="2026-03-23T00:00:00.000-07:00"
               foreign-source="mhuot-labs">
