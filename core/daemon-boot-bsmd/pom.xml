@@ -224,6 +224,8 @@
                      javax.persistence annotations — not needed here (no JPA) -->
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-config-model</artifactId></exclusion>
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+                <!-- Exclude legacy Hibernate 3.x DAOs — model-jakarta provides Jakarta JPA DAOs -->
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-dao</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -279,6 +281,7 @@
                      javax.persistence annotations — not needed here (no JPA) -->
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-config-model</artifactId></exclusion>
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-dao</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -326,6 +329,7 @@
                      javax.persistence annotations — not needed here (no JPA) -->
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-config-model</artifactId></exclusion>
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-dao</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -339,6 +343,7 @@
                 <exclusion><groupId>org.slf4j</groupId><artifactId>jcl-over-slf4j</artifactId></exclusion>
                 <exclusion><groupId>org.slf4j</groupId><artifactId>log4j-over-slf4j</artifactId></exclusion>
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-dao</artifactId></exclusion>
             </exclusions>
         </dependency>
 

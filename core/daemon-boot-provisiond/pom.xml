@@ -230,6 +230,8 @@
                 <!-- Exclude ServiceMix Quartz — Spring Boot Quartz brings its own -->
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.quartz</artifactId></exclusion>
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+                <!-- Exclude legacy Hibernate 3.x DAOs — model-jakarta provides Jakarta JPA DAOs -->
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-dao</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -258,6 +260,7 @@
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-log4j2</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-dao</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -366,6 +369,7 @@
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-log4j2</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-dao</artifactId></exclusion>
             </exclusions>
         </dependency>
 

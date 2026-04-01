@@ -34,7 +34,7 @@ import org.opennms.netmgt.bsm.service.BusinessServiceStateMachine;
 import org.opennms.netmgt.bsm.service.model.BusinessService;
 import org.opennms.netmgt.bsm.service.model.Status;
 import org.opennms.netmgt.bsm.service.model.graph.GraphVertex;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -101,7 +101,7 @@ public class BsmdRestController {
             return mapper.toDto(bs);
         });
         reloadStateMachine();
-        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        return ResponseEntity.status(201).body(result);
     }
 
     @PutMapping("/{id}")
@@ -166,7 +166,7 @@ public class BsmdRestController {
         try {
             return manager.getBusinessServiceById(id);
         } catch (NoSuchElementException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+            throw new ResponseStatusException(HttpStatusCode.valueOf(404),
                     "Business service not found: " + id);
         }
     }
@@ -187,7 +187,7 @@ public class BsmdRestController {
                 case "application" -> manager.addApplicationEdge(bs,
                         manager.getApplicationById(edgeDto.getApplicationId()),
                         mapFn, edgeDto.getWeight());
-                default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                default -> throw new ResponseStatusException(HttpStatusCode.valueOf(400),
                         "Unknown edge type: " + edgeDto.getType());
             }
         }
