@@ -25,6 +25,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.opennms.core.criteria.Criteria;
+import org.opennms.netmgt.model.OnmsCriteria;
 
 /**
  * OnmsDao interface.
@@ -55,6 +56,22 @@ public interface OnmsDao<T, K extends Serializable> {
     List<T> findMatching(Criteria criteria);
 
     int countMatching(final Criteria onmsCrit);
+
+    /**
+     * @deprecated Legacy Hibernate 3.x method. Override in Hibernate DAOs;
+     * Jakarta DaoJpa classes inherit this default which throws UOE.
+     */
+    default List<T> findMatching(OnmsCriteria criteria) {
+        throw new UnsupportedOperationException("findMatching(OnmsCriteria) is not supported — use findMatching(Criteria)");
+    }
+
+    /**
+     * @deprecated Legacy Hibernate 3.x method. Override in Hibernate DAOs;
+     * Jakarta DaoJpa classes inherit this default which throws UOE.
+     */
+    default int countMatching(final OnmsCriteria onmsCrit) {
+        throw new UnsupportedOperationException("countMatching(OnmsCriteria) is not supported — use countMatching(Criteria)");
+    }
 
     T get(K id);
 
