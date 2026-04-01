@@ -33,7 +33,6 @@ import org.opennms.core.daemon.common.AbstractDaoJpa;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.model.OnmsCategory;
-import org.opennms.netmgt.model.OnmsCriteria;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.SurveillanceStatus;
@@ -47,9 +46,6 @@ import org.springframework.transaction.annotation.Transactional;
  * (hierarchy loading, foreign source/ID lookups, scan stamp management, etc.).
  * Methods not used by either daemon throw {@link UnsupportedOperationException}.</p>
  *
- * <p>The deprecated {@link #findMatching(OnmsCriteria)} and {@link #countMatching(OnmsCriteria)}
- * methods from {@link org.opennms.netmgt.dao.api.LegacyOnmsDao} also throw
- * {@link UnsupportedOperationException}.</p>
  */
 @Repository
 @Transactional
@@ -57,20 +53,6 @@ public class NodeDaoJpa extends AbstractDaoJpa<OnmsNode, Integer> implements Nod
 
     public NodeDaoJpa() {
         super(OnmsNode.class);
-    }
-
-    // ---- LegacyOnmsDao methods ----
-
-    @Override
-    public List<OnmsNode> findMatching(OnmsCriteria criteria) {
-        throw new UnsupportedOperationException(
-                "findMatching(OnmsCriteria) is not supported in NodeDaoJpa — use HQL queries");
-    }
-
-    @Override
-    public int countMatching(OnmsCriteria onmsCrit) {
-        throw new UnsupportedOperationException(
-                "countMatching(OnmsCriteria) is not supported in NodeDaoJpa — use HQL queries");
     }
 
     // ---- NodeDao methods — not used by Alarmd core ----

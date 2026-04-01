@@ -33,6 +33,7 @@
     <module>config</module>
     <module>criteria</module>
     <module>daemon</module>
+    <module>dao-jpa-support</module>
     <module>daemon-common</module>
     <module>daemon-boot-minion-common</module>
     <module>daemon-boot-minion</module>

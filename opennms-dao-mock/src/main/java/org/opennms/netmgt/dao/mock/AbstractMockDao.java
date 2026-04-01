@@ -37,14 +37,13 @@ import org.opennms.netmgt.dao.api.AssetRecordDao;
 import org.opennms.netmgt.dao.api.CategoryDao;
 import org.opennms.netmgt.dao.api.DistPollerDao;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
-import org.opennms.netmgt.dao.api.LegacyOnmsDao;
 import org.opennms.netmgt.dao.api.MonitoredServiceDao;
+import org.opennms.netmgt.dao.api.OnmsDao;
 import org.opennms.netmgt.dao.api.MonitoringLocationDao;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.dao.api.ServiceTypeDao;
 import org.opennms.netmgt.dao.api.SnmpInterfaceDao;
 import org.opennms.netmgt.events.api.EventForwarder;
-import org.opennms.netmgt.model.OnmsCriteria;
 import org.opennms.netmgt.xml.event.Event;
 import org.opennms.netmgt.xml.event.Log;
 import org.slf4j.Logger;
@@ -53,7 +52,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
-public abstract class AbstractMockDao<T, K extends Serializable> implements LegacyOnmsDao<T, K>, InitializingBean {
+public abstract class AbstractMockDao<T, K extends Serializable> implements OnmsDao<T, K>, InitializingBean {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractMockDao.class);
 
     @Autowired
@@ -136,20 +135,7 @@ public abstract class AbstractMockDao<T, K extends Serializable> implements Lega
     }
 
     @Override
-    public List<T> findMatching(final OnmsCriteria criteria) {
-        LOG.trace("findMatching({})", criteria);
-        throw new UnsupportedOperationException("Not yet implemented!");
-    }
-
-    @Override
     public int countMatching(final Criteria onmsCrit) {
-        LOG.trace("countMatching({})", onmsCrit);
-        final List<T> matched = findMatching(onmsCrit);
-        return matched == null? 0 : matched.size();
-    }
-
-    @Override
-    public int countMatching(final OnmsCriteria onmsCrit) {
         LOG.trace("countMatching({})", onmsCrit);
         final List<T> matched = findMatching(onmsCrit);
         return matched == null? 0 : matched.size();

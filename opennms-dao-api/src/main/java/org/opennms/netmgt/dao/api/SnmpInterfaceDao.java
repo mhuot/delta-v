@@ -33,7 +33,7 @@ import org.opennms.netmgt.model.OnmsSnmpInterface;
  * @author Ted Kazmark
  * @author David Hustace
  */
-public interface SnmpInterfaceDao extends LegacyOnmsDao<OnmsSnmpInterface, Integer> {
+public interface SnmpInterfaceDao extends OnmsDao<OnmsSnmpInterface, Integer> {
 
     /**
      * <p>findByNodeIdAndIfIndex</p>

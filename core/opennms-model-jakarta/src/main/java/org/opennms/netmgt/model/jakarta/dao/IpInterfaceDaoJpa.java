@@ -28,7 +28,6 @@ import java.util.Map;
 import org.opennms.core.daemon.common.AbstractDaoJpa;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
-import org.opennms.netmgt.model.OnmsCriteria;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
 import org.springframework.stereotype.Repository;
@@ -55,20 +54,6 @@ public class IpInterfaceDaoJpa extends AbstractDaoJpa<OnmsIpInterface, Integer> 
         return findUnique(
                 "from OnmsIpInterface iface where iface.node.id = ?1 and iface.ipAddress = ?2",
                 nodeId, InetAddressUtils.addr(ipAddress));
-    }
-
-    // ---- LegacyOnmsDao methods — not used by Provisiond ----
-
-    @Override
-    public List<OnmsIpInterface> findMatching(OnmsCriteria criteria) {
-        throw new UnsupportedOperationException(
-                "IpInterfaceDaoJpa.findMatching(OnmsCriteria) not implemented — not required by Provisiond");
-    }
-
-    @Override
-    public int countMatching(OnmsCriteria onmsCrit) {
-        throw new UnsupportedOperationException(
-                "IpInterfaceDaoJpa.countMatching(OnmsCriteria) not implemented — not required by Provisiond");
     }
 
     // ---- IpInterfaceDao methods — not used by Provisiond ----

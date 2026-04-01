@@ -38,7 +38,6 @@ import org.opennms.core.criteria.restrictions.Restriction;
 import org.opennms.core.daemon.common.AbstractDaoJpa;
 import org.opennms.netmgt.dao.api.MonitoredServiceDao;
 import org.opennms.netmgt.model.OnmsApplication;
-import org.opennms.netmgt.model.OnmsCriteria;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.ServiceSelector;
 import org.springframework.stereotype.Repository;
@@ -50,10 +49,6 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>Implements all methods from the {@link MonitoredServiceDao} interface.
  * The HQL-backed methods use the helper methods from {@link AbstractDaoJpa}.</p>
  *
- * <p>The deprecated {@link #findMatching(OnmsCriteria)} and
- * {@link #countMatching(OnmsCriteria)} methods from
- * {@link org.opennms.netmgt.dao.api.LegacyOnmsDao} throw
- * {@link UnsupportedOperationException}.</p>
  */
 @Repository
 @Transactional
@@ -62,20 +57,6 @@ public class MonitoredServiceDaoJpa extends AbstractDaoJpa<OnmsMonitoredService,
 
     public MonitoredServiceDaoJpa() {
         super(OnmsMonitoredService.class);
-    }
-
-    // ---- LegacyOnmsDao methods ----
-
-    @Override
-    public List<OnmsMonitoredService> findMatching(OnmsCriteria criteria) {
-        throw new UnsupportedOperationException(
-                "findMatching(OnmsCriteria) is not supported in MonitoredServiceDaoJpa — use HQL queries");
-    }
-
-    @Override
-    public int countMatching(OnmsCriteria onmsCrit) {
-        throw new UnsupportedOperationException(
-                "countMatching(OnmsCriteria) is not supported in MonitoredServiceDaoJpa — use HQL queries");
     }
 
     /**

@@ -211,7 +211,7 @@
         </dependency>
         <!-- opennms-config-api — provides EventConfDao interface used by
              KafkaEventForwarder. opennms-model excluded; EventConfEvent/EventConfSource
-             resolve from the opennms-model dependency below. -->
+             resolve from model-jakarta. -->
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-config-api</artifactId>
@@ -234,32 +234,24 @@
             <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>
 
-        <!-- OpenNMS APIs (consumed as-is during hybrid period) -->
+        <!-- Jakarta entity types (OnmsNode, OnmsDistPoller, EventConfEvent, etc.)
+             Replaces the former opennms-model compile dependency. The cycle that
+             previously prevented this (model-jakarta → daemon-common) is broken:
+             model-jakarta now depends on dao-jpa-support, not daemon-common. -->
+        <dependency>
+            <groupId>org.opennms.core</groupId>
+            <artifactId>org.opennms.core.model-jakarta</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- DAO interfaces. opennms-model excluded — model-jakarta above supplies
+             the same entity types in the same package. -->
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-dao-api</artifactId>
             <version>${project.version}</version>
-        </dependency>
-
-        <!-- Model (OnmsDistPoller, OnmsMonitoringSystem, entity types for DaemonEntityScopeProvider).
-             At runtime, daemon-boot modules exclude opennms-model and use model-jakarta instead.
-             Can't switch to model-jakarta here due to cycle: model-jakarta → daemon-common. -->
-        <dependency>
-            <groupId>org.opennms</groupId>
-            <artifactId>opennms-model</artifactId>
-            <version>${project.version}</version>
             <exclusions>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-core</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-tx</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-orm</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-jdbc</artifactId></exclusion>
-                <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
-                <exclusion><groupId>org.hibernate.javax.persistence</groupId><artifactId>hibernate-jpa-2.0-api</artifactId></exclusion>
-                <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion>
-                <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
-                <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -363,7 +355,7 @@
             <exclusions>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>mina-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>netty-dependencies</artifactId></exclusion>
-                <!-- opennms-model already on classpath with proper exclusions -->
+                <!-- opennms-model excluded — model-jakarta supplies entity types -->
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>

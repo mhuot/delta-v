@@ -30,7 +30,6 @@ import org.opennms.core.daemon.common.AbstractDaoJpa;
 import org.opennms.netmgt.dao.api.AlarmDao;
 import org.opennms.netmgt.model.HeatMapElement;
 import org.opennms.netmgt.model.OnmsAlarm;
-import org.opennms.netmgt.model.OnmsCriteria;
 import org.opennms.netmgt.model.alarm.AlarmSummary;
 import org.opennms.netmgt.model.alarm.SituationSummary;
 import org.springframework.stereotype.Repository;
@@ -45,9 +44,6 @@ import org.springframework.transaction.annotation.Transactional;
  * {@link #getAlarmsForEventParameters}) are not used by Alarmd and throw
  * {@link UnsupportedOperationException}.</p>
  *
- * <p>The deprecated {@link #findMatching(OnmsCriteria)} and {@link #countMatching(OnmsCriteria)}
- * methods from {@link org.opennms.netmgt.dao.api.LegacyOnmsDao} also throw
- * {@link UnsupportedOperationException} — Alarmd does not use them.</p>
  */
 @Repository
 @Transactional
@@ -82,20 +78,6 @@ public class AlarmDaoJpa extends AbstractDaoJpa<OnmsAlarm, Integer> implements A
         query.setParameter("hours", hours);
         Number result = (Number) query.getSingleResult();
         return result != null ? result.longValue() : 0L;
-    }
-
-    // ---- LegacyOnmsDao methods — not used by Alarmd ----
-
-    @Override
-    public List<OnmsAlarm> findMatching(OnmsCriteria criteria) {
-        throw new UnsupportedOperationException(
-                "findMatching(OnmsCriteria) is not supported in AlarmDaoJpa — use HQL queries");
-    }
-
-    @Override
-    public int countMatching(OnmsCriteria onmsCrit) {
-        throw new UnsupportedOperationException(
-                "countMatching(OnmsCriteria) is not supported in AlarmDaoJpa — use HQL queries");
     }
 
     // ---- REST-oriented methods — not used by Alarmd core ----
