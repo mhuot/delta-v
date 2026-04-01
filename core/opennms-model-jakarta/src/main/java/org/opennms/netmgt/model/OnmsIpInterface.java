@@ -707,4 +707,15 @@ public class OnmsIpInterface extends OnmsEntity implements Serializable {
         }
         return null;
     }
+
+    @Override
+    public void visit(EntityVisitor visitor) {
+        visitor.visitIpInterface(this);
+
+        for (OnmsMonitoredService monSvc : getMonitoredServices()) {
+            monSvc.visit(visitor);
+        }
+
+        visitor.visitIpInterfaceComplete(this);
+    }
 }

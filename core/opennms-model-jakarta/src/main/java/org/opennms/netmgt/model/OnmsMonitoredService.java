@@ -658,4 +658,10 @@ public class OnmsMonitoredService extends OnmsEntity implements Serializable, Co
         }
         return null;
     }
+
+    @Override
+    public void visit(EntityVisitor visitor) {
+        visitor.visitMonitoredService(this);
+        visitor.visitMonitoredServiceComplete(this);
+    }
 }

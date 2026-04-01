@@ -22,21 +22,26 @@
 package org.opennms.netmgt.model;
 
 /**
- * Abstract base for OpenNMS entity classes.
+ * Visitor pattern interface for traversing the node/interface/service hierarchy.
+ * Used by provisiond's import pipeline to walk the entity graph during
+ * node provisioning operations.
  */
-public abstract class OnmsEntity {
+public interface EntityVisitor {
 
-    /**
-     * Accept a visitor for traversing the entity hierarchy.
-     * Used by provisiond's import pipeline during node provisioning.
-     */
-    public abstract void visit(EntityVisitor visitor);
+    void visitNode(OnmsNode node);
 
-    /**
-     * Returns {@code true} when a new value differs from the existing one.
-     * Convenience for update-detection in entity merge logic.
-     */
-    protected static boolean hasNewValue(final Object newVal, final Object existingVal) {
-        return newVal != null && !newVal.equals(existingVal);
-    }
+    void visitNodeComplete(OnmsNode node);
+
+    void visitSnmpInterface(OnmsEntity snmpIface);
+
+    void visitSnmpInterfaceComplete(OnmsEntity snmpIface);
+
+    void visitIpInterface(OnmsIpInterface iface);
+
+    void visitIpInterfaceComplete(OnmsIpInterface iface);
+
+    void visitMonitoredService(OnmsMonitoredService monSvc);
+
+    void visitMonitoredServiceComplete(OnmsMonitoredService monSvc);
+
 }

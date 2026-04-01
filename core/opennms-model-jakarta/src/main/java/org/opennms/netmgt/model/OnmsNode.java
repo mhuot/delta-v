@@ -1589,4 +1589,19 @@ public class OnmsNode extends OnmsEntity implements Serializable, Comparable<Onm
         return (getInterfaceWithAddress(addr) != null);
     }
 
+    @Override
+    public void visit(EntityVisitor visitor) {
+        visitor.visitNode(this);
+
+        for (OnmsIpInterface iface : getIpInterfaces()) {
+            iface.visit(visitor);
+        }
+
+        for (OnmsSnmpInterface snmpIface : getSnmpInterfaces()) {
+            snmpIface.visit(visitor);
+        }
+
+        visitor.visitNodeComplete(this);
+    }
+
 }

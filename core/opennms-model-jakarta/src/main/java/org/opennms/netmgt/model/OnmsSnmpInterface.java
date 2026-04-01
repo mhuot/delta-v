@@ -743,4 +743,10 @@ public class OnmsSnmpInterface extends OnmsEntity implements Serializable {
 
         setCollectionEnabled(scannedSnmpIface.isCollectionEnabled(), scannedSnmpIface.getCollectionDefinitionSource());
     }
+
+    @Override
+    public void visit(EntityVisitor visitor) {
+        visitor.visitSnmpInterface(this);
+        visitor.visitSnmpInterfaceComplete(this);
+    }
 }
