@@ -33,6 +33,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+
 import org.opennms.core.xml.ValidateUsing;
 import org.opennms.netmgt.config.utils.ConfigUtils;
 
@@ -51,6 +53,7 @@ public class UeiMatch implements Serializable {
      *  by an instance of this tag within the ueiMatch.
      */
     @XmlElement(name = "facility")
+    @JacksonXmlElementWrapper(useWrapping = false)
     private List<String> m_facilities = new ArrayList<>();
 
     /**
@@ -59,6 +62,7 @@ public class UeiMatch implements Serializable {
      *  by an instance of this tag within the ueiMatch.
      */
     @XmlElement(name = "severity")
+    @JacksonXmlElementWrapper(useWrapping = false)
     private List<String> m_severities = new ArrayList<>();
 
     /**

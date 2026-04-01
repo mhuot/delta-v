@@ -141,32 +141,54 @@ public class DaemonEventConfDao implements EventConfDao {
 
     @Override
     public List<Event> getEvents(String uei) {
-        throw new UnsupportedOperationException("Not used in daemon context");
+        if (uei == null) {
+            return List.of();
+        }
+        return events.forEachEvent(new java.util.ArrayList<>(), (accum, event) -> {
+            if (uei.equals(event.getUei())) {
+                accum.add(event);
+            }
+            return accum;
+        });
     }
 
     @Override
     public List<String> getEventUEIs() {
-        throw new UnsupportedOperationException("Not used in daemon context");
+        return events.forEachEvent(new java.util.ArrayList<>(), (accum, event) -> {
+            if (event.getUei() != null) {
+                accum.add(event.getUei());
+            }
+            return accum;
+        });
     }
 
     @Override
     public Map<String, String> getEventLabels() {
-        throw new UnsupportedOperationException("Not used in daemon context");
+        return events.forEachEvent(new java.util.LinkedHashMap<>(), (accum, event) -> {
+            if (event.getUei() != null && event.getEventLabel() != null) {
+                accum.put(event.getUei(), event.getEventLabel());
+            }
+            return accum;
+        });
     }
 
     @Override
     public String getEventLabel(String uei) {
-        throw new UnsupportedOperationException("Not used in daemon context");
+        Event event = findByUei(uei);
+        return event != null ? event.getEventLabel() : null;
     }
 
     @Override
     public List<Event> getEventsByLabel() {
-        throw new UnsupportedOperationException("Not used in daemon context");
+        return events.forEachEvent(new java.util.ArrayList<>(), (accum, event) -> {
+            accum.add(event);
+            return accum;
+        });
     }
 
     @Override
     public void addEvent(Event event) {
-        throw new UnsupportedOperationException("Not used in daemon context");
+        events.addEvent(event);
     }
 
     @Override

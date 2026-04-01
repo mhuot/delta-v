@@ -36,6 +36,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import org.opennms.core.xml.DoubleAdapter;
 import org.opennms.core.xml.ValidateUsing;
 import org.opennms.netmgt.config.utils.ConfigUtils;
@@ -111,6 +112,7 @@ public class DiscoveryConfiguration implements Serializable {
      */
     @XmlElement(name = "specific")
     @JsonProperty("specific")
+    @JacksonXmlElementWrapper(useWrapping = false)
     private List<Specific> specifics = new ArrayList<>();
 
     /**
@@ -118,6 +120,7 @@ public class DiscoveryConfiguration implements Serializable {
      */
     @XmlElement(name = "include-range")
     @JsonProperty("include-range")
+    @JacksonXmlElementWrapper(useWrapping = false)
     private List<IncludeRange> includeRanges = new ArrayList<>();
 
     /**
@@ -126,6 +129,7 @@ public class DiscoveryConfiguration implements Serializable {
      */
     @XmlElement(name = "exclude-range")
     @JsonProperty("exclude-range")
+    @JacksonXmlElementWrapper(useWrapping = false)
     private List<ExcludeRange> excludeRanges = new ArrayList<>();
 
     /**
@@ -134,16 +138,19 @@ public class DiscoveryConfiguration implements Serializable {
      */
     @XmlElement(name = "include-url")
     @JsonProperty("include-url")
+    @JacksonXmlElementWrapper(useWrapping = false)
     private List<IncludeUrl> includeUrls = new ArrayList<>();
 
     /**
      * a file URL holding specific addresses to be excluded
      */
     @XmlElement(name = "exclude-url")
+    @JacksonXmlElementWrapper(useWrapping = false)
     private List<ExcludeUrl> excludeUrls = new ArrayList<>();
 
     @XmlElement(name = "definition")
     @JsonProperty("definition")
+    @JacksonXmlElementWrapper(useWrapping = false)
     private List<Definition> definitions = new ArrayList<>();
 
     public DiscoveryConfiguration() {

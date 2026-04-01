@@ -32,6 +32,8 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlText;
+
 import org.opennms.core.xml.ValidateUsing;
 import org.opennms.netmgt.config.utils.ConfigUtils;
 
@@ -48,6 +50,7 @@ public class Specific implements Serializable {
      * inner value
      */
     @XmlValue
+    @JacksonXmlText
     private String address;
 
     /**

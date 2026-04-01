@@ -32,6 +32,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+
 import org.opennms.core.xml.ValidateUsing;
 import org.opennms.netmgt.config.utils.ConfigUtils;
 
@@ -58,6 +60,7 @@ public class SyslogdConfiguration implements Serializable {
     private List<HideMatch> m_hideMatches = new ArrayList<>();
 
     @XmlElement(name = "import-file")
+    @JacksonXmlElementWrapper(useWrapping = false)
     private List<String> m_importFiles = new ArrayList<>();
 
     public Configuration getConfiguration() {
