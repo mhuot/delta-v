@@ -258,6 +258,10 @@
             <groupId>org.opennms.core.snmp</groupId>
             <artifactId>org.opennms.core.snmp.config</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
+            </exclusions>
         </dependency>
 
         <!-- ICMP proxy RPC — LocationAwarePingClientImpl -->
