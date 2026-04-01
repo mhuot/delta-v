@@ -24,6 +24,12 @@
     </plugins>
   </build>
   <dependencies>
+    <!-- DataCollectionConfigFactory, DefaultDataCollectionConfigDao, DataCollectionConfigParser, DefaultResourceTypesDao — moved to features/collection/config -->
+    <dependency>
+      <groupId>org.opennms.features.collection</groupId>
+      <artifactId>org.opennms.features.collection.config</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <!-- FilterDaoFactory, JdbcFilterDao — moved to core/filter -->
     <dependency>
       <groupId>org.opennms.core</groupId>
