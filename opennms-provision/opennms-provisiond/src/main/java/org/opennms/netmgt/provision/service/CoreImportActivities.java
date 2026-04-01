@@ -112,6 +112,10 @@ public class CoreImportActivities {
             info("The import has been aborted, skipping scan phase import.");
             return;
         }
+        if (opsMgr == null) {
+            warn("No ImportOperationsManager available (audit phase may have been aborted), skipping scan phase.");
+            return;
+        }
         Objects.requireNonNull(monitor);
 
         info("Scheduling nodes for phase {}", currentPhase);
