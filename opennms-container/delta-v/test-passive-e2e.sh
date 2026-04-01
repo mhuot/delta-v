@@ -75,7 +75,7 @@ cleanup() {
         psql_query "DELETE FROM alarms WHERE eventuei LIKE '%syslogd/cloud/%'" 2>/dev/null || true
     fi
 
-    docker exec "$(docker compose ps -q kafka 2>/dev/null)" pkill -f 'kafka-console-consumer' 2>/dev/null || true
+    docker exec "$(docker compose ps -q kafka 2>/dev/null)" sh -c 'for p in $(ps -eo pid,args 2>/dev/null | grep kafka-console-consumer | grep -v grep | awk "{print \$1}"); do kill "$p" 2>/dev/null; done' || true
     rm -rf "$TEST_TMPDIR"
 }
 trap cleanup EXIT
@@ -265,10 +265,11 @@ REQEOF
     # Write files to the host directories mounted into the Provisiond container.
     # docker-compose mounts:
     #   ./provisiond-overlay/etc → /opt/deltav/etc (general config)
-    #   ./etc/imports → /opt/deltav/etc/imports (overrides the overlay's imports dir)
-    mkdir -p provisiond-overlay/etc/foreign-sources etc/imports
+    # NOTE: On macOS Docker Desktop, the parent mount shadows the child.
+    # Write to provisiond-overlay/etc/imports/ (the path the container actually sees).
+    mkdir -p provisiond-overlay/etc/foreign-sources provisiond-overlay/etc/imports
     cp "$TEST_TMPDIR/cloud-services-fs.xml" "provisiond-overlay/etc/foreign-sources/${FOREIGN_SOURCE}.xml"
-    cp "$TEST_TMPDIR/cloud-services-req.xml" "etc/imports/${FOREIGN_SOURCE}.xml"
+    cp "$TEST_TMPDIR/cloud-services-req.xml" "provisiond-overlay/etc/imports/${FOREIGN_SOURCE}.xml"
 
     # Add a requisition-def so Provisiond auto-imports the requisition on startup
     cat > provisiond-overlay/etc/provisiond-configuration.xml <<PROVEOF

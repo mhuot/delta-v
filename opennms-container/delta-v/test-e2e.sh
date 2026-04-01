@@ -100,7 +100,9 @@ cleanup() {
             2>/dev/null || true
     fi
 
-    docker compose exec -T kafka pkill -f 'kafka-console-consumer' 2>/dev/null || true
+    # Kill only the background consumer docker-exec processes (not the Kafka broker).
+    # The host-side PIDs were already killed above; this catches the in-container JVMs.
+    docker compose exec -T kafka sh -c 'for p in $(ps -eo pid,args 2>/dev/null | grep kafka-console-consumer | grep -v grep | awk "{print \$1}"); do kill "$p" 2>/dev/null; done' || true
     rm -rf "$TEST_TMPDIR"
 }
 trap cleanup EXIT
