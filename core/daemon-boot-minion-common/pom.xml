@@ -313,6 +313,28 @@
         </dependency>
 
         <!-- ============================================================ -->
+        <!-- Twin subscriber implementations (passive status, SNMPv3)     -->
+        <!-- ============================================================ -->
+        <dependency>
+            <groupId>org.opennms.features.minion</groupId>
+            <artifactId>core-impl</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion>
+                <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.opennms.features.poller</groupId>
+            <artifactId>org.opennms.features.poller.api</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion>
+                <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- ============================================================ -->
         <!-- IPC: Off-heap buffering                                      -->
         <!-- ============================================================ -->
         <dependency>
