@@ -160,6 +160,26 @@ public class PollerRequestBuilderImpl implements PollerRequestBuilder {
 
         final Map<String, Object> interpolatedAttributes = safeGetInterpolatedAttributes();
 
+        // If the monitor forces local execution (getEffectiveLocation returns null),
+        // execute directly on Pollerd without RPC. This is used by monitors that
+        // read from in-memory state (e.g., PassiveServiceMonitor) and must not be
+        // delegated to Minion, regardless of the force-remote setting.
+        if (serviceMonitor != null && serviceMonitor.getEffectiveLocation(service.getNodeLocation()) == null) {
+            return CompletableFuture.supplyAsync(() -> {
+                PollStatus pollStatus;
+                try {
+                    pollStatus = serviceMonitor.poll(service, interpolatedAttributes);
+                } catch (RuntimeException e) {
+                    pollStatus = PollStatus.unknown(e.getMessage());
+                }
+                for (ServiceMonitorAdaptor adaptor : adaptors) {
+                    pollStatus = adaptor.handlePollResult(service, new HashMap<>(interpolatedAttributes), pollStatus);
+                }
+                PollerResponseDTO response = new PollerResponseDTO(pollStatus);
+                return response;
+            });
+        }
+
         final RpcTarget target = client.getRpcTargetHelper().target()
                 .withNodeId(service.getNodeId())
                 .withLocation(service.getNodeLocation())

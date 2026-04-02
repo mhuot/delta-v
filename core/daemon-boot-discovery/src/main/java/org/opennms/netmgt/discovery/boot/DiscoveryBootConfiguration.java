@@ -53,7 +53,9 @@ public class DiscoveryBootConfiguration {
 
     private static final XmlMapper XML_MAPPER;
     static {
-        XML_MAPPER = new XmlMapper();
+        XML_MAPPER = XmlMapper.builder()
+                .defaultUseWrapper(false)
+                .build();
         XML_MAPPER.registerModule(new JaxbAnnotationModule());
         XML_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }

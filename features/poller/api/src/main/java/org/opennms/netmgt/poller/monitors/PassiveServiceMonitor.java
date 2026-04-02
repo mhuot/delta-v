@@ -34,11 +34,20 @@ import org.opennms.netmgt.poller.support.AbstractServiceMonitor;
  * <p>Reads from {@link PassiveStatusHolder}, a shared static singleton populated by
  * {@code PassiveStatusKeeper} (on Pollerd) or {@code PassiveStatusTwinSubscriber}
  * (on Minion via Twin API).</p>
+ *
+ * <p>Returns {@code null} from {@link #getEffectiveLocation(String)} to force local
+ * execution on Pollerd — this monitor performs no network I/O, it only reads from
+ * an in-memory map, so it must not be delegated to Minion via RPC.</p>
  */
 public class PassiveServiceMonitor extends AbstractServiceMonitor {
 
     @Override
     public PollStatus poll(MonitoredService svc, Map<String, Object> parameters) {
         return PassiveStatusHolder.getStatus(svc.getNodeLabel(), svc.getIpAddr(), svc.getSvcName());
+    }
+
+    @Override
+    public String getEffectiveLocation(String location) {
+        return null;
     }
 }
