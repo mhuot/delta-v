@@ -29,6 +29,7 @@ import org.opennms.core.ipc.twin.api.TwinSubscriber;
 import org.opennms.core.ipc.twin.kafka.subscriber.KafkaTwinSubscriber;
 import org.opennms.core.tracing.api.TracerRegistry;
 import org.opennms.distributed.core.api.MinionIdentity;
+import org.opennms.minion.core.impl.PassiveStatusTwinSubscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -70,10 +71,23 @@ public class KafkaTwinSubscriberConfiguration {
                 new MetricRegistry());
     }
 
-
+    /**
+     * Subscribes to passive service status updates from Pollerd via Twin API
+     * so that {@link org.opennms.netmgt.poller.monitors.PassiveServiceMonitor}
+     * can execute on Minion with current status data.
+     *
+     * <p>Binding happens in the lifecycle's {@code start()} after the Kafka
+     * Twin subscriber is initialized, so the subscription is active.</p>
+     */
+    @Bean(destroyMethod = "close")
+    public PassiveStatusTwinSubscriber passiveStatusTwinSubscriber() {
+        return new PassiveStatusTwinSubscriber();
+    }
 
     @Bean
-    public SmartLifecycle kafkaTwinSubscriberLifecycle(KafkaTwinSubscriber subscriber) {
+    public SmartLifecycle kafkaTwinSubscriberLifecycle(
+            KafkaTwinSubscriber subscriber,
+            PassiveStatusTwinSubscriber passiveStatusTwinSubscriber) {
 
         return new SmartLifecycle() {
             private volatile boolean running = false;
@@ -83,6 +97,7 @@ public class KafkaTwinSubscriberConfiguration {
                 LOG.info("Starting Kafka Twin subscriber (phase 100)");
                 try {
                     subscriber.init();
+                    passiveStatusTwinSubscriber.bind(subscriber);
                     running = true;
                     LOG.info("Kafka Twin subscriber started");
                 } catch (Exception e) {
