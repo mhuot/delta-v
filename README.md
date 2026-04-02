@@ -71,7 +71,7 @@ Delta-V has removed Apache Karaf/OSGi from the runtime architecture. All 12 serv
 | `daemon-common` | DataSource, Kafka event transport (with EventConfDao enrichment), Kafka RPC client, JdbcDistPollerDao, JdbcInterfaceToNodeCache, AbstractDaoJpa, EventIpcManagerEnrichingWrapper |
 | `daemon-boot-minion-common` | Minion shared infra: KafkaTwinSubscriberConfiguration, PassiveStatusTwinSubscriber, SnmpV3 config sync |
 | `daemon-sink-kafka` | KafkaSinkBridge — consumes from Minion Sink topics (`OpenNMS.Sink.*`) |
-| `opennms-model-jakarta` | 17 Jakarta Persistence entities + 15 JPA DAOs for Hibernate 7 + 15 Enlinkd AttributeConverters |
+| `opennms-model-jakarta` | 43 Jakarta Persistence entities + 15 JPA DAOs for Hibernate 7 + 15 Enlinkd AttributeConverters |
 
 ### Other Components Removed
 
