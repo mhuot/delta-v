@@ -322,9 +322,13 @@ public final class EventTranslatorConfigFactory implements EventTranslatorConfig
             // uei matches now go thru the mappings
             ArrayList<Event> events = new ArrayList<>();
             for (TranslationMapping mapping : getTranslationMappings()) {
-                Event translatedEvent = mapping.translate(e);
-                if (translatedEvent != null)
-                    events.add(translatedEvent);
+                try {
+                    Event translatedEvent = mapping.translate(e);
+                    if (translatedEvent != null)
+                        events.add(translatedEvent);
+                } catch (Exception ex) {
+                    LOG.warn("Translation mapping failed for event UEI '{}': {}", e.getUei(), ex.getMessage(), ex);
+                }
             }
 
             return events;

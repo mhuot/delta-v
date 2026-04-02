@@ -33,6 +33,8 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+
 import org.opennms.core.xml.ValidateUsing;
 import org.opennms.netmgt.config.utils.ConfigUtils;
 
@@ -47,15 +49,19 @@ public class Value implements Serializable {
     private static final long serialVersionUID = 2L;
 
     @XmlAttribute(name = "result", required = true)
+    @JacksonXmlProperty(isAttribute = true, localName = "result")
     private String m_result;
 
     @XmlAttribute(name = "matches")
+    @JacksonXmlProperty(isAttribute = true, localName = "matches")
     private String m_matches;
 
     @XmlAttribute(name = "type", required = true)
+    @JacksonXmlProperty(isAttribute = true, localName = "type")
     private String m_type;
 
     @XmlAttribute(name = "name")
+    @JacksonXmlProperty(isAttribute = true, localName = "name")
     private String m_name;
 
     /**

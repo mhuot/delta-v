@@ -61,7 +61,13 @@ public class EventTranslatorBootConfiguration {
 
     private static final XmlMapper XML_MAPPER;
     static {
-        XML_MAPPER = new XmlMapper();
+        // defaultUseWrapper(false) is required: Jackson's JaxbAnnotationModule
+        // mishandles @XmlElementWrapper when nested types share attribute names
+        // (e.g., Assignment.name + Value.name). Without this, Jackson conflates
+        // parent and child attributes, producing nulls and wrong values.
+        XML_MAPPER = XmlMapper.builder()
+                .defaultUseWrapper(false)
+                .build();
         XML_MAPPER.registerModule(new JaxbAnnotationModule());
         XML_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }

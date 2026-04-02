@@ -31,6 +31,8 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+
 import org.opennms.core.xml.ValidateUsing;
 import org.opennms.netmgt.config.utils.ConfigUtils;
 
@@ -44,12 +46,15 @@ public class Assignment implements Serializable {
     private static final long serialVersionUID = 2L;
 
     @XmlAttribute(name = "type", required = true)
+    @JacksonXmlProperty(isAttribute = true, localName = "type")
     private String m_type;
 
     @XmlAttribute(name = "name", required = true)
+    @JacksonXmlProperty(isAttribute = true, localName = "name")
     private String m_name;
 
     @XmlAttribute(name = "default", required = false)
+    @JacksonXmlProperty(isAttribute = true, localName = "default")
     private String m_default;
 
     /**
