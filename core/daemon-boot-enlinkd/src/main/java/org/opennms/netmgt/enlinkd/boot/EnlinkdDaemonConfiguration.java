@@ -45,6 +45,7 @@ import org.opennms.netmgt.enlinkd.CdpOnmsTopologyUpdater;
 import org.opennms.netmgt.enlinkd.DiscoveryBridgeDomains;
 import org.opennms.netmgt.enlinkd.EnhancedLinkd;
 import org.opennms.netmgt.enlinkd.EventProcessor;
+import org.opennms.netmgt.enlinkd.TopologyUpdaterRegistry;
 import org.opennms.netmgt.enlinkd.IsisOnmsTopologyUpdater;
 import org.opennms.netmgt.enlinkd.LldpOnmsTopologyUpdater;
 import org.opennms.netmgt.enlinkd.NetworkRouterTopologyUpdater;
@@ -85,6 +86,7 @@ import org.opennms.netmgt.enlinkd.service.api.IpNetToMediaTopologyService;
 import org.opennms.netmgt.enlinkd.service.api.IsisTopologyService;
 import org.opennms.netmgt.enlinkd.service.api.LldpTopologyService;
 import org.opennms.netmgt.enlinkd.service.api.NodeTopologyService;
+import org.opennms.netmgt.enlinkd.service.api.ProtocolSupported;
 import org.opennms.netmgt.enlinkd.service.api.OspfTopologyService;
 import org.opennms.netmgt.enlinkd.service.api.UserDefinedLinkTopologyService;
 import org.opennms.netmgt.enlinkd.service.impl.BridgeTopologyServiceImpl;
@@ -365,7 +367,33 @@ public class EnlinkdDaemonConfiguration {
         return new DiscoveryBridgeDomains(bridgeTopologyService);
     }
 
-    // ── 8. EnhancedLinkd daemon ──────────────────────────────────────
+    // ── 8. TopologyUpdaterRegistry + EnhancedLinkd daemon ──────────
+
+    @Bean
+    public TopologyUpdaterRegistry topologyUpdaterRegistry(
+            NodesOnmsTopologyUpdater nodesTopologyUpdater,
+            CdpOnmsTopologyUpdater cdpTopologyUpdater,
+            LldpOnmsTopologyUpdater lldpTopologyUpdater,
+            IsisOnmsTopologyUpdater isisTopologyUpdater,
+            OspfOnmsTopologyUpdater ospfTopologyUpdater,
+            OspfAreaOnmsTopologyUpdater ospfAreaTopologyUpdater,
+            BridgeOnmsTopologyUpdater bridgeTopologyUpdater,
+            NetworkRouterTopologyUpdater networkRouterTopologyUpdater,
+            UserDefinedLinkTopologyUpdater userDefinedLinkTopologyUpdater,
+            DiscoveryBridgeDomains discoveryBridgeDomains) {
+        var registry = new TopologyUpdaterRegistry();
+        registry.put(ProtocolSupported.NODES, nodesTopologyUpdater);
+        registry.put(ProtocolSupported.CDP, cdpTopologyUpdater);
+        registry.put(ProtocolSupported.LLDP, lldpTopologyUpdater);
+        registry.put(ProtocolSupported.ISIS, isisTopologyUpdater);
+        registry.put(ProtocolSupported.OSPF, ospfTopologyUpdater);
+        registry.put(ProtocolSupported.OSPFAREA, ospfAreaTopologyUpdater);
+        registry.put(ProtocolSupported.BRIDGE, bridgeTopologyUpdater);
+        registry.put(ProtocolSupported.NETWORKROUTER, networkRouterTopologyUpdater);
+        registry.put(ProtocolSupported.USERDEFINED, userDefinedLinkTopologyUpdater);
+        registry.setDiscoveryBridgeDomains(discoveryBridgeDomains);
+        return registry;
+    }
 
     @Bean
     public EnhancedLinkd enhancedLinkd(EnhancedLinkdConfig linkdConfig,
@@ -377,27 +405,14 @@ public class EnlinkdDaemonConfiguration {
                                         BridgeTopologyService bridgeTopologyService,
                                         IpNetToMediaTopologyService ipNetToMediaTopologyService,
                                         LocationAwareSnmpClient locationAwareSnmpClient,
-                                        NodesOnmsTopologyUpdater nodesTopologyUpdater,
-                                        BridgeOnmsTopologyUpdater bridgeTopologyUpdater,
-                                        CdpOnmsTopologyUpdater cdpTopologyUpdater,
-                                        LldpOnmsTopologyUpdater lldpTopologyUpdater,
-                                        IsisOnmsTopologyUpdater isisTopologyUpdater,
-                                        OspfOnmsTopologyUpdater ospfTopologyUpdater,
-                                        OspfAreaOnmsTopologyUpdater ospfAreaTopologyUpdater,
-                                        DiscoveryBridgeDomains discoveryBridgeDomains,
-                                        UserDefinedLinkTopologyUpdater userDefinedLinkTopologyUpdater,
-                                        NetworkRouterTopologyUpdater networkRouterTopologyUpdater) {
+                                        TopologyUpdaterRegistry registry) {
         return new EnhancedLinkd(
                 linkdConfig, nodeTopologyService,
                 bridgeTopologyService, cdpTopologyService,
                 isisTopologyService, ipNetToMediaTopologyService,
                 lldpTopologyService, ospfTopologyService,
                 locationAwareSnmpClient,
-                nodesTopologyUpdater, bridgeTopologyUpdater,
-                cdpTopologyUpdater, lldpTopologyUpdater,
-                isisTopologyUpdater, ospfTopologyUpdater,
-                ospfAreaTopologyUpdater, discoveryBridgeDomains,
-                userDefinedLinkTopologyUpdater, networkRouterTopologyUpdater);
+                registry);
     }
 
     // ── 9. Event Processor ───────────────────────────────────────────

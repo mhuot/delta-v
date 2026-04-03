@@ -86,17 +86,7 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
     private final OspfTopologyService m_ospfTopologyService;
     private final LocationAwareSnmpClient m_locationAwareSnmpClient;
 
-    // Non-final: reload() reassigns these via .clone()
-    private NodesOnmsTopologyUpdater m_nodesTopologyUpdater;
-    private BridgeOnmsTopologyUpdater m_bridgeTopologyUpdater;
-    private CdpOnmsTopologyUpdater m_cdpTopologyUpdater;
-    private LldpOnmsTopologyUpdater m_lldpTopologyUpdater;
-    private IsisOnmsTopologyUpdater m_isisTopologyUpdater;
-    private OspfOnmsTopologyUpdater m_ospfTopologyUpdater;
-    private OspfAreaOnmsTopologyUpdater m_ospfAreaTopologyUpdater;
-    private DiscoveryBridgeDomains m_discoveryBridgeDomains;
-    private UserDefinedLinkTopologyUpdater m_userDefinedLinkTopologyUpdater;
-    private NetworkRouterTopologyUpdater m_networkRouterTopologyUpdater;
+    private final TopologyUpdaterRegistry m_registry;
 
     private final List<SchedulableNodeCollectorGroup> m_groups = new ArrayList<>();
 
@@ -113,16 +103,7 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
             LldpTopologyService lldpTopologyService,
             OspfTopologyService ospfTopologyService,
             LocationAwareSnmpClient locationAwareSnmpClient,
-            NodesOnmsTopologyUpdater nodesTopologyUpdater,
-            BridgeOnmsTopologyUpdater bridgeTopologyUpdater,
-            CdpOnmsTopologyUpdater cdpTopologyUpdater,
-            LldpOnmsTopologyUpdater lldpTopologyUpdater,
-            IsisOnmsTopologyUpdater isisTopologyUpdater,
-            OspfOnmsTopologyUpdater ospfTopologyUpdater,
-            OspfAreaOnmsTopologyUpdater ospfAreaTopologyUpdater,
-            DiscoveryBridgeDomains discoveryBridgeDomains,
-            UserDefinedLinkTopologyUpdater userDefinedLinkTopologyUpdater,
-            NetworkRouterTopologyUpdater networkRouterTopologyUpdater) {
+            TopologyUpdaterRegistry registry) {
         super(LOG_PREFIX);
         m_linkdConfig = linkdConfig;
         m_queryMgr = queryMgr;
@@ -133,16 +114,7 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
         m_lldpTopologyService = lldpTopologyService;
         m_ospfTopologyService = ospfTopologyService;
         m_locationAwareSnmpClient = locationAwareSnmpClient;
-        m_nodesTopologyUpdater = nodesTopologyUpdater;
-        m_bridgeTopologyUpdater = bridgeTopologyUpdater;
-        m_cdpTopologyUpdater = cdpTopologyUpdater;
-        m_lldpTopologyUpdater = lldpTopologyUpdater;
-        m_isisTopologyUpdater = isisTopologyUpdater;
-        m_ospfTopologyUpdater = ospfTopologyUpdater;
-        m_ospfAreaTopologyUpdater = ospfAreaTopologyUpdater;
-        m_discoveryBridgeDomains = discoveryBridgeDomains;
-        m_userDefinedLinkTopologyUpdater = userDefinedLinkTopologyUpdater;
-        m_networkRouterTopologyUpdater = networkRouterTopologyUpdater;
+        m_registry = registry;
     }
 
     /**
@@ -175,9 +147,9 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
 
     private void schedule(boolean init) {
         if (init) {
-            scheduleAndRegisterOnmsTopologyUpdater(m_nodesTopologyUpdater);
-            scheduleAndRegisterOnmsTopologyUpdater(m_networkRouterTopologyUpdater);
-            scheduleAndRegisterOnmsTopologyUpdater(m_userDefinedLinkTopologyUpdater);
+            scheduleAndRegisterOnmsTopologyUpdater(m_registry.get(ProtocolSupported.NODES));
+            scheduleAndRegisterOnmsTopologyUpdater(m_registry.get(ProtocolSupported.NETWORKROUTER));
+            scheduleAndRegisterOnmsTopologyUpdater(m_registry.get(ProtocolSupported.USERDEFINED));
         }
 
         if (m_linkdConfig.useCdpDiscovery()) {
@@ -185,7 +157,7 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
             nodeCollectionGroupCdp.setScheduler(m_scheduler);
             nodeCollectionGroupCdp.schedule();
             m_groups.add(nodeCollectionGroupCdp);
-            scheduleAndRegisterOnmsTopologyUpdater(m_cdpTopologyUpdater);
+            scheduleAndRegisterOnmsTopologyUpdater(m_registry.get(ProtocolSupported.CDP));
         } else {
             m_cdpTopologyService.deletePersistedData();
         }
@@ -195,7 +167,7 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
             nodeCollectionGroupLldp.setScheduler(m_scheduler);
             nodeCollectionGroupLldp.schedule();
             m_groups.add(nodeCollectionGroupLldp);
-            scheduleAndRegisterOnmsTopologyUpdater(m_lldpTopologyUpdater);
+            scheduleAndRegisterOnmsTopologyUpdater(m_registry.get(ProtocolSupported.LLDP));
        } else {
             m_lldpTopologyService.deletePersistedData();
         }
@@ -205,7 +177,7 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
             nodeCollectionGroupIsis.setScheduler(m_scheduler);
             nodeCollectionGroupIsis.schedule();
             m_groups.add(nodeCollectionGroupIsis);
-            scheduleAndRegisterOnmsTopologyUpdater(m_isisTopologyUpdater);
+            scheduleAndRegisterOnmsTopologyUpdater(m_registry.get(ProtocolSupported.ISIS));
         } else {
             m_isisTopologyService.deletePersistedData();
         }
@@ -215,8 +187,8 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
             nodeCollectionGroupOspf.setScheduler(m_scheduler);
             nodeCollectionGroupOspf.schedule();
             m_groups.add(nodeCollectionGroupOspf);
-            scheduleAndRegisterOnmsTopologyUpdater(m_ospfTopologyUpdater);
-            scheduleAndRegisterOnmsTopologyUpdater(m_ospfAreaTopologyUpdater);
+            scheduleAndRegisterOnmsTopologyUpdater(m_registry.get(ProtocolSupported.OSPF));
+            scheduleAndRegisterOnmsTopologyUpdater(m_registry.get(ProtocolSupported.OSPFAREA));
         } else {
             m_ospfTopologyService.deletePersistedData();
         }
@@ -231,7 +203,7 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
             nodeCollectionGroupBridge.schedule();
             m_groups.add(nodeCollectionGroupBridge);
             scheduleDiscoveryBridgeDomain();
-            scheduleAndRegisterOnmsTopologyUpdater(m_bridgeTopologyUpdater);
+            scheduleAndRegisterOnmsTopologyUpdater(m_registry.get(ProtocolSupported.BRIDGE));
         } else {
             m_bridgeTopologyService.deletePersistedData();
         }
@@ -248,13 +220,14 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
     }
 
     public void scheduleDiscoveryBridgeDomain() {
-            m_discoveryBridgeDomains.setScheduler(m_scheduler);
-            m_discoveryBridgeDomains.setPollInterval(m_linkdConfig.getBridgeTopologyInterval());
-            m_discoveryBridgeDomains.setInitialSleepTime(m_linkdConfig.getBridgeTopologyInterval()+m_linkdConfig.getInitialSleepTime());
-            m_discoveryBridgeDomains.setMaxthreads(m_linkdConfig.getDiscoveryBridgeThreads());
+            var dbd = m_registry.getDiscoveryBridgeDomains();
+            dbd.setScheduler(m_scheduler);
+            dbd.setPollInterval(m_linkdConfig.getBridgeTopologyInterval());
+            dbd.setInitialSleepTime(m_linkdConfig.getBridgeTopologyInterval()+m_linkdConfig.getInitialSleepTime());
+            dbd.setMaxthreads(m_linkdConfig.getDiscoveryBridgeThreads());
             LOG.info("scheduleDiscoveryBridgeDomain: Scheduling {}",
-                     m_discoveryBridgeDomains.getInfo());
-            m_discoveryBridgeDomains.schedule();
+                     dbd.getInfo());
+            dbd.schedule();
     }
 
     /**
@@ -342,118 +315,31 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
     }
 
     public void runDiscoveryBridgeDomains() {
-            m_discoveryBridgeDomains.runSchedulable();
+            m_registry.getDiscoveryBridgeDomains().runSchedulable();
+    }
+
+    private boolean isEnabled(ProtocolSupported proto) {
+        return switch (proto) {
+            case CDP -> m_linkdConfig.useCdpDiscovery();
+            case LLDP -> m_linkdConfig.useLldpDiscovery();
+            case ISIS -> m_linkdConfig.useIsisDiscovery();
+            case OSPF, OSPFAREA -> m_linkdConfig.useOspfDiscovery();
+            case BRIDGE -> m_linkdConfig.useBridgeDiscovery();
+            case NODES, USERDEFINED, NETWORKROUTER -> true;
+        };
     }
 
     public void forceTopologyUpdaterRun(ProtocolSupported proto) {
-        switch (proto) {
-        case CDP:
-            if (m_linkdConfig.useCdpDiscovery()) {
-                m_cdpTopologyUpdater.forceRun();
-            }
-            break;
-
-        case LLDP:
-            if (m_linkdConfig.useLldpDiscovery()) {
-                m_lldpTopologyUpdater.forceRun();
-            }
-            break;
-
-        case ISIS:
-            if (m_linkdConfig.useIsisDiscovery()) {
-                m_isisTopologyUpdater.forceRun();
-            }
-            break;
-
-        case OSPFAREA:
-            if (m_linkdConfig.useOspfDiscovery()) {
-                m_ospfAreaTopologyUpdater.forceRun();
-            }
-            break;
-
-        case OSPF:
-            if (m_linkdConfig.useOspfDiscovery()) {
-                m_ospfTopologyUpdater.forceRun();
-            }
-            break;
-
-        case BRIDGE:
-            if (m_linkdConfig.useBridgeDiscovery()) {
-                m_bridgeTopologyUpdater.forceRun();
-            }
-            break;
-
-        case NODES:
-            m_nodesTopologyUpdater.forceRun();
-            break;
-
-        case USERDEFINED:
-            m_userDefinedLinkTopologyUpdater.forceRun();
-            break;
-
-        case NETWORKROUTER:
-            m_networkRouterTopologyUpdater.forceRun();
-            break;
-
-        default:
-            break;
-
+        TopologyUpdater updater = m_registry.get(proto);
+        if (updater != null && isEnabled(proto)) {
+            updater.forceRun();
         }
-
     }
 
     public void runTopologyUpdater(ProtocolSupported proto) {
-        switch (proto) {
-            case CDP:
-                if (m_linkdConfig.useCdpDiscovery()) {
-                    m_cdpTopologyUpdater.runSchedulable();
-                }
-                break;
-
-            case LLDP:
-                if (m_linkdConfig.useLldpDiscovery()) {
-                    m_lldpTopologyUpdater.runSchedulable();
-                }
-                break;
-
-            case ISIS:
-                if (m_linkdConfig.useIsisDiscovery()) {
-                    m_isisTopologyUpdater.runSchedulable();
-                }
-                break;
-
-            case OSPF:
-                if (m_linkdConfig.useOspfDiscovery()) {
-                    m_ospfTopologyUpdater.runSchedulable();
-                }
-                break;
-
-            case OSPFAREA:
-                if (m_linkdConfig.useOspfDiscovery()) {
-                    m_ospfAreaTopologyUpdater.runSchedulable();
-                }
-                break;
-
-            case BRIDGE:
-                if (m_linkdConfig.useBridgeDiscovery()) {
-                    m_bridgeTopologyUpdater.runSchedulable();
-                }
-                break;
-
-            case NODES:
-                m_nodesTopologyUpdater.runSchedulable();
-                break;
-
-            case USERDEFINED:
-                m_userDefinedLinkTopologyUpdater.runSchedulable();
-                break;
-
-            case NETWORKROUTER:
-                m_networkRouterTopologyUpdater.runSchedulable();
-                break;
-
-            default:
-                break;
+        TopologyUpdater updater = m_registry.get(proto);
+        if (updater != null && isEnabled(proto)) {
+            updater.runSchedulable();
         }
     }
 
@@ -531,29 +417,33 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
         return m_ipNetToMediaTopologyService;
     }
 
+    public TopologyUpdaterRegistry getRegistry() {
+        return m_registry;
+    }
+
     public NodesOnmsTopologyUpdater getNodesTopologyUpdater() {
-        return m_nodesTopologyUpdater;
+        return m_registry.get(ProtocolSupported.NODES, NodesOnmsTopologyUpdater.class);
     }
     public NetworkRouterTopologyUpdater getNetworkRouterTopologyUpdater() {
-        return m_networkRouterTopologyUpdater;
+        return m_registry.get(ProtocolSupported.NETWORKROUTER, NetworkRouterTopologyUpdater.class);
     }
     public CdpOnmsTopologyUpdater getCdpTopologyUpdater() {
-        return m_cdpTopologyUpdater;
+        return m_registry.get(ProtocolSupported.CDP, CdpOnmsTopologyUpdater.class);
     }
     public LldpOnmsTopologyUpdater getLldpTopologyUpdater() {
-        return m_lldpTopologyUpdater;
+        return m_registry.get(ProtocolSupported.LLDP, LldpOnmsTopologyUpdater.class);
     }
     public IsisOnmsTopologyUpdater getIsisTopologyUpdater() {
-        return m_isisTopologyUpdater;
+        return m_registry.get(ProtocolSupported.ISIS, IsisOnmsTopologyUpdater.class);
     }
     public BridgeOnmsTopologyUpdater getBridgeTopologyUpdater() {
-        return m_bridgeTopologyUpdater;
+        return m_registry.get(ProtocolSupported.BRIDGE, BridgeOnmsTopologyUpdater.class);
     }
     public OspfOnmsTopologyUpdater getOspfTopologyUpdater() {
-        return m_ospfTopologyUpdater;
+        return m_registry.get(ProtocolSupported.OSPF, OspfOnmsTopologyUpdater.class);
     }
     public OspfAreaOnmsTopologyUpdater getOspfAreaTopologyUpdater() {
-        return m_ospfAreaTopologyUpdater;
+        return m_registry.get(ProtocolSupported.OSPFAREA, OspfAreaOnmsTopologyUpdater.class);
     }
 
     @Override
@@ -563,45 +453,33 @@ public class EnhancedLinkd extends AbstractServiceDaemon implements ReloadableTo
         m_groups.forEach(Schedulable::unschedule);
         m_groups.clear();
 
-        if (m_ospfTopologyUpdater.isRegistered()) {
-            m_ospfTopologyUpdater.unschedule();
-            m_ospfTopologyUpdater.unregister();
-            m_ospfTopologyUpdater = OspfOnmsTopologyUpdater.clone(m_ospfTopologyUpdater);
-        }
+        reloadUpdater(ProtocolSupported.OSPF, OspfOnmsTopologyUpdater.class, OspfOnmsTopologyUpdater::clone);
+        reloadUpdater(ProtocolSupported.OSPFAREA, OspfAreaOnmsTopologyUpdater.class, OspfAreaOnmsTopologyUpdater::clone);
+        reloadUpdater(ProtocolSupported.LLDP, LldpOnmsTopologyUpdater.class, LldpOnmsTopologyUpdater::clone);
+        reloadUpdater(ProtocolSupported.ISIS, IsisOnmsTopologyUpdater.class, IsisOnmsTopologyUpdater::clone);
+        reloadUpdater(ProtocolSupported.CDP, CdpOnmsTopologyUpdater.class, CdpOnmsTopologyUpdater::clone);
 
-        if (m_ospfAreaTopologyUpdater.isRegistered()) {
-                m_ospfAreaTopologyUpdater.unschedule();
-                m_ospfAreaTopologyUpdater.unregister();
-                m_ospfAreaTopologyUpdater = OspfAreaOnmsTopologyUpdater.clone(m_ospfAreaTopologyUpdater);
-        }
-
-        if (m_lldpTopologyUpdater.isRegistered()) {
-            m_lldpTopologyUpdater.unschedule();
-            m_lldpTopologyUpdater.unregister();
-            m_lldpTopologyUpdater = LldpOnmsTopologyUpdater.clone(m_lldpTopologyUpdater);
-        }
-
-        if (m_isisTopologyUpdater.isRegistered()) {
-            m_isisTopologyUpdater.unschedule();
-            m_isisTopologyUpdater.unregister();
-            m_isisTopologyUpdater = IsisOnmsTopologyUpdater.clone(m_isisTopologyUpdater);
-        }
-
-        if (m_cdpTopologyUpdater.isRegistered()) {
-            m_cdpTopologyUpdater.unschedule();
-            m_cdpTopologyUpdater.unregister();
-            m_cdpTopologyUpdater = CdpOnmsTopologyUpdater.clone(m_cdpTopologyUpdater);
-        }
-
-        if (m_bridgeTopologyUpdater.isRegistered()) {
-            m_bridgeTopologyUpdater.unschedule();
-            m_bridgeTopologyUpdater.unregister();
-            m_bridgeTopologyUpdater = BridgeOnmsTopologyUpdater.clone(m_bridgeTopologyUpdater);
-            m_discoveryBridgeDomains.unschedule();
-            m_discoveryBridgeDomains = DiscoveryBridgeDomains.clone(m_discoveryBridgeDomains);
+        var bridgeUpdater = m_registry.get(ProtocolSupported.BRIDGE, BridgeOnmsTopologyUpdater.class);
+        if (bridgeUpdater != null && bridgeUpdater.isRegistered()) {
+            bridgeUpdater.unschedule();
+            bridgeUpdater.unregister();
+            m_registry.put(ProtocolSupported.BRIDGE, BridgeOnmsTopologyUpdater.clone(bridgeUpdater));
+            m_registry.getDiscoveryBridgeDomains().unschedule();
+            m_registry.setDiscoveryBridgeDomains(
+                    DiscoveryBridgeDomains.clone(m_registry.getDiscoveryBridgeDomains()));
         }
 
         schedule(false);
+    }
+
+    private <T extends TopologyUpdater> void reloadUpdater(
+            ProtocolSupported proto, Class<T> type, java.util.function.UnaryOperator<T> cloner) {
+        T updater = m_registry.get(proto, type);
+        if (updater != null && updater.isRegistered()) {
+            updater.unschedule();
+            updater.unregister();
+            m_registry.put(proto, cloner.apply(updater));
+        }
     }
 
     @Override
