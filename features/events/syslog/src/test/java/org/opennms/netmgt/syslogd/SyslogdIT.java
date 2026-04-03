@@ -147,17 +147,11 @@ public class SyslogdIT implements InitializingBean {
         assertTrue(foundBeer);
         assertTrue(foundMalt);
 
-        m_syslogSinkConsumer = new SyslogSinkConsumer(new MetricRegistry());
-        m_syslogSinkConsumer.setDistPollerDao(m_distPollerDao);
-        m_syslogSinkConsumer.setSyslogdConfig(m_config);
-        m_syslogSinkConsumer.setEventForwarder(m_eventIpcManager);
-        m_syslogSinkConsumer.setLocationAwareDnsLookupClient(locationAwareDnsLookupClient);
+        m_syslogSinkConsumer = new SyslogSinkConsumer(new MetricRegistry(), null, m_config, m_distPollerDao, m_eventIpcManager, locationAwareDnsLookupClient);
         m_syslogSinkModule = m_syslogSinkConsumer.getModule();
         m_messageDispatcherFactory.setConsumer(m_syslogSinkConsumer);
 
-        SyslogReceiverJavaNetImpl receiver = new SyslogReceiverJavaNetImpl(m_config);
-        receiver.setDistPollerDao(m_distPollerDao);
-        receiver.setMessageDispatcherFactory(m_messageDispatcherFactory);
+        SyslogReceiverJavaNetImpl receiver = new SyslogReceiverJavaNetImpl(m_config, m_distPollerDao, m_messageDispatcherFactory);
         m_syslogd.setSyslogReceiver(receiver);
         m_syslogd.init();
         SyslogdTestUtils.startSyslogdGracefully(m_syslogd);

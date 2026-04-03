@@ -31,24 +31,25 @@ import org.opennms.netmgt.dao.api.DistPollerDao;
 import org.opennms.netmgt.syslogd.api.SyslogConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class SinkDispatchingSyslogReceiver implements SyslogReceiver {
 
     private static final Logger LOG = LoggerFactory.getLogger(SinkDispatchingSyslogReceiver.class);
 
-    @Autowired
-    private DistPollerDao m_distPollerDao;
+    private final DistPollerDao m_distPollerDao;
 
-    @Autowired
-    private MessageDispatcherFactory m_messageDispatcherFactory;
+    private final MessageDispatcherFactory m_messageDispatcherFactory;
 
     private final SyslogdConfig m_config;
 
     protected AsyncDispatcher<SyslogConnection> m_dispatcher;
 
-    public SinkDispatchingSyslogReceiver(SyslogdConfig config) {
+    public SinkDispatchingSyslogReceiver(SyslogdConfig config,
+                                         DistPollerDao distPollerDao,
+                                         MessageDispatcherFactory messageDispatcherFactory) {
         m_config = Objects.requireNonNull(config);
+        m_distPollerDao = Objects.requireNonNull(distPollerDao);
+        m_messageDispatcherFactory = Objects.requireNonNull(messageDispatcherFactory);
     }
 
     @Override
@@ -73,11 +74,4 @@ public abstract class SinkDispatchingSyslogReceiver implements SyslogReceiver {
         }
     }
 
-    public void setDistPollerDao(DistPollerDao distPollerDao) {
-        m_distPollerDao = distPollerDao;
-    }
-
-    public void setMessageDispatcherFactory(MessageDispatcherFactory messageDispatcherFactory) {
-        m_messageDispatcherFactory = messageDispatcherFactory;
-    }
 }

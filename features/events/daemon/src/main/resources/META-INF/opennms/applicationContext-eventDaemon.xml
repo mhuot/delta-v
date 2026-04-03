@@ -175,7 +175,6 @@
         destroy-method="stop" />
 
   <!-- Consume events from sink component -->
-  <bean id="eventSinkConsumer" class="org.opennms.netmgt.eventd.sink.EventSinkConsumer">
-  </bean>
+  <bean id="eventSinkConsumer" class="org.opennms.netmgt.eventd.sink.EventSinkConsumer" autowire="constructor" />
 
 </beans>

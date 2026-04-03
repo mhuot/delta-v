@@ -49,7 +49,7 @@ import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.xml.event.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.support.TransactionOperations;
 
 import com.codahale.metrics.MetricRegistry;
 
@@ -57,17 +57,13 @@ public class EventUtilDaoImpl extends AbstractEventUtil {
 
     private static final Logger LOG = LoggerFactory.getLogger(EventUtilDaoImpl.class);
 
-	@Autowired
-	private NodeDao nodeDao;
-	
-	@Autowired
-	private AssetRecordDao assetRecordDao;
-	
-	@Autowired
-	private IpInterfaceDao ipInterfaceDao;
+	private final NodeDao nodeDao;
 
-    @Autowired
-    private HwEntityDao hwEntityDao;
+	private final AssetRecordDao assetRecordDao;
+
+	private final IpInterfaceDao ipInterfaceDao;
+
+    private final HwEntityDao hwEntityDao;
 
 	private final Pattern ASSET_PARM_PATTERN = Pattern.compile("^asset\\[(.*)\\]$");
 
@@ -77,10 +73,24 @@ public class EventUtilDaoImpl extends AbstractEventUtil {
 
 	private final static Map<String, PropertyDescriptor> hwEntityDescriptorsByName = getDescriptorsForStrings(OnmsHwEntity.class);
 
-    public EventUtilDaoImpl() { }
+    public EventUtilDaoImpl(NodeDao nodeDao,
+                            AssetRecordDao assetRecordDao,
+                            IpInterfaceDao ipInterfaceDao,
+                            HwEntityDao hwEntityDao) {
+        this(null, null, nodeDao, assetRecordDao, ipInterfaceDao, hwEntityDao);
+    }
 
-    public EventUtilDaoImpl(MetricRegistry registry) {
-        super(registry);
+    public EventUtilDaoImpl(MetricRegistry registry,
+                            TransactionOperations transactionOperations,
+                            NodeDao nodeDao,
+                            AssetRecordDao assetRecordDao,
+                            IpInterfaceDao ipInterfaceDao,
+                            HwEntityDao hwEntityDao) {
+        super(registry, transactionOperations);
+        this.nodeDao = nodeDao;
+        this.assetRecordDao = assetRecordDao;
+        this.ipInterfaceDao = ipInterfaceDao;
+        this.hwEntityDao = hwEntityDao;
     }
 
     @Override

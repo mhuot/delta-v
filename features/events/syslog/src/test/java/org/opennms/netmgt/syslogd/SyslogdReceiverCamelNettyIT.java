@@ -103,9 +103,7 @@ public class SyslogdReceiverCamelNettyIT {
         when(distPollerDao.whoami().getId()).thenReturn("");
         when(distPollerDao.whoami().getLocation()).thenReturn("");
 
-        SyslogReceiverCamelNettyImpl syslogReceiver = new SyslogReceiverCamelNettyImpl(syslogdConfig);
-        syslogReceiver.setMessageDispatcherFactory(threadLockingDispatcherFactory);
-        syslogReceiver.setDistPollerDao(distPollerDao);
+        SyslogReceiverCamelNettyImpl syslogReceiver = new SyslogReceiverCamelNettyImpl(syslogdConfig, distPollerDao, threadLockingDispatcherFactory);
         syslogReceiver.run();
 
         // Fire up the syslog generators

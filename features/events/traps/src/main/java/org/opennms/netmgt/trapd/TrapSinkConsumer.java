@@ -46,8 +46,6 @@ import org.opennms.netmgt.xml.eventconf.LogDestType;
 import org.opennms.netmgt.xml.eventconf.Logmsg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 
 public class TrapSinkConsumer implements MessageConsumer<TrapInformationWrapper, TrapLogDTO> {
 
@@ -60,26 +58,33 @@ public class TrapSinkConsumer implements MessageConsumer<TrapInformationWrapper,
 	 */
 	private static final String LOCALHOST_ADDRESS = InetAddressUtils.getLocalHostName();
 
-	@Autowired
-	private MessageConsumerManager messageConsumerManager;
+	private final MessageConsumerManager messageConsumerManager;
 
-	@Autowired
-	private EventConfDao eventConfDao;
+	private final EventConfDao eventConfDao;
 
-	@Autowired
-	@Qualifier("eventIpcManager")
-	private EventForwarder eventForwarder;
+	private final EventForwarder eventForwarder;
 
-	@Autowired
-	private InterfaceToNodeCache interfaceToNodeCache;
+	private final InterfaceToNodeCache interfaceToNodeCache;
 
-	@Autowired
-	private TrapdConfig config;
+	private final TrapdConfig config;
 
-	@Autowired
-	private DistPollerDao distPollerDao;
+	private final DistPollerDao distPollerDao;
 
 	private EventCreator eventCreator;
+
+	public TrapSinkConsumer(MessageConsumerManager messageConsumerManager,
+							EventConfDao eventConfDao,
+							EventForwarder eventForwarder,
+							InterfaceToNodeCache interfaceToNodeCache,
+							TrapdConfig config,
+							DistPollerDao distPollerDao) {
+		this.messageConsumerManager = messageConsumerManager;
+		this.eventConfDao = eventConfDao;
+		this.eventForwarder = eventForwarder;
+		this.interfaceToNodeCache = interfaceToNodeCache;
+		this.config = config;
+		this.distPollerDao = distPollerDao;
+	}
 
 	@PostConstruct
 	public void init() throws Exception {

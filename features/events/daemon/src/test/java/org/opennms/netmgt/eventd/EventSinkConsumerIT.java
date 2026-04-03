@@ -93,10 +93,7 @@ public class EventSinkConsumerIT {
         // Since Kafka consumer depends on above system properties to start, can't autowire below beans.
         KafkaMessageConsumerManager consumerManager = new KafkaMessageConsumerManager();
         consumerManager.afterPropertiesSet();
-        EventSinkConsumer m_eventSinkConsumer = new EventSinkConsumer();
-        m_eventSinkConsumer.setconfig(m_config);
-        m_eventSinkConsumer.setEventForwarder(m_eventMgr);
-        m_eventSinkConsumer.setMessageConsumerManager(consumerManager);
+        EventSinkConsumer m_eventSinkConsumer = new EventSinkConsumer(m_config, consumerManager, m_eventMgr);
         consumerManager.registerConsumer(m_eventSinkConsumer);
         final Properties producerConfig = new Properties();
         producerConfig.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServer.getKafkaConnectString());

@@ -17,9 +17,7 @@
   <tx:annotation-driven/>
 
   <!-- Consume messages provided by the Sink API -->
-  <bean id="syslogSinkConsumer" class="org.opennms.netmgt.syslogd.SyslogSinkConsumer" >
-    <constructor-arg ref="syslogdMetricRegistry"/>
-  </bean>
+  <bean id="syslogSinkConsumer" class="org.opennms.netmgt.syslogd.SyslogSinkConsumer" autowire="constructor" />
 
   <bean id="syslogdMetricRegistry" class="com.codahale.metrics.MetricRegistry" />
 
@@ -38,12 +36,11 @@
         destroy-method="stop" />
 
   <!-- Listen for Syslog message and dispatch them to the Sink API -->
-  <bean id="syslogReceiverCamelNetty" class="org.opennms.netmgt.syslogd.SyslogReceiverCamelNettyImpl" destroy-method="stop">
-    <constructor-arg  ref="syslogdConfigFactory" />
-  </bean>
+  <bean id="syslogReceiverCamelNetty" class="org.opennms.netmgt.syslogd.SyslogReceiverCamelNettyImpl" destroy-method="stop" autowire="constructor" />
 
   <bean id="daemon" class="org.opennms.netmgt.syslogd.Syslogd">
-    <property name="syslogReceiver" ref="syslogReceiverCamelNetty" />
+    <constructor-arg ref="syslogReceiverCamelNetty" />
+    <constructor-arg><null/></constructor-arg>
   </bean>
 
 </beans>

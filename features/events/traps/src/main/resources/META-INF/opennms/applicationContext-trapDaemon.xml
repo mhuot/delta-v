@@ -13,16 +13,14 @@
 
   <onms-osgi:reference interface="org.opennms.features.scv.api.SecureCredentialsVault" id="jceksSecureCredentialsVault"/>
 
-  <bean id="daemon" class="org.opennms.netmgt.trapd.Trapd">
-    <property name="secureCredentialsVault" ref="jceksSecureCredentialsVault" />
-  </bean>
+  <bean id="daemon" class="org.opennms.netmgt.trapd.Trapd" autowire="constructor" />
 
   <bean id="daemonListener" class="org.opennms.netmgt.events.api.AnnotationBasedEventListenerAdapter">
     <property name="annotatedListener" ref="daemon" />
     <property name="eventSubscriptionService" ref="eventSubscriptionService" />
   </bean>
 
-  <bean id="trapSinkConsumer" class="org.opennms.netmgt.trapd.TrapSinkConsumer" />
+  <bean id="trapSinkConsumer" class="org.opennms.netmgt.trapd.TrapSinkConsumer" autowire="constructor" />
 
   <bean id="trapListenerMetricRegistry" class="com.codahale.metrics.MetricRegistry" />
 

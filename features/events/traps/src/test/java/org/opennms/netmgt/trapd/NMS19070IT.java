@@ -79,7 +79,6 @@ public class NMS19070IT {
     @Before
     public void setUp() {
         m_mockEventIpcManager.setSynchronous(true);
-        m_trapd.setSecureCredentialsVault(new TrapdIT.MockSecureCredentialsVault());
         m_trapd.onStart();
     }
 

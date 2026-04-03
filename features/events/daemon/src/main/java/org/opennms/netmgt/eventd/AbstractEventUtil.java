@@ -43,7 +43,6 @@ import org.opennms.netmgt.xml.event.Parm;
 import org.opennms.netmgt.xml.event.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.support.TransactionOperations;
 
 import com.codahale.metrics.Gauge;
@@ -390,18 +389,22 @@ public abstract class AbstractEventUtil implements EventUtil {
 		return outBuffer.toString();
 	}
 
-	@Autowired
-	private TransactionOperations transactionOperations;
+	private final TransactionOperations transactionOperations;
 
 	private final LoadingCache<String, EventTemplate> eventTemplateCache;
 
 	private final ExpandableParameterResolverRegistry resolverRegistry = new ExpandableParameterResolverRegistry();
 
 	public AbstractEventUtil() {
-	    this(null);
+	    this(null, null);
 	}
 
 	public AbstractEventUtil(MetricRegistry registry) {
+	    this(registry, null);
+	}
+
+	public AbstractEventUtil(MetricRegistry registry, TransactionOperations transactionOperations) {
+	    this.transactionOperations = transactionOperations;
 	    // Build the cache, and enable statistics collection if we've been given a metric registry
 	    final long maximumCacheSize = Long.parseLong(System.getProperty("org.opennms.eventd.eventTemplateCacheSize", "1000"));
 	    final CacheBuilder<Object, Object> cacheBuilder = CacheBuilder.newBuilder()

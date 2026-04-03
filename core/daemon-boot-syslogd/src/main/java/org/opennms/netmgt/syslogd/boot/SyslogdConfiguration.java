@@ -17,8 +17,10 @@ import org.opennms.netmgt.config.SyslogdConfig;
 import org.opennms.netmgt.config.syslogd.SyslogdConfigurationGroup;
 import org.opennms.netmgt.config.syslogd.HideMatch;
 import org.opennms.netmgt.config.syslogd.UeiMatch;
+import org.opennms.core.ipc.sink.api.MessageConsumerManager;
 import org.opennms.netmgt.dao.api.DistPollerDao;
 import org.opennms.netmgt.dao.api.InterfaceToNodeCache;
+import org.opennms.netmgt.events.api.EventForwarder;
 import org.opennms.netmgt.provision.LocationAwareDnsLookupClient;
 import org.opennms.netmgt.syslogd.SyslogSinkConsumer;
 import org.slf4j.Logger;
@@ -33,7 +35,7 @@ import org.springframework.context.annotation.Configuration;
  * <p>Replaces the Karaf-era {@code applicationContext-daemon-loader-syslogd.xml}.</p>
  *
  * <p>{@code SyslogSinkConsumer} implements {@code InitializingBean} -- Spring
- * calls {@code afterPropertiesSet()} natively after {@code @Autowired} injection.
+ * calls {@code afterPropertiesSet()} natively after constructor injection.
  * No {@code initMethod} workaround needed (unlike Trapd's {@code javax.annotation.PostConstruct}).</p>
  */
 @Configuration
@@ -119,18 +121,24 @@ public class SyslogdConfiguration {
     }
 
     @Bean
-    public SyslogSinkConsumer syslogSinkConsumer(MetricRegistry metricRegistry) {
+    public SyslogSinkConsumer syslogSinkConsumer(MetricRegistry metricRegistry,
+                                                  MessageConsumerManager messageConsumerManager,
+                                                  SyslogdConfig syslogdConfig,
+                                                  DistPollerDao distPollerDao,
+                                                  EventForwarder eventForwarder,
+                                                  LocationAwareDnsLookupClient locationAwareDnsLookupClient) {
         // Bridge DNS cache config for SyslogSinkConsumer constructor
         System.setProperty("org.opennms.netmgt.syslogd.dnscache.config", dnsCacheConfig);
 
         // SyslogSinkConsumer implements InitializingBean -- Spring calls
-        // afterPropertiesSet() after @Autowired injection completes.
+        // afterPropertiesSet() after construction completes.
         // afterPropertiesSet() registers consumer with MessageConsumerManager,
         // which triggers KafkaSinkBridge.setModule(), starting Kafka polling.
         //
         // Note: SyslogSinkConsumer.getModule() internally creates its own
-        // SyslogSinkModule using its @Autowired syslogdConfig and distPollerDao.
+        // SyslogSinkModule using its syslogdConfig and distPollerDao.
         // No separate SyslogSinkModule @Bean is needed.
-        return new SyslogSinkConsumer(metricRegistry);
+        return new SyslogSinkConsumer(metricRegistry, messageConsumerManager, syslogdConfig,
+                distPollerDao, eventForwarder, locationAwareDnsLookupClient);
     }
 }

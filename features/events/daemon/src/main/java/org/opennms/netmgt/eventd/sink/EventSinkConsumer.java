@@ -36,26 +36,30 @@ import org.opennms.netmgt.eventd.Eventd;
 import org.opennms.netmgt.events.api.EventForwarder;
 import org.opennms.netmgt.xml.event.Event;
 import org.opennms.netmgt.xml.event.Log;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author Malatesh Sudarshan
  */
 public class EventSinkConsumer implements MessageConsumer<Event, Log> {
 
-    @Autowired
-    private EventdConfig m_config;
+    private final EventdConfig m_config;
+
+    private final MessageConsumerManager messageConsumerManager;
+
+    private final EventForwarder eventForwarder;
+
+    public EventSinkConsumer(EventdConfig config,
+                             MessageConsumerManager messageConsumerManager,
+                             EventForwarder eventForwarder) {
+        this.m_config = config;
+        this.messageConsumerManager = messageConsumerManager;
+        this.eventForwarder = eventForwarder;
+    }
 
     @PostConstruct
     public void init() throws Exception {
         messageConsumerManager.registerConsumer(this);
     }
-
-    @Autowired
-    private MessageConsumerManager messageConsumerManager;
-
-    @Autowired
-    private EventForwarder eventForwarder;
 
     @Override
     public SinkModule<Event, Log> getModule() {
@@ -70,16 +74,4 @@ public class EventSinkConsumer implements MessageConsumer<Event, Log> {
 
     }
 
-    public void setconfig(EventdConfig m_config) {
-        this.m_config = m_config;
-    }
-
-    public void setMessageConsumerManager(
-            MessageConsumerManager messageConsumerManager) {
-        this.messageConsumerManager = messageConsumerManager;
-    }
-
-    public void setEventForwarder(EventForwarder eventForwarder) {
-        this.eventForwarder = eventForwarder;
-    }
 }

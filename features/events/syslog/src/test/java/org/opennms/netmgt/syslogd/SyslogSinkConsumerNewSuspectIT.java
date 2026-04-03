@@ -124,10 +124,7 @@ public class SyslogSinkConsumerNewSuspectIT {
         // Create a mock SyslogdConfig
         SyslogdConfigFactory config = loadSyslogConfiguration("/etc/syslogd-rfc-configuration.xml");
 
-        m_syslogSinkConsumer = new SyslogSinkConsumer(new MetricRegistry());
-        m_syslogSinkConsumer.setDistPollerDao(m_distPollerDao);
-        m_syslogSinkConsumer.setSyslogdConfig(config);
-        m_syslogSinkConsumer.setEventForwarder(m_eventIpcManager);
+        m_syslogSinkConsumer = new SyslogSinkConsumer(new MetricRegistry(), null, config, m_distPollerDao, m_eventIpcManager, null);
         m_syslogSinkModule = m_syslogSinkConsumer.getModule();
     }
 
@@ -245,10 +242,7 @@ public class SyslogSinkConsumerNewSuspectIT {
         // Overwrite with new config by enabling new suspect on message flag.
         SyslogdConfigFactory config = loadSyslogConfiguration("/etc/syslogd-new-suspect-enable-configuration.xml");
         // Create new consumer and module with the new config.
-        SyslogSinkConsumer syslogSinkConsumer = new SyslogSinkConsumer(new MetricRegistry());
-        syslogSinkConsumer.setDistPollerDao(m_distPollerDao);
-        syslogSinkConsumer.setSyslogdConfig(config);
-        syslogSinkConsumer.setEventForwarder(m_eventIpcManager);
+        SyslogSinkConsumer syslogSinkConsumer = new SyslogSinkConsumer(new MetricRegistry(), null, config, m_distPollerDao, m_eventIpcManager, null);
         SyslogSinkModule syslogSinkModule = syslogSinkConsumer.getModule();
         // One of the interfaces on node1
         final InetAddress addr = InetAddressUtils.addr("192.168.1.3");
@@ -296,17 +290,13 @@ public class SyslogSinkConsumerNewSuspectIT {
         // One of the interfaces on node1
         final InetAddress addr = InetAddressUtils.addr("192.168.1.3");
         // Create new consumer and module with the new config.
-        SyslogSinkConsumer syslogSinkConsumer = new SyslogSinkConsumer(new MetricRegistry());
-        syslogSinkConsumer.setDistPollerDao(m_distPollerDao);
         OnmsDistPoller onmsDistPoller = m_distPollerDao.whoami();
         onmsDistPoller.setLocation("MINION");
         m_distPollerDao.save(onmsDistPoller);
         LocationAwareDnsLookupClient locationAwareDnsLookupClient = Mockito.mock(LocationAwareDnsLookupClient.class);
-        syslogSinkConsumer.setLocationAwareDnsLookupClient(locationAwareDnsLookupClient);
         Mockito.when(locationAwareDnsLookupClient.lookup(anyString(), Mockito.eq("MINION"), Mockito.eq(onmsDistPoller.getId())))
                 .thenReturn(CompletableFuture.completedFuture("192.168.1.3"));
-        syslogSinkConsumer.setSyslogdConfig(config);
-        syslogSinkConsumer.setEventForwarder(m_eventIpcManager);
+        SyslogSinkConsumer syslogSinkConsumer = new SyslogSinkConsumer(new MetricRegistry(), null, config, m_distPollerDao, m_eventIpcManager, locationAwareDnsLookupClient);
         SyslogSinkModule syslogSinkModule = syslogSinkConsumer.getModule();
 
         // Syslog message with hostname (hostResolvableOnMinion) that is resolvable on Minion, should create new suspect event.
