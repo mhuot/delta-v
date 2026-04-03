@@ -28,7 +28,8 @@ import java.util.Map;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationConfig.Feature;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 import com.google.common.base.Throwables;
 
@@ -529,9 +530,9 @@ public class UsageStatisticsReportDTO {
 
     public String toJson(boolean prettyPrint) {
         ObjectMapper mapper = new ObjectMapper();
-        mapper.enable(Feature.SORT_PROPERTIES_ALPHABETICALLY);
+        mapper.enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY);
         if (prettyPrint) {
-            mapper.enable(Feature.INDENT_OUTPUT);
+            mapper.enable(SerializationFeature.INDENT_OUTPUT);
         }
         try {
             return mapper.writeValueAsString(this);

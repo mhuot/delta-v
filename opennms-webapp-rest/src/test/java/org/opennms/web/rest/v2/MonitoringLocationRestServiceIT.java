@@ -26,7 +26,7 @@ import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
-import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -173,7 +173,7 @@ public class MonitoringLocationRestServiceIT extends AbstractSpringJerseyRestTes
         final Integer LOCATION_COUNT = 15;
 
         final ObjectMapper MAPPER = new ObjectMapper();
-        MAPPER.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         // There is one default location, therefore we skip one location
         for (int i = 0; i < LOCATION_COUNT - 1; i++) {

@@ -24,7 +24,8 @@ package org.opennms.features.datachoices.internal.productupdateenrollment;
 import java.io.IOException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationConfig;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,8 +66,8 @@ public class ProductUpdateEnrollmentServiceImpl implements ProductUpdateEnrollme
 
     private String jsonSerialize(ProductUpdateEnrollmentSubmissionData data) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        mapper.enable(SerializationConfig.Feature.SORT_PROPERTIES_ALPHABETICALLY);
-        mapper.enable(SerializationConfig.Feature.INDENT_OUTPUT);
+        mapper.enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY);
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
         try {
             return mapper.writeValueAsString(data);
