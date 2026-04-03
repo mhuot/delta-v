@@ -18,5 +18,11 @@ if (not grep { $_ =~ /^[^-]/ } @ARGS) {
 }
 
 my @command = ($MVN, @ARGS);
-info("running:", @command);
-handle_errors_and_exit(system(@command));
+if (defined $USE_ULIMIT_WRAPPER && $USE_ULIMIT_WRAPPER > 0) {
+	my $cmd_str = join(' ', map { quotemeta($_) } @command);
+	info("running (with ulimit -n $USE_ULIMIT_WRAPPER):", @command);
+	handle_errors_and_exit(system("sh", "-c", "ulimit -n $USE_ULIMIT_WRAPPER 2>/dev/null; exec $cmd_str"));
+} else {
+	info("running:", @command);
+	handle_errors_and_exit(system(@command));
+}

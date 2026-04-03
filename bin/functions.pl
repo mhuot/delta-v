@@ -31,6 +31,7 @@ use vars qw(
 	$SKIP_OPENJDK
 	$TESTS
 	$SINGLE_TEST
+	$USE_ULIMIT_WRAPPER
 	$VERBOSE
 	@DEFAULT_GOALS
 	@ARGS
@@ -190,14 +191,26 @@ if ($LOGLEVEL !~ /^(error|warning|info|debug)$/) {
 	exit 1;
 }
 
-# If we have a ulimit command, do a sanity check on the number of FDs,
-# otherwise ignore (presumable the platform doesn't support ulimit).
+# Sanity check on the number of FDs.
+# 'ulimit' is a shell builtin, so invoke it via 'sh -c' (not as a standalone command).
 my $ulimit_fd;
-if ($ulimit_fd = `ulimit -n`) {
+if ($ulimit_fd = `sh -c 'ulimit -n' 2>/dev/null`) {
 	chomp($ulimit_fd);
 	if ($ulimit_fd ne "unlimited" && $ulimit_fd < $MINIMUM_FD) {
-		error("File descriptor limit ('ulimit -n') must be >= $MINIMUM_FD but is $ulimit_fd. Use 'ulimit -n $MINIMUM_FD' to set.");
-		exit 1;
+		# Check if the hard limit allows raising
+		my $hard_limit = `sh -c 'ulimit -Hn' 2>/dev/null`;
+		chomp($hard_limit) if defined $hard_limit;
+		if (defined $hard_limit && $hard_limit ne "" &&
+		    ($hard_limit eq "unlimited" || $hard_limit >= $MINIMUM_FD)) {
+			warning("File descriptor limit is $ulimit_fd (need >= $MINIMUM_FD). Raising to $MINIMUM_FD automatically.");
+			$USE_ULIMIT_WRAPPER = $MINIMUM_FD;
+		} else {
+			error("File descriptor limit ('ulimit -n') is $ulimit_fd but must be >= $MINIMUM_FD.");
+			error("Your hard limit ($hard_limit) is too low. Raise it with:");
+			error("  Linux:  sudo sysctl -w fs.nr_open=$MINIMUM_FD && sudo sh -c 'echo \"* soft nofile $MINIMUM_FD\" >> /etc/security/limits.conf'");
+			error("  macOS:  sudo launchctl limit maxfiles $MINIMUM_FD 200000 && ulimit -n $MINIMUM_FD");
+			exit 1;
+		}
 	}
 }
 
