@@ -65,7 +65,7 @@ public class ApplicationSearchProviderTest {
 
     private void assertSuggestions(List<OnmsApplication> applications, String input, List<SearchSuggestion> expectations) {
         ApplicationDao dao = Mockito.mock(ApplicationDao.class);
-        when(dao.findMatching(any())).thenReturn(applications);
+        when(dao.findMatching(any(org.opennms.core.criteria.Criteria.class))).thenReturn(applications);
         ApplicationSearchProvider provider = new ApplicationSearchProvider(dao);
         SearchContext context = SearchContext.builder().graphService(Mockito.mock(GraphService.class)).build();
         List<SearchSuggestion> results = provider.getSuggestions(context,
