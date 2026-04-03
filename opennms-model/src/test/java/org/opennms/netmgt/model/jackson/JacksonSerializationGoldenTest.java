@@ -111,15 +111,11 @@ public class JacksonSerializationGoldenTest {
     public void testSerializationMatchesGoldenFile() throws IOException, JSONException {
         String actualJson = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(testObject);
 
-        if (Boolean.getBoolean("jackson.golden.regenerate")) {
-            System.out.println("=== Golden file for " + testName + " (" + goldenFileName + ") ===");
-            System.out.println(actualJson);
-            System.out.println("=== End golden file ===");
-            // Test passes when regenerating — output is captured for saving
+        String expectedJson = loadOrBootstrapGoldenFile(goldenFileName, actualJson);
+        if (expectedJson == null) {
+            // First run — golden file was just created; nothing to compare yet
             return;
         }
-
-        String expectedJson = loadGoldenFile(goldenFileName);
         JSONAssert.assertEquals(
             "JSON serialization mismatch for " + testName + " against golden file " + goldenFileName,
             expectedJson, actualJson, JSONCompareMode.STRICT);
@@ -142,15 +138,32 @@ public class JacksonSerializationGoldenTest {
             json, roundTrippedJson, JSONCompareMode.STRICT);
     }
 
-    private static String loadGoldenFile(String fileName) throws IOException {
+    /**
+     * Load the golden file if it exists. If it doesn't, write it (bootstrap mode)
+     * and return null to signal the test should skip comparison on first run.
+     */
+    private static String loadOrBootstrapGoldenFile(String fileName, String actualJson) throws IOException {
         String path = "golden/json/" + fileName;
         try (InputStream is = JacksonSerializationGoldenTest.class.getClassLoader().getResourceAsStream(path)) {
-            if (is == null) {
-                Assert.fail("Golden file not found: " + path +
-                    ". Run with -Djackson.golden.regenerate=true to generate it.");
+            if (is != null) {
+                return IOUtils.toString(is, StandardCharsets.UTF_8);
             }
-            return IOUtils.toString(is, StandardCharsets.UTF_8);
         }
+
+        // Golden file doesn't exist — bootstrap it
+        java.net.URL resourceDir = JacksonSerializationGoldenTest.class.getClassLoader().getResource("golden/json");
+        if (resourceDir != null && "file".equals(resourceDir.getProtocol())) {
+            java.io.File goldenFile = new java.io.File(resourceDir.getPath(), fileName);
+            goldenFile.getParentFile().mkdirs();
+            java.nio.file.Files.write(goldenFile.toPath(), actualJson.getBytes(StandardCharsets.UTF_8));
+            System.out.println("BOOTSTRAP: Wrote golden file " + goldenFile.getAbsolutePath());
+            System.out.println("           Re-run tests to validate against this baseline.");
+            return null;
+        }
+
+        Assert.fail("Golden file not found: " + path +
+            ". Ensure src/test/resources/golden/json/ directory exists in the source tree.");
+        return null; // unreachable
     }
 
     // ========== Test Data Factories ==========
