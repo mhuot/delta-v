@@ -1,7 +1,0 @@
-<model-import xmlns="http://xmlns.opennms.org/xsd/config/model-import" date-stamp="2026-03-18T03:30:00.000Z" foreign-source="test-e2e" last-import="2026-03-18T02:36:00.031Z">
-   <node foreign-id="docker-host" node-label="Docker-Host-Mac">
-      <interface descr="host" ip-addr="192.168.65.254" status="1" snmp-primary="P">
-         <monitored-service service-name="SNMP"/>
-      </interface>
-   </node>
-</model-import>

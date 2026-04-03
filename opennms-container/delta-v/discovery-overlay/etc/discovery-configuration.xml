@@ -5,7 +5,10 @@
     retries="2"
     timeout="3000">
 
-    <!-- Discover the postgres container (known to be reachable within Docker network) -->
-    <specific retries="2" timeout="3000" foreign-source="delta-v-hosts">postgres</specific>
+    <!-- Home network discovery -->
+    <include-range retries="2" timeout="3000" foreign-source="home-network" location="Default">
+        <begin>192.168.1.1</begin>
+        <end>192.168.1.254</end>
+    </include-range>
 
 </discovery-configuration>

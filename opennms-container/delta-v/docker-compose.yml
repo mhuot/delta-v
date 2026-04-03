@@ -343,7 +343,7 @@ services:
       kafka:
         condition: service_healthy
     environment:
-      JAVA_OPTS: "-Xms512m -Xmx1g -XX:MaxMetaspaceSize=256m"
+      JAVA_OPTS: "-Xms512m -Xmx1g -XX:MaxMetaspaceSize=256m -Dorg.opennms.core.ipc.rpc.kafka.ttl=60000"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/opennms
       SPRING_DATASOURCE_USERNAME: opennms
       SPRING_DATASOURCE_PASSWORD: opennms

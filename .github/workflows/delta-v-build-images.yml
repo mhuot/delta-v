@@ -15,6 +15,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
   JAVA_VERSION: '21'
+  PLATFORMS: linux/amd64,linux/arm64
 
 permissions:
   contents: read
@@ -51,6 +52,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set up QEMU for multi-arch builds
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Compile daemon-boot modules
         run: |
           ulimit -n 65536 || true
@@ -60,30 +67,36 @@ jobs:
       - name: Compile db-init
         run: ./mvnw -B -DskipTests -f core/db-init/pom.xml package
 
-      - name: Build JRE base image
+      - name: Build and push JRE base image
         working-directory: opennms-container/delta-v
         run: |
-          docker build -f Dockerfile.jre \
-            -t opennms/jre-deltav:21 \
-            -t opennms/jre-deltav:latest \
+          docker buildx build \
+            --platform ${{ env.PLATFORMS }} \
+            -f Dockerfile.jre \
+            -t "${{ env.IMAGE_PREFIX }}/jre-deltav:21" \
+            -t "${{ env.IMAGE_PREFIX }}/jre-deltav:latest" \
+            --push \
             .
 
       - name: Stage and deduplicate daemon JARs
         working-directory: opennms-container/delta-v
         run: ./compute-shared-libs.sh "${{ github.workspace }}" "${{ steps.version.outputs.version }}"
 
-      - name: Build daemon-base image
+      - name: Build and push daemon-base image
         working-directory: opennms-container/delta-v
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          docker build --no-cache \
+          docker buildx build --no-cache \
+            --platform ${{ env.PLATFORMS }} \
             -f Dockerfile.daemon-base \
-            -t "opennms/daemon-base:${VERSION}" \
-            -t "opennms/daemon-base:latest" \
+            --build-arg "JRE_IMAGE=${{ env.IMAGE_PREFIX }}/jre-deltav:21" \
+            -t "${{ env.IMAGE_PREFIX }}/daemon-base:${VERSION}" \
+            -t "${{ env.IMAGE_PREFIX }}/daemon-base:latest" \
+            --push \
             .
 
-      - name: Build per-daemon images
+      - name: Build and push per-daemon images
         working-directory: opennms-container/delta-v
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -92,13 +105,16 @@ jobs:
           for name in $DAEMONS; do
             MAIN_CLASS=$(cat "staging/$name/.main_class")
             echo "==> Building $name (main: $MAIN_CLASS)..."
-            docker build \
+            docker buildx build \
+              --platform ${{ env.PLATFORMS }} \
               -f Dockerfile.daemon-per \
               --build-arg "VERSION=${VERSION}" \
+              --build-arg "DAEMON_BASE_IMAGE=${{ env.IMAGE_PREFIX }}/daemon-base" \
               --build-arg "DAEMON_NAME=$name" \
               --build-arg "MAIN_CLASS=$MAIN_CLASS" \
-              -t "opennms/$name:${VERSION}" \
-              -t "opennms/$name:latest" \
+              -t "${{ env.IMAGE_PREFIX }}/$name:${VERSION}" \
+              -t "${{ env.IMAGE_PREFIX }}/$name:latest" \
+              --push \
               .
           done
 
@@ -112,52 +128,41 @@ jobs:
             -maxdepth 1 -name "*.jar" \
             ! -name "*-sources.jar" ! -name "*-javadoc.jar" ! -name "*.original" \
             -exec cp {} staging/minion-boot/daemon-boot-minion.jar \;
-          docker build \
+          docker buildx build \
+            --platform ${{ env.PLATFORMS }} \
             --build-arg "VERSION=${VERSION}" \
+            --build-arg "JRE_IMAGE=${{ env.IMAGE_PREFIX }}/jre-deltav:21" \
             -f Dockerfile.minion-boot \
-            -t "opennms/minion-boot:${VERSION}" \
-            -t "opennms/minion-boot:latest" \
+            -t "${{ env.IMAGE_PREFIX }}/minion-boot:${VERSION}" \
+            -t "${{ env.IMAGE_PREFIX }}/minion-boot:latest" \
+            --push \
             .
 
-      - name: Build db-init image
+      - name: Build and push db-init image
         working-directory: core/db-init
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          docker build \
-            -t "opennms/db-init:${VERSION}" \
-            -t "opennms/db-init:latest" \
+          docker buildx build \
+            --platform ${{ env.PLATFORMS }} \
+            -t "${{ env.IMAGE_PREFIX }}/db-init:${VERSION}" \
+            -t "${{ env.IMAGE_PREFIX }}/db-init:latest" \
+            --push \
             .
-
-      - name: Tag and push all images to GHCR
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          IMAGES="alarmd bsmd collectd discovery enlinkd eventtranslator perspectivepollerd pollerd provisiond syslogd telemetryd trapd minion-boot db-init"
-          for name in $IMAGES; do
-            for tag in "${VERSION}" "latest"; do
-              docker tag "opennms/$name:${tag}" "${IMAGE_PREFIX}/$name:${tag}"
-              docker push "${IMAGE_PREFIX}/$name:${tag}"
-              echo "  Pushed ${IMAGE_PREFIX}/$name:${tag}"
-            done
-          done
-
-          # Also push base images (useful for debugging)
-          for name in jre-deltav daemon-base; do
-            local_tag="opennms/$name:latest"
-            docker tag "$local_tag" "${IMAGE_PREFIX}/$name:latest"
-            docker push "${IMAGE_PREFIX}/$name:latest"
-            echo "  Pushed ${IMAGE_PREFIX}/$name:latest"
-          done
 
       - name: Print image summary
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          echo "## Delta-V Images pushed to GHCR"
+          echo "## Delta-V multi-arch images pushed to GHCR"
+          echo ""
+          echo "Platforms: ${{ env.PLATFORMS }}"
           echo ""
           echo "Pull with:"
-          echo "  docker pull ${IMAGE_PREFIX}/<daemon>:${VERSION}"
+          echo "  docker pull ${{ env.IMAGE_PREFIX }}/<daemon>:${VERSION}"
           echo ""
+          DAEMONS="alarmd bsmd collectd discovery enlinkd eventtranslator perspectivepollerd pollerd provisiond syslogd telemetryd trapd minion-boot db-init jre-deltav daemon-base"
           echo "Images:"
-          docker images --format "  {{.Repository}}:{{.Tag}}\t{{.Size}}" | grep "${IMAGE_PREFIX}" | sort
+          for name in $DAEMONS; do
+            echo "  ${{ env.IMAGE_PREFIX }}/$name:${VERSION}"
+          done
