@@ -21,19 +21,15 @@
  */
 package org.opennms.netmgt.collectd;
 
-import javax.annotation.PostConstruct;
-
 import org.opennms.netmgt.collection.api.ResourceTypeMapper;
 import org.opennms.netmgt.config.api.ResourceTypesDao;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class DefaultResourceTypeMapper {
 
-    @Autowired
-    private ResourceTypesDao resourceTypesDao;
+    private final ResourceTypesDao resourceTypesDao;
 
-    @PostConstruct
-    public void registerWithTypeMapper() {
+    public DefaultResourceTypeMapper(ResourceTypesDao resourceTypesDao) {
+        this.resourceTypesDao = resourceTypesDao;
         ResourceTypeMapper.getInstance().setResourceTypeMapper(
                 (type) -> resourceTypesDao.getResourceTypeByName(type));
     }
