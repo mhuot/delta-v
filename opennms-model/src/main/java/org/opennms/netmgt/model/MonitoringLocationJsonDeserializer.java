@@ -44,7 +44,7 @@ public class MonitoringLocationJsonDeserializer extends StdScalarDeserializer<On
             final String locationName = jp.getText().trim();
             return new OnmsMonitoringLocation(locationName, locationName);
         }
-        throw ctxt.mappingException(_valueClass, t);
+        throw ctxt.wrongTokenException(jp, handledType(), JsonToken.VALUE_STRING, null);
     }
 
 }
