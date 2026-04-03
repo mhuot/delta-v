@@ -74,6 +74,10 @@ import org.opennms.netmgt.model.jakarta.converter.OnmsSeverityConverter;
 import org.opennms.netmgt.model.jakarta.converter.PrimaryTypeConverter;
 import org.opennms.netmgt.provision.LocationAwareDetectorClient;
 import org.opennms.netmgt.provision.LocationAwareDnsLookupClient;
+import org.opennms.netmgt.provision.ServiceDetectorFactory;
+import org.opennms.netmgt.provision.detector.registry.api.ServiceDetectorRegistry;
+import org.opennms.netmgt.provision.detector.snmp.GenericSnmpDetectorFactory;
+import org.opennms.core.daemon.common.registry.LocalServiceDetectorRegistry;
 import org.opennms.netmgt.provision.detector.client.rpc.DetectorClientRpcModule;
 import org.opennms.netmgt.provision.detector.client.rpc.LocationAwareDetectorClientRpcImpl;
 import org.opennms.netmgt.provision.dns.client.rpc.DnsLookupClientRpcModule;
@@ -230,6 +234,28 @@ public class ProvisiondBootConfiguration {
     @Bean
     public SnmpProfileMapper snmpProfileMapper() {
         return new NoOpSnmpProfileMapper();
+    }
+
+    /**
+     * Override the default {@link LocalServiceDetectorRegistry} to inject
+     * {@link SnmpAgentConfigFactory} into SNMP detector factories.
+     *
+     * <p>ServiceLoader creates factory instances without Spring DI, so
+     * {@code @Autowired} fields like {@code SnmpAgentConfigFactory} are null.
+     * This bean post-processes the registry to wire the SNMP config.</p>
+     */
+    @Bean
+    public ServiceDetectorRegistry serviceDetectorRegistry(SnmpAgentConfigFactory snmpAgentConfigFactory) {
+        var registry = new LocalServiceDetectorRegistry();
+        // Inject SnmpAgentConfigFactory into any GenericSnmpDetectorFactory instances
+        for (String className : registry.getClassNames()) {
+            ServiceDetectorFactory<?> factory = registry.getDetectorFactoryByClassName(className);
+            if (factory instanceof GenericSnmpDetectorFactory<?> snmpFactory) {
+                snmpFactory.setAgentConfigFactory(snmpAgentConfigFactory);
+                LOG.info("Injected SnmpAgentConfigFactory into detector factory: {}", className);
+            }
+        }
+        return registry;
     }
 
     // ===================================================================
