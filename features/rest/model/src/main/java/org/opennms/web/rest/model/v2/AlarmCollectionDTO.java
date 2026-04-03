@@ -21,7 +21,7 @@
  */
 package org.opennms.web.rest.model.v2;
 
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.opennms.core.config.api.JaxbListWrapper;
 
 import javax.xml.bind.annotation.XmlAccessType;

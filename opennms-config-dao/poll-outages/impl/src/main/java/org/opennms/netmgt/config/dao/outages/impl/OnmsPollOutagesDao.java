@@ -28,7 +28,7 @@ import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.opennms.core.utils.ConfigFileConstants;
 import org.opennms.core.xml.JacksonUtils;
 import org.opennms.features.distributed.kvstore.api.JsonStore;

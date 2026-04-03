@@ -1790,8 +1790,7 @@
     <httpclientVersion>4.5.14</httpclientVersion>
     <httpasyncclientVersion>4.1.5</httpasyncclientVersion>
     <ipaddressVersion>5.5.0</ipaddressVersion>
-    <jacksonVersion>1.9.14-atlassian-6</jacksonVersion>
-    <jackson2Version>2.16.2</jackson2Version>
+    <jackson2Version>2.21.0</jackson2Version>
     <jmsApiVersion>2.0.1</jmsApiVersion>
     <snakeyamlVersion>2.2</snakeyamlVersion>
     <spiflyVersion>1.3.6</spiflyVersion>
@@ -2992,12 +2991,6 @@
       <dependency>
         <groupId>org.opennms.dependencies</groupId>
         <artifactId>gwt-maps-dependencies</artifactId>
-        <version>${project.version}</version>
-        <type>pom</type>
-      </dependency>
-      <dependency>
-        <groupId>org.opennms.dependencies</groupId>
-        <artifactId>jackson1-dependencies</artifactId>
         <version>${project.version}</version>
         <type>pom</type>
       </dependency>
@@ -4337,26 +4330,6 @@
         <groupId>com.codeborne</groupId>
         <artifactId>phantomjsdriver</artifactId>
         <version>1.5.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.codehaus.jackson</groupId>
-        <artifactId>jackson-core-asl</artifactId>
-        <version>${jacksonVersion}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.codehaus.jackson</groupId>
-        <artifactId>jackson-jaxrs</artifactId>
-        <version>${jacksonVersion}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.codehaus.jackson</groupId>
-        <artifactId>jackson-mapper-asl</artifactId>
-        <version>${jacksonVersion}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.codehaus.jackson</groupId>
-        <artifactId>jackson-xc</artifactId>
-        <version>${jacksonVersion}</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>

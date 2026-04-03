@@ -29,10 +29,10 @@ import java.util.Collection;
 import java.util.Date;
 
 import org.apache.commons.io.IOUtils;
-import org.codehaus.jackson.map.AnnotationIntrospector;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
-import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
+import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -85,9 +85,8 @@ public class RestModelDTOGoldenTest {
         final ObjectMapper mapper = new ObjectMapper();
         final AnnotationIntrospector introspectorPair = AnnotationIntrospector.pair(
                 new JacksonAnnotationIntrospector(),
-                new JaxbAnnotationIntrospector());
-        mapper.setDeserializationConfig(mapper.getDeserializationConfig().withAnnotationIntrospector(introspectorPair));
-        mapper.setSerializationConfig(mapper.getSerializationConfig().withAnnotationIntrospector(introspectorPair));
+                new JaxbAnnotationIntrospector(mapper.getTypeFactory()));
+        mapper.setAnnotationIntrospector(introspectorPair);
         return mapper;
     }
 

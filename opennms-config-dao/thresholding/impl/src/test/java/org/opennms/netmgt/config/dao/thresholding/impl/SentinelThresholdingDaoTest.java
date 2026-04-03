@@ -31,7 +31,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.OptionalLong;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.opennms.core.xml.JacksonUtils;
 import org.opennms.features.distributed.kvstore.api.JsonStore;

@@ -27,10 +27,8 @@
     <!-- JSON Serialization @Provider classes -->
     <!-- Jettison JSON provider -->
     <!-- <bean id="jsonProvider"            class="org.apache.cxf.jaxrs.provider.json.JSONProvider"/> -->
-    <!-- Jackson JSON provider -->
-    <!-- <bean id="jacksonJsonProvider"     class="org.codehaus.jackson.jaxrs.JacksonJsonProvider"/> -->
     <!-- Jackson JAXB JSON provider -->
-    <bean id="jacksonJaxbJsonProvider" class="org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider"/>
+    <bean id="jacksonJaxbJsonProvider" class="com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider"/>
 
     <!-- FIQL search @Provider class -->
     <bean id="searchContextProvider" class="org.apache.cxf.jaxrs.ext.search.SearchContextProvider"/>

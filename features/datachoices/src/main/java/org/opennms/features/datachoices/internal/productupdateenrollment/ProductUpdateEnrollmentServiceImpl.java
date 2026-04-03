@@ -23,8 +23,8 @@ package org.opennms.features.datachoices.internal.productupdateenrollment;
 
 import java.io.IOException;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

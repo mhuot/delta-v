@@ -23,13 +23,13 @@ package org.opennms.netmgt.model;
 
 import java.io.IOException;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.map.SerializerProvider;
-import org.codehaus.jackson.map.ser.std.SerializerBase;
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.opennms.netmgt.model.monitoringLocations.OnmsMonitoringLocation;
 
-public class MonitoringLocationJsonSerializer extends SerializerBase<OnmsMonitoringLocation> {
+public class MonitoringLocationJsonSerializer extends StdSerializer<OnmsMonitoringLocation> {
 
     protected MonitoringLocationJsonSerializer() {
         super(OnmsMonitoringLocation.class);

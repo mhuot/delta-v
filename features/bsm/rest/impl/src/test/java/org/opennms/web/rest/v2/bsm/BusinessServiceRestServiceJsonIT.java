@@ -23,7 +23,7 @@ package org.opennms.web.rest.v2.bsm;
 
 import javax.ws.rs.core.MediaType;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.opennms.core.xml.JacksonUtils;
 
 import static org.opennms.netmgt.bsm.test.BsmTestUtils.toJson;

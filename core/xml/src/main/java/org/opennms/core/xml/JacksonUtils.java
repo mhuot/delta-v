@@ -21,10 +21,10 @@
  */
 package org.opennms.core.xml;
 
-import org.codehaus.jackson.map.AnnotationIntrospector;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
-import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
+import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
 public class JacksonUtils {
 
@@ -32,9 +32,8 @@ public class JacksonUtils {
         final ObjectMapper mapper = new ObjectMapper();
         final AnnotationIntrospector introspectorPair = AnnotationIntrospector.pair(
                 new JacksonAnnotationIntrospector(),
-                new JaxbAnnotationIntrospector());
-        mapper.setDeserializationConfig(mapper.getDeserializationConfig().withAnnotationIntrospector(introspectorPair));
-        mapper.setSerializationConfig(mapper.getSerializationConfig().withAnnotationIntrospector(introspectorPair));
+                new JaxbAnnotationIntrospector(mapper.getTypeFactory()));
+        mapper.setAnnotationIntrospector(introspectorPair);
         return mapper;
     }
 }

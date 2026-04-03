@@ -14,11 +14,16 @@
         <groupId>org.opennms</groupId>
         <artifactId>opennms-util</artifactId>
     </dependency>
-    <!-- Needed for Cassandra -->
+    <!-- Cassandra 2.1.6 requires Jackson 1.x at runtime (transitive) -->
     <dependency>
-      <groupId>org.opennms.dependencies</groupId>
-      <artifactId>jackson1-dependencies</artifactId>
-      <type>pom</type>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-core-asl</artifactId>
+      <version>1.9.13</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-mapper-asl</artifactId>
+      <version>1.9.13</version>
     </dependency>
     <dependency>
       <groupId>org.apache.cassandra</groupId>

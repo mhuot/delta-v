@@ -27,9 +27,9 @@
 package org.opennms.netmgt.measurements.filters.impl;
 
 import org.apache.commons.io.IOUtils;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.FileInputStream;
 import java.io.IOException;

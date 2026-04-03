@@ -30,7 +30,7 @@ import java.util.Collection;
 import java.util.Date;
 
 import org.apache.commons.io.IOUtils;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -63,7 +63,7 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
  * Golden file tests for Jackson JSON serialization of core model objects.
  *
  * These tests validate that the JSON wire format produced by Jackson 1
- * (org.codehaus.jackson) matches known-good baselines stored in
+ * matches known-good baselines stored in
  * src/test/resources/golden/json/. This ensures that any future Jackson
  * migration (e.g. Jackson 1 -> Jackson 2) preserves REST API contracts.
  *

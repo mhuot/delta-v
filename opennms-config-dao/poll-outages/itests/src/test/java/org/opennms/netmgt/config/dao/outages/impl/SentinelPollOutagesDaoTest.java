@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.OptionalLong;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 import org.opennms.core.xml.JacksonUtils;

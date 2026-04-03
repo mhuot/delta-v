@@ -298,7 +298,7 @@
     <feature name="opennms-core" version="36.0.0-SNAPSHOT" description="OpenNMS :: Core">
         <feature>commons-io</feature>
         <feature>dnsjava</feature>
-        <feature>jackson1</feature>
+        <feature>jackson2</feature>
         <feature>jaxb</feature>
         <feature version="[4.2,4.3)">spring</feature>
         <feature version="[4.2,4.3)">spring-orm</feature>
@@ -840,7 +840,7 @@
         <feature>commons-jxpath</feature>
         <feature>commons-lang</feature>
         <feature version="31.1">guava</feature>
-        <feature>jackson1</feature>
+        <feature>jackson2</feature>
         <feature>joda-time</feature>
         <feature>opennms-core-web</feature>
         <bundle>mvn:com.github.mwiede/jsch/0.2.11</bundle>
@@ -1558,7 +1558,7 @@
         <feature prerequisite="true">shell-compat</feature>
         <feature version="31.1">guava</feature>
         <feature>hibernate36</feature>
-        <feature>jackson1</feature>
+        <feature>jackson2</feature>
         <feature>javax.servlet</feature>
         <feature>quartz</feature>
         <feature>opennms-health-api</feature>
