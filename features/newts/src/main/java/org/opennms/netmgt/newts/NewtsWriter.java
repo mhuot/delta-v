@@ -40,7 +40,6 @@ import org.opennms.newts.api.search.Indexer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Meter;
@@ -74,11 +73,9 @@ public class NewtsWriter implements WorkHandler<SampleBatchEvent>, DisposableBea
             .maxRate(5).every(Duration.ofSeconds(30))
             .build();
 
-    @Autowired
-    private SampleRepository m_sampleRepository;
+    private final SampleRepository m_sampleRepository;
 
-    @Autowired
-    private Indexer m_indexer;
+    private final Indexer m_indexer;
 
     private WorkerPool<SampleBatchEvent> m_workerPool;
 
@@ -99,7 +96,8 @@ public class NewtsWriter implements WorkHandler<SampleBatchEvent>, DisposableBea
     private final AtomicLong m_numEntriesOnRingBuffer = new AtomicLong();
 
     @Inject
-    public NewtsWriter(@Named("newts.max_batch_size") Integer maxBatchSize, @Named("newts.ring_buffer_size") Integer ringBufferSize,
+    public NewtsWriter(SampleRepository sampleRepository, Indexer indexer,
+            @Named("newts.max_batch_size") Integer maxBatchSize, @Named("newts.ring_buffer_size") Integer ringBufferSize,
             @Named("newts.writer_threads") Integer numWriterThreads, @Named("newtsMetricRegistry") MetricRegistry registry) {
         Preconditions.checkArgument(maxBatchSize > 0, "maxBatchSize must be strictly positive");
         Preconditions.checkArgument(ringBufferSize > 0, "ringBufferSize must be positive");
@@ -107,6 +105,8 @@ public class NewtsWriter implements WorkHandler<SampleBatchEvent>, DisposableBea
         Preconditions.checkArgument(numWriterThreads > 0, "numWriterThreads must be positive");
         Preconditions.checkNotNull(registry, "metric registry");
 
+        m_sampleRepository = sampleRepository;
+        m_indexer = indexer;
         m_maxBatchSize = maxBatchSize;
         m_ringBufferSize = ringBufferSize;
         m_numWriterThreads = numWriterThreads;
@@ -243,11 +243,4 @@ public class NewtsWriter implements WorkHandler<SampleBatchEvent>, DisposableBea
                 }
             };
 
-    public void setSampleRepository(SampleRepository sampleRepository) {
-        m_sampleRepository = sampleRepository;
-    }
-
-    public void setIndexer(Indexer indexer) {
-        m_indexer = indexer;
-    }
 }
