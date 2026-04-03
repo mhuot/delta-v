@@ -38,7 +38,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.web.rest.model.v2.AlarmCollectionDTO;
 import org.opennms.web.rest.model.v2.AlarmDTO;
 import org.opennms.web.rest.model.v2.AlarmSummaryDTO;
@@ -91,7 +90,7 @@ public class RestModelDTOGoldenTest {
     }
 
     @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> data() {
+    public static Collection<Object[]> data() throws Exception {
         return Arrays.asList(new Object[][] {
             { "AlarmDTO", createAlarmDTO(), AlarmDTO.class, "alarm-dto.json" },
             { "AlarmCollectionDTO", createAlarmCollectionDTO(), AlarmCollectionDTO.class, "alarm-collection-dto.json" },
@@ -155,13 +154,13 @@ public class RestModelDTOGoldenTest {
 
     // ========== Test Data Factories ==========
 
-    private static AlarmDTO createAlarmDTO() {
+    private static AlarmDTO createAlarmDTO() throws Exception {
         AlarmDTO alarm = new AlarmDTO();
         alarm.setId(42);
         alarm.setUei("uei.opennms.org/test/goldenFile");
         alarm.setNodeId(1);
         alarm.setNodeLabel("test-node-1");
-        alarm.setIpAddress(InetAddressUtils.addr("192.168.1.1"));
+        alarm.setIpAddress(java.net.InetAddress.getByName("192.168.1.1"));
         alarm.setType(1);
         alarm.setCount(3);
         alarm.setSeverity("MAJOR");
@@ -180,20 +179,20 @@ public class RestModelDTOGoldenTest {
         return alarm;
     }
 
-    private static AlarmCollectionDTO createAlarmCollectionDTO() {
+    private static AlarmCollectionDTO createAlarmCollectionDTO() throws Exception {
         AlarmCollectionDTO collection = new AlarmCollectionDTO();
         collection.add(createAlarmDTO());
         collection.setTotalCount(1);
         return collection;
     }
 
-    private static EventDTO createEventDTO() {
+    private static EventDTO createEventDTO() throws Exception {
         EventDTO event = new EventDTO();
         event.setId(100L);
         event.setUei("uei.opennms.org/test/goldenFile");
         event.setNodeId(1);
         event.setNodeLabel("test-node-1");
-        event.setIpAddress(InetAddressUtils.addr("192.168.1.1"));
+        event.setIpAddress(java.net.InetAddress.getByName("192.168.1.1"));
         event.setSeverity("WARNING");
         event.setLog("Y");
         event.setDisplay("Y");
@@ -212,7 +211,7 @@ public class RestModelDTOGoldenTest {
         return event;
     }
 
-    private static EventCollectionDTO createEventCollectionDTO() {
+    private static EventCollectionDTO createEventCollectionDTO() throws Exception {
         EventCollectionDTO collection = new EventCollectionDTO();
         collection.add(createEventDTO());
         collection.setTotalCount(1);
