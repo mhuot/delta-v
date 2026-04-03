@@ -34,7 +34,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.opennms.core.logging.Logging;
-import org.opennms.core.spring.BeanUtils;
 import org.opennms.netmgt.config.DiscoveryConfigFactory;
 import org.opennms.netmgt.config.discovery.Detector;
 import org.opennms.netmgt.config.discovery.DiscoveryConfiguration;
@@ -50,23 +49,25 @@ import org.opennms.netmgt.provision.LocationAwareDetectorClient;
 import org.opennms.netmgt.xml.event.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class DiscoveryTaskExecutorImpl implements DiscoveryTaskExecutor {
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(DiscoveryTaskExecutorImpl.class);
 
-    @Autowired
-    private RangeChunker rangeChunker;
+    private final RangeChunker rangeChunker;
+    private final LocationAwarePingClient locationAwarePingClient;
+    private final EventForwarder eventForwarder;
+    private final LocationAwareDetectorClient locationAwareDetectorClient;
 
-    @Autowired
-    private LocationAwarePingClient locationAwarePingClient;
-
-    @Autowired
-    private EventForwarder eventForwarder;
-
-    @Autowired(required = false)
-    private LocationAwareDetectorClient locationAwareDetectorClient;
+    public DiscoveryTaskExecutorImpl(RangeChunker rangeChunker,
+                                     LocationAwarePingClient locationAwarePingClient,
+                                     EventForwarder eventForwarder,
+                                     LocationAwareDetectorClient locationAwareDetectorClient) {
+        this.rangeChunker = rangeChunker;
+        this.locationAwarePingClient = locationAwarePingClient;
+        this.eventForwarder = eventForwarder;
+        this.locationAwareDetectorClient = locationAwareDetectorClient;
+    }
 
     private final AtomicInteger taskIdTracker = new AtomicInteger();
 
@@ -292,26 +293,7 @@ public class DiscoveryTaskExecutorImpl implements DiscoveryTaskExecutor {
         return future;
     }
 
-    public void setRangeChunker(RangeChunker rangeChunker) {
-        this.rangeChunker = rangeChunker;
-    }
-
-    public void setLocationAwarePingClient(LocationAwarePingClient locationAwarePingClient) {
-        this.locationAwarePingClient = locationAwarePingClient;
-    }
-
-    public void setEventForwarder(EventForwarder eventForwarder) {
-        this.eventForwarder = eventForwarder;
-    }
-
-    public void setLocationAwareDetectorClient(LocationAwareDetectorClient locationAwareDetectorClient) {
-        this.locationAwareDetectorClient = locationAwareDetectorClient;
-    }
-
     public LocationAwareDetectorClient getLocationAwareDetectorClient() {
-        if (this.locationAwareDetectorClient == null) {
-            return BeanUtils.getBean("provisiondContext", "locationAwareDetectorClient", LocationAwareDetectorClient.class);
-        }
         return locationAwareDetectorClient;
     }
 }
