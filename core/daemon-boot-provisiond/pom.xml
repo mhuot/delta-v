@@ -283,6 +283,38 @@
             </exclusions>
         </dependency>
 
+        <!-- Concrete detector factory classes -->
+        <dependency>
+            <groupId>org.opennms</groupId>
+            <artifactId>opennms-detector-simple</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opennms</groupId>
+            <artifactId>opennms-detector-lineoriented</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opennms</groupId>
+            <artifactId>opennms-detector-datagram</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opennms</groupId>
+            <artifactId>opennms-detector-ssh</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opennms</groupId>
+            <artifactId>opennms-detector-web</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opennms</groupId>
+            <artifactId>opennms-detector-jmx</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- SNMP proxy RPC -->
         <dependency>
             <groupId>org.opennms.core.snmp</groupId>
