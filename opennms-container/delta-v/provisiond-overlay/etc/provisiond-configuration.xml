@@ -3,4 +3,8 @@
   foreign-source-dir="/opt/deltav/etc/foreign-sources"
   requistion-dir="/opt/deltav/etc/imports"
   importThreads="4" scanThreads="4" rescanThreads="4" writeThreads="4" >
+  <requisition-def import-name="home-network"
+                   import-url-resource="file:///opt/deltav/etc/imports/home-network.xml">
+    <cron-schedule>0 0/5 * * * ?</cron-schedule>
+  </requisition-def>
 </provisiond-configuration>
