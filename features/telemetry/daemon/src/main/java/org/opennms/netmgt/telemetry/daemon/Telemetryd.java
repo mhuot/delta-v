@@ -51,7 +51,6 @@ import org.opennms.netmgt.telemetry.config.model.QueueConfig;
 import org.opennms.netmgt.telemetry.config.model.TelemetrydConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 
@@ -72,26 +71,29 @@ public class Telemetryd implements SpringServiceDaemon, TelemetryManager, Messag
     /** MessageBus type derived from uei.opennms.org/internal/reloadDaemonConfig */
     private static final String MSG_TYPE_RELOAD_DAEMON_CONFIG = "reloadDaemonConfig";
 
-    @Autowired
-    private TelemetrydConfigDao telemetrydConfigDao;
+    private final TelemetrydConfigDao telemetrydConfigDao;
+    private final MessageDispatcherFactory messageDispatcherFactory;
+    private final MessageConsumerManager messageConsumerManager;
+    private final ApplicationContext applicationContext;
+    private final TelemetryRegistry telemetryRegistry;
+    private final ConnectorManager connectorManager;
+    private final MessageBus m_messageBus;
 
-    @Autowired
-    private MessageDispatcherFactory messageDispatcherFactory;
-
-    @Autowired
-    private MessageConsumerManager messageConsumerManager;
-
-    @Autowired
-    private ApplicationContext applicationContext;
-
-    @Autowired
-    private TelemetryRegistry telemetryRegistry;
-
-    @Autowired
-    private ConnectorManager connectorManager;
-
-    @Autowired(required = false)
-    private MessageBus m_messageBus;
+    public Telemetryd(TelemetrydConfigDao telemetrydConfigDao,
+                      MessageDispatcherFactory messageDispatcherFactory,
+                      MessageConsumerManager messageConsumerManager,
+                      ApplicationContext applicationContext,
+                      TelemetryRegistry telemetryRegistry,
+                      ConnectorManager connectorManager,
+                      MessageBus messageBus) {
+        this.telemetrydConfigDao = Objects.requireNonNull(telemetrydConfigDao);
+        this.messageDispatcherFactory = Objects.requireNonNull(messageDispatcherFactory);
+        this.messageConsumerManager = Objects.requireNonNull(messageConsumerManager);
+        this.applicationContext = Objects.requireNonNull(applicationContext);
+        this.telemetryRegistry = Objects.requireNonNull(telemetryRegistry);
+        this.connectorManager = Objects.requireNonNull(connectorManager);
+        this.m_messageBus = messageBus; // nullable -- no MessageBus bean in some deployments
+    }
 
     private List<TelemetryMessageConsumer> consumers = new ArrayList<>();
     private List<Listener> listeners = new ArrayList<>();
@@ -117,8 +119,7 @@ public class Telemetryd implements SpringServiceDaemon, TelemetryManager, Messag
             // Create the consumer of there are any adapters, but don't start it yet
             final List<AdapterConfig> enabledAdapters = queueConfig.getAdapters().stream().filter(AdapterConfig::isEnabled).collect(Collectors.toList());
             if (!enabledAdapters.isEmpty()) {
-                final TelemetryMessageConsumer consumer = new TelemetryMessageConsumer(queueConfig, enabledAdapters, sinkModule);
-                beanFactory.autowireBean(consumer);
+                final TelemetryMessageConsumer consumer = new TelemetryMessageConsumer(queueConfig, enabledAdapters, sinkModule, telemetryRegistry);
                 beanFactory.initializeBean(consumer, "consumer");
                 consumers.add(consumer);
             } else {

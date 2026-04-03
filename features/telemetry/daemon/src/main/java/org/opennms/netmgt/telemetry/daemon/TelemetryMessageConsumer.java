@@ -43,7 +43,6 @@ import org.opennms.netmgt.telemetry.config.api.QueueDefinition;
 import org.opennms.netmgt.telemetry.config.model.QueueConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.collect.Sets;
 
@@ -51,8 +50,7 @@ import com.google.common.collect.Sets;
 public class TelemetryMessageConsumer implements MessageConsumer<TelemetryMessage, TelemetryProtos.TelemetryMessageLog> {
     private final Logger LOG = LoggerFactory.getLogger(TelemetryMessageConsumer.class);
 
-    @Autowired
-    private TelemetryRegistry telemetryRegistry;
+    private final TelemetryRegistry telemetryRegistry;
 
     private final QueueDefinition queueDef;
     private final TelemetrySinkModule sinkModule;
@@ -61,18 +59,21 @@ public class TelemetryMessageConsumer implements MessageConsumer<TelemetryMessag
     // Actual adapters implementing the logic
     private final Set<Adapter> adapters = Sets.newHashSet();
 
-    public TelemetryMessageConsumer(QueueConfig queueConfig, TelemetrySinkModule sinkModule) throws Exception {
+    public TelemetryMessageConsumer(QueueConfig queueConfig, TelemetrySinkModule sinkModule, TelemetryRegistry telemetryRegistry) throws Exception {
         this(queueConfig,
                 queueConfig.getAdapters(),
-                sinkModule);
+                sinkModule,
+                telemetryRegistry);
     }
 
     public TelemetryMessageConsumer(QueueDefinition queueDef,
                                     Collection<? extends AdapterDefinition> adapterDefs,
-                                    TelemetrySinkModule sinkModule) {
+                                    TelemetrySinkModule sinkModule,
+                                    TelemetryRegistry telemetryRegistry) {
         this.queueDef = Objects.requireNonNull(queueDef);
         this.sinkModule = Objects.requireNonNull(sinkModule);
         this.adapterDefs = new ArrayList(adapterDefs);
+        this.telemetryRegistry = Objects.requireNonNull(telemetryRegistry);
     }
 
     @PostConstruct
@@ -121,10 +122,6 @@ public class TelemetryMessageConsumer implements MessageConsumer<TelemetryMessag
 
     public QueueDefinition getQueue() {
         return queueDef;
-    }
-
-    public void setRegistry(TelemetryRegistry telemetryRegistry) {
-        this.telemetryRegistry = telemetryRegistry;
     }
 
     public Set<Adapter> getAdapters() {

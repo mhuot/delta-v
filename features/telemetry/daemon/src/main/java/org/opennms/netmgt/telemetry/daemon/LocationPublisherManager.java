@@ -23,15 +23,17 @@
 package org.opennms.netmgt.telemetry.daemon;
 
 import org.opennms.core.ipc.twin.api.TwinPublisher;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.ConcurrentHashMap;
 
 
 public class LocationPublisherManager {
 
-    @Autowired
-    private  TwinPublisher twinPublisher;
+    private final TwinPublisher twinPublisher;
+
+    public LocationPublisherManager(TwinPublisher twinPublisher) {
+        this.twinPublisher = twinPublisher;
+    }
 
     private final ConcurrentHashMap<String, LocationPublisher> publishers = new ConcurrentHashMap<>();
 
