@@ -44,7 +44,6 @@ import org.opennms.netmgt.enlinkd.service.api.TopologyService;
 import org.opennms.netmgt.model.OnmsNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,13 +51,13 @@ public class LldpTopologyServiceImpl extends TopologyServiceImpl implements Lldp
 
     private static final Logger LOG = LoggerFactory.getLogger(LldpTopologyServiceImpl.class);
 
-    @Autowired
-    private PlatformTransactionManager m_transactionManager;
+    private final PlatformTransactionManager m_transactionManager;
 
     private LldpLinkDao m_lldpLinkDao;
     private LldpElementDao m_lldpElementDao;
 
-    public LldpTopologyServiceImpl() {
+    public LldpTopologyServiceImpl(PlatformTransactionManager transactionManager) {
+        m_transactionManager = transactionManager;
     }
 
     @Override

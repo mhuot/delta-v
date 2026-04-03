@@ -43,7 +43,6 @@ import org.opennms.netmgt.enlinkd.service.api.TopologyService;
 import org.opennms.netmgt.model.OnmsNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,13 +50,13 @@ public class IsisTopologyServiceImpl extends TopologyServiceImpl implements Isis
 
     private static final Logger LOG = LoggerFactory.getLogger(IsisTopologyServiceImpl.class);
 
-    @Autowired
-    private PlatformTransactionManager m_transactionManager;
+    private final PlatformTransactionManager m_transactionManager;
 
     private IsIsLinkDao m_isisLinkDao;
     private IsIsElementDao m_isisElementDao;
 
-    public IsisTopologyServiceImpl() {
+    public IsisTopologyServiceImpl(PlatformTransactionManager transactionManager) {
+        m_transactionManager = transactionManager;
     }
 
     @Override

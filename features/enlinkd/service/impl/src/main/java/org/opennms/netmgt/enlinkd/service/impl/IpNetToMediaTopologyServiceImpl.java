@@ -37,22 +37,21 @@ import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 
 public class IpNetToMediaTopologyServiceImpl implements
         IpNetToMediaTopologyService {
 
-    @Autowired
-    private PlatformTransactionManager m_transactionManager;
+    private final PlatformTransactionManager m_transactionManager;
 
     private final static Logger LOG = LoggerFactory.getLogger(IpNetToMediaTopologyServiceImpl.class);
 
     private IpNetToMediaDao m_ipNetToMediaDao;
-    private IpInterfaceDao m_ipInterfaceDao;    
+    private IpInterfaceDao m_ipInterfaceDao;
 
-    public IpNetToMediaTopologyServiceImpl() {
+    public IpNetToMediaTopologyServiceImpl(PlatformTransactionManager transactionManager) {
+        m_transactionManager = transactionManager;
     }
 
     @Override
