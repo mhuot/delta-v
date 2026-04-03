@@ -44,7 +44,6 @@ import org.opennms.netmgt.enlinkd.service.api.TopologyService;
 import org.opennms.netmgt.model.OnmsNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,13 +51,13 @@ public class CdpTopologyServiceImpl extends TopologyServiceImpl implements CdpTo
 
     private static final Logger LOG = LoggerFactory.getLogger(CdpTopologyServiceImpl.class);
 
-    @Autowired
-    private PlatformTransactionManager m_transactionManager;
-    
+    private final PlatformTransactionManager m_transactionManager;
+
     private CdpLinkDao m_cdpLinkDao;
     private CdpElementDao m_cdpElementDao;
-    
-    public CdpTopologyServiceImpl() {
+
+    public CdpTopologyServiceImpl(PlatformTransactionManager transactionManager) {
+        m_transactionManager = transactionManager;
     }
 
     @Override

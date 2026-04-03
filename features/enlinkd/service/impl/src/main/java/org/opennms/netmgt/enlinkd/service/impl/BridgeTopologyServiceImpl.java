@@ -57,7 +57,6 @@ import org.opennms.netmgt.enlinkd.service.api.TopologyShared;
 import org.opennms.netmgt.model.OnmsNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,10 +64,13 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
 public class BridgeTopologyServiceImpl extends TopologyServiceImpl implements BridgeTopologyService {
-    
+
     private final static Logger LOG = LoggerFactory.getLogger(BridgeTopologyServiceImpl.class);
-    @Autowired
-    private PlatformTransactionManager m_transactionManager;
+    private final PlatformTransactionManager m_transactionManager;
+
+    public BridgeTopologyServiceImpl(PlatformTransactionManager transactionManager) {
+        m_transactionManager = transactionManager;
+    }
 
     private final Object lock = new Object();
     private BridgeElementDao m_bridgeElementDao;

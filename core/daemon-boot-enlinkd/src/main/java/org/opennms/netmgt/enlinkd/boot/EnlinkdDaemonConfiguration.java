@@ -104,6 +104,7 @@ import org.opennms.netmgt.topologies.service.impl.OnmsTopologyDaoInMemoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -208,10 +209,11 @@ public class EnlinkdDaemonConfiguration {
     }
 
     @Bean
-    public CdpTopologyService cdpTopologyService(CdpLinkDaoJpa cdpLinkDao,
+    public CdpTopologyService cdpTopologyService(PlatformTransactionManager transactionManager,
+                                                  CdpLinkDaoJpa cdpLinkDao,
                                                   CdpElementDaoJpa cdpElementDao,
                                                   TopologyEntityCache topologyEntityCache) {
-        var svc = new CdpTopologyServiceImpl();
+        var svc = new CdpTopologyServiceImpl(transactionManager);
         svc.setCdpLinkDao(cdpLinkDao);
         svc.setCdpElementDao(cdpElementDao);
         svc.setTopologyEntityCache(topologyEntityCache);
@@ -219,10 +221,11 @@ public class EnlinkdDaemonConfiguration {
     }
 
     @Bean
-    public LldpTopologyService lldpTopologyService(LldpLinkDaoJpa lldpLinkDao,
+    public LldpTopologyService lldpTopologyService(PlatformTransactionManager transactionManager,
+                                                    LldpLinkDaoJpa lldpLinkDao,
                                                     LldpElementDaoJpa lldpElementDao,
                                                     TopologyEntityCache topologyEntityCache) {
-        var svc = new LldpTopologyServiceImpl();
+        var svc = new LldpTopologyServiceImpl(transactionManager);
         svc.setLldpLinkDao(lldpLinkDao);
         svc.setLldpElementDao(lldpElementDao);
         svc.setTopologyEntityCache(topologyEntityCache);
@@ -230,11 +233,12 @@ public class EnlinkdDaemonConfiguration {
     }
 
     @Bean
-    public OspfTopologyService ospfTopologyService(OspfLinkDaoJpa ospfLinkDao,
+    public OspfTopologyService ospfTopologyService(PlatformTransactionManager transactionManager,
+                                                    OspfLinkDaoJpa ospfLinkDao,
                                                     OspfElementDaoJpa ospfElementDao,
                                                     OspfAreaDaoJpa ospfAreaDao,
                                                     TopologyEntityCache topologyEntityCache) {
-        var svc = new OspfTopologyServiceImpl();
+        var svc = new OspfTopologyServiceImpl(transactionManager);
         svc.setOspfLinkDao(ospfLinkDao);
         svc.setOspfElementDao(ospfElementDao);
         svc.setOspfAreaDao(ospfAreaDao);
@@ -243,10 +247,11 @@ public class EnlinkdDaemonConfiguration {
     }
 
     @Bean
-    public IsisTopologyService isisTopologyService(IsIsLinkDaoJpa isisLinkDao,
+    public IsisTopologyService isisTopologyService(PlatformTransactionManager transactionManager,
+                                                    IsIsLinkDaoJpa isisLinkDao,
                                                     IsIsElementDaoJpa isisElementDao,
                                                     TopologyEntityCache topologyEntityCache) {
-        var svc = new IsisTopologyServiceImpl();
+        var svc = new IsisTopologyServiceImpl(transactionManager);
         svc.setIsisLinkDao(isisLinkDao);
         svc.setIsisElementDao(isisElementDao);
         svc.setTopologyEntityCache(topologyEntityCache);
@@ -254,13 +259,14 @@ public class EnlinkdDaemonConfiguration {
     }
 
     @Bean
-    public BridgeTopologyService bridgeTopologyService(BridgeElementDaoJpa bridgeElementDao,
+    public BridgeTopologyService bridgeTopologyService(PlatformTransactionManager transactionManager,
+                                                        BridgeElementDaoJpa bridgeElementDao,
                                                         BridgeBridgeLinkDaoJpa bridgeBridgeLinkDao,
                                                         BridgeMacLinkDaoJpa bridgeMacLinkDao,
                                                         BridgeStpLinkDaoJpa bridgeStpLinkDao,
                                                         IpNetToMediaDaoJpa ipNetToMediaDao,
                                                         TopologyEntityCache topologyEntityCache) {
-        var svc = new BridgeTopologyServiceImpl();
+        var svc = new BridgeTopologyServiceImpl(transactionManager);
         svc.setBridgeElementDao(bridgeElementDao);
         svc.setBridgeBridgeLinkDao(bridgeBridgeLinkDao);
         svc.setBridgeMacLinkDao(bridgeMacLinkDao);
@@ -271,9 +277,10 @@ public class EnlinkdDaemonConfiguration {
     }
 
     @Bean
-    public IpNetToMediaTopologyService ipNetToMediaTopologyService(IpNetToMediaDaoJpa ipNetToMediaDao,
+    public IpNetToMediaTopologyService ipNetToMediaTopologyService(PlatformTransactionManager transactionManager,
+                                                                    IpNetToMediaDaoJpa ipNetToMediaDao,
                                                                     IpInterfaceDao ipInterfaceDao) {
-        var svc = new IpNetToMediaTopologyServiceImpl();
+        var svc = new IpNetToMediaTopologyServiceImpl(transactionManager);
         svc.setIpNetToMediaDao(ipNetToMediaDao);
         svc.setIpInterfaceDao(ipInterfaceDao);
         return svc;
