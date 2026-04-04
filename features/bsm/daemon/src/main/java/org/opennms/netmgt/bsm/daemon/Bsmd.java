@@ -90,11 +90,11 @@ public class Bsmd implements SpringServiceDaemon, BusinessServiceStateChangeHand
     /** MessageBus type derived from uei.opennms.org/internal/reloadDaemonConfig */
     private static final String MSG_TYPE_RELOAD_DAEMON_CONFIG = "reloadDaemonConfig";
 
-    private final EventIpcManager m_eventIpcManager;
+    private EventIpcManager m_eventIpcManager;
 
     private final MessageBus m_messageBus;
 
-    private final EventConfDao m_eventConfDao;
+    private EventConfDao m_eventConfDao;
 
     private final TransactionTemplate m_template;
 
@@ -406,4 +406,19 @@ public class Bsmd implements SpringServiceDaemon, BusinessServiceStateChangeHand
         return m_verifyReductionKeys;
     }
 
+    public void setEventIpcManager(EventIpcManager eventIpcManager) {
+        m_eventIpcManager = eventIpcManager;
+    }
+
+    public EventConfDao getEventConfDao() {
+        return m_eventConfDao;
+    }
+
+    public void setEventConfDao(EventConfDao eventConfDao) {
+        m_eventConfDao = eventConfDao;
+    }
+
+    public BusinessServiceStateMachine getBusinessServiceStateMachine() {
+        return m_stateMachine;
+    }
 }
