@@ -40,7 +40,7 @@ public class BusinessServiceCriteriaTest {
 
     private List<BusinessService> businessServices = new ArrayList<>();
 
-    private BusinessServiceManagerImpl businessServiceManager = new BusinessServiceManagerImpl() {
+    private BusinessServiceManagerImpl businessServiceManager = new BusinessServiceManagerImpl(null, null, null, null, null, null, null, null, null) {
         @Override
         public List<BusinessService> getAllBusinessServices() {
             return businessServices;

@@ -181,8 +181,7 @@ public class DefaultBusinessServiceStateMachineIT {
 
         // Simulate lookup of reduction keys
         final long start = System.currentTimeMillis();
-        final DefaultBusinessServiceStateMachine stateMachine = new DefaultBusinessServiceStateMachine();
-        stateMachine.setAlarmProvider(alarmProvider);
+        final DefaultBusinessServiceStateMachine stateMachine = new DefaultBusinessServiceStateMachine(alarmProvider);
         stateMachine.setBusinessServices(businessServiceDao.findAll().stream().map(e -> new BusinessServiceImpl(businessServiceManager, e)).collect(Collectors.toList()));
         long diff = System.currentTimeMillis() - start;
         LoggerFactory.getLogger(getClass()).info("Took {} ms to initialize state machine", diff);
