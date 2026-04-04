@@ -83,10 +83,7 @@ public class NewtsFetchStrategyTest {
         m_resourceDao = mock(ResourceDao.class);
         m_sampleRepository = mock(SampleRepository.class);
  
-        m_newtsFetchStrategy = new NewtsFetchStrategy();
-        m_newtsFetchStrategy.setContext(m_context);
-        m_newtsFetchStrategy.setResourceDao(m_resourceDao);
-        m_newtsFetchStrategy.setSampleRepository(m_sampleRepository);
+        m_newtsFetchStrategy = new NewtsFetchStrategy(m_context, m_resourceDao, m_sampleRepository);
     }
 
     @After

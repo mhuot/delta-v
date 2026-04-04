@@ -61,8 +61,7 @@ public class NewtsWriterTest {
 
         LatchedSampleRepository sampleRepo = new LatchedSampleRepository(numWriterThreads);
         MetricRegistry registry = new MetricRegistry();
-        NewtsWriter writer = new NewtsWriter(1, ringBufferSize, numWriterThreads, registry);
-        writer.setSampleRepository(sampleRepo);
+        NewtsWriter writer = new NewtsWriter(sampleRepo, null, 1, ringBufferSize, numWriterThreads, registry);
 
         for (int i = 0; i < ringBufferSize*2; i++) {
             Resource x = new Resource("x");
@@ -84,8 +83,7 @@ public class NewtsWriterTest {
         Lock lock = new ReentrantLock();
         LockedSampleRepository sampleRepo = new LockedSampleRepository(lock);
         MetricRegistry registry = new MetricRegistry();
-        NewtsWriter writer = new NewtsWriter(1, ringBufferSize, numWriterThreads, registry);
-        writer.setSampleRepository(sampleRepo);
+        NewtsWriter writer = new NewtsWriter(sampleRepo, null, 1, ringBufferSize, numWriterThreads, registry);
 
         lock.lock();
         for (int i = 0; i < ringBufferSize; i++) {
