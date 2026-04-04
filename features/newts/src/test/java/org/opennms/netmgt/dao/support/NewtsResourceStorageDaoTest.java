@@ -83,10 +83,7 @@ public class NewtsResourceStorageDaoTest {
     public void setUp() {
         m_searcher = mock(CassandraSearcher.class);
 
-        m_nrs = new NewtsResourceStorageDao();
-        m_nrs.setSearcher(m_searcher);
-        m_nrs.setSearchableCache(m_cache);
-        m_nrs.setContext(Context.DEFAULT_CONTEXT);
+        m_nrs = new NewtsResourceStorageDao(m_context, m_searcher, null, null, null, m_cache);
     }
 
     @Test
