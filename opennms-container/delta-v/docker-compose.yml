@@ -5,9 +5,12 @@
 # + Discovery + Trapd + Syslogd + EventTranslator + Enlinkd
 # + Provisiond + Bsmd + PerspectivePollerd + Telemetryd
 #
-# Images: Each daemon has its own image (opennms/<daemon>:${VERSION}) built
-# from a shared daemon-base layer. Build with: ./build.sh deltav
+# Images: Each daemon has its own image (${IMAGE_PREFIX}/<daemon>:${VERSION})
+# built from a shared daemon-base layer. Build with: ./build.sh deltav
 # Per-service config overlays remain as local bind mounts.
+#
+# To use GHCR images, set in .env:
+#   IMAGE_PREFIX=ghcr.io/mhuot
 #
 # Usage:
 #   docker compose up -d
@@ -68,7 +71,7 @@ services:
   # Liquibase migrations, then exits. All services that need PostgreSQL
   # should depend on this with condition: service_completed_successfully.
   db-init:
-    image: opennms/db-init:${VERSION}
+    image: ${IMAGE_PREFIX:-opennms}/db-init:${VERSION}
     container_name: delta-v-db-init
     depends_on:
       postgres:
@@ -93,7 +96,7 @@ services:
       retries: 3
 
   minion:
-    image: opennms/minion-boot:${VERSION}
+    image: ${IMAGE_PREFIX:-opennms}/minion-boot:${VERSION}
     container_name: delta-v-minion
     hostname: minion-default-01
     cap_add:
@@ -121,7 +124,7 @@ services:
 
   pollerd:
     profiles: [lite, full]
-    image: opennms/pollerd:${VERSION}
+    image: ${IMAGE_PREFIX:-opennms}/pollerd:${VERSION}
     container_name: delta-v-pollerd
     hostname: pollerd
     depends_on:
@@ -152,7 +155,7 @@ services:
 
   collectd:
     profiles: [lite, full]
-    image: opennms/collectd:${VERSION}
+    image: ${IMAGE_PREFIX:-opennms}/collectd:${VERSION}
     container_name: delta-v-collectd
     hostname: collectd
     depends_on:
@@ -179,7 +182,7 @@ services:
 
   discovery:
     profiles: [passive, full]
-    image: opennms/discovery:${VERSION}
+    image: ${IMAGE_PREFIX:-opennms}/discovery:${VERSION}
     container_name: delta-v-discovery
     hostname: discovery
     depends_on:
@@ -211,7 +214,7 @@ services:
 
   trapd:
     profiles: [passive, full]
-    image: opennms/trapd:${VERSION}
+    image: ${IMAGE_PREFIX:-opennms}/trapd:${VERSION}
     container_name: delta-v-trapd
     hostname: trapd
     depends_on:
@@ -242,7 +245,7 @@ services:
 
   syslogd:
     profiles: [passive, full]
-    image: opennms/syslogd:${VERSION}
+    image: ${IMAGE_PREFIX:-opennms}/syslogd:${VERSION}
     container_name: delta-v-syslogd
     hostname: syslogd
     depends_on:
@@ -274,7 +277,7 @@ services:
 
   eventtranslator:
     profiles: [passive, full]
-    image: opennms/eventtranslator:${VERSION}
+    image: ${IMAGE_PREFIX:-opennms}/eventtranslator:${VERSION}
     container_name: delta-v-eventtranslator
     hostname: eventtranslator
     depends_on:
@@ -303,7 +306,7 @@ services:
 
   enlinkd:
     profiles: [full]
-    image: opennms/enlinkd:${VERSION}
+    image: ${IMAGE_PREFIX:-opennms}/enlinkd:${VERSION}
     container_name: delta-v-enlinkd
     hostname: enlinkd
     environment:
@@ -331,7 +334,7 @@ services:
 
   provisiond:
     profiles: [lite, passive, full]
-    image: opennms/provisiond:${VERSION}
+    image: ${IMAGE_PREFIX:-opennms}/provisiond:${VERSION}
     container_name: delta-v-provisiond
     hostname: provisiond
     depends_on:
@@ -364,7 +367,7 @@ services:
 
   bsmd:
     profiles: [lite, full]
-    image: opennms/bsmd:${VERSION}
+    image: ${IMAGE_PREFIX:-opennms}/bsmd:${VERSION}
     container_name: delta-v-bsmd
     hostname: bsmd
     depends_on:
@@ -393,7 +396,7 @@ services:
 
   perspectivepollerd:
     profiles: [full]
-    image: opennms/perspectivepollerd:${VERSION}
+    image: ${IMAGE_PREFIX:-opennms}/perspectivepollerd:${VERSION}
     container_name: delta-v-perspectivepollerd
     hostname: perspectivepollerd
     depends_on:
@@ -424,7 +427,7 @@ services:
 
   alarmd:
     profiles: [lite, passive, full]
-    image: opennms/alarmd:${VERSION}
+    image: ${IMAGE_PREFIX:-opennms}/alarmd:${VERSION}
     container_name: delta-v-alarmd
     hostname: alarmd
     depends_on:
@@ -451,7 +454,7 @@ services:
 
   telemetryd:
     profiles: [full]
-    image: opennms/telemetryd:${VERSION}
+    image: ${IMAGE_PREFIX:-opennms}/telemetryd:${VERSION}
     container_name: delta-v-telemetryd
     hostname: telemetryd
     depends_on:

@@ -1,0 +1,219 @@
+# Delta-V Build & Push Images
+#
+# Builds all Delta-V Docker images (16 total) and pushes them to GitHub
+# Container Registry (GHCR) as multi-arch images (linux/amd64 + linux/arm64).
+#
+# Trigger: Push a tag matching 'delta-v-*' (e.g., delta-v-1.0.0)
+#          or run manually via workflow_dispatch.
+#
+# Images built:
+#   Base layers:
+#     - ghcr.io/<owner>/jre-deltav:21          Custom JRE (jlink, Alpine)
+#     - ghcr.io/<owner>/daemon-base:<version>  Shared libs for all daemons
+#
+#   Daemons (12 Spring Boot fat JARs):
+#     - ghcr.io/<owner>/alarmd:<version>
+#     - ghcr.io/<owner>/bsmd:<version>
+#     - ghcr.io/<owner>/collectd:<version>
+#     - ghcr.io/<owner>/discovery:<version>
+#     - ghcr.io/<owner>/enlinkd:<version>
+#     - ghcr.io/<owner>/eventtranslator:<version>
+#     - ghcr.io/<owner>/perspectivepollerd:<version>
+#     - ghcr.io/<owner>/pollerd:<version>
+#     - ghcr.io/<owner>/provisiond:<version>
+#     - ghcr.io/<owner>/syslogd:<version>
+#     - ghcr.io/<owner>/telemetryd:<version>
+#     - ghcr.io/<owner>/trapd:<version>
+#
+#   Infrastructure:
+#     - ghcr.io/<owner>/minion-boot:<version>  Spring Boot Minion
+#     - ghcr.io/<owner>/db-init:<version>      Liquibase schema migration
+#
+# Usage after build:
+#   1. Set IMAGE_PREFIX in opennms-container/delta-v/.env:
+#        IMAGE_PREFIX=ghcr.io/<owner>
+#
+#   2. Authenticate to GHCR (one-time):
+#        echo $GITHUB_TOKEN | docker login ghcr.io -u <username> --password-stdin
+#
+#   3. Pull and deploy:
+#        cd opennms-container/delta-v
+#        docker compose pull
+#        ./deploy.sh up lite    # or passive, full
+#
+#   4. Verify:
+#        ./deploy.sh status
+#        ./deploy.sh test
+
+name: Delta-V Build & Push Images
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'delta-v-*'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
+  JAVA_VERSION: '21'
+  PLATFORMS: linux/amd64,linux/arm64
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    name: Build & Push Delta-V Images
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Extract version from POM
+        id: version
+        run: |
+          VERSION=$(grep -m1 '<version>' pom.xml | sed 's/.*<version>\(.*\)<\/version>.*/\1/')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Version: $VERSION"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU for multi-arch builds
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Compile daemon-boot modules
+        run: |
+          ulimit -n 65536 || true
+          DAEMON_BOOTS=":org.opennms.core.daemon-boot-alarmd,:org.opennms.core.daemon-boot-bsmd,:org.opennms.core.daemon-boot-collectd,:org.opennms.core.daemon-boot-discovery,:org.opennms.core.daemon-boot-enlinkd,:org.opennms.core.daemon-boot-eventtranslator,:org.opennms.core.daemon-boot-minion,:org.opennms.core.daemon-boot-perspectivepollerd,:org.opennms.core.daemon-boot-pollerd,:org.opennms.core.daemon-boot-provisiond,:org.opennms.core.daemon-boot-syslogd,:org.opennms.core.daemon-boot-telemetryd,:org.opennms.core.daemon-boot-trapd"
+          ./mvnw -B -DskipTests --projects "${DAEMON_BOOTS}" -am install
+
+      - name: Compile db-init
+        run: ./mvnw -B -DskipTests -f core/db-init/pom.xml package
+
+      - name: Build and push JRE base image
+        working-directory: opennms-container/delta-v
+        run: |
+          docker buildx build \
+            --platform ${{ env.PLATFORMS }} \
+            -f Dockerfile.jre \
+            -t "${{ env.IMAGE_PREFIX }}/jre-deltav:21" \
+            -t "${{ env.IMAGE_PREFIX }}/jre-deltav:latest" \
+            --push \
+            .
+
+      - name: Stage and deduplicate daemon JARs
+        working-directory: opennms-container/delta-v
+        run: ./compute-shared-libs.sh "${{ github.workspace }}" "${{ steps.version.outputs.version }}"
+
+      - name: Build and push daemon-base image
+        working-directory: opennms-container/delta-v
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          docker buildx build --no-cache \
+            --platform ${{ env.PLATFORMS }} \
+            -f Dockerfile.daemon-base \
+            --build-arg "JRE_IMAGE=${{ env.IMAGE_PREFIX }}/jre-deltav:21" \
+            -t "${{ env.IMAGE_PREFIX }}/daemon-base:${VERSION}" \
+            -t "${{ env.IMAGE_PREFIX }}/daemon-base:latest" \
+            --push \
+            .
+
+      - name: Build and push per-daemon images
+        working-directory: opennms-container/delta-v
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          DAEMONS="alarmd bsmd collectd discovery enlinkd eventtranslator perspectivepollerd pollerd provisiond syslogd telemetryd trapd"
+          for name in $DAEMONS; do
+            MAIN_CLASS=$(cat "staging/$name/.main_class")
+            echo "==> Building $name (main: $MAIN_CLASS)..."
+            docker buildx build \
+              --platform ${{ env.PLATFORMS }} \
+              -f Dockerfile.daemon-per \
+              --build-arg "VERSION=${VERSION}" \
+              --build-arg "DAEMON_BASE_IMAGE=${{ env.IMAGE_PREFIX }}/daemon-base" \
+              --build-arg "DAEMON_NAME=$name" \
+              --build-arg "MAIN_CLASS=$MAIN_CLASS" \
+              -t "${{ env.IMAGE_PREFIX }}/$name:${VERSION}" \
+              -t "${{ env.IMAGE_PREFIX }}/$name:latest" \
+              --push \
+              .
+          done
+
+      - name: Stage and build Minion Boot image
+        working-directory: opennms-container/delta-v
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          mkdir -p staging/minion-boot
+          find "${{ github.workspace }}/core/daemon-boot-minion/target" \
+            -maxdepth 1 -name "*.jar" \
+            ! -name "*-sources.jar" ! -name "*-javadoc.jar" ! -name "*.original" \
+            -exec cp {} staging/minion-boot/daemon-boot-minion.jar \;
+          docker buildx build \
+            --platform ${{ env.PLATFORMS }} \
+            --build-arg "VERSION=${VERSION}" \
+            --build-arg "JRE_IMAGE=${{ env.IMAGE_PREFIX }}/jre-deltav:21" \
+            -f Dockerfile.minion-boot \
+            -t "${{ env.IMAGE_PREFIX }}/minion-boot:${VERSION}" \
+            -t "${{ env.IMAGE_PREFIX }}/minion-boot:latest" \
+            --push \
+            .
+
+      - name: Build and push db-init image
+        working-directory: core/db-init
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          docker buildx build \
+            --platform ${{ env.PLATFORMS }} \
+            -t "${{ env.IMAGE_PREFIX }}/db-init:${VERSION}" \
+            -t "${{ env.IMAGE_PREFIX }}/db-init:latest" \
+            --push \
+            .
+
+      - name: Print image summary
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "## Delta-V Images Published to GHCR"
+          echo ""
+          echo "Platforms: ${{ env.PLATFORMS }}"
+          echo "Registry:  ${{ env.IMAGE_PREFIX }}"
+          echo "Version:   ${VERSION}"
+          echo ""
+          echo "### Quick Start"
+          echo ""
+          echo "1. Set IMAGE_PREFIX in opennms-container/delta-v/.env:"
+          echo "     IMAGE_PREFIX=${{ env.IMAGE_PREFIX }}"
+          echo ""
+          echo "2. Pull and deploy:"
+          echo "     cd opennms-container/delta-v"
+          echo "     docker compose pull"
+          echo "     ./deploy.sh up lite"
+          echo ""
+          echo "### Images"
+          DAEMONS="alarmd bsmd collectd discovery enlinkd eventtranslator perspectivepollerd pollerd provisiond syslogd telemetryd trapd minion-boot db-init jre-deltav daemon-base"
+          for name in $DAEMONS; do
+            echo "  ${{ env.IMAGE_PREFIX }}/$name:${VERSION}"
+          done
