@@ -23,22 +23,22 @@ package org.opennms.netmgt.provision.detector.snmp;
 
 import java.net.InetAddress;
 import java.util.Map;
+import java.util.Objects;
 
 import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 import org.opennms.netmgt.provision.DetectRequest;
 import org.opennms.netmgt.provision.support.DetectRequestImpl;
 import org.opennms.netmgt.provision.support.GenericServiceDetectorFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class GenericSnmpDetectorFactory<T extends SnmpDetector> extends GenericServiceDetectorFactory<SnmpDetector> {
 
-    @Autowired(required=false)
-    private SnmpAgentConfigFactory m_agentConfigFactory;
+    private final SnmpAgentConfigFactory m_agentConfigFactory;
 
 
     @SuppressWarnings("unchecked")
-    public GenericSnmpDetectorFactory(Class<T> clazz) {
+    public GenericSnmpDetectorFactory(Class<T> clazz, SnmpAgentConfigFactory agentConfigFactory) {
         super((Class<SnmpDetector>) clazz);
+        this.m_agentConfigFactory = Objects.requireNonNull(agentConfigFactory, "agentConfigFactory");
     }
 
     @SuppressWarnings("unchecked")
@@ -53,17 +53,10 @@ public class GenericSnmpDetectorFactory<T extends SnmpDetector> extends GenericS
     }
 
     public Map<String, String> getRuntimeAttributes(String location, InetAddress address) {
-        if (m_agentConfigFactory == null) {
-            throw new IllegalStateException("Cannot determine agent configuration without a SnmpAgentConfigFactory.");
-        }
         final var map = m_agentConfigFactory.getAgentConfig(address, location).toMap();
         // Need to embed location into request so minion knows
         map.put("location", location);
         return map;
-    }
-
-    public void setAgentConfigFactory(SnmpAgentConfigFactory agentConfigFactory) {
-        m_agentConfigFactory = agentConfigFactory;
     }
 
     public SnmpAgentConfigFactory getAgentConfigFactory() {

@@ -87,10 +87,19 @@ public class LocalServiceDetectorRegistry implements ServiceDetectorRegistry {
 
     public LocalServiceDetectorRegistry() {
         ServiceLoader<ServiceDetectorFactory> loader = ServiceLoader.load(ServiceDetectorFactory.class);
-        for (ServiceDetectorFactory<?> factory : loader) {
-            String detectorClassName = factory.getDetectorClass().getCanonicalName();
-            factoryByClassName.put(detectorClassName, factory);
-            LOG.info("Registered detector factory via ServiceLoader: {} -> {}", detectorClassName, factory.getClass().getCanonicalName());
+        // Factories that require constructor args (e.g., SnmpAgentConfigFactory) will
+        // throw ServiceConfigurationError here; skip them and let explicit @Bean
+        // wiring handle them instead.
+        var iterator = loader.iterator();
+        while (iterator.hasNext()) {
+            try {
+                ServiceDetectorFactory<?> factory = iterator.next();
+                String detectorClassName = factory.getDetectorClass().getCanonicalName();
+                factoryByClassName.put(detectorClassName, factory);
+                LOG.info("Registered detector factory via ServiceLoader: {} -> {}", detectorClassName, factory.getClass().getCanonicalName());
+            } catch (java.util.ServiceConfigurationError e) {
+                LOG.debug("Skipping ServiceLoader entry that cannot be instantiated (likely constructor-injected): {}", e.getMessage());
+            }
         }
         // In Karaf OSGi, ServiceLoader can't discover factories across bundle boundaries.
         // Explicitly register factories via reflection using DynamicImport-Package: *.

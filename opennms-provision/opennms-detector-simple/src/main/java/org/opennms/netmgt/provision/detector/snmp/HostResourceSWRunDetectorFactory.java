@@ -21,12 +21,11 @@
  */
 package org.opennms.netmgt.provision.detector.snmp;
 
-import org.springframework.stereotype.Component;
+import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 
-@Component
 public class HostResourceSWRunDetectorFactory extends GenericSnmpDetectorFactory<HostResourceSWRunDetector> {
 
-    public HostResourceSWRunDetectorFactory() {
-        super(HostResourceSWRunDetector.class);
+    public HostResourceSWRunDetectorFactory(SnmpAgentConfigFactory agentConfigFactory) {
+        super(HostResourceSWRunDetector.class, agentConfigFactory);
     }
 }
