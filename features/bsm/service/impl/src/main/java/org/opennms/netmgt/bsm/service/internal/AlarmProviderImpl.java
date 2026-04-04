@@ -24,6 +24,7 @@ package org.opennms.netmgt.bsm.service.internal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -34,7 +35,6 @@ import org.opennms.netmgt.dao.api.AlarmDao;
 import org.opennms.netmgt.model.OnmsAlarm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class AlarmProviderImpl implements AlarmProvider {
 
@@ -46,8 +46,11 @@ public class AlarmProviderImpl implements AlarmProvider {
 
     private final long threshold = getThreshold();
 
-    @Autowired
-    private AlarmDao alarmDao;
+    private final AlarmDao alarmDao;
+
+    public AlarmProviderImpl(AlarmDao alarmDao) {
+        this.alarmDao = Objects.requireNonNull(alarmDao);
+    }
 
     @Override
     public Map<String, AlarmWrapper> lookup(Set<String> reductionKeys) {

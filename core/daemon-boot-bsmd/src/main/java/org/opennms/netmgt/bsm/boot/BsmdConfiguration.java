@@ -48,9 +48,18 @@ import org.opennms.netmgt.bsm.service.BusinessServiceManager;
 import org.opennms.netmgt.bsm.service.BusinessServiceStateMachine;
 import org.opennms.netmgt.bsm.service.internal.BusinessServiceManagerImpl;
 import org.opennms.netmgt.bsm.service.internal.DefaultBusinessServiceStateMachine;
+import org.opennms.netmgt.bsm.persistence.api.BusinessServiceDao;
+import org.opennms.netmgt.bsm.persistence.api.BusinessServiceEdgeDao;
+import org.opennms.netmgt.bsm.persistence.api.functions.map.MapFunctionDao;
+import org.opennms.netmgt.bsm.persistence.api.functions.reduce.ReductionFunctionDao;
 import org.opennms.core.daemon.common.DaemonEventConfDao;
+import org.opennms.core.messagebus.MessageBus;
 import org.opennms.netmgt.config.api.EventConfDao;
+import org.opennms.netmgt.dao.api.ApplicationDao;
+import org.opennms.netmgt.dao.api.MonitoredServiceDao;
+import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.events.api.AnnotationBasedEventListenerAdapter;
+import org.opennms.netmgt.events.api.EventForwarder;
 import org.opennms.netmgt.events.api.EventIpcManager;
 import org.opennms.netmgt.events.api.EventSubscriptionService;
 import org.opennms.netmgt.model.AlarmAssociation;
@@ -73,6 +82,7 @@ import org.opennms.netmgt.model.jakarta.converter.NodeLabelSourceConverter;
 import org.opennms.netmgt.model.jakarta.converter.NodeTypeConverter;
 import org.opennms.netmgt.model.jakarta.converter.OnmsSeverityConverter;
 import org.opennms.netmgt.model.jakarta.converter.PrimaryTypeConverter;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.SmartLifecycle;
@@ -230,8 +240,9 @@ public class BsmdConfiguration {
     }
 
     @Bean
-    public BusinessServiceStateMachine businessServiceStateMachine() {
-        return new DefaultBusinessServiceStateMachine();
+    public BusinessServiceStateMachine businessServiceStateMachine(
+            org.opennms.netmgt.bsm.service.AlarmProvider alarmProvider) {
+        return new DefaultBusinessServiceStateMachine(alarmProvider);
     }
 
     /**
@@ -239,8 +250,26 @@ public class BsmdConfiguration {
      * Business Services and their edges.
      */
     @Bean
-    public BusinessServiceManager businessServiceManager() {
-        return new BusinessServiceManagerImpl();
+    public BusinessServiceManager businessServiceManager(
+            BusinessServiceDao businessServiceDao,
+            BusinessServiceEdgeDao edgeDao,
+            MonitoredServiceDao monitoredServiceDao,
+            MapFunctionDao mapFunctionDao,
+            ReductionFunctionDao reductionFunctionDao,
+            BusinessServiceStateMachine businessServiceStateMachine,
+            NodeDao nodeDao,
+            @Qualifier("eventIpcManager") EventForwarder eventForwarder,
+            ApplicationDao applicationDao) {
+        return new BusinessServiceManagerImpl(
+                businessServiceDao,
+                edgeDao,
+                monitoredServiceDao,
+                mapFunctionDao,
+                reductionFunctionDao,
+                businessServiceStateMachine,
+                nodeDao,
+                eventForwarder,
+                applicationDao);
     }
 
     /**
@@ -292,8 +321,10 @@ public class BsmdConfiguration {
             EventConfDao eventConfDao,
             TransactionTemplate transactionTemplate,
             BusinessServiceStateMachine stateMachine,
-            BusinessServiceManager manager) {
-        return new Bsmd(eventIpcManager, eventConfDao, transactionTemplate, stateMachine, manager);
+            BusinessServiceManager manager,
+            ObjectProvider<MessageBus> messageBusProvider) {
+        return new Bsmd(eventIpcManager, eventConfDao, transactionTemplate, stateMachine, manager,
+                messageBusProvider.getIfAvailable());
     }
 
     /**
