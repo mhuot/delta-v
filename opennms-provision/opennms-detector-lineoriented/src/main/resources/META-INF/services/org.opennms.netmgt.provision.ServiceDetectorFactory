@@ -1,0 +1,17 @@
+org.opennms.netmgt.provision.detector.msexchange.MSExchangeDetectorFactory
+org.opennms.netmgt.provision.detector.simple.CitrixDetectorFactory
+org.opennms.netmgt.provision.detector.simple.DominoIIOPDetectorFactory
+org.opennms.netmgt.provision.detector.simple.FtpDetectorFactory
+org.opennms.netmgt.provision.detector.simple.HttpDetectorFactory
+org.opennms.netmgt.provision.detector.simple.HttpsDetectorFactory
+org.opennms.netmgt.provision.detector.simple.ImapDetectorFactory
+org.opennms.netmgt.provision.detector.simple.ImapsDetectorFactory
+org.opennms.netmgt.provision.detector.simple.LdapDetectorFactory
+org.opennms.netmgt.provision.detector.simple.LdapsDetectorFactory
+org.opennms.netmgt.provision.detector.simple.MemcachedDetectorFactory
+org.opennms.netmgt.provision.detector.simple.NotesHttpDetectorFactory
+org.opennms.netmgt.provision.detector.simple.NrpeDetectorFactory
+org.opennms.netmgt.provision.detector.simple.Pop3DetectorFactory
+org.opennms.netmgt.provision.detector.simple.SmtpDetectorFactory
+org.opennms.netmgt.provision.detector.simple.TcpDetectorFactory
+org.opennms.netmgt.provision.detector.simple.TrivialTimeDetectorFactory
