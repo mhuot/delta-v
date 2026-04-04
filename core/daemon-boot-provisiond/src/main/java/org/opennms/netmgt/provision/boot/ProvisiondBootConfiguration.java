@@ -77,7 +77,6 @@ import org.opennms.netmgt.provision.LocationAwareDnsLookupClient;
 import org.opennms.netmgt.provision.ServiceDetectorFactory;
 import org.opennms.netmgt.provision.detector.registry.api.ServiceDetectorRegistry;
 import org.opennms.netmgt.provision.detector.snmp.GenericSnmpDetectorFactory;
-import org.opennms.core.daemon.common.registry.LocalServiceDetectorRegistry;
 import org.opennms.netmgt.provision.detector.client.rpc.DetectorClientRpcModule;
 import org.opennms.netmgt.provision.detector.client.rpc.LocationAwareDetectorClientRpcImpl;
 import org.opennms.netmgt.provision.dns.client.rpc.DnsLookupClientRpcModule;
@@ -237,25 +236,32 @@ public class ProvisiondBootConfiguration {
     }
 
     /**
-     * Override the default {@link LocalServiceDetectorRegistry} to inject
-     * {@link SnmpAgentConfigFactory} into SNMP detector factories.
+     * Inject {@link SnmpAgentConfigFactory} into SNMP detector factories after
+     * the {@link ServiceDetectorRegistry} bean is created by daemon-common.
      *
      * <p>ServiceLoader creates factory instances without Spring DI, so
      * {@code @Autowired} fields like {@code SnmpAgentConfigFactory} are null.
-     * This bean post-processes the registry to wire the SNMP config.</p>
+     * This bean wires the SNMP config into the factories post-creation.</p>
      */
     @Bean
-    public ServiceDetectorRegistry serviceDetectorRegistry(SnmpAgentConfigFactory snmpAgentConfigFactory) {
-        var registry = new LocalServiceDetectorRegistry();
-        // Inject SnmpAgentConfigFactory into any GenericSnmpDetectorFactory instances
-        for (String className : registry.getClassNames()) {
-            ServiceDetectorFactory<?> factory = registry.getDetectorFactoryByClassName(className);
-            if (factory instanceof GenericSnmpDetectorFactory<?> snmpFactory) {
-                snmpFactory.setAgentConfigFactory(snmpAgentConfigFactory);
-                LOG.info("Injected SnmpAgentConfigFactory into detector factory: {}", className);
+    public SmartLifecycle detectorRegistrySnmpConfigInjector(
+            ServiceDetectorRegistry registry, SnmpAgentConfigFactory snmpAgentConfigFactory) {
+        return new SmartLifecycle() {
+            private boolean running = false;
+            @Override public void start() {
+                for (String className : registry.getClassNames()) {
+                    ServiceDetectorFactory<?> factory = registry.getDetectorFactoryByClassName(className);
+                    if (factory instanceof GenericSnmpDetectorFactory<?> snmpFactory) {
+                        snmpFactory.setAgentConfigFactory(snmpAgentConfigFactory);
+                        LOG.info("Injected SnmpAgentConfigFactory into detector factory: {}", className);
+                    }
+                }
+                running = true;
             }
-        }
-        return registry;
+            @Override public void stop() { running = false; }
+            @Override public boolean isRunning() { return running; }
+            @Override public int getPhase() { return 0; }
+        };
     }
 
     // ===================================================================
