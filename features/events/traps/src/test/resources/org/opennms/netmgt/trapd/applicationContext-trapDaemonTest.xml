@@ -35,11 +35,15 @@
   <!-- update config for tests -->
   <bean id="trapdConfigUpdate" class="org.opennms.netmgt.trapd.TrapdConfigConfigUpdater"/>
 
-  <bean name="memoryTwinPublisher" class="org.opennms.core.ipc.twin.memory.MemoryTwinPublisher">
+  <bean name="twinPublisher" class="org.opennms.core.ipc.twin.memory.MemoryTwinPublisher">
   </bean>
+  <alias name="twinPublisher" alias="memoryTwinPublisher"/>
+
+  <!-- Mock SecureCredentialsVault for Trapd constructor injection -->
+  <bean id="jceksSecureCredentialsVault" class="org.opennms.netmgt.trapd.TrapdIT$MockSecureCredentialsVault"/>
 
   <bean name="memoryTwinSubscriber" class="org.opennms.core.ipc.twin.memory.MemoryTwinSubscriber">
-    <constructor-arg index="0" ref="memoryTwinPublisher"/>
+    <constructor-arg index="0" ref="twinPublisher"/>
     <constructor-arg index="1" value="Default"/>
   </bean>
 </beans>

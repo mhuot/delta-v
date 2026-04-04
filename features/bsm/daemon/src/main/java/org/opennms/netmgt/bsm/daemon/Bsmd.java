@@ -61,7 +61,6 @@ import org.opennms.netmgt.xml.event.Event;
 import org.opennms.netmgt.xml.eventconf.AlarmData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -93,28 +92,28 @@ public class Bsmd implements SpringServiceDaemon, BusinessServiceStateChangeHand
 
     private EventIpcManager m_eventIpcManager;
 
-    @Autowired(required = false)
-    private MessageBus m_messageBus;
+    private final MessageBus m_messageBus;
 
     private EventConfDao m_eventConfDao;
 
-    private TransactionTemplate m_template;
+    private final TransactionTemplate m_template;
 
-    private BusinessServiceStateMachine m_stateMachine;
+    private final BusinessServiceStateMachine m_stateMachine;
 
-    private BusinessServiceManager m_manager;
+    private final BusinessServiceManager m_manager;
 
-    @Autowired
     public Bsmd(EventIpcManager eventIpcManager,
                 EventConfDao eventConfDao,
                 TransactionTemplate transactionTemplate,
                 BusinessServiceStateMachine stateMachine,
-                BusinessServiceManager manager) {
+                BusinessServiceManager manager,
+                MessageBus messageBus) {
         m_eventIpcManager = Objects.requireNonNull(eventIpcManager);
         m_eventConfDao = Objects.requireNonNull(eventConfDao);
         m_template = Objects.requireNonNull(transactionTemplate);
         m_stateMachine = Objects.requireNonNull(stateMachine);
         m_manager = Objects.requireNonNull(manager);
+        m_messageBus = messageBus; // nullable — optional dependency
     }
 
     private boolean m_verifyReductionKeys = true;
@@ -399,30 +398,6 @@ public class Bsmd implements SpringServiceDaemon, BusinessServiceStateChangeHand
         LOG.info("Stopping bsmd...");
     }
 
-    public void setEventIpcManager(EventIpcManager eventIpcManager) {
-        m_eventIpcManager = eventIpcManager;
-    }
-
-    public EventIpcManager getEventIpcManager() {
-        return m_eventIpcManager;
-    }
-
-    public void setEventConfDao(EventConfDao eventConfDao) {
-        m_eventConfDao = eventConfDao;
-    }
-
-    public EventConfDao getEventConfDao() {
-        return m_eventConfDao;
-    }
-
-    public void setTransactionTemplate(TransactionTemplate template) {
-        m_template = template;
-    }
-
-    public TransactionTemplate getTransactionTemplate() {
-        return m_template;
-    }
-
     public void setVerifyReductionKeys(boolean verify) {
         m_verifyReductionKeys = verify;
     }
@@ -431,12 +406,19 @@ public class Bsmd implements SpringServiceDaemon, BusinessServiceStateChangeHand
         return m_verifyReductionKeys;
     }
 
-    public void setBusinessServiceStateMachine(BusinessServiceStateMachine stateMachine) {
-        m_stateMachine = stateMachine;
+    public void setEventIpcManager(EventIpcManager eventIpcManager) {
+        m_eventIpcManager = eventIpcManager;
+    }
+
+    public EventConfDao getEventConfDao() {
+        return m_eventConfDao;
+    }
+
+    public void setEventConfDao(EventConfDao eventConfDao) {
+        m_eventConfDao = eventConfDao;
     }
 
     public BusinessServiceStateMachine getBusinessServiceStateMachine() {
         return m_stateMachine;
     }
-
 }

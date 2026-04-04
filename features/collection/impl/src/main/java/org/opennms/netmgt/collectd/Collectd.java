@@ -39,8 +39,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import javax.swing.text.html.parser.Entity;
-
 import org.apache.commons.lang.StringUtils;
 import org.opennms.core.logging.Logging;
 import org.opennms.core.mate.api.EntityScopeProvider;
@@ -89,14 +87,10 @@ import org.opennms.netmgt.snmp.InetAddrUtils;
 import org.opennms.netmgt.threshd.api.ThresholdingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
-
-import com.google.common.annotations.VisibleForTesting;
 
 /**
  * <p>Collectd class.</p>
@@ -149,23 +143,11 @@ public class Collectd extends AbstractServiceDaemon implements
      */
     private volatile Scheduler m_scheduler;
 
-    /**
-     * Indicates if scheduling of existing interfaces has been completed
-     */
-    @Autowired
-    private volatile CollectdConfigFactory m_collectdConfigFactory;
-
-    @Autowired
-    private volatile IpInterfaceDao m_ifaceDao;
-
-    @Autowired
-    private volatile FilterDao m_filterDao;
-
-    @Autowired
-    private volatile ServiceCollectorRegistry m_serviceCollectorRegistry;
-
-    @Autowired
-    private volatile LocationAwareCollectorClient m_locationAwareCollectorClient;
+    private final CollectdConfigFactory m_collectdConfigFactory;
+    private final IpInterfaceDao m_ifaceDao;
+    private final FilterDao m_filterDao;
+    private final ServiceCollectorRegistry m_serviceCollectorRegistry;
+    private final LocationAwareCollectorClient m_locationAwareCollectorClient;
 
     static class SchedulingCompletedFlag {
         volatile boolean m_schedulingCompleted = false;
@@ -183,34 +165,44 @@ public class Collectd extends AbstractServiceDaemon implements
 
     private final SchedulingCompletedFlag m_schedulingCompletedFlag = new SchedulingCompletedFlag();
 
-    private volatile EventIpcManager m_eventIpcManager;
-
-    @Autowired
-    private volatile TransactionTemplate m_transTemplate;
-
-    @Autowired
-    private volatile NodeDao m_nodeDao;
-
-    @Autowired
-    private PersisterFactory m_persisterFactory;
-
-    @Autowired
-    private ThresholdingService m_thresholdingService;
-    
-    @Autowired(required = false)
-    private ReadablePollOutagesDao pollOutagesDao;
-
-    @Autowired
-    private EntityScopeProvider entityScopeProvider;
+    private final EventIpcManager m_eventIpcManager;
+    private final TransactionTemplate m_transTemplate;
+    private final NodeDao m_nodeDao;
+    private final PersisterFactory m_persisterFactory;
+    private final ThresholdingService m_thresholdingService;
+    private final ReadablePollOutagesDao pollOutagesDao;
+    private final EntityScopeProvider entityScopeProvider;
 
     private AtomicInteger sessionID = new AtomicInteger();
 
     /**
-     * Constructor.
+     * Constructor — all dependencies injected explicitly.
      */
-    public Collectd() {
+    public Collectd(CollectdConfigFactory collectdConfigFactory,
+                    IpInterfaceDao ifaceDao,
+                    FilterDao filterDao,
+                    ServiceCollectorRegistry serviceCollectorRegistry,
+                    LocationAwareCollectorClient locationAwareCollectorClient,
+                    EventIpcManager eventIpcManager,
+                    TransactionTemplate transTemplate,
+                    NodeDao nodeDao,
+                    PersisterFactory persisterFactory,
+                    ThresholdingService thresholdingService,
+                    ReadablePollOutagesDao pollOutagesDao,
+                    EntityScopeProvider entityScopeProvider) {
         super(LOG4J_CATEGORY);
-
+        m_collectdConfigFactory = collectdConfigFactory;
+        m_ifaceDao = ifaceDao;
+        m_filterDao = filterDao;
+        m_serviceCollectorRegistry = serviceCollectorRegistry;
+        m_locationAwareCollectorClient = locationAwareCollectorClient;
+        m_eventIpcManager = eventIpcManager;
+        m_transTemplate = transTemplate;
+        m_nodeDao = nodeDao;
+        m_persisterFactory = persisterFactory;
+        m_thresholdingService = thresholdingService;
+        this.pollOutagesDao = pollOutagesDao;
+        this.entityScopeProvider = entityScopeProvider;
         m_collectableServices = Collections.synchronizedList(new LinkedList<>());
     }
 
@@ -219,13 +211,6 @@ public class Collectd extends AbstractServiceDaemon implements
      */
     @Override
     protected void onInit() {
-        Assert.notNull(m_collectdConfigFactory, "collectdConfigFactory must not be null");
-        Assert.notNull(m_eventIpcManager, "eventIpcManager must not be null");
-        Assert.notNull(m_transTemplate, "transTemplate must not be null");
-        Assert.notNull(m_ifaceDao, "ifaceDao must not be null");
-        Assert.notNull(m_nodeDao, "nodeDao must not be null");
-        Assert.notNull(m_filterDao, "filterDao must not be null");
-
         LOG.debug("init: Initializing collection daemon");
         
         // make sure the instrumentation gets initialized
@@ -280,25 +265,12 @@ public class Collectd extends AbstractServiceDaemon implements
      *
      * @param eventIpcManager a {@link org.opennms.netmgt.events.api.EventIpcManager} object.
      */
-    public void setEventIpcManager(EventIpcManager eventIpcManager) {
-        m_eventIpcManager = eventIpcManager;
-    }
-
-    /**
-     * <p>getEventIpcManager</p>
-     *
-     * @return a {@link org.opennms.netmgt.events.api.EventIpcManager} object.
-     */
     public EventIpcManager getEventIpcManager() {
         return m_eventIpcManager;
     }
 
     public ThresholdingService getThresholdingService() {
         return m_thresholdingService;
-    }
-
-    public void setThresholdingService(ThresholdingService thresholdingService) {
-        m_thresholdingService = thresholdingService;
     }
 
     private void createScheduler() {
@@ -1359,59 +1331,6 @@ public class Collectd extends AbstractServiceDaemon implements
     }
 
     /**
-     * <p>setCollectorConfigDao</p>
-     *
-     * @param collectdConfigFactory a {@link org.opennms.netmgt.config.CollectdConfigFactory} object.
-     */
-    void setCollectdConfigFactory(CollectdConfigFactory collectdConfigFactory) {
-        m_collectdConfigFactory = collectdConfigFactory;
-    }
-
-    /**
-     * <p>setIpInterfaceDao</p>
-     *
-     * @param ifSvcDao a {@link org.opennms.netmgt.dao.api.IpInterfaceDao} object.
-     */
-    void setIpInterfaceDao(IpInterfaceDao ifSvcDao) {
-        m_ifaceDao = ifSvcDao;
-    }
-
-    /**
-     * <p>setFilterDao</p>
-     *
-     * @param dao a {@link org.opennms.netmgt.filter.api.FilterDao} object.
-     */
-    void setFilterDao(FilterDao dao) {
-        m_filterDao = dao;
-    }
-
-    public void setServiceCollectorRegistry(ServiceCollectorRegistry serviceCollectorRegistry) {
-        m_serviceCollectorRegistry = serviceCollectorRegistry;
-    }
-
-    public void setLocationAwareCollectorClient(LocationAwareCollectorClient locationAwareCollectorClient) {
-        m_locationAwareCollectorClient = locationAwareCollectorClient;
-    }
-
-    /**
-     * <p>setTransactionTemplate</p>
-     *
-     * @param transTemplate a {@link org.springframework.transaction.support.TransactionTemplate} object.
-     */
-    void setTransactionTemplate(TransactionTemplate transTemplate) {
-        m_transTemplate = transTemplate;
-    }
-
-    /**
-     * <p>setNodeDao</p>
-     *
-     * @param nodeDao a {@link org.opennms.netmgt.dao.api.NodeDao} object.
-     */
-    void setNodeDao(NodeDao nodeDao) {
-        m_nodeDao = nodeDao;
-    }
-
-    /**
      * <p>setServiceCollector</p>
      *
      * @param svcName a {@link java.lang.String} object.
@@ -1433,10 +1352,6 @@ public class Collectd extends AbstractServiceDaemon implements
 
     public PersisterFactory getPersisterFactory() {
         return m_persisterFactory;
-    }
-
-    public void setPersisterFactory(PersisterFactory persisterFactory) {
-        m_persisterFactory = persisterFactory;
     }
 
     /**
@@ -1518,12 +1433,4 @@ public class Collectd extends AbstractServiceDaemon implements
         return m_collectableServices.size();
     }
 
-    @VisibleForTesting
-    public void setPollOutagesDao(ReadablePollOutagesDao pollOutagesDao) {
-        this.pollOutagesDao = pollOutagesDao;
-    }
-
-    public void setEntityScopeProvider(EntityScopeProvider entityScopeProvider) {
-        this.entityScopeProvider = entityScopeProvider;
-    }
 }

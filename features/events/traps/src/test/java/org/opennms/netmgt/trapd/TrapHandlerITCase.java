@@ -149,8 +149,6 @@ public class TrapHandlerITCase implements InitializingBean {
         final TrapdConfigBean newConfig = new TrapdConfigBean(m_trapdConfig);
         newConfig.setSnmpV3Users(Lists.newArrayList(user));
         m_trapdConfig.update(newConfig);
-        m_trapd.setSecureCredentialsVault(new TrapdIT.MockSecureCredentialsVault());
-
         m_trapd.start();
         m_doStop = true;
     }

@@ -111,8 +111,7 @@ public class AdapterManager implements ManagedServiceFactory, TelemetryManager {
             sinkModule.setDistPollerDao(distPollerDao);
 
             // Create the consumer
-            final TelemetryMessageConsumer consumer = new TelemetryMessageConsumer(queueDefinition, adapterDefinitions, sinkModule);
-            consumer.setRegistry(telemetryRegistry);
+            final TelemetryMessageConsumer consumer = new TelemetryMessageConsumer(queueDefinition, adapterDefinitions, sinkModule, telemetryRegistry);
             consumer.init();
             messageConsumerManager.registerConsumer(consumer);
             consumersById.put(pid, consumer);

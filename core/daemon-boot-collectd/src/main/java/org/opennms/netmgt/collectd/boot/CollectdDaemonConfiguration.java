@@ -53,10 +53,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.opennms.netmgt.config.dao.outages.api.ReadablePollOutagesDao;
 import org.opennms.netmgt.config.dao.outages.impl.OnmsPollOutagesDao;
+import org.opennms.netmgt.collection.api.LocationAwareCollectorClient;
+import org.opennms.netmgt.collection.api.ServiceCollectorRegistry;
+import org.opennms.netmgt.dao.api.IpInterfaceDao;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.dao.api.SessionUtils;
 import org.opennms.netmgt.events.api.EventIpcManager;
 import org.opennms.netmgt.events.api.EventIpcManagerFactory;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.opennms.netmgt.threshd.api.ThresholdInitializationException;
 import org.opennms.netmgt.threshd.api.ThresholdingService;
 import org.opennms.netmgt.threshd.api.ThresholdingSession;
@@ -189,8 +193,8 @@ public class CollectdDaemonConfiguration {
      * handles automatically.</p>
      */
     @Bean
-    public DefaultResourceTypeMapper defaultResourceTypeMapper() {
-        return new DefaultResourceTypeMapper();
+    public DefaultResourceTypeMapper defaultResourceTypeMapper(DefaultResourceTypesDao resourceTypesDao) {
+        return new DefaultResourceTypeMapper(resourceTypesDao);
     }
 
     // ===================================================================
@@ -362,22 +366,30 @@ public class CollectdDaemonConfiguration {
     // ===================================================================
 
     /**
-     * The Collectd daemon.
-     *
-     * <p>Collectd has a 0-arg constructor. All dependencies except
-     * {@code EventIpcManager} are {@code @Autowired} fields satisfied by Spring
-     * auto-wiring. {@code EventIpcManager} is set via the explicit setter
-     * because it was historically setter-injected.</p>
+     * The Collectd daemon — all dependencies injected via constructor.
      */
     @Bean
-    public Collectd collectd(EventIpcManager eventIpcManager) {
+    public Collectd collectd(CollectdConfigFactory collectdConfigFactory,
+                             IpInterfaceDao ipInterfaceDao,
+                             FilterDao filterDao,
+                             ServiceCollectorRegistry serviceCollectorRegistry,
+                             LocationAwareCollectorClient locationAwareCollectorClient,
+                             EventIpcManager eventIpcManager,
+                             TransactionTemplate transactionTemplate,
+                             NodeDao nodeDao,
+                             PersisterFactory persisterFactory,
+                             ThresholdingService thresholdingService,
+                             ReadablePollOutagesDao pollOutagesDao,
+                             EntityScopeProvider entityScopeProvider) {
         // CollectableService.sendEvent() uses the static EventIpcManagerFactory singleton
         // rather than the Spring-injected EventIpcManager. Initialize it here.
         EventIpcManagerFactory.setIpcManager(eventIpcManager);
 
-        Collectd collectd = new Collectd();
-        collectd.setEventIpcManager(eventIpcManager);
-        return collectd;
+        return new Collectd(collectdConfigFactory, ipInterfaceDao, filterDao,
+                serviceCollectorRegistry, locationAwareCollectorClient,
+                eventIpcManager, transactionTemplate, nodeDao,
+                persisterFactory, thresholdingService, pollOutagesDao,
+                entityScopeProvider);
     }
 
     // ===================================================================

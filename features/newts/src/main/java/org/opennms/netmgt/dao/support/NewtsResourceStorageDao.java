@@ -57,7 +57,6 @@ import org.opennms.newts.cassandra.search.CassandraSearcher;
 import org.opennms.newts.persistence.cassandra.CassandraSampleRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -82,23 +81,24 @@ public class NewtsResourceStorageDao implements ResourceStorageDao {
 
     private static final Logger LOG = LoggerFactory.getLogger(NewtsResourceStorageDao.class);
 
-    @Autowired
-    private Context m_context;
+    private final Context m_context;
+    private final CassandraSearcher m_searcher;
+    private final CassandraSampleRepository m_sampleRepository;
+    private final CassandraIndexer m_indexer;
+    private final NewtsWriter m_newtsWriter;
+    private final SearchableResourceMetadataCache m_searchableCache;
 
-    @Autowired
-    private CassandraSearcher m_searcher;
-
-    @Autowired
-    private CassandraSampleRepository m_sampleRepository;
-
-    @Autowired
-    private CassandraIndexer m_indexer;
-
-    @Autowired
-    private NewtsWriter m_newtsWriter;
-
-    @Autowired
-    private SearchableResourceMetadataCache m_searchableCache;
+    public NewtsResourceStorageDao(Context context, CassandraSearcher searcher,
+                                   CassandraSampleRepository sampleRepository,
+                                   CassandraIndexer indexer, NewtsWriter newtsWriter,
+                                   SearchableResourceMetadataCache searchableCache) {
+        m_context = context;
+        m_searcher = searcher;
+        m_sampleRepository = sampleRepository;
+        m_indexer = indexer;
+        m_newtsWriter = newtsWriter;
+        m_searchableCache = searchableCache;
+    }
 
     @Override
     public boolean exists(ResourcePath path, int depth) {
@@ -292,30 +292,6 @@ public class NewtsResourceStorageDao implements ResourceStorageDao {
         }
 
         return ResourcePath.get(els);
-    }
-
-    public void setSearchableCache(SearchableResourceMetadataCache searchableCache) {
-        m_searchableCache = searchableCache;
-    }
-
-    public void setSearcher(CassandraSearcher searcher) {
-        m_searcher = searcher;
-    }
-
-    public void setContext(Context context) {
-        m_context = context;
-    }
-
-    public void setNewtsWriter(NewtsWriter newtsWriter) {
-        m_newtsWriter = newtsWriter;
-    }
-
-    public void setIndexer(CassandraIndexer indexer) {
-        m_indexer = indexer;
-    }
-
-    public void setSampleRepository(CassandraSampleRepository sampleRepository) {
-        m_sampleRepository = sampleRepository;
     }
 
 }

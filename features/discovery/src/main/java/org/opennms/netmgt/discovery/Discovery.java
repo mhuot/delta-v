@@ -33,8 +33,6 @@ import org.opennms.netmgt.events.api.EventForwarder;
 import org.opennms.netmgt.model.events.EventBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * This class is the main interface to the OpenNMS discovery service. The service
@@ -51,15 +49,9 @@ public class Discovery extends AbstractServiceDaemon {
 
     protected static final String LOG4J_CATEGORY = "discovery";
 
-    @Autowired
-    private DiscoveryConfigurationFactory m_discoveryFactory;
-
-    @Autowired
-    private DiscoveryTaskExecutor m_discoveryTaskExecutor;
-
-    @Autowired
-    @Qualifier("eventIpcManager")
-    private EventForwarder m_eventForwarder;
+    private final DiscoveryConfigurationFactory m_discoveryFactory;
+    private final DiscoveryTaskExecutor m_discoveryTaskExecutor;
+    private final EventForwarder m_eventForwarder;
 
     private Timer discoveryTimer;
 
@@ -67,14 +59,9 @@ public class Discovery extends AbstractServiceDaemon {
                      DiscoveryTaskExecutor discoveryTaskExecutor,
                      EventForwarder eventForwarder) {
         super(LOG4J_CATEGORY);
-        this.m_discoveryFactory = Objects.requireNonNull(discoveryConfigFactory);
-        this.m_discoveryTaskExecutor = Objects.requireNonNull(discoveryTaskExecutor);
-        this.m_eventForwarder = Objects.requireNonNull(eventForwarder);
-    }
-
-    /** Legacy no-arg constructor for Karaf XML context. */
-    public Discovery() {
-        super(LOG4J_CATEGORY);
+        m_discoveryFactory = Objects.requireNonNull(discoveryConfigFactory);
+        m_discoveryTaskExecutor = Objects.requireNonNull(discoveryTaskExecutor);
+        m_eventForwarder = Objects.requireNonNull(eventForwarder);
     }
 
     /**
@@ -84,10 +71,6 @@ public class Discovery extends AbstractServiceDaemon {
      */
     @Override
     protected void onInit() throws IllegalStateException {
-        Objects.requireNonNull(m_eventForwarder, "must set the eventForwarder property");
-        Objects.requireNonNull(m_discoveryTaskExecutor, "must set the discoveryTaskExecutor property");
-        Objects.requireNonNull(m_discoveryFactory, "must set the discoveryFactory property");
-
         try {
             LOG.debug("Initializing configuration...");
             m_discoveryFactory.reload();
@@ -174,20 +157,5 @@ public class Discovery extends AbstractServiceDaemon {
 
     public static String getLoggingCategory() {
         return LOG4J_CATEGORY;
-    }
-
-    /** @deprecated Legacy setter for Karaf XML context. Use constructor injection. */
-    public void setEventForwarder(EventForwarder eventForwarder) {
-        m_eventForwarder = eventForwarder;
-    }
-
-    /** @deprecated Legacy setter for Karaf XML context. Use constructor injection. */
-    public void setDiscoveryFactory(DiscoveryConfigurationFactory discoveryFactory) {
-        m_discoveryFactory = discoveryFactory;
-    }
-
-    /** @deprecated Legacy setter for Karaf XML context. Use constructor injection. */
-    public void setDiscoveryTaskExecutor(DiscoveryTaskExecutor discoveryTaskExecutor) {
-        m_discoveryTaskExecutor = discoveryTaskExecutor;
     }
 }

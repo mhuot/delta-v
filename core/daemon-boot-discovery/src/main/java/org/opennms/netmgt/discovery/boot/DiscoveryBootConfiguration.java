@@ -26,6 +26,7 @@ import org.opennms.netmgt.discovery.UnmanagedInterfaceFilter;
 import org.opennms.netmgt.icmp.best.BestMatchPingerFactory;
 import org.opennms.netmgt.icmp.PingerFactory;
 import org.opennms.core.rpc.api.RpcClientFactory;
+import org.opennms.netmgt.icmp.proxy.LocationAwarePingClient;
 import org.opennms.netmgt.icmp.proxy.LocationAwarePingClientImpl;
 import org.opennms.netmgt.icmp.proxy.PingProxyRpcModule;
 import org.opennms.netmgt.icmp.proxy.PingSweepRpcModule;
@@ -152,10 +153,12 @@ public class DiscoveryBootConfiguration {
     }
 
     @Bean
-    public DiscoveryTaskExecutorImpl discoveryTaskExecutor() {
-        // @Autowired fields: rangeChunker, locationAwarePingClient,
-        //   eventForwarder (@Primary), locationAwareDetectorClient (optional)
-        return new DiscoveryTaskExecutorImpl();
+    public DiscoveryTaskExecutorImpl discoveryTaskExecutor(
+            RangeChunker rangeChunker,
+            LocationAwarePingClient locationAwarePingClient,
+            @Qualifier("eventIpcManager") EventForwarder eventForwarder) {
+        return new DiscoveryTaskExecutorImpl(rangeChunker, locationAwarePingClient,
+                eventForwarder, null);
     }
 
     @Bean

@@ -31,7 +31,6 @@ import org.opennms.netmgt.daemon.AbstractServiceDaemon;
 import org.opennms.netmgt.events.api.EventConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * <p>
@@ -60,17 +59,17 @@ public class Syslogd extends AbstractServiceDaemon implements MessageHandler {
     /** MessageBus type derived from uei.opennms.org/internal/reloadDaemonConfig */
     private static final String MSG_TYPE_RELOAD_DAEMON_CONFIG = "reloadDaemonConfig";
 
-    @Autowired
     private SyslogReceiver m_udpEventReceiver;
 
-    @Autowired(required = false)
-    private MessageBus m_messageBus;
+    private final MessageBus m_messageBus;
 
     /**
      * <p>Constructor for Syslogd.</p>
      */
-    public Syslogd() {
+    public Syslogd(SyslogReceiver syslogReceiver, MessageBus messageBus) {
         super(LOG4J_CATEGORY);
+        this.m_udpEventReceiver = syslogReceiver;
+        this.m_messageBus = messageBus;
     }
 
     public SyslogReceiver getSyslogReceiver() {
@@ -153,7 +152,4 @@ public class Syslogd extends AbstractServiceDaemon implements MessageHandler {
         }
     }
 
-    public void setMessageBus(MessageBus messageBus) {
-        m_messageBus = messageBus;
-    }
 }

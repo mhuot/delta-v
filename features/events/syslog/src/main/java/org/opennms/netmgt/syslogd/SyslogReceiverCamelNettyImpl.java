@@ -38,8 +38,10 @@ import org.apache.camel.component.netty4.NettyConstants;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.DefaultManagementNameStrategy;
 import org.apache.camel.impl.SimpleRegistry;
+import org.opennms.core.ipc.sink.api.MessageDispatcherFactory;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.config.SyslogdConfig;
+import org.opennms.netmgt.dao.api.DistPollerDao;
 import org.opennms.netmgt.syslogd.api.SyslogConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,8 +65,10 @@ public class SyslogReceiverCamelNettyImpl extends SinkDispatchingSyslogReceiver 
 
     private DefaultCamelContext m_camel;
 
-    public SyslogReceiverCamelNettyImpl(final SyslogdConfig config) {
-        super(config);
+    public SyslogReceiverCamelNettyImpl(final SyslogdConfig config,
+                                        final DistPollerDao distPollerDao,
+                                        final MessageDispatcherFactory messageDispatcherFactory) {
+        super(config, distPollerDao, messageDispatcherFactory);
         m_config = config;
         setHostAndPort();
     }

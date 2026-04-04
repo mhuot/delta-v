@@ -84,12 +84,10 @@ public class DiscoveryWithDetectorsIT {
     @Test(timeout = 30000)
     public void testDiscoveryWithMockDetector() throws IOException, InterruptedException {
         MockLogAppender.setupLogging(true, "INFO");
-        m_discovery.setEventForwarder(m_eventIpcManager);
         String resourcePath = DiscoveryConfigDetectorsTest.class.getResource("/etc/discovery-configuration.xml").getPath();
         Path etcPath = Paths.get(resourcePath).getParent().getParent();
         System.setProperty("opennms.home", etcPath.toString());
         DiscoveryConfigFactory configFactory = new DiscoveryConfigFactory();
-        m_discovery.setDiscoveryFactory(configFactory);
         serviceDetectorRegistry.onBind(new MockServiceDetectorFactory1(), new HashMap());
         serviceDetectorRegistry.onBind(new MockServiceDetectorFactory2(), new HashMap());
         // Anticipate newSuspect events for all of the addresses

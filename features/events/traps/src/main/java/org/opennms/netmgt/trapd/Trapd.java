@@ -28,7 +28,6 @@ import org.opennms.core.ipc.twin.api.TwinPublisher;
 import org.opennms.core.mate.api.Interpolator;
 import org.opennms.core.mate.api.Scope;
 import org.opennms.core.mate.api.SecureCredentialsVaultScope;
-import org.opennms.core.spring.BeanUtils;
 import org.opennms.features.scv.api.SecureCredentialsVault;
 import org.opennms.netmgt.config.TrapdConfig;
 import org.opennms.netmgt.config.TrapdConfigFactory;
@@ -43,7 +42,6 @@ import org.opennms.netmgt.snmp.SnmpV3User;
 import org.opennms.netmgt.snmp.TrapListenerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * <p>
@@ -85,16 +83,13 @@ public class Trapd extends AbstractServiceDaemon {
     /**
      * The class instance used to receive new events from for the system.
      */
-    @Autowired
-    private TrapListener m_trapListener;
+    private final TrapListener m_trapListener;
 
-    @Autowired
-    private SecureCredentialsVault secureCredentialsVault;
+    private final SecureCredentialsVault secureCredentialsVault;
 
     private TrapdConfig m_config;
 
-    @Autowired
-    private TwinPublisher m_twinPublisher;
+    private final TwinPublisher m_twinPublisher;
 
     private TwinPublisher.Session<TrapListenerConfig> m_twinSession;
 
@@ -108,14 +103,15 @@ public class Trapd extends AbstractServiceDaemon {
      *
      * @see org.opennms.protocols.snmp.SnmpTrapSession
      */
-    public Trapd() {
+    public Trapd(TrapListener trapListener,
+                 SecureCredentialsVault secureCredentialsVault,
+                 TwinPublisher twinPublisher) {
         super(LOG4J_CATEGORY);
 
-        m_config = TrapdConfigFactory.getInstance();
-    }
-
-    public void setSecureCredentialsVault(final SecureCredentialsVault secureCredentialsVault) {
+        this.m_trapListener = trapListener;
         this.secureCredentialsVault = secureCredentialsVault;
+        this.m_twinPublisher = twinPublisher;
+        m_config = TrapdConfigFactory.getInstance();
     }
 
     /**
@@ -123,7 +119,6 @@ public class Trapd extends AbstractServiceDaemon {
      */
     @Override
     protected synchronized void onInit() {
-        BeanUtils.assertAutowiring(this);
     }
 
     /**

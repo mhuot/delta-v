@@ -31,6 +31,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.opennms.core.criteria.Criteria;
 import org.opennms.netmgt.dao.api.ApplicationDao;
 import org.opennms.netmgt.graph.api.search.SearchContext;
 import org.opennms.netmgt.graph.api.search.SearchSuggestion;
@@ -65,7 +66,7 @@ public class ApplicationSearchProviderTest {
 
     private void assertSuggestions(List<OnmsApplication> applications, String input, List<SearchSuggestion> expectations) {
         ApplicationDao dao = Mockito.mock(ApplicationDao.class);
-        when(dao.findMatching(any())).thenReturn(applications);
+        when(dao.findMatching(any(Criteria.class))).thenReturn(applications);
         ApplicationSearchProvider provider = new ApplicationSearchProvider(dao);
         SearchContext context = SearchContext.builder().graphService(Mockito.mock(GraphService.class)).build();
         List<SearchSuggestion> results = provider.getSuggestions(context,

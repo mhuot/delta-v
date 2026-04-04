@@ -139,13 +139,9 @@ public class Nms4335IT implements InitializingBean {
             stream = new ByteArrayInputStream(config.getBytes());
             m_config = new SyslogdConfigFactory(stream);
 
-            m_syslogd = new Syslogd();
+            SyslogReceiverJavaNetImpl receiver = new SyslogReceiverJavaNetImpl(m_config, m_distPollerDao, new MockMessageDispatcherFactory<>());
 
-            SyslogReceiverJavaNetImpl receiver = new SyslogReceiverJavaNetImpl(m_config);
-            receiver.setDistPollerDao(m_distPollerDao);
-            receiver.setMessageDispatcherFactory(new MockMessageDispatcherFactory<>());
-
-            m_syslogd.setSyslogReceiver(receiver);
+            m_syslogd = new Syslogd(receiver, null);
             m_syslogd.init();
 
         } finally {
@@ -199,10 +195,7 @@ public class Nms4335IT implements InitializingBean {
     
         m_eventIpcManager.getEventAnticipator().anticipateEvent(expectedEventBldr.getEvent());
 
-        final SyslogSinkConsumer syslogSinkConsumer = new SyslogSinkConsumer(new MetricRegistry());
-        syslogSinkConsumer.setDistPollerDao(m_distPollerDao);
-        syslogSinkConsumer.setSyslogdConfig(m_config);
-        syslogSinkConsumer.setEventForwarder(m_eventIpcManager);
+        final SyslogSinkConsumer syslogSinkConsumer = new SyslogSinkConsumer(new MetricRegistry(), null, m_config, m_distPollerDao, m_eventIpcManager, null);
 
         final SyslogSinkModule syslogSinkModule = syslogSinkConsumer.getModule();
 

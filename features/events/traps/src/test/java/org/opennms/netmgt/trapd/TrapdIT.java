@@ -145,7 +145,6 @@ public class TrapdIT {
         eventConfDao.loadEventsFromDB(events);
 
         m_mockEventIpcManager.setSynchronous(true);
-        m_trapd.setSecureCredentialsVault(new MockSecureCredentialsVault());
         m_trapd.onStart();
     }
 

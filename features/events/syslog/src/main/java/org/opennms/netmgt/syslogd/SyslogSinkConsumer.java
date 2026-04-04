@@ -51,7 +51,6 @@ import org.opennms.netmgt.xml.event.Parm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
@@ -64,20 +63,16 @@ public class SyslogSinkConsumer implements MessageConsumer<SyslogConnection, Sys
 
     private static final String defaultCacheConfig = "maximumSize=1000,expireAfterWrite=8h";
     private static final String dnsCacheConfigProperty = "org.opennms.netmgt.syslogd.dnscache.config";
-    @Autowired
-    private MessageConsumerManager messageConsumerManager;
 
-    @Autowired
-    private SyslogdConfig syslogdConfig;
+    private final MessageConsumerManager messageConsumerManager;
 
-    @Autowired
-    private DistPollerDao distPollerDao;
+    private final SyslogdConfig syslogdConfig;
 
-    @Autowired
-    private EventForwarder eventForwarder;
+    private final DistPollerDao distPollerDao;
 
-    @Autowired
-    private LocationAwareDnsLookupClient m_locationAwareDnsLookupClient;
+    private final EventForwarder eventForwarder;
+
+    private final LocationAwareDnsLookupClient m_locationAwareDnsLookupClient;
 
     private Cache<HostNameWithLocationKey, String> dnsCache;
 
@@ -86,7 +81,17 @@ public class SyslogSinkConsumer implements MessageConsumer<SyslogConnection, Sys
     private final Timer toEventTimer;
     private final Timer broadcastTimer;
 
-    public SyslogSinkConsumer(MetricRegistry registry) {
+    public SyslogSinkConsumer(MetricRegistry registry,
+                              MessageConsumerManager messageConsumerManager,
+                              SyslogdConfig syslogdConfig,
+                              DistPollerDao distPollerDao,
+                              EventForwarder eventForwarder,
+                              LocationAwareDnsLookupClient locationAwareDnsLookupClient) {
+        this.messageConsumerManager = messageConsumerManager;
+        this.syslogdConfig = syslogdConfig;
+        this.distPollerDao = distPollerDao;
+        this.eventForwarder = eventForwarder;
+        this.m_locationAwareDnsLookupClient = locationAwareDnsLookupClient;
         consumerTimer = registry.timer("consumer");
         toEventTimer = registry.timer("consumer.toevent");
         broadcastTimer = registry.timer("consumer.broadcast");
@@ -198,26 +203,6 @@ public class SyslogSinkConsumer implements MessageConsumer<SyslogConnection, Sys
     public void afterPropertiesSet() throws Exception {
         // Automatically register the consumer on initialization
         messageConsumerManager.registerConsumer(this);
-    }
-
-    public void setEventForwarder(EventForwarder eventForwarder) {
-        this.eventForwarder = eventForwarder;
-    }
-
-    public void setMessageConsumerManager(MessageConsumerManager messageConsumerManager) {
-        this.messageConsumerManager = messageConsumerManager;
-    }
-
-    public void setSyslogdConfig(SyslogdConfig syslogdConfig) {
-        this.syslogdConfig = syslogdConfig;
-    }
-
-    public void setDistPollerDao(DistPollerDao distPollerDao) {
-        this.distPollerDao = distPollerDao;
-    }
-
-    public void setLocationAwareDnsLookupClient(LocationAwareDnsLookupClient locationAwareDnsLookupClient) {
-        this.m_locationAwareDnsLookupClient = locationAwareDnsLookupClient;
     }
 
 }

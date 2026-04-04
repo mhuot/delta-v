@@ -64,7 +64,6 @@ import org.opennms.newts.api.query.ResultDescriptor;
 import org.opennms.newts.api.query.StandardAggregationFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.ObjectRetrievalFailureException;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -101,14 +100,15 @@ public class NewtsFetchStrategy implements MeasurementFetchStrategy {
 
     public static final int PARALLELISM = SystemProperties.getInteger("org.opennms.newts.query.parallelism", Runtime.getRuntime().availableProcessors());
 
-    @Autowired
-    private Context m_context;
+    private final Context m_context;
+    private final ResourceDao m_resourceDao;
+    private final SampleRepository m_sampleRepository;
 
-    @Autowired
-    private ResourceDao m_resourceDao;
-
-    @Autowired
-    private SampleRepository m_sampleRepository;
+    public NewtsFetchStrategy(Context context, ResourceDao resourceDao, SampleRepository sampleRepository) {
+        m_context = context;
+        m_resourceDao = resourceDao;
+        m_sampleRepository = sampleRepository;
+    }
 
     private final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("NewtsFetchStrateg-%d").build();
 
@@ -399,21 +399,6 @@ public class NewtsFetchStrategy implements MeasurementFetchStrategy {
         }
 
         return new LateAggregationParams(effectiveStep, effectiveInterval, effectiveHeartbeat);
-    }
-
-    @VisibleForTesting
-    protected void setResourceDao(ResourceDao resourceDao) {
-        m_resourceDao = resourceDao;
-    }
-
-    @VisibleForTesting
-    protected void setSampleRepository(SampleRepository sampleRepository) {
-        m_sampleRepository = sampleRepository;
-    }
-
-    @VisibleForTesting
-    protected void setContext(Context context) {
-        m_context = context;
     }
 
     private OnmsNode getNode(final OnmsResource resource, final Source source) {

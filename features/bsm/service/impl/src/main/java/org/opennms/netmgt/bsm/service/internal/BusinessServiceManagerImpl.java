@@ -73,35 +73,37 @@ import org.opennms.netmgt.model.OnmsApplication;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.events.EventBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class BusinessServiceManagerImpl implements BusinessServiceManager {
-    @Autowired
-    private BusinessServiceDao businessServiceDao;
+    private final BusinessServiceDao businessServiceDao;
+    private final BusinessServiceEdgeDao edgeDao;
+    private final MonitoredServiceDao monitoredServiceDao;
+    private final MapFunctionDao mapFunctionDao;
+    private final ReductionFunctionDao reductionFunctionDao;
+    private final BusinessServiceStateMachine businessServiceStateMachine;
+    private final NodeDao nodeDao;
+    private final EventForwarder eventForwarder;
+    private final ApplicationDao applicationDao;
 
-    @Autowired
-    private BusinessServiceEdgeDao edgeDao;
-
-    @Autowired
-    private MonitoredServiceDao monitoredServiceDao;
-
-    @Autowired
-    private MapFunctionDao mapFunctionDao;
-
-    @Autowired
-    private ReductionFunctionDao reductionFunctionDao;
-
-    @Autowired
-    private BusinessServiceStateMachine businessServiceStateMachine;
-
-    @Autowired
-    private NodeDao nodeDao;
-
-    @Autowired
-    private EventForwarder eventForwarder;
-
-    @Autowired
-    private ApplicationDao applicationDao;
+    public BusinessServiceManagerImpl(BusinessServiceDao businessServiceDao,
+                                      BusinessServiceEdgeDao edgeDao,
+                                      MonitoredServiceDao monitoredServiceDao,
+                                      MapFunctionDao mapFunctionDao,
+                                      ReductionFunctionDao reductionFunctionDao,
+                                      BusinessServiceStateMachine businessServiceStateMachine,
+                                      NodeDao nodeDao,
+                                      EventForwarder eventForwarder,
+                                      ApplicationDao applicationDao) {
+        this.businessServiceDao = Objects.requireNonNull(businessServiceDao);
+        this.edgeDao = Objects.requireNonNull(edgeDao);
+        this.monitoredServiceDao = Objects.requireNonNull(monitoredServiceDao);
+        this.mapFunctionDao = Objects.requireNonNull(mapFunctionDao);
+        this.reductionFunctionDao = Objects.requireNonNull(reductionFunctionDao);
+        this.businessServiceStateMachine = Objects.requireNonNull(businessServiceStateMachine);
+        this.nodeDao = Objects.requireNonNull(nodeDao);
+        this.eventForwarder = Objects.requireNonNull(eventForwarder);
+        this.applicationDao = Objects.requireNonNull(applicationDao);
+    }
 
     @Override
     public List<BusinessService> getAllBusinessServices() {

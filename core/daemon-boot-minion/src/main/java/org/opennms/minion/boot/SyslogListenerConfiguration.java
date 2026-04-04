@@ -73,10 +73,7 @@ public class SyslogListenerConfiguration {
     public SyslogReceiverJavaNetImpl syslogReceiver(SyslogConfigBean config,
                                                      MessageDispatcherFactory messageDispatcherFactory,
                                                      DistPollerDao distPollerDao) {
-        SyslogReceiverJavaNetImpl receiver = new SyslogReceiverJavaNetImpl(config);
-        receiver.setMessageDispatcherFactory(messageDispatcherFactory);
-        receiver.setDistPollerDao(distPollerDao);
-        return receiver;
+        return new SyslogReceiverJavaNetImpl(config, distPollerDao, messageDispatcherFactory);
     }
 
     @Bean

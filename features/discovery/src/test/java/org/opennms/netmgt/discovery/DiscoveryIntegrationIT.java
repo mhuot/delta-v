@@ -91,8 +91,7 @@ public class DiscoveryIntegrationIT {
     public void setUp() throws Exception {
         MockLogAppender.setupLogging(true, "INFO");
 
-        // Replace the default event forwarder with our mock
-        m_discovery.setEventForwarder(m_eventIpcManager);
+        // EventForwarder is now injected via constructor — mock wired by Spring context
     }
 
     @Test

@@ -68,12 +68,7 @@ public class DefaultBusinessServiceStateMachineTest {
         Edge a1 = h.getEdgeByReductionKey("a1");
 
         // Setup the state machine
-        DefaultBusinessServiceStateMachine stateMachine = new DefaultBusinessServiceStateMachine();
-        LoggingStateChangeHandler stateChangeHandler = new LoggingStateChangeHandler();
-        stateMachine.addHandler(stateChangeHandler, Maps.newHashMap());
-        stateMachine.setBusinessServices(h.getBusinessServices());
-
-        stateMachine.setAlarmProvider(new AlarmProvider() {
+        DefaultBusinessServiceStateMachine stateMachine = new DefaultBusinessServiceStateMachine(new AlarmProvider() {
             @Override
             public Map<String, AlarmWrapper> lookup(Set<String> reductionKeys) {
 
@@ -85,6 +80,9 @@ public class DefaultBusinessServiceStateMachineTest {
                 return new HashMap<>();
             }
         });
+        LoggingStateChangeHandler stateChangeHandler = new LoggingStateChangeHandler();
+        stateMachine.addHandler(stateChangeHandler, Maps.newHashMap());
+        stateMachine.setBusinessServices(h.getBusinessServices());
 
         // Verify the initial state
         assertEquals(Status.NORMAL, stateMachine.getOperationalStatus(b1));

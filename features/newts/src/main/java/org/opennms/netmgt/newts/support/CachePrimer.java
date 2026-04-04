@@ -30,31 +30,30 @@ import org.opennms.newts.cassandra.search.CassandraCachePrimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class CachePrimer implements InitializingBean, Runnable {
 
     private static final Logger LOG = LoggerFactory.getLogger(CachePrimer.class);
 
-    @Autowired(required=false)
-    private GuavaSearchableResourceMetadataCache resourceMetadataCache;
-
-    @Autowired
-    private CassandraSession session;
-
-    @Autowired
-    private Context context;
-
+    private final GuavaSearchableResourceMetadataCache resourceMetadataCache;
+    private final CassandraSession session;
+    private final Context context;
     private final boolean primingDisabled;
     private final long blockWhilePrimingMs;
     private final int fetchSize;
     private final int fetchMoreThreshold;
 
     @Inject
-    public CachePrimer(@Named("cache.priming.disable") boolean primingDisabled,
+    public CachePrimer(GuavaSearchableResourceMetadataCache resourceMetadataCache,
+                       CassandraSession session,
+                       Context context,
+                       @Named("cache.priming.disable") boolean primingDisabled,
                        @Named("cache.priming.block_ms") long blockWhilePrimingMs,
                        @Named("cache.priming.fetch_size") int fetchSize,
                        @Named("cache.priming.fetch_more_threshold") int fetchMoreThreshold) {
+        this.resourceMetadataCache = resourceMetadataCache;
+        this.session = session;
+        this.context = context;
         this.primingDisabled = primingDisabled;
         this.blockWhilePrimingMs = blockWhilePrimingMs;
         this.fetchSize = fetchSize;
@@ -107,15 +106,4 @@ public class CachePrimer implements InitializingBean, Runnable {
         LOG.info("Done priming cache. Cache size: {}", resourceMetadataCache.getSize());
     }
 
-    public void setResourceMetadataCache(GuavaSearchableResourceMetadataCache resourceMetadataCache) {
-        this.resourceMetadataCache = resourceMetadataCache;
-    }
-
-    public void setSession(CassandraSession session) {
-        this.session = session;
-    }
-
-    public void setContext(Context context) {
-        this.context = context;
-    }
 }

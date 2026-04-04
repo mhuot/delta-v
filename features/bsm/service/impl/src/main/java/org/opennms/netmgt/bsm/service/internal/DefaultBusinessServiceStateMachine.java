@@ -65,7 +65,6 @@ import org.opennms.netmgt.bsm.service.model.graph.internal.BusinessServiceGraphI
 import org.opennms.netmgt.bsm.service.model.graph.internal.GraphAlgorithms;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -79,8 +78,16 @@ public class DefaultBusinessServiceStateMachine implements BusinessServiceStateM
     private static final Logger LOG = LoggerFactory.getLogger(DefaultBusinessServiceStateMachine.class);
     public static final Status MIN_SEVERITY = Status.NORMAL;
 
-    @Autowired
-    private AlarmProvider m_alarmProvider;
+    private final AlarmProvider m_alarmProvider;
+
+    public DefaultBusinessServiceStateMachine(AlarmProvider alarmProvider) {
+        m_alarmProvider = alarmProvider;
+    }
+
+    /** No-arg constructor for {@link #clone(boolean)} and tests. */
+    public DefaultBusinessServiceStateMachine() {
+        this(null);
+    }
 
     private final List<BusinessServiceStateChangeHandler> m_handlers = Lists.newArrayList();
     private final ReadWriteLock m_rwLock = new ReentrantReadWriteLock();
@@ -368,15 +375,6 @@ public class DefaultBusinessServiceStateMachine implements BusinessServiceStateM
             return null;
         } finally {
             m_rwLock.readLock().unlock();
-        }
-    }
-
-    public void setAlarmProvider(AlarmProvider alarmProvider) {
-        m_rwLock.writeLock().lock();
-        try {
-            m_alarmProvider = alarmProvider;
-        } finally {
-            m_rwLock.writeLock().unlock();
         }
     }
 

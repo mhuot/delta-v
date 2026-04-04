@@ -21,6 +21,7 @@
  */
 package org.opennms.netmgt.telemetry.daemon;
 
+import java.io.Closeable;
 import java.util.List;
 import java.util.Map;
 
@@ -29,8 +30,12 @@ import org.junit.Test;
 import org.opennms.core.rpc.mock.MockEntityScopeProvider;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.dao.api.ServiceRef;
+import org.opennms.netmgt.dao.api.ServiceTracker;
+import org.opennms.netmgt.telemetry.api.registry.TelemetryRegistry;
 import org.opennms.netmgt.telemetry.config.model.PackageConfig;
 import org.opennms.netmgt.telemetry.config.model.Parameter;
+
+import static org.mockito.Mockito.mock;
 
 public class ConnectorManagerTest {
 
@@ -48,8 +53,11 @@ public class ConnectorManagerTest {
         connectorPackage.getParameters().add(new Parameter("group3", "paths", "/protocols/protocol/bgp"));
         connectorPackage.getParameters().add(new Parameter("group3", "frequency", "4000"));
 
-        ConnectorManager connectorManager = new ConnectorManager();
-        connectorManager.setEntityScopeProvider(new MockEntityScopeProvider());
+        ConnectorManager connectorManager = new ConnectorManager(
+                mock(TelemetryRegistry.class),
+                new MockEntityScopeProvider(),
+                mock(ServiceTracker.class),
+                mock(OpenConfigTwinPublisher.class));
         ServiceRef serviceRef = new ServiceRef(1, InetAddressUtils.ONE_TWENTY_SEVEN, "OPENCONFIG",DEFAULT_LOCATION);
         List<Map<String, String>> groupedParams = connectorManager.getGroupedParams(connectorPackage, serviceRef);
         Assert.assertEquals(4, groupedParams.size());

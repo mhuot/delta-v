@@ -134,10 +134,7 @@ public class SyslogdEventdLoadIT implements InitializingBean {
         m_eventCounter = new EventCounter();
         m_eventIpcManager.addEventListener(m_eventCounter);
 
-        m_syslogSinkConsumer = new SyslogSinkConsumer(new MetricRegistry());
-        m_syslogSinkConsumer.setDistPollerDao(m_distPollerDao);
-        m_syslogSinkConsumer.setSyslogdConfig(m_config);
-        m_syslogSinkConsumer.setEventForwarder(m_eventIpcManager);
+        m_syslogSinkConsumer = new SyslogSinkConsumer(new MetricRegistry(), null, m_config, m_distPollerDao, m_eventIpcManager, null);
         m_syslogSinkModule = m_syslogSinkConsumer.getModule();
 
         m_messageDispatcherFactory.setConsumer(m_syslogSinkConsumer);
@@ -161,21 +158,18 @@ public class SyslogdEventdLoadIT implements InitializingBean {
                 IOUtils.closeQuietly(stream);
             }
         }
-        // Update the beans with the new config.
+        // Re-create the consumer with the new config.
         if (m_syslogSinkConsumer != null) {
-            m_syslogSinkConsumer.setSyslogdConfig(m_config);
+            m_syslogSinkConsumer = new SyslogSinkConsumer(new MetricRegistry(), null, m_config, m_distPollerDao, m_eventIpcManager, null);
             m_syslogSinkModule = m_syslogSinkConsumer.getModule();
+            m_messageDispatcherFactory.setConsumer(m_syslogSinkConsumer);
         }
     }
 
     private void startSyslogdGracefully() throws SocketException {
-        m_syslogd = new Syslogd();
+        SyslogReceiverJavaNetImpl receiver = new SyslogReceiverJavaNetImpl(m_config, m_distPollerDao, m_messageDispatcherFactory);
 
-        SyslogReceiverJavaNetImpl receiver = new SyslogReceiverJavaNetImpl(m_config);
-        receiver.setDistPollerDao(m_distPollerDao);
-        receiver.setMessageDispatcherFactory(m_messageDispatcherFactory);
-
-        m_syslogd.setSyslogReceiver(receiver);
+        m_syslogd = new Syslogd(receiver, null);
         m_syslogd.init();
 
         SyslogdTestUtils.startSyslogdGracefully(m_syslogd);

@@ -77,7 +77,6 @@ public class TrapdConfigReloadIT {
 	public void setUp() {
 		this.events.setSynchronous(true);
 		this.events.getEventAnticipator().reset();
-		this.trapd.setSecureCredentialsVault(new TrapdIT.MockSecureCredentialsVault());
 		this.trapd.onStart();
 	}
 

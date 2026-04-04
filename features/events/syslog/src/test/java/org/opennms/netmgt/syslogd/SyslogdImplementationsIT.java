@@ -114,9 +114,7 @@ public class SyslogdImplementationsIT implements InitializingBean {
         m_eventCounter = new EventCounter();
         this.m_eventIpcManager.addEventListener(m_eventCounter);
 
-        SyslogSinkConsumer consumer = new SyslogSinkConsumer(new MetricRegistry());
-        consumer.setSyslogdConfig(m_config);
-        consumer.setEventForwarder(m_eventIpcManager);
+        SyslogSinkConsumer consumer = new SyslogSinkConsumer(new MetricRegistry(), null, m_config, null, m_eventIpcManager, null);
         m_messageDispatcherFactory.setConsumer(consumer);
     }
 

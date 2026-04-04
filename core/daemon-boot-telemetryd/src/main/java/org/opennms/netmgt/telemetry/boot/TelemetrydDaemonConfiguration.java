@@ -26,11 +26,11 @@ import java.util.function.Consumer;
 
 import com.codahale.metrics.MetricRegistry;
 
-import org.opennms.core.daemon.common.NoOpEntityScopeProvider;
 import org.opennms.core.daemon.common.NoOpTracerRegistry;
+import org.opennms.core.ipc.sink.api.MessageConsumerManager;
+import org.opennms.core.ipc.sink.api.MessageDispatcherFactory;
 import org.opennms.core.ipc.twin.api.LocalTwinSubscriber;
 import org.opennms.core.ipc.twin.api.TwinPublisher;
-import org.opennms.core.ipc.twin.api.TwinSubscriber;
 import org.opennms.core.ipc.twin.api.TwinUpdate;
 import org.opennms.core.ipc.twin.kafka.publisher.KafkaTwinPublisher;
 import org.opennms.core.mate.api.EntityScopeProvider;
@@ -47,6 +47,7 @@ import org.opennms.netmgt.telemetry.protocols.registry.impl.TelemetryRegistryImp
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -59,10 +60,8 @@ import org.springframework.core.io.FileSystemResource;
  * registry (with no-op sub-registries since no adapters run locally), Twin API
  * chain (for ConnectorManager), and lifecycle management.</p>
  *
- * <p>Most beans in this graph use {@code @Autowired} field injection. When
- * declared via {@code @Bean} in a {@code @Configuration} class, Spring's
- * {@code AutowiredAnnotationBeanPostProcessor} handles field injection
- * automatically after construction.</p>
+ * <p>All beans use constructor injection -- dependencies are passed explicitly
+ * via {@code @Bean} factory method parameters.</p>
  */
 @Configuration
 public class TelemetrydDaemonConfiguration {
@@ -116,9 +115,9 @@ public class TelemetrydDaemonConfiguration {
     }
 
     /**
-     * The concrete TelemetryRegistry. Uses {@code @Autowired @Qualifier} field
-     * injection for the 4 sub-registries. MetricRegistry is wired via setter
-     * (not {@code @Autowired}), so we call it explicitly.
+     * The concrete TelemetryRegistry. The 4 sub-registries are wired via
+     * {@code @Autowired @Qualifier} field injection inside {@link TelemetryRegistryImpl}.
+     * MetricRegistry is wired via setter.
      */
     @Bean
     public TelemetryRegistryImpl telemetryRegistry(MetricRegistry metricRegistry) {
@@ -196,13 +195,9 @@ public class TelemetrydDaemonConfiguration {
         return new KafkaTwinPublisher(localTwinSubscriber, tracerRegistry, metricRegistry);
     }
 
-    /**
-     * LocationPublisherManager uses {@code @Autowired TwinPublisher} field
-     * injection -- Spring will inject the KafkaTwinPublisher bean.
-     */
     @Bean
-    public LocationPublisherManager locationPublisherManager() {
-        return new LocationPublisherManager();
+    public LocationPublisherManager locationPublisherManager(TwinPublisher twinPublisher) {
+        return new LocationPublisherManager(twinPublisher);
     }
 
     @Bean
@@ -212,27 +207,25 @@ public class TelemetrydDaemonConfiguration {
 
     // ── 5. ConnectorManager ───────────────────────────────────────────
 
-    /**
-     * ConnectorManager uses {@code @Autowired} field injection for
-     * TelemetryRegistry, EntityScopeProvider, ServiceTracker, and
-     * OpenConfigTwinPublisher. Spring handles all 4 automatically.
-     */
     @Bean
-    public ConnectorManager connectorManager() {
-        return new ConnectorManager();
+    public ConnectorManager connectorManager(TelemetryRegistryImpl telemetryRegistry,
+                                             EntityScopeProvider entityScopeProvider,
+                                             ServiceTracker serviceTracker,
+                                             OpenConfigTwinPublisher openConfigTwinPublisher) {
+        return new ConnectorManager(telemetryRegistry, entityScopeProvider, serviceTracker, openConfigTwinPublisher);
     }
 
     // ── 6. Telemetryd daemon ──────────────────────────────────────────
 
-    /**
-     * The Telemetryd daemon. Uses {@code @Autowired} field injection for
-     * TelemetrydConfigDao, MessageDispatcherFactory, MessageConsumerManager,
-     * ApplicationContext, TelemetryRegistry, ConnectorManager, and
-     * MessageBus (optional, will be null).
-     */
     @Bean
-    public Telemetryd telemetryd() {
-        return new Telemetryd();
+    public Telemetryd telemetryd(TelemetrydConfigDao telemetrydConfigDao,
+                                 MessageDispatcherFactory messageDispatcherFactory,
+                                 MessageConsumerManager messageConsumerManager,
+                                 ApplicationContext applicationContext,
+                                 TelemetryRegistryImpl telemetryRegistry,
+                                 ConnectorManager connectorManager) {
+        return new Telemetryd(telemetrydConfigDao, messageDispatcherFactory, messageConsumerManager,
+                applicationContext, telemetryRegistry, connectorManager, null);
     }
 
     // ── 7. SmartLifecycle ─────────────────────────────────────────────

@@ -46,9 +46,6 @@ import org.opennms.netmgt.telemetry.config.model.Parameter;
 import org.opennms.netmgt.telemetry.config.model.TelemetrydConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.google.common.annotations.VisibleForTesting;
 
 /**
  * The ConnectorManager is responsible for starting/stopping connectors that connect to the target agents.
@@ -65,17 +62,21 @@ public class ConnectorManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConnectorManager.class);
 
-    @Autowired
-    private TelemetryRegistry telemetryRegistry;
+    private final TelemetryRegistry telemetryRegistry;
+    private final EntityScopeProvider entityScopeProvider;
+    private final ServiceTracker serviceTracker;
+    private final OpenConfigTwinPublisher openConfigTwinPublisher;
 
-    @Autowired
-    private EntityScopeProvider entityScopeProvider;
+    public ConnectorManager(TelemetryRegistry telemetryRegistry,
+                            EntityScopeProvider entityScopeProvider,
+                            ServiceTracker serviceTracker,
+                            OpenConfigTwinPublisher openConfigTwinPublisher) {
+        this.telemetryRegistry = Objects.requireNonNull(telemetryRegistry);
+        this.entityScopeProvider = Objects.requireNonNull(entityScopeProvider);
+        this.serviceTracker = Objects.requireNonNull(serviceTracker);
+        this.openConfigTwinPublisher = Objects.requireNonNull(openConfigTwinPublisher);
+    }
 
-    @Autowired
-    private ServiceTracker serviceTracker;
-
-    @Autowired
-    private OpenConfigTwinPublisher openConfigTwinPublisher;
     private final Map<ConnectorKey, Connector> connectorsByKey = new LinkedHashMap<>();
 
     private final List<Closeable> serviceTrackerSessions = new LinkedList<>();
@@ -234,8 +235,4 @@ public class ConnectorManager {
         }
     }
 
-    @VisibleForTesting
-    public void setEntityScopeProvider(EntityScopeProvider entityScopeProvider) {
-        this.entityScopeProvider = entityScopeProvider;
-    }
 }
