@@ -24,10 +24,10 @@
     <constructor-arg ref="unmanagedInterfaceFilter"/>
   </bean>
   
-  <bean id="discoveryTaskExecutor" class="org.opennms.netmgt.discovery.DiscoveryTaskExecutorImpl" />
+  <bean id="discoveryTaskExecutor" class="org.opennms.netmgt.discovery.DiscoveryTaskExecutorImpl" autowire="constructor" />
 
   <onmsgi:service interface="org.opennms.netmgt.discovery.DiscoveryTaskExecutor" ref="discoveryTaskExecutor"/>
 
-  <bean id="daemon" class="org.opennms.netmgt.discovery.Discovery" />
+  <bean id="daemon" class="org.opennms.netmgt.discovery.Discovery" autowire="constructor" />
 
 </beans>
