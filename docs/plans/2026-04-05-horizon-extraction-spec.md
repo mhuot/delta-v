@@ -100,6 +100,10 @@ Both repos ship `NOTICE.md` files with:
 
 **Why not groupId-only rebrand:** Changing only the Maven groupId while keeping `package org.opennms.netmgt.*;` declarations creates a confusing split personality and provides weak trademark coverage. Either commit to package rebrand or don't — not halfway.
 
+**Artifact ID naming:** Delta-V-Horizon modules keep their existing `opennms-*` artifact IDs unchanged (e.g., `org.opennms:opennms-dao:1.0.0`, `org.opennms:opennms-provision:1.0.0`). This minimizes POM churn in Delta-V — only the `<version>` needs to change to `${deltav.horizon.version}`, not `<artifactId>`. Artifact IDs live under the groupId namespace, so the `org.opennms:opennms-dao` coordinate is unambiguous.
+
+**Leaf-repository constraint (critical):** `pbrane/delta-v-horizon` MUST remain a leaf — it MUST NOT depend on any `org.deltav:*` artifacts. If a future Delta-V-Horizon patch needs a utility currently in Delta-V (e.g., a shared logging helper), the utility must either be duplicated into Delta-V-Horizon or moved *down* into Delta-V-Horizon and consumed by Delta-V. Any attempt to import `org.deltav:*` into Delta-V-Horizon creates a circular repo dependency that breaks the two-speed CI economics (Delta-V-Horizon would need Delta-V published first, which needs Delta-V-Horizon published first).
+
 ### 6. Migration Path: Sequential (Path 1)
 
 Six PRs (PR0 through PR5), each individually testable against the full E2E suite. The sequential path optimizes for safety: each PR has a clear rollback boundary, and PR1's reactor pruning validates the module closure that PR3's extraction depends on.
@@ -125,7 +129,7 @@ The exact module paths will be confirmed during PR2's bootstrap work; the table 
 
 A GitHub Action in `pbrane/delta-v` runs on every PR and weekly on schedule. It performs reachability analysis from Delta-V's daemon-boot modules into the Delta-V-Horizon module set, producing a trinary classification:
 
-- **In use** — transitively referenced by a Delta-V daemon-boot (via `mvn dependency:list -DincludeGroupIds=org.opennms`)
+- **In use** — transitively referenced by a Delta-V daemon-boot (via `mvn dependency:list -DincludeGroupIds=org.opennms`). Transitive traversal MUST be enabled (it is by default — do not pass `-DexcludeTransitive=true`) because horizon modules are typically only referenced 2–3 levels deep.
 - **Reserved** — in the capabilities allow-list
 - **Prunable** — neither; flagged for human review
 
@@ -144,10 +148,10 @@ All PRs run the full E2E suite (93 tests) as baseline validation plus PR-specifi
 Historical note: a PerspectivePollerd + PageSequenceMonitor E2E test existed at one point (during the introduction of `${nodelabel}` hostname resolution). It was removed at some point and the coverage has not been restored.
 
 **Change:** Add one E2E test that provisions a node via Minion RPC exercising:
-- A real detector (e.g., `SnmpDetector` against labbox cEOS)
+- A real detector (e.g., `SnmpDetector` against labbox cEOS — verify cEOS SNMP community string config matches the test's `read-community` attribute)
 - A real monitor (e.g., `IcmpMonitor` or `SnmpMonitor`)
 
-The test runs on the existing labbox Containerlab cEOS topology (see `reference_labbox_setup.md`).
+The test runs on the existing labbox Containerlab cEOS topology (see `reference_labbox_setup.md`). New suite location: `integration-tests/test-minion-rpc-e2e/` — distinct from the passive `test-minion-e2e` suite so "active RPC execution" coverage is separately discoverable.
 
 **Validation:** test passes against the current `develop` baseline *before* any Phase 3 work begins. This establishes the canary — every subsequent PR re-runs this test to catch RPC path regressions.
 
@@ -195,9 +199,12 @@ The test runs on the existing labbox Containerlab cEOS topology (see `reference_
 
 ### PR3 (Phase 3a): Switch Delta-V to External Horizon JARs
 
+**Pre-PR3 audit:** Run `mvn dependency:tree -Dverbose` across all 16 daemon-boot modules. Confirm no daemon-boot requires a *different* version of the same `org.opennms:*` artifact than another daemon-boot. If divergences exist (unlikely — everything currently pins to `36.0.0-SNAPSHOT`), resolve them via `<dependencyManagement>` in the delta-v root POM pinning single horizon versions.
+
 **Change:** In `pbrane/delta-v`:
 - Add `<repositories>` entry for GitHub Packages Maven
 - Add `<properties><deltav.horizon.version>1.0.0</deltav.horizon.version></properties>` to root POM
+- Add `<dependencyManagement>` section in root POM pinning all `org.opennms:*` artifacts to `${deltav.horizon.version}`
 - Update all `org.opennms:*` dependencies in daemon-boot POMs to use `${deltav.horizon.version}` (currently `36.0.0-SNAPSHOT`)
 - Delete the ~200 horizon module directories from the repo (now dead code, not in reactor since PR1)
 - Update `.github/workflows/delta-v-build-images.yml` to authenticate to GitHub Packages during dependency resolution
@@ -242,6 +249,7 @@ The test runs on the existing labbox Containerlab cEOS topology (see `reference_
 - PR0's Minion RPC test passes
 - Docker images build and daemons start (validates ENTRYPOINT + main class updates)
 - `grep -r "org.opennms.core.daemon" core/` returns only unavoidable import statements (no residual package declarations)
+- **XML configuration audit:** `grep -rn 'class="org.opennms.core.daemon' core/ opennms-container/` returns zero hits. Covers both Spring (`META-INF/spring/*.xml`) and Blueprint (`OSGI-INF/blueprint/*.xml`) configs — hardcoded FQCNs in XML are the highest-risk miss during package renames because IDE refactoring doesn't traverse XML files reliably.
 
 **Rollback:** Revert the PR. Package rename is idempotent.
 
@@ -302,6 +310,8 @@ Before merging PR3, validate the published-JAR path works end-to-end:
 | `ComparableVersion` surprises with semver | Low | Plain semver (1.0.0) dodges Maven version-parsing edge cases |
 | Reserved capability missed in `1.0.0` | Medium | Allow-list lives in README; adding a module later is a routine PR bumping to next minor version |
 | Published `1.0.0` has a bug, needs immediate replacement | Low | Publish `1.0.1`; previous version immutably remains on GHP for reproducibility |
+| Circular repo dependency (delta-v-horizon imports `org.deltav:*`) | Low | Leaf-repo constraint enforced in Section 5; delta-v-horizon's CI could lint pom.xml files to reject any `org.deltav:*` dependency |
+| Daemon-boots require *different* versions of same horizon module | Medium | Pre-PR3 convergence audit: `mvn dependency:tree -Dverbose` across all daemon-boots; add `<dependencyManagement>` to delta-v root POM to pin single horizon version per artifact |
 
 ## Rollback Procedures
 
@@ -321,8 +331,9 @@ These will be resolved during the implementation plan phase, not the spec phase:
 1. **Exact module paths for reserved capabilities** — indicative paths in section 7 need verification against current horizon source layout
 2. **Docker build auth pattern** — whether `--secret` mount or env-based `settings.xml` is cleaner for `delta-v-build-images.yml`
 3. **Automated version-bump PR mechanics** — whether to use `peter-evans/create-pull-request` GitHub Action or a custom script
-4. **PR0 test location** — which existing E2E suite directory should host the new Minion RPC test (likely `test-minion-e2e` or `test-e2e`)
-5. **Initial bootstrap mechanism** — `git subtree split` vs. directory copy for populating `pbrane/delta-v-horizon` (directory copy is simpler; subtree split preserves Delta-V-side commit attribution)
+4. **Initial bootstrap mechanism** — `git subtree split` vs. directory copy for populating `pbrane/delta-v-horizon` (directory copy is simpler; subtree split preserves Delta-V-side commit attribution)
+5. **Dependency convergence audit outcome** — whether the pre-PR3 `mvn dependency:tree -Dverbose` audit surfaces any horizon version divergences requiring explicit `<dependencyManagement>` pins beyond the global version property
+6. **Leaf-repo enforcement mechanism** — whether a lint script in delta-v-horizon's CI is needed to reject `org.deltav:*` imports, or if the constraint stays a documented convention
 
 ## Decision Journal
 
@@ -339,3 +350,5 @@ Summary of the brainstorming decisions that produced this spec. Full transcript 
 | 6a | PR0 added (Minion RPC E2E) | Deferred to future task | Phase 3 extraction cannot be safely validated without Minion RPC execution coverage; gap existed before Phase 3 but becomes blocking |
 | 7 | Reserved capabilities allow-list | Prune aggressively, recover from git | Aggressive pruning creates recovery friction; asymmetric economics favor conservative initial inclusion (~1 hour recovery cost vs. ~30 seconds build cost) |
 | 8 | Automated pruning-report CI | Manual inspection per refactor | Operational sustainability of two-repo approach depends on visible pruning signals; CI comment on every PR makes it automatic |
+| 9 | Keep `opennms-*` artifactId prefixes | Rename to `deltav-*` | Minimizes POM churn in delta-v consumer (only `<version>` changes, not `<artifactId>`); artifactId lives under groupId namespace so coordinate stays unambiguous |
+| 10 | Leaf-repo constraint on delta-v-horizon | Allow bidirectional deps | Circular repo dependency would break two-speed CI economics; leaf constraint preserves independent publish cadence |
