@@ -565,7 +565,7 @@
             </exclusions>
         </dependency>
 
-        <!-- LocalServiceDetectorRegistry (constructor-injected) -->
+        <!-- Monitor/Collector/Detector registry configurations -->
         <dependency>
             <groupId>org.opennms.core</groupId>
             <artifactId>org.opennms.core.daemon-registry</artifactId>
