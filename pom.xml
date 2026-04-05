@@ -99,7 +99,6 @@
     <module>integrations</module>
     <module>protocols</module>
     <module>tests</module>
-    <module>integration-tests</module>
     <module>ui</module>
 
     <!-- old structure -->
@@ -117,10 +116,7 @@
     <module>opennms-config</module>
     <module>opennms-config-model</module>
     <module>opennms-provision</module>
-    <module>opennms-taglib</module>
-    <module>opennms-correlation</module>
     <module>opennms-web-api</module>
-    <module>opennms-web-dependencies</module>
     <module>opennms-wmi</module>
     <module>opennms-config-dao</module>
   </modules>
