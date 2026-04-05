@@ -52,7 +52,6 @@ import org.opennms.netmgt.provision.detector.snmp.SnmpDetector;
 import org.opennms.netmgt.provision.detector.snmp.SnmpDetectorFactory;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
 import org.opennms.test.JUnitConfigurationEnvironment;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 
 @RunWith(OpenNMSJUnit4ClassRunner.class)
@@ -60,16 +59,14 @@ import org.springframework.test.context.ContextConfiguration;
         "classpath:/META-INF/opennms/applicationContext-soa.xml",
         "classpath:/META-INF/opennms/applicationContext-mockDao.xml",
         "classpath:/META-INF/opennms/applicationContext-proxy-snmp.xml",
-        "classpath:/META-INF/opennms/detectors.xml"
+        "classpath:/META-INF/opennms/detectors.xml",
+        "classpath:/META-INF/opennms/detectors-snmp.xml"
 })
 @JUnitConfigurationEnvironment
 @JUnitSnmpAgent(host = SnmpDetectorTest.TEST_IP_ADDRESS, resource = "classpath:/org/opennms/netmgt/provision/detector/snmpDetectorTestData.properties")
 public class SnmpDetectorWithProfilesTest {
 
     static final String TEST_IP_ADDRESS = "192.0.2.205";
-
-    @Autowired
-    private SnmpDetectorFactory m_detectorFactory;
 
     private SnmpDetector m_detector;
 
@@ -78,10 +75,6 @@ public class SnmpDetectorWithProfilesTest {
     @Before
     public void setUp() throws InterruptedException, IOException {
         MockLogAppender.setupLogging();
-        m_detector = m_detectorFactory.createDetector(new HashMap<>());
-        m_detector.setRetries(2);
-        m_detector.setUseSnmpProfiles("true");
-        m_detector.setTimeout(500);
 
         final TemporaryFolder temporaryFolder = new TemporaryFolder();
         temporaryFolder.create();
@@ -99,8 +92,12 @@ public class SnmpDetectorWithProfilesTest {
             SnmpPeerFactory snmpPeerFactory = new ProxySnmpAgentConfigFactoryExtension(configStream);
             // This is to not override snmp-config from etc
             SnmpPeerFactory.setFile(new File(url.getFile()));
-            m_detectorFactory.setAgentConfigFactory(snmpPeerFactory);
-            m_request = m_detectorFactory.buildRequest(null, InetAddressUtils.addr(TEST_IP_ADDRESS), null, Collections.emptyMap());
+            SnmpDetectorFactory detectorFactory = new SnmpDetectorFactory(snmpPeerFactory);
+            m_detector = detectorFactory.createDetector(new HashMap<>());
+            m_detector.setRetries(2);
+            m_detector.setUseSnmpProfiles("true");
+            m_detector.setTimeout(500);
+            m_request = detectorFactory.buildRequest(null, InetAddressUtils.addr(TEST_IP_ADDRESS), null, Collections.emptyMap());
             assertTrue(m_detector.detect(m_request).isServiceDetected());
         }
 
@@ -114,8 +111,12 @@ public class SnmpDetectorWithProfilesTest {
             SnmpPeerFactory snmpPeerFactory = new ProxySnmpAgentConfigFactoryExtension(configStream);
             // This is to not override snmp-config from etc
             SnmpPeerFactory.setFile(new File(url.getFile()));
-            m_detectorFactory.setAgentConfigFactory(snmpPeerFactory);
-            m_request = m_detectorFactory.buildRequest(null, InetAddressUtils.addr(TEST_IP_ADDRESS), null, Collections.emptyMap());
+            SnmpDetectorFactory detectorFactory = new SnmpDetectorFactory(snmpPeerFactory);
+            m_detector = detectorFactory.createDetector(new HashMap<>());
+            m_detector.setRetries(2);
+            m_detector.setUseSnmpProfiles("true");
+            m_detector.setTimeout(500);
+            m_request = detectorFactory.buildRequest(null, InetAddressUtils.addr(TEST_IP_ADDRESS), null, Collections.emptyMap());
             assertFalse(m_detector.detect(m_request).isServiceDetected());
         }
 

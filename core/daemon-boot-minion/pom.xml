@@ -565,6 +565,13 @@
             </exclusions>
         </dependency>
 
+        <!-- Monitor/Collector/Detector registry configurations -->
+        <dependency>
+            <groupId>org.opennms.core</groupId>
+            <artifactId>org.opennms.core.daemon-registry</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Concrete detector factory classes (exclusions match opennms-detectorclient-rpc) -->
         <dependency>
             <groupId>org.opennms</groupId>

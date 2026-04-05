@@ -21,7 +21,7 @@
  */
 package org.opennms.netmgt.poller.boot;
 
-import org.opennms.core.daemon.common.registry.LocalServiceMonitorRegistry;
+import org.opennms.core.daemon.registry.MonitorRegistryConfiguration;
 import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.core.rpc.api.RpcClientFactory;
 import org.opennms.core.rpc.utils.RpcTargetHelper;
@@ -37,6 +37,7 @@ import org.opennms.netmgt.poller.client.rpc.LocationAwarePollerClientImpl;
 import org.opennms.netmgt.poller.client.rpc.PollerClientRpcModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -53,16 +54,8 @@ import java.util.concurrent.Executors;
  * provided by {@code DaemonProvisioningConfiguration} as a no-op default.</p>
  */
 @Configuration
+@Import(MonitorRegistryConfiguration.class)
 public class PollerdRpcConfiguration {
-
-    /**
-     * ServiceMonitorRegistry that discovers ServiceMonitor implementations
-     * via {@link java.util.ServiceLoader}.
-     */
-    @Bean
-    public ServiceMonitorRegistry serviceMonitorRegistry() {
-        return new LocalServiceMonitorRegistry();
-    }
 
     /**
      * Executor for PollerClientRpcModule async response handling.

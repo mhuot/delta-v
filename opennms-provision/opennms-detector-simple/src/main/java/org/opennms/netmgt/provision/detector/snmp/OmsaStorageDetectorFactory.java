@@ -21,12 +21,11 @@
  */
 package org.opennms.netmgt.provision.detector.snmp;
 
-import org.springframework.stereotype.Component;
+import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 
-@Component
 public class OmsaStorageDetectorFactory extends GenericSnmpDetectorFactory<OmsaStorageDetector> {
 
-    public OmsaStorageDetectorFactory() {
-        super(OmsaStorageDetector.class);
+    public OmsaStorageDetectorFactory(SnmpAgentConfigFactory agentConfigFactory) {
+        super(OmsaStorageDetector.class, agentConfigFactory);
     }
 }

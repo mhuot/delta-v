@@ -24,28 +24,34 @@ package org.opennms.minion.boot;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import org.opennms.core.daemon.common.registry.LocalServiceDetectorRegistry;
+import org.opennms.core.daemon.registry.DetectorRegistryConfiguration;
+import org.opennms.core.daemon.registry.NoOpSnmpAgentConfigFactory;
+import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 import org.opennms.netmgt.provision.detector.client.rpc.DetectorClientRpcModule;
 import org.opennms.netmgt.provision.detector.registry.api.ServiceDetectorRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 /**
  * Wires the Detector RPC module (module ID "Detect") and its
  * {@link ServiceDetectorRegistry}.
  *
- * <p>Uses {@link LocalServiceDetectorRegistry} which discovers
- * {@link org.opennms.netmgt.provision.ServiceDetectorFactory} implementations
- * via {@link java.util.ServiceLoader}.</p>
+ * <p>The {@link ServiceDetectorRegistry} is provided by
+ * {@link DetectorRegistryConfiguration}, which registers explicit detector factory
+ * beans. Since Minion receives SNMP config via RPC request attributes, we supply
+ * a {@link NoOpSnmpAgentConfigFactory} to satisfy the SNMP detector factory
+ * constructor argument.</p>
  */
 @Configuration
+@Import(DetectorRegistryConfiguration.class)
 @ConditionalOnProperty(name = "opennms.minion.detector.enabled", havingValue = "true", matchIfMissing = true)
 public class DetectorConfiguration {
 
     @Bean
-    public ServiceDetectorRegistry serviceDetectorRegistry() {
-        return new LocalServiceDetectorRegistry();
+    public SnmpAgentConfigFactory snmpAgentConfigFactory() {
+        return new NoOpSnmpAgentConfigFactory();
     }
 
     @Bean

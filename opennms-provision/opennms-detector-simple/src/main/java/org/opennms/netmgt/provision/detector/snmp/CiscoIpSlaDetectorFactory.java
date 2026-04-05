@@ -21,12 +21,11 @@
  */
 package org.opennms.netmgt.provision.detector.snmp;
 
-import org.springframework.stereotype.Component;
+import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 
-@Component
 public class CiscoIpSlaDetectorFactory extends GenericSnmpDetectorFactory<CiscoIpSlaDetector> {
 
-    public CiscoIpSlaDetectorFactory() {
-        super(CiscoIpSlaDetector.class);
+    public CiscoIpSlaDetectorFactory(SnmpAgentConfigFactory agentConfigFactory) {
+        super(CiscoIpSlaDetector.class, agentConfigFactory);
     }
 }

@@ -26,6 +26,7 @@ import org.opennms.core.concurrent.PausibleScheduledThreadPoolExecutor;
 import org.opennms.core.daemon.common.JdbcDistPollerDao;
 import org.opennms.core.daemon.common.JdbcInterfaceToNodeCache;
 import org.opennms.core.daemon.common.NoOpEntityScopeProvider;
+import org.opennms.core.daemon.registry.DetectorRegistryConfiguration;
 import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.core.soa.ServiceRegistry;
 import org.opennms.core.soa.support.DefaultServiceRegistry;
@@ -74,9 +75,6 @@ import org.opennms.netmgt.model.jakarta.converter.OnmsSeverityConverter;
 import org.opennms.netmgt.model.jakarta.converter.PrimaryTypeConverter;
 import org.opennms.netmgt.provision.LocationAwareDetectorClient;
 import org.opennms.netmgt.provision.LocationAwareDnsLookupClient;
-import org.opennms.netmgt.provision.ServiceDetectorFactory;
-import org.opennms.netmgt.provision.detector.registry.api.ServiceDetectorRegistry;
-import org.opennms.netmgt.provision.detector.snmp.GenericSnmpDetectorFactory;
 import org.opennms.netmgt.provision.detector.client.rpc.DetectorClientRpcModule;
 import org.opennms.netmgt.provision.detector.client.rpc.LocationAwareDetectorClientRpcImpl;
 import org.opennms.netmgt.provision.dns.client.rpc.DnsLookupClientRpcModule;
@@ -112,6 +110,7 @@ import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.orm.jpa.persistenceunit.PersistenceManagedTypes;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.scheduling.concurrent.ScheduledExecutorFactoryBean;
@@ -125,6 +124,7 @@ import org.springframework.transaction.support.TransactionTemplate;
  * All bean definitions are translated from the XML context into explicit @Bean methods.</p>
  */
 @Configuration
+@Import(DetectorRegistryConfiguration.class)
 public class ProvisiondBootConfiguration {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProvisiondBootConfiguration.class);
@@ -235,34 +235,9 @@ public class ProvisiondBootConfiguration {
         return new NoOpSnmpProfileMapper();
     }
 
-    /**
-     * Inject {@link SnmpAgentConfigFactory} into SNMP detector factories after
-     * the {@link ServiceDetectorRegistry} bean is created by daemon-common.
-     *
-     * <p>ServiceLoader creates factory instances without Spring DI, so
-     * {@code @Autowired} fields like {@code SnmpAgentConfigFactory} are null.
-     * This bean wires the SNMP config into the factories post-creation.</p>
-     */
-    @Bean
-    public SmartLifecycle detectorRegistrySnmpConfigInjector(
-            ServiceDetectorRegistry registry, SnmpAgentConfigFactory snmpAgentConfigFactory) {
-        return new SmartLifecycle() {
-            private boolean running = false;
-            @Override public void start() {
-                for (String className : registry.getClassNames()) {
-                    ServiceDetectorFactory<?> factory = registry.getDetectorFactoryByClassName(className);
-                    if (factory instanceof GenericSnmpDetectorFactory<?> snmpFactory) {
-                        snmpFactory.setAgentConfigFactory(snmpAgentConfigFactory);
-                        LOG.info("Injected SnmpAgentConfigFactory into detector factory: {}", className);
-                    }
-                }
-                running = true;
-            }
-            @Override public void stop() { running = false; }
-            @Override public boolean isRunning() { return running; }
-            @Override public int getPhase() { return 0; }
-        };
-    }
+    // SNMP detector factories are registered via @Import(DetectorRegistryConfiguration.class)
+    // at the class level. DetectorRegistryConfiguration pulls the SnmpAgentConfigFactory
+    // bean defined above (snmpPeerFactory) via constructor injection.
 
     // ===================================================================
     // Section 4: RPC Clients

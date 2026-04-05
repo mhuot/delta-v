@@ -38,11 +38,9 @@ import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 import org.opennms.netmgt.config.snmp.SnmpProfile;
 import org.opennms.netmgt.provision.support.AgentBasedSyncAbstractDetector;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
-import org.springframework.stereotype.Component;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-@Component
 public class SnmpDetectorFactory extends GenericSnmpDetectorFactory<SnmpDetector> {
 
     private final ThreadFactory snmpDetectorThreadFactory = new ThreadFactoryBuilder()
@@ -52,8 +50,8 @@ public class SnmpDetectorFactory extends GenericSnmpDetectorFactory<SnmpDetector
 
     private SecureCredentialsVault m_scv;
 
-    public SnmpDetectorFactory() {
-        super(SnmpDetector.class);
+    public SnmpDetectorFactory(SnmpAgentConfigFactory agentConfigFactory) {
+        super(SnmpDetector.class, agentConfigFactory);
     }
 
     public void setSecureCredentialsVault(SecureCredentialsVault scv) {

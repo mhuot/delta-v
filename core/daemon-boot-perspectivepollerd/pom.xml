@@ -190,6 +190,11 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.opennms.core</groupId>
+            <artifactId>org.opennms.core.daemon-registry</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- PerspectivePoller implementation — PerspectivePollerd daemon class -->
         <dependency>

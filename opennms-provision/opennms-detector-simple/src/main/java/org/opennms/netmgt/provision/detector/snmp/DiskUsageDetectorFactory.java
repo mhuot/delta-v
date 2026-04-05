@@ -21,12 +21,11 @@
  */
 package org.opennms.netmgt.provision.detector.snmp;
 
-import org.springframework.stereotype.Component;
+import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 
-@Component
 public class DiskUsageDetectorFactory extends GenericSnmpDetectorFactory<DiskUsageDetector> {
 
-    public DiskUsageDetectorFactory() {
-        super(DiskUsageDetector.class);
+    public DiskUsageDetectorFactory(SnmpAgentConfigFactory agentConfigFactory) {
+        super(DiskUsageDetector.class, agentConfigFactory);
     }
 }

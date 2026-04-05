@@ -49,7 +49,8 @@ import org.springframework.test.context.ContextConfiguration;
         "classpath:/META-INF/opennms/applicationContext-soa.xml",
         "classpath:/META-INF/opennms/applicationContext-mockDao.xml",
         "classpath:/META-INF/opennms/applicationContext-proxy-snmp.xml",
-        "classpath:/META-INF/opennms/detectors.xml"
+        "classpath:/META-INF/opennms/detectors.xml",
+        "classpath:/META-INF/opennms/detectors-snmp.xml"
 })
 @JUnitConfigurationEnvironment
 @JUnitSnmpAgent(host=PercDetectorTest.TEST_IP_ADDRESS, resource="classpath:/org/opennms/netmgt/provision/detector/percDetector.properties")

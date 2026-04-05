@@ -21,23 +21,30 @@
  */
 package org.opennms.minion.boot;
 
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import org.opennms.core.daemon.registry.LocalServiceCollectorRegistry;
+import org.opennms.netmgt.collectd.SnmpCollector;
 import org.opennms.netmgt.collection.api.ServiceCollectorRegistry;
 import org.opennms.netmgt.collection.client.rpc.CollectorClientRpcModule;
-import org.opennms.netmgt.collection.support.DefaultServiceCollectorRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
  * Wires the Collector RPC module (module ID "Collect") and its
- * {@link ServiceCollectorRegistry}.
+ * {@link ServiceCollectorRegistry} on Minion.
  *
- * <p>The {@link DefaultServiceCollectorRegistry} discovers collector implementations
- * via {@link java.util.ServiceLoader} from
- * {@code META-INF/services/org.opennms.netmgt.collection.api.ServiceCollector}.</p>
+ * <p>Unlike the Horizon side (which uses
+ * {@code CollectorRegistryConfiguration}), Minion does not have an
+ * {@code RpcClientFactory}, so it cannot instantiate the RPC-backed
+ * {@code LocationAwareSnmpClient}. The {@link SnmpCollector} runs locally
+ * on Minion with its {@code m_client} field left null — on first
+ * {@code collect()} invocation, the collector falls back to a
+ * {@code BeanUtils} lookup that resolves to whatever {@code LocationAwareSnmpClient}
+ * the Minion's wider Spring context provides.</p>
  */
 @Configuration
 @ConditionalOnProperty(name = "opennms.minion.collector.enabled", havingValue = "true", matchIfMissing = true)
@@ -45,7 +52,7 @@ public class CollectorConfiguration {
 
     @Bean
     public ServiceCollectorRegistry serviceCollectorRegistry() {
-        return new DefaultServiceCollectorRegistry();
+        return new LocalServiceCollectorRegistry(List.of(new SnmpCollector()));
     }
 
     @Bean

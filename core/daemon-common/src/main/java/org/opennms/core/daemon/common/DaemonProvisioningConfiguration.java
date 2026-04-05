@@ -21,7 +21,6 @@
  */
 package org.opennms.core.daemon.common;
 
-import org.opennms.core.daemon.common.registry.LocalServiceDetectorRegistry;
 import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.core.spring.BeanUtils;
 import org.opennms.features.scv.api.SecureCredentialsVault;
@@ -31,7 +30,6 @@ import org.opennms.netmgt.dao.api.MonitoredServiceDao;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.dao.api.SessionUtils;
 import org.opennms.netmgt.dao.api.SnmpInterfaceDao;
-import org.opennms.netmgt.provision.detector.registry.api.ServiceDetectorRegistry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -58,8 +56,6 @@ import org.springframework.context.annotation.Configuration;
  *   <li>{@link JCEKSSecureCredentialsVault} — JCEKS-based SCV backing
  *       {@code ${scv:...}} MATE expressions. Falls back to an empty vault
  *       if the keystore does not yet exist.</li>
- *   <li>{@link LocalServiceDetectorRegistry} — SPI-based detector discovery.
- *       Returns empty unless detector factory JARs are on the classpath.</li>
  *   <li>{@link BeanUtils} — bridges legacy static bean lookups to this
  *       daemon's ApplicationContext.</li>
  * </ul>
@@ -108,12 +104,6 @@ public class DaemonProvisioningConfiguration {
     public SecureCredentialsVault secureCredentialsVault(
             @Value("${opennms.home:/opt/deltav}") String opennmsHome) {
         return new JCEKSSecureCredentialsVault(opennmsHome + "/etc/scv.jce", "notReallyASecret");
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(ServiceDetectorRegistry.class)
-    public ServiceDetectorRegistry serviceDetectorRegistry() {
-        return new LocalServiceDetectorRegistry();
     }
 
     /**
