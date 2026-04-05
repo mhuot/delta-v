@@ -133,6 +133,7 @@ cd opennms-container/delta-v
 
 bash test-collectd-e2e.sh        # SNMP data collection via Minion
 bash test-minion-e2e.sh          # Trap → Minion → Kafka → Alarmd lifecycle
+bash test-minion-rpc-e2e.sh      # Detector + Monitor via Minion RPC (Phase 3 canary)
 bash test-syslog-e2e.sh          # Syslog → Minion → Kafka → Alarmd lifecycle
 bash test-passive-e2e.sh         # Passive status via EventTranslator + Pollerd
 bash test-enlinkd-e2e.sh         # LLDP/CDP link discovery on Containerlab cEOS

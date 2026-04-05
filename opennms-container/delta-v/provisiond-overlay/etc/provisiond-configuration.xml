@@ -15,4 +15,7 @@
                    import-url-resource="file:///opt/deltav/etc/imports/mhuot-labs.xml">
     <cron-schedule>0/30 * * * * ?</cron-schedule>
   </requisition-def>
+  <requisition-def import-name="rpc-canary" import-url-resource="file:///opt/deltav/etc/imports/rpc-canary.xml">
+    <cron-schedule>0/30 * * * * ?</cron-schedule>
+  </requisition-def>
 </provisiond-configuration>
