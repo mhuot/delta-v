@@ -100,6 +100,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # NOTE: Keep DAEMON_BOOTS in sync with DELTAV_MODULES in Makefile.
+      # The Makefile's deltav targets use the same module list for local
+      # dev iteration (with mvnd + skip flags). This workflow keeps
+      # checkstyle/enforcer enabled as CI quality gates.
       - name: Compile daemon-boot modules
         run: |
           ulimit -n 65536 || true
