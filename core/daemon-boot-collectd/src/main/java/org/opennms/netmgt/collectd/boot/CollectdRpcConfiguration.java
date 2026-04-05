@@ -21,7 +21,7 @@
  */
 package org.opennms.netmgt.collectd.boot;
 
-import org.opennms.core.daemon.common.registry.LocalServiceCollectorRegistry;
+import org.opennms.core.daemon.registry.LocalServiceCollectorRegistry;
 import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.core.rpc.api.RpcClientFactory;
 import org.opennms.core.rpc.utils.RpcTargetHelper;
@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -68,7 +69,8 @@ public class CollectdRpcConfiguration {
      */
     @Bean
     public ServiceCollectorRegistry serviceCollectorRegistry(LocationAwareSnmpClient snmpClient) {
-        LocalServiceCollectorRegistry registry = new LocalServiceCollectorRegistry();
+        // Transitional: Task 5 replaces this with @Import'd configuration
+        LocalServiceCollectorRegistry registry = new LocalServiceCollectorRegistry(List.of());
         // Inject the SNMP client into any SNMP collectors loaded via ServiceLoader.
         // In monolithic OpenNMS, SnmpCollector obtains this via BeanUtils.getBean("daoContext", ...)
         // which doesn't work in Spring Boot. Pre-inject it here.

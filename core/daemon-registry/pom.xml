@@ -75,6 +75,10 @@
             <groupId>org.opennms.features.poller</groupId>
             <artifactId>org.opennms.features.poller.api</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <!-- Brings in ServiceMix Spring 4.2.9 bundles which conflict with Spring Boot 4 -->
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
+            </exclusions>
         </dependency>
 
         <!-- RADIUS monitor (RadiusAuthMonitor) -->
@@ -120,6 +124,10 @@
             <groupId>org.opennms.features.collection</groupId>
             <artifactId>org.opennms.features.collection.api</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <!-- Brings in ServiceMix Spring 4.2.9 bundles which conflict with Spring Boot 4 -->
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
+            </exclusions>
         </dependency>
 
         <!-- ============================================================ -->
@@ -139,6 +147,7 @@
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
             </exclusions>
         </dependency>
         <dependency>

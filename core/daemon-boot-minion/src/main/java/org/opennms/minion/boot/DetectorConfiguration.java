@@ -21,10 +21,11 @@
  */
 package org.opennms.minion.boot;
 
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import org.opennms.core.daemon.common.registry.LocalServiceDetectorRegistry;
+import org.opennms.core.daemon.registry.LocalServiceDetectorRegistry;
 import org.opennms.netmgt.provision.detector.client.rpc.DetectorClientRpcModule;
 import org.opennms.netmgt.provision.detector.registry.api.ServiceDetectorRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -45,7 +46,8 @@ public class DetectorConfiguration {
 
     @Bean
     public ServiceDetectorRegistry serviceDetectorRegistry() {
-        return new LocalServiceDetectorRegistry();
+        // Transitional: Task 5 replaces this with @Import'd configuration
+        return new LocalServiceDetectorRegistry(List.of());
     }
 
     @Bean

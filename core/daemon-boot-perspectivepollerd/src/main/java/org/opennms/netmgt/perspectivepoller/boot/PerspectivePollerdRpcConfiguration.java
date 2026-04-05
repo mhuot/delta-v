@@ -21,7 +21,7 @@
  */
 package org.opennms.netmgt.perspectivepoller.boot;
 
-import org.opennms.core.daemon.common.registry.LocalServiceMonitorRegistry;
+import org.opennms.core.daemon.registry.LocalServiceMonitorRegistry;
 import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.core.rpc.api.RpcClientFactory;
 import org.opennms.core.rpc.utils.RpcTargetHelper;
@@ -38,6 +38,7 @@ import org.opennms.netmgt.poller.client.rpc.PollerClientRpcModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -61,7 +62,8 @@ public class PerspectivePollerdRpcConfiguration {
      */
     @Bean
     public ServiceMonitorRegistry serviceMonitorRegistry() {
-        return new LocalServiceMonitorRegistry();
+        // Transitional: Task 5 replaces this with @Import'd configuration
+        return new LocalServiceMonitorRegistry(List.of());
     }
 
     /**

@@ -19,12 +19,13 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.core.daemon.common.registry;
+package org.opennms.core.daemon.registry;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -34,32 +35,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Local ServiceCollectorRegistry for standalone daemon containers.
- * Discovers ServiceCollector implementations via Java ServiceLoader.
+ * Registry of service collectors provided via constructor injection.
+ * Replaces ServiceLoader-based discovery — callers pass the exact list of
+ * collectors they want to expose.
  */
 public class LocalServiceCollectorRegistry implements ServiceCollectorRegistry {
 
     private static final Logger LOG = LoggerFactory.getLogger(LocalServiceCollectorRegistry.class);
-
     private final Map<String, ServiceCollector> collectorsByClassName = new HashMap<>();
 
-    public LocalServiceCollectorRegistry() {
-        for (ServiceCollector collector : ServiceLoader.load(ServiceCollector.class)) {
-            final String className = collector.getClass().getCanonicalName();
-            LOG.info("Registered service collector: {}", className);
+    public LocalServiceCollectorRegistry(List<ServiceCollector> collectors) {
+        Objects.requireNonNull(collectors, "collectors");
+        for (ServiceCollector collector : collectors) {
+            String className = collector.getClass().getCanonicalName();
             collectorsByClassName.put(className, collector);
+            LOG.info("Registered collector: {}", className);
         }
-        LOG.info("Loaded {} service collectors via ServiceLoader", collectorsByClassName.size());
+        LOG.info("Loaded {} collectors", collectorsByClassName.size());
     }
 
     @Override
     public CompletableFuture<ServiceCollector> getCollectorFutureByClassName(String className) {
-        final ServiceCollector collector = collectorsByClassName.get(className);
-        if (collector != null) {
-            return CompletableFuture.completedFuture(collector);
-        }
-        return CompletableFuture.failedFuture(
-                new IllegalArgumentException("Collector not found: " + className));
+        return CompletableFuture.completedFuture(collectorsByClassName.get(className));
     }
 
     @Override
