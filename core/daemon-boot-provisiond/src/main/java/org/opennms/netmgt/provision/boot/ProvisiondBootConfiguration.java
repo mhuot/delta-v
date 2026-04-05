@@ -26,6 +26,7 @@ import org.opennms.core.concurrent.PausibleScheduledThreadPoolExecutor;
 import org.opennms.core.daemon.common.JdbcDistPollerDao;
 import org.opennms.core.daemon.common.JdbcInterfaceToNodeCache;
 import org.opennms.core.daemon.common.NoOpEntityScopeProvider;
+import org.opennms.core.daemon.registry.DetectorRegistryConfiguration;
 import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.core.soa.ServiceRegistry;
 import org.opennms.core.soa.support.DefaultServiceRegistry;
@@ -109,6 +110,7 @@ import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.orm.jpa.persistenceunit.PersistenceManagedTypes;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.scheduling.concurrent.ScheduledExecutorFactoryBean;
@@ -122,6 +124,7 @@ import org.springframework.transaction.support.TransactionTemplate;
  * All bean definitions are translated from the XML context into explicit @Bean methods.</p>
  */
 @Configuration
+@Import(DetectorRegistryConfiguration.class)
 public class ProvisiondBootConfiguration {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProvisiondBootConfiguration.class);
@@ -232,12 +235,9 @@ public class ProvisiondBootConfiguration {
         return new NoOpSnmpProfileMapper();
     }
 
-    // NOTE: The post-construction SnmpAgentConfigFactory injection that lived here was
-    // removed when GenericSnmpDetectorFactory moved to constructor injection. SNMP
-    // detector factories will be registered via explicit @Bean declarations in a
-    // follow-up DetectorRegistryConfiguration (Task 4 of the spring-native-registries
-    // refactor). Until then, the ServiceLoader-based LocalServiceDetectorRegistry
-    // cannot instantiate SNMP detector factories (they require a constructor arg).
+    // SNMP detector factories are registered via @Import(DetectorRegistryConfiguration.class)
+    // at the class level. DetectorRegistryConfiguration pulls the SnmpAgentConfigFactory
+    // bean defined above (snmpPeerFactory) via constructor injection.
 
     // ===================================================================
     // Section 4: RPC Clients

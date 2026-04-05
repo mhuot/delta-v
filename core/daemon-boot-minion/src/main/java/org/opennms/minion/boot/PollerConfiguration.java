@@ -24,29 +24,25 @@ package org.opennms.minion.boot;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import org.opennms.core.daemon.registry.MonitorRegistryConfiguration;
 import org.opennms.netmgt.poller.ServiceMonitorRegistry;
 import org.opennms.netmgt.poller.client.rpc.PollerClientRpcModule;
-import org.opennms.netmgt.poller.support.DefaultServiceMonitorRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 /**
  * Wires the Poller RPC module (module ID "Poller") and its
  * {@link ServiceMonitorRegistry}.
  *
- * <p>The {@link DefaultServiceMonitorRegistry} discovers monitor implementations
- * via {@link java.util.ServiceLoader} from
- * {@code META-INF/services/org.opennms.netmgt.poller.ServiceMonitor}.</p>
+ * <p>The {@link ServiceMonitorRegistry} is provided by
+ * {@link MonitorRegistryConfiguration}, which registers explicit monitor beans.</p>
  */
 @Configuration
+@Import(MonitorRegistryConfiguration.class)
 @ConditionalOnProperty(name = "opennms.minion.poller.enabled", havingValue = "true", matchIfMissing = true)
 public class PollerConfiguration {
-
-    @Bean
-    public ServiceMonitorRegistry serviceMonitorRegistry() {
-        return new DefaultServiceMonitorRegistry();
-    }
 
     @Bean
     public Executor pollerExecutor() {

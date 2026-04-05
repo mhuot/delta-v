@@ -24,28 +24,33 @@ package org.opennms.minion.boot;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import org.opennms.core.daemon.registry.CollectorRegistryConfiguration;
 import org.opennms.netmgt.collection.api.ServiceCollectorRegistry;
 import org.opennms.netmgt.collection.client.rpc.CollectorClientRpcModule;
-import org.opennms.netmgt.collection.support.DefaultServiceCollectorRegistry;
+import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
+import org.opennms.netmgt.snmp.proxy.common.LocationAwareSnmpClientRpcImpl;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 /**
  * Wires the Collector RPC module (module ID "Collect") and its
  * {@link ServiceCollectorRegistry}.
  *
- * <p>The {@link DefaultServiceCollectorRegistry} discovers collector implementations
- * via {@link java.util.ServiceLoader} from
- * {@code META-INF/services/org.opennms.netmgt.collection.api.ServiceCollector}.</p>
+ * <p>The {@link ServiceCollectorRegistry} is provided by
+ * {@link CollectorRegistryConfiguration}, which registers explicit collector beans.
+ * The imported configuration constructs {@link org.opennms.netmgt.collectd.SnmpCollector}
+ * with a {@link LocationAwareSnmpClient}, which we supply here.</p>
  */
 @Configuration
+@Import(CollectorRegistryConfiguration.class)
 @ConditionalOnProperty(name = "opennms.minion.collector.enabled", havingValue = "true", matchIfMissing = true)
 public class CollectorConfiguration {
 
     @Bean
-    public ServiceCollectorRegistry serviceCollectorRegistry() {
-        return new DefaultServiceCollectorRegistry();
+    public LocationAwareSnmpClient locationAwareSnmpClient() {
+        return new LocationAwareSnmpClientRpcImpl();
     }
 
     @Bean

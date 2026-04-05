@@ -157,6 +157,11 @@
         <!-- ========== Shared daemon infrastructure ========== -->
         <dependency>
             <groupId>org.opennms.core</groupId>
+            <artifactId>org.opennms.core.daemon-registry</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opennms.core</groupId>
             <artifactId>org.opennms.core.daemon-common</artifactId>
             <version>${project.version}</version>
             <exclusions>
