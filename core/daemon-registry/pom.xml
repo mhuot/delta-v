@@ -95,6 +95,10 @@
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+                <!-- Pulls in apache-jsp with javax.servlet JspServlet that conflicts with jakarta.servlet Tomcat 11 -->
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>servlet-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-provision-persistence</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-web-api</artifactId></exclusion>
             </exclusions>
         </dependency>
 

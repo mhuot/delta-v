@@ -21,10 +21,6 @@
  */
 package org.opennms.core.daemon.common;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
-
 import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.core.spring.BeanUtils;
 import org.opennms.features.scv.api.SecureCredentialsVault;
@@ -34,9 +30,6 @@ import org.opennms.netmgt.dao.api.MonitoredServiceDao;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.dao.api.SessionUtils;
 import org.opennms.netmgt.dao.api.SnmpInterfaceDao;
-import org.opennms.netmgt.provision.ServiceDetector;
-import org.opennms.netmgt.provision.ServiceDetectorFactory;
-import org.opennms.netmgt.provision.detector.registry.api.ServiceDetectorRegistry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -63,8 +56,6 @@ import org.springframework.context.annotation.Configuration;
  *   <li>{@link JCEKSSecureCredentialsVault} — JCEKS-based SCV backing
  *       {@code ${scv:...}} MATE expressions. Falls back to an empty vault
  *       if the keystore does not yet exist.</li>
- *   <li>Empty {@link ServiceDetectorRegistry} — default no-op implementation.
- *       Daemons that need real detectors provide their own via {@code @Import}.</li>
  *   <li>{@link BeanUtils} — bridges legacy static bean lookups to this
  *       daemon's ApplicationContext.</li>
  * </ul>
@@ -113,25 +104,6 @@ public class DaemonProvisioningConfiguration {
     public SecureCredentialsVault secureCredentialsVault(
             @Value("${opennms.home:/opt/deltav}") String opennmsHome) {
         return new JCEKSSecureCredentialsVault(opennmsHome + "/etc/scv.jce", "notReallyASecret");
-    }
-
-    /**
-     * Default empty {@link ServiceDetectorRegistry} for daemons that do not
-     * supply their own. Daemons that need real detectors should provide their
-     * own {@code @Bean} or {@code @Import} a configuration that does.
-     */
-    @Bean
-    @ConditionalOnMissingBean(ServiceDetectorRegistry.class)
-    public ServiceDetectorRegistry serviceDetectorRegistry() {
-        return new ServiceDetectorRegistry() {
-            @Override public Map<String, String> getTypes() { return Collections.emptyMap(); }
-            @Override public Set<String> getClassNames() { return Collections.emptySet(); }
-            @Override public ServiceDetector getDetectorByClassName(String className, Map<String, String> properties) { return null; }
-            @Override public ServiceDetectorFactory<?> getDetectorFactoryByClassName(String className) { return null; }
-            @Override public Set<String> getServiceNames() { return Collections.emptySet(); }
-            @Override public String getDetectorClassNameFromServiceName(String serviceName) { return null; }
-            @Override public Class<?> getDetectorClassByServiceName(String serviceName) { return null; }
-        };
     }
 
     /**

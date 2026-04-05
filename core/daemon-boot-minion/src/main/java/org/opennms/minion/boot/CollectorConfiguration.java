@@ -21,36 +21,38 @@
  */
 package org.opennms.minion.boot;
 
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import org.opennms.core.daemon.registry.CollectorRegistryConfiguration;
+import org.opennms.core.daemon.registry.LocalServiceCollectorRegistry;
+import org.opennms.netmgt.collectd.SnmpCollector;
 import org.opennms.netmgt.collection.api.ServiceCollectorRegistry;
 import org.opennms.netmgt.collection.client.rpc.CollectorClientRpcModule;
-import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
-import org.opennms.netmgt.snmp.proxy.common.LocationAwareSnmpClientRpcImpl;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 
 /**
  * Wires the Collector RPC module (module ID "Collect") and its
- * {@link ServiceCollectorRegistry}.
+ * {@link ServiceCollectorRegistry} on Minion.
  *
- * <p>The {@link ServiceCollectorRegistry} is provided by
- * {@link CollectorRegistryConfiguration}, which registers explicit collector beans.
- * The imported configuration constructs {@link org.opennms.netmgt.collectd.SnmpCollector}
- * with a {@link LocationAwareSnmpClient}, which we supply here.</p>
+ * <p>Unlike the Horizon side (which uses
+ * {@code CollectorRegistryConfiguration}), Minion does not have an
+ * {@code RpcClientFactory}, so it cannot instantiate the RPC-backed
+ * {@code LocationAwareSnmpClient}. The {@link SnmpCollector} runs locally
+ * on Minion with its {@code m_client} field left null — on first
+ * {@code collect()} invocation, the collector falls back to a
+ * {@code BeanUtils} lookup that resolves to whatever {@code LocationAwareSnmpClient}
+ * the Minion's wider Spring context provides.</p>
  */
 @Configuration
-@Import(CollectorRegistryConfiguration.class)
 @ConditionalOnProperty(name = "opennms.minion.collector.enabled", havingValue = "true", matchIfMissing = true)
 public class CollectorConfiguration {
 
     @Bean
-    public LocationAwareSnmpClient locationAwareSnmpClient() {
-        return new LocationAwareSnmpClientRpcImpl();
+    public ServiceCollectorRegistry serviceCollectorRegistry() {
+        return new LocalServiceCollectorRegistry(List.of(new SnmpCollector()));
     }
 
     @Bean
