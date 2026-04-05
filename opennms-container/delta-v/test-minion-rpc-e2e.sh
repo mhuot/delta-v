@@ -69,6 +69,8 @@ cleanup() {
         log "Post-run cleanup (--post-cleanup): removing canary node..."
         psql_query "DELETE FROM outages WHERE nodeid IN (SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}')" || true
         psql_query "DELETE FROM ifservices WHERE ipinterfaceid IN (SELECT id FROM ipinterface WHERE nodeid IN (SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}'))" || true
+        psql_query "UPDATE ipinterface SET snmpinterfaceid = NULL WHERE nodeid IN (SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}')" || true
+        psql_query "DELETE FROM snmpinterface WHERE nodeid IN (SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}')" || true
         psql_query "DELETE FROM ipinterface WHERE nodeid IN (SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}')" || true
         psql_query "DELETE FROM events WHERE nodeid IN (SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}')" || true
         psql_query "DELETE FROM node WHERE foreignsource = '${FOREIGN_SOURCE}'" || true
@@ -186,6 +188,8 @@ if $PRE_CLEAN; then
 
     psql_query "DELETE FROM outages WHERE nodeid IN (SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}')" || true
     psql_query "DELETE FROM ifservices WHERE ipinterfaceid IN (SELECT id FROM ipinterface WHERE nodeid IN (SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}'))" || true
+    psql_query "UPDATE ipinterface SET snmpinterfaceid = NULL WHERE nodeid IN (SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}')" || true
+    psql_query "DELETE FROM snmpinterface WHERE nodeid IN (SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}')" || true
     psql_query "DELETE FROM ipinterface WHERE nodeid IN (SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}')" || true
     psql_query "DELETE FROM events WHERE nodeid IN (SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}')" || true
     psql_query "DELETE FROM node WHERE foreignsource = '${FOREIGN_SOURCE}'" || true
