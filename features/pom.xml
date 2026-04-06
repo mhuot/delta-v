@@ -83,17 +83,12 @@
 
     <!-- JMX config generator -->
     <module>jmx-config-generator</module>
-    <module>vaadin-jmxconfiggenerator</module>
- 
+
     <!-- SNMP MIB Parser and Event/Collection Configuration -->
     <module>mib-compiler</module>
-    <module>vaadin-snmp-events-and-metrics</module>
 
     <!-- Near Real Time Graphing -->
     <module>nrtg</module>
-
-    <!-- Topology Map -->
-    <module>topology-map</module>
 
     <!-- webapps -->
     <module>root-webapp</module>
@@ -111,19 +106,6 @@
 
     <!-- OpenNMS Vaadin Themes -->
     <module>themes</module>
-
-    <!-- Vaadin Feature -->
-    <module>vaadin</module>
-
-    <!-- Generic Vaadin components -->
-    <module>vaadin-components</module>
-
-    <!-- Dashboard and dashlet UI elements -->
-    <module>vaadin-dashboard</module>
-    <module>vaadin-dashlets</module>
-
-    <!-- OpenNMS Vaadin Surveillance Views -->
-    <module>vaadin-surveillance-views</module>
 
     <!-- Data Choices -->
     <module>datachoices</module>
@@ -165,7 +147,6 @@
 
     <module>jest</module>
     <module>dnsresolver</module>
-    <module>karaf-health</module>
     <module>perspectivepoller</module>
     <module>openconfig</module>
     <module>ui-extension</module>
