@@ -94,8 +94,13 @@ public class ApplicationDaoJpa extends AbstractDaoJpa<OnmsApplication, Integer>
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<ServicePerspective> getServicePerspectives() {
-        // Service perspectives are for REST API, not daemon use.
-        return Collections.emptyList();
+        return (List<ServicePerspective>) entityManager().createQuery(
+                "SELECT DISTINCT new org.opennms.netmgt.dao.api.ServicePerspective(service, perspectiveLocation) " +
+                "FROM OnmsApplication AS application " +
+                "INNER JOIN application.monitoredServices AS service " +
+                "INNER JOIN application.perspectiveLocations AS perspectiveLocation")
+                .getResultList();
     }
 }

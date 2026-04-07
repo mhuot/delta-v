@@ -234,14 +234,17 @@ public class OutageDaoJpa extends AbstractDaoJpa<OnmsOutage, Integer> implements
 
     @Override
     public OnmsOutage currentOutageForServiceFromPerspective(OnmsMonitoredService service, OnmsMonitoringLocation perspective) {
-        throw new UnsupportedOperationException(
-                "currentOutageForServiceFromPerspective() is not used by Pollerd");
+        return findUnique(
+                "FROM OnmsOutage o WHERE o.monitoredService = ?1 AND o.perspective = ?2 AND o.ifRegainedService IS NULL",
+                service, perspective);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Collection<OnmsOutage> currentOutagesForServiceFromPerspectivePoller(OnmsMonitoredService service) {
-        throw new UnsupportedOperationException(
-                "currentOutagesForServiceFromPerspectivePoller() is not used by Pollerd");
+        return find(
+                "FROM OnmsOutage o WHERE o.monitoredService = ?1 AND o.perspective IS NOT NULL AND o.ifRegainedService IS NULL",
+                service);
     }
 
     @Override
