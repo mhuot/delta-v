@@ -14,6 +14,9 @@ import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
 import org.opennms.core.daemon.common.JdbcDistPollerDao;
 import org.opennms.core.daemon.common.JdbcInterfaceToNodeCache;
+import org.opennms.core.daemon.registry.DetectorRegistryConfiguration;
+import org.opennms.core.daemon.registry.NoOpSnmpAgentConfigFactory;
+import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 import org.opennms.netmgt.config.DiscoveryConfigFactory;
 import org.opennms.netmgt.config.api.DiscoveryConfigurationFactory;
 import org.opennms.netmgt.config.discovery.DiscoveryConfiguration;
@@ -41,13 +44,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 /**
  * Spring Boot @Configuration that wires all Discovery beans.
  *
  * <p>Replaces the Karaf-era {@code applicationContext-daemon-loader-discovery.xml}.</p>
+ *
+ * <p>{@link DetectorRegistryConfiguration} is imported explicitly to provide
+ * the {@link org.opennms.netmgt.provision.detector.registry.api.ServiceDetectorRegistry}
+ * bean that {@link DetectorClientRpcModule} requires via {@code @Autowired}.
+ * Discovery doesn't need the collector or monitor registries, so we import
+ * only the detector configuration — the same pattern Minion uses.</p>
  */
 @Configuration
+@Import(DetectorRegistryConfiguration.class)
 public class DiscoveryBootConfiguration {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiscoveryBootConfiguration.class);
@@ -59,6 +70,13 @@ public class DiscoveryBootConfiguration {
                 .build();
         XML_MAPPER.registerModule(new JaxbAnnotationModule());
         XML_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
+    // -- SNMP Config (NoOp — detectors execute on Minion via RPC) --
+
+    @Bean
+    public SnmpAgentConfigFactory snmpAgentConfigFactory() {
+        return new NoOpSnmpAgentConfigFactory();
     }
 
     // -- DAO / Cache --
