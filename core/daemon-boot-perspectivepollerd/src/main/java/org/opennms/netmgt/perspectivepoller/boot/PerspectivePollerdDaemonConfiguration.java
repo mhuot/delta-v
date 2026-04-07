@@ -48,6 +48,8 @@ import org.opennms.netmgt.dao.api.OutageDao;
 import org.opennms.netmgt.dao.api.SessionUtils;
 import org.opennms.netmgt.events.api.EventIpcManager;
 import org.opennms.netmgt.events.api.AnnotationBasedEventListenerAdapter;
+import org.opennms.netmgt.events.api.model.IEvent;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.opennms.netmgt.perspectivepoller.PerspectivePollerd;
 import org.opennms.netmgt.perspectivepoller.PerspectiveServiceTracker;
 import org.opennms.netmgt.poller.LocationAwarePollerClient;
@@ -163,16 +165,24 @@ public class PerspectivePollerdDaemonConfiguration {
     /**
      * Registers PerspectivePollerd's @EventHandler methods with the EventIpcManager.
      *
-     * <p>Uses the 0-arg constructor + setters so that Spring's InitializingBean
-     * callback calls afterPropertiesSet() exactly once. The 2-arg constructor
-     * calls afterPropertiesSet() internally, which causes double registration
-     * when Spring also calls it as an InitializingBean.</p>
+     * <p>Wraps event dispatch in a transaction so that DAO operations within
+     * {@code handlePerspectiveNodeLostService()} and
+     * {@code handlePerspectiveNodeGainedService()} share the same persistence
+     * context. Without this, the {@code OnmsMonitoredService} loaded by
+     * {@code monitoredServiceDao.get()} is detached when {@code outageDao.save()}
+     * tries to persist the outage, causing a null {@code ifserviceid}.</p>
      */
     @Bean
     public AnnotationBasedEventListenerAdapter perspectivePollerdEventAdapter(
             PerspectivePollerd perspectivePollerd,
-            EventIpcManager eventIpcManager) {
-        var adapter = new AnnotationBasedEventListenerAdapter();
+            EventIpcManager eventIpcManager,
+            TransactionTemplate transactionTemplate) {
+        var adapter = new AnnotationBasedEventListenerAdapter() {
+            @Override
+            public void onEvent(final IEvent event) {
+                transactionTemplate.executeWithoutResult(status -> super.onEvent(event));
+            }
+        };
         adapter.setAnnotatedListener(perspectivePollerd);
         adapter.setEventSubscriptionService(eventIpcManager);
         return adapter;

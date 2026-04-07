@@ -426,18 +426,18 @@ else
 fi
 
 # ===========================================================================
-# Phase 4: Simulate location-specific outage by pausing Default Minion
+# Phase 4: Perspective outage simulation
 # ===========================================================================
-# KNOWN ISSUE: PerspectivePollerd detects failures and fires
-# perspectiveNodeLostService events, but OutageDaoJpa fails to persist the
-# outage (ifserviceid is null → NOT NULL constraint violation). This phase
-# is disabled until the OutageDao bug is fixed. When fixed, uncomment this
-# phase and Phase 5 below.
+# BLOCKED: PerspectivePollJob.onTimedOut() in the horizon JAR silently
+# swallows RPC timeouts — never calls reportResult() with Unavailable
+# status. docker pause freezes the Minion causing RPC timeouts, but
+# PerspectivePollerd never detects a status change.
 #
-# See: project_perspectivepollerd_outage_bug.md in memory
+# To fix, delta-v-horizon's PerspectivePollJob needs to report RPC
+# timeouts as poll failures. Once fixed, uncomment Phase 4/5 below.
 log ""
-log "Phase 4: Perspective outage simulation (SKIPPED — OutageDao bug, see followup)"
-ok "Phase 4 skipped — OutageDaoJpa ifserviceid null bug blocks perspective outage persistence"
+log "Phase 4: Perspective outage simulation (SKIPPED — PerspectivePollJob swallows RPC timeouts)"
+ok "Phase 4 skipped — horizon PerspectivePollJob.onTimedOut() needs fix to report failures"
 
 # ===========================================================================
 # Summary
