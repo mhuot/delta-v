@@ -21,7 +21,7 @@
  */
 package org.opennms.netmgt.model;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
 public class NodeIdAdapter extends XmlAdapter<Integer, OnmsNode> {
 

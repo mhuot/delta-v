@@ -7,8 +7,9 @@
 
     <parent>
         <groupId>org.opennms</groupId>
-        <artifactId>org.opennms.core</artifactId>
-        <version>36.0.0-SNAPSHOT</version>
+        <artifactId>delta-v-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <groupId>org.opennms.core</groupId>
@@ -17,143 +18,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <spring-boot.version>4.0.3</spring-boot.version>
-        <!-- Skip enforcer: this module uses Spring Boot 4 / Spring 7
-             which the parent POM's banned-dependencies rules reject -->
-        <enforcer-skip-banned-dependencies>true</enforcer-skip-banned-dependencies>
-        <enforcer-skip-dependency-convergence>true</enforcer-skip-dependency-convergence>
     </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <!-- Import Spring Boot BOM for version management.
-                 Listed FIRST so it takes precedence over the parent POM's
-                 managed versions for JUnit, Spring, etc. -->
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring-boot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <!-- Pin logback to match Spring Boot 4's requirements.
-                 Parent POM manages logback-classic at 1.2.13 which is
-                 incompatible with Spring Boot 4's Configurator API. -->
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>1.5.32</version>
-            </dependency>
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-core</artifactId>
-                <version>1.5.32</version>
-            </dependency>
-            <!-- Pin jboss-logging — Hibernate 7.2.4 requires 3.6+ for MethodHandles$Lookup API -->
-            <dependency>
-                <groupId>org.jboss.logging</groupId>
-                <artifactId>jboss-logging</artifactId>
-                <version>3.6.1.Final</version>
-            </dependency>
-            <!-- Pin Jakarta XML Bind 4.x — parent POM manages 2.3.3, Hibernate 7 needs 4.0+ -->
-            <dependency>
-                <groupId>jakarta.xml.bind</groupId>
-                <artifactId>jakarta.xml.bind-api</artifactId>
-                <version>4.0.2</version>
-            </dependency>
-            <!-- Pin SLF4J 2.x — parent POM manages 1.7.36 which is incompatible with logback 1.5 -->
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>2.0.17</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>jcl-over-slf4j</artifactId>
-                <version>2.0.17</version>
-            </dependency>
-            <!-- Pin Jackson 2.19.4 — parent POM manages 2.16.2 which lacks JsonFormat$Shape.POJO
-                 required by Spring Boot 4.0.3. Explicit entries here override the parent's
-                 managed versions even though the Spring Boot BOM is imported first. -->
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.datatype</groupId>
-                <artifactId>jackson-datatype-jsr310</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.datatype</groupId>
-                <artifactId>jackson-datatype-jdk8</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.module</groupId>
-                <artifactId>jackson-module-parameter-names</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <!-- Pin JUnit to 6.0.3 / Platform 6.0.3 which is the latest
-                 version supported by maven-surefire-plugin 3.5.5.
-                 Must be explicit entries (not BOM import) to override
-                 the parent POM's managed versions at 5.9.2 / 1.9.2. -->
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter</artifactId>
-                <version>6.0.3</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-api</artifactId>
-                <version>6.0.3</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-engine</artifactId>
-                <version>6.0.3</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-params</artifactId>
-                <version>6.0.3</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.platform</groupId>
-                <artifactId>junit-platform-commons</artifactId>
-                <version>6.0.3</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.platform</groupId>
-                <artifactId>junit-platform-engine</artifactId>
-                <version>6.0.3</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.platform</groupId>
-                <artifactId>junit-platform-launcher</artifactId>
-                <version>6.0.3</version>
-            </dependency>
-            <!-- Testcontainers — use 2.0.3 to align with Spring Boot 4.0.3's managed version -->
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>testcontainers-bom</artifactId>
-                <version>2.0.3</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <dependencies>
         <!-- Jakarta entity classes and JPA DAOs — MUST be listed before any
@@ -191,7 +56,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-alarmd</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <!-- Exclude ALL ServiceMix Spring 4.2.x bundles — Spring Boot 4 provides Spring 7 -->
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-aop</artifactId></exclusion>
@@ -240,7 +104,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-alarm-api</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion>
                 <exclusion><groupId>org.slf4j</groupId><artifactId>jcl-over-slf4j</artifactId></exclusion>
@@ -361,7 +224,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>${spring-boot.version}</version>
                 <executions>
                     <execution>
                         <goals>

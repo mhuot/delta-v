@@ -23,15 +23,15 @@ SKIP_TESTS="${SKIP_TESTS:-true}"
 DOCKER_REGISTRY="${DOCKER_REGISTRY:-docker.io}"
 DOCKER_ORG="${DOCKER_ORG:-opennms}"
 
-# Detect version from POM (extract <version> from root pom.xml)
-VERSION="$(grep -m1 '<version>' "$REPO_ROOT/pom.xml" | sed 's/.*<version>\(.*\)<\/version>.*/\1/')"
+# Detect version from POM (skip parent version, get project version)
+VERSION="$(cd "$REPO_ROOT" && ./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout 2>/dev/null || grep '<version>0\.' "$REPO_ROOT/pom.xml" | head -1 | sed 's/.*<version>\(.*\)<\/version>.*/\1/')"
 
 log() { echo "==> $*"; }
 err() { echo "ERROR: $*" >&2; exit 1; }
 
 check_prereqs() {
     command -v docker >/dev/null 2>&1 || err "docker not found"
-    command -v perl >/dev/null 2>&1   || err "perl not found (needed by compile.pl)"
+    command -v ./mvnw >/dev/null 2>&1 || true  # Maven wrapper
 
     # Verify Java 21
     if [ -z "${JAVA_HOME:-}" ]; then
@@ -59,11 +59,11 @@ check_prereqs() {
 }
 
 do_compile() {
-    log "Compiling OpenNMS (version $VERSION)..."
+    log "Compiling Delta-V (version $VERSION)..."
     local test_flag=""
     [ "$SKIP_TESTS" = "true" ] && test_flag="-DskipTests"
     cd "$REPO_ROOT"
-    ./compile.pl $test_flag
+    ./mvnw -B $test_flag install
 }
 
 do_assemble() {
@@ -74,7 +74,7 @@ do_assemble() {
 do_db_init_image() {
     log "Building db-init image (opennms/db-init:$VERSION)..."
     cd "$REPO_ROOT"
-    ./maven/bin/mvn -f core/db-init/pom.xml -DskipTests package
+    ./mvnw -B -f core/db-init/pom.xml -DskipTests package
     cd "$REPO_ROOT/core/db-init"
     docker build -t "opennms/db-init:$VERSION" -t "opennms/db-init:latest" .
 }
@@ -131,34 +131,6 @@ do_deltav_images() {
             -t "opennms/$name:latest" \
             .
     done
-
-    # Stage Minion overlay JARs (these are separate from the daemon deduplication)
-    log "Staging Minion overlay JARs..."
-    mkdir -p "$SCRIPT_DIR/staging/daemon"
-    local minion_pairs=(
-        "features/poller/api/target/org.opennms.features.poller.api-$VERSION.jar:poller-api.jar"
-        "features/poller/client-rpc/target/org.opennms.features.poller.client-rpc-$VERSION.jar:poller-client-rpc.jar"
-        "features/minion/core/impl/target/core-impl-$VERSION.jar:minion-core-impl.jar"
-        "features/poller/monitors/core/target/org.opennms.features.poller.monitors.core-$VERSION.jar:poller-monitors-core.jar"
-    )
-    for pair in "${minion_pairs[@]}"; do
-        local src="${pair%%:*}"
-        local dst="${pair##*:}"
-        if [ -f "$REPO_ROOT/$src" ]; then
-            cp "$REPO_ROOT/$src" "$SCRIPT_DIR/staging/daemon/$dst"
-        else
-            log "WARNING: $src not found"
-        fi
-    done
-
-    # Minion image
-    log "Building opennms/minion-deltav:$VERSION..."
-    docker build \
-        --build-arg "VERSION=$VERSION" \
-        -f Dockerfile.minion \
-        -t "opennms/minion-deltav:$VERSION" \
-        -t "opennms/minion-deltav:latest" \
-        .
 
     # --- Stage Minion Boot fat JAR ---
     log "Staging Minion Boot fat JAR..."

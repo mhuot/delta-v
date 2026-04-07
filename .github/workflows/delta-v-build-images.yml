@@ -80,10 +80,27 @@ jobs:
           distribution: temurin
           cache: maven
 
+      - name: Configure Maven for GitHub Packages
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml << SETTINGS
+          <settings>
+            <servers>
+              <server>
+                <id>github-deltav-horizon</id>
+                <username>${GITHUB_ACTOR}</username>
+                <password>${PACKAGES_TOKEN}</password>
+              </server>
+            </servers>
+          </settings>
+          SETTINGS
+        env:
+          PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Extract version from POM
         id: version
         run: |
-          VERSION=$(grep -m1 '<version>' pom.xml | sed 's/.*<version>\(.*\)<\/version>.*/\1/')
+          VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Version: $VERSION"
 
@@ -100,18 +117,8 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # NOTE: Keep DAEMON_BOOTS in sync with DELTAV_MODULES in Makefile.
-      # The Makefile's deltav targets use the same module list for local
-      # dev iteration (with mvnd + skip flags). This workflow keeps
-      # checkstyle/enforcer enabled as CI quality gates.
-      - name: Compile daemon-boot modules
-        run: |
-          ulimit -n 65536 || true
-          DAEMON_BOOTS=":org.opennms.core.daemon-boot-alarmd,:org.opennms.core.daemon-boot-bsmd,:org.opennms.core.daemon-boot-collectd,:org.opennms.core.daemon-boot-discovery,:org.opennms.core.daemon-boot-enlinkd,:org.opennms.core.daemon-boot-eventtranslator,:org.opennms.core.daemon-boot-minion,:org.opennms.core.daemon-boot-perspectivepollerd,:org.opennms.core.daemon-boot-pollerd,:org.opennms.core.daemon-boot-provisiond,:org.opennms.core.daemon-boot-syslogd,:org.opennms.core.daemon-boot-telemetryd,:org.opennms.core.daemon-boot-trapd"
-          ./mvnw -B -DskipTests --projects "${DAEMON_BOOTS}" -am install
-
-      - name: Compile db-init
-        run: ./mvnw -B -DskipTests -f core/db-init/pom.xml package
+      - name: Compile all modules
+        run: ./mvnw -B -DskipTests install
 
       - name: Build and push JRE base image
         working-directory: opennms-container/delta-v

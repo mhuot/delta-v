@@ -7,38 +7,15 @@
 
     <parent>
         <groupId>org.opennms</groupId>
-        <artifactId>org.opennms.core</artifactId>
-        <version>36.0.0-SNAPSHOT</version>
+        <artifactId>delta-v-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <groupId>org.opennms.core</groupId>
     <artifactId>org.opennms.core.daemon-registry</artifactId>
     <packaging>jar</packaging>
     <name>OpenNMS :: Core :: Daemon Registry</name>
-
-    <properties>
-        <java.version>21</java.version>
-        <spring-boot.version>4.0.3</spring-boot.version>
-        <!-- Skip enforcer: this module lives alongside the Spring Boot 4 stack
-             and pulls ServiceMonitor/ServiceCollector/ServiceDetector factories
-             which trigger the parent POM's banned-dependencies rules. -->
-        <enforcer-skip-banned-dependencies>true</enforcer-skip-banned-dependencies>
-        <enforcer-skip-dependency-convergence>true</enforcer-skip-dependency-convergence>
-    </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <!-- Import Spring Boot BOM so org.springframework:spring-context
-                 resolves to the Spring Boot 4 managed version. -->
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring-boot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <dependencies>
         <!-- ============================================================ -->
@@ -49,7 +26,6 @@
         <dependency>
             <groupId>org.opennms.features.poller.monitors</groupId>
             <artifactId>org.opennms.features.poller.monitors.core</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-aop</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
@@ -74,7 +50,6 @@
         <dependency>
             <groupId>org.opennms.features.poller</groupId>
             <artifactId>org.opennms.features.poller.api</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <!-- Brings in ServiceMix Spring 4.2.9 bundles which conflict with Spring Boot 4 -->
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
@@ -85,7 +60,6 @@
         <dependency>
             <groupId>org.opennms.protocols</groupId>
             <artifactId>org.opennms.protocols.radius</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
@@ -110,7 +84,6 @@
         <dependency>
             <groupId>org.opennms.features.collection</groupId>
             <artifactId>org.opennms.features.collection.snmp-collector</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
@@ -127,7 +100,6 @@
         <dependency>
             <groupId>org.opennms.features.collection</groupId>
             <artifactId>org.opennms.features.collection.api</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <!-- Brings in ServiceMix Spring 4.2.9 bundles which conflict with Spring Boot 4 -->
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
@@ -141,7 +113,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-detector-simple</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
@@ -157,7 +128,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-detector-lineoriented</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
@@ -172,7 +142,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-detector-datagram</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
@@ -187,7 +156,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-detector-ssh</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
@@ -202,7 +170,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-detector-web</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
@@ -217,7 +184,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-detector-jmx</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
@@ -238,7 +204,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-detector-registry</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <!-- core.soa pulls spring-dependencies (ServiceMix Spring 4.2.x) -->
                 <exclusion><groupId>org.opennms.core</groupId><artifactId>org.opennms.core.soa</artifactId></exclusion>
@@ -249,7 +214,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-config-api</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>

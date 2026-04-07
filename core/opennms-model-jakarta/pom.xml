@@ -7,8 +7,9 @@
 
     <parent>
         <groupId>org.opennms</groupId>
-        <artifactId>org.opennms.core</artifactId>
-        <version>36.0.0-SNAPSHOT</version>
+        <artifactId>delta-v-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <groupId>org.opennms.core</groupId>
@@ -19,83 +20,6 @@
         Same package (org.opennms.netmgt.model) as legacy opennms-model,
         different module. Only one should be on the classpath at runtime.
     </description>
-
-    <properties>
-        <java.version>21</java.version>
-        <spring-boot.version>4.0.3</spring-boot.version>
-        <enforcer-skip-banned-dependencies>true</enforcer-skip-banned-dependencies>
-        <enforcer-skip-dependency-convergence>true</enforcer-skip-dependency-convergence>
-    </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring-boot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>1.5.32</version>
-            </dependency>
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-core</artifactId>
-                <version>1.5.32</version>
-            </dependency>
-            <!-- Pin Jackson 2.19.4 — parent POM manages 2.16.2 which lacks JsonFormat$Shape.POJO
-                 required by Spring Boot 4.0.3. Explicit entries here override the parent's
-                 managed versions even though the Spring Boot BOM is imported first. -->
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter</artifactId>
-                <version>5.12.2</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-api</artifactId>
-                <version>5.12.2</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-engine</artifactId>
-                <version>5.12.2</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.platform</groupId>
-                <artifactId>junit-platform-commons</artifactId>
-                <version>1.12.2</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.platform</groupId>
-                <artifactId>junit-platform-engine</artifactId>
-                <version>1.12.2</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.platform</groupId>
-                <artifactId>junit-platform-launcher</artifactId>
-                <version>1.12.2</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <dependencies>
         <!-- Jakarta Persistence API (from Spring Boot 4 BOM) -->
@@ -127,7 +51,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-dao-api</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
                 <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
@@ -139,7 +62,6 @@
         <dependency>
             <groupId>org.opennms.features.events</groupId>
             <artifactId>org.opennms.features.events.api</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <!-- Hibernate 3.x — compile-only for CategoryDao.getCriterionForCategorySetsUnion return type.
@@ -151,7 +73,6 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
-            <version>${hibernateVersion}</version>
             <scope>provided</scope>
         </dependency>
 
