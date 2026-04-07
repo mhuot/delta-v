@@ -306,6 +306,18 @@
         <parameter key="port" value="9092"/>
         <parameter key="hostname" value="${nodeLabel}"/>
       </service>
+      <!-- Perspective-polled service: PSM resolves ${nodelabel} via DNS on each Minion -->
+      <service name="Google-Search" interval="30000" user-defined="false" status="on">
+        <parameter key="rrd-status" value="false"/>
+        <parameter key="timeout" value="10000"/>
+        <parameter key="retry" value="1"/>
+        <parameter key="page-sequence">
+          <page-sequence>
+            <page host="${nodelabel}" path="/" port="443" scheme="https"
+                  response-range="200-399"/>
+          </page-sequence>
+        </parameter>
+      </service>
       <!-- Passive cloud service monitors — status driven by syslog → Event Translator → passiveServiceStatus -->
       <service name="GoogleCloud" interval="30000" user-defined="true" status="on"/>
       <service name="Azure" interval="30000" user-defined="true" status="on"/>
@@ -382,4 +394,5 @@
    <monitor service="Minion-Health" class-name="org.opennms.netmgt.poller.monitors.TcpMonitor"/>
    <monitor service="PostgreSQL" class-name="org.opennms.netmgt.poller.monitors.TcpMonitor"/>
    <monitor service="Kafka" class-name="org.opennms.netmgt.poller.monitors.TcpMonitor"/>
+   <monitor service="Google-Search" class-name="org.opennms.netmgt.poller.monitors.PageSequenceMonitor"/>
 </poller-configuration>
