@@ -5,27 +5,21 @@
          https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!--
-      This module does NOT inherit from the OpenNMS parent POM.
-      It is a standalone Spring Boot application with its own dependency
-      management, Java version, and build lifecycle.
-    -->
+    <parent>
+        <groupId>org.opennms</groupId>
+        <artifactId>delta-v-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
     <groupId>org.opennms.core</groupId>
     <artifactId>org.opennms.core.db-init</artifactId>
-    <version>36.0.0-SNAPSHOT</version>
     <name>OpenNMS :: Core :: DB Init</name>
     <description>Standalone Spring Boot CLI for PostgreSQL schema migration</description>
 
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.3</version>
-        <relativePath/>
-    </parent>
-
     <properties>
         <java.version>21</java.version>
-        <opennms.version>36.0.0-SNAPSHOT</opennms.version>
+        <opennms.version>${deltav.horizon.version}</opennms.version>
         <liquibase.version>3.6.3</liquibase.version>
     </properties>
 

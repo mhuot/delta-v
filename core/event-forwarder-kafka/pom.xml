@@ -5,8 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.opennms</groupId>
-        <artifactId>org.opennms.core</artifactId>
-        <version>36.0.0-SNAPSHOT</version>
+        <artifactId>delta-v-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <groupId>org.opennms.core</groupId>
@@ -22,28 +23,24 @@
         <dependency>
             <groupId>org.opennms.features.events</groupId>
             <artifactId>org.opennms.features.events.api</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <!-- Config API (EventConfDao interface) -->
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-config-api</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <!-- DAO API (EventConfEventDao interface) -->
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-dao-api</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <!-- Config (DefaultEventConfDao implementation — available at runtime via Karaf) -->
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-config</artifactId>
-            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -51,28 +48,24 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>org.opennms.core.messagebus.api</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <!-- Event daemon (EventExpander, TsidAssigner, EventClassifier, IpcMessageConverter) -->
         <dependency>
             <groupId>org.opennms.features.events</groupId>
             <artifactId>org.opennms.features.events.daemon</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <!-- Kafka consumer (EventDeserializer interface) -->
         <dependency>
             <groupId>org.opennms.features.events</groupId>
             <artifactId>org.opennms.features.events.kafka-consumer</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <!-- Kafka client -->
         <dependency>
             <groupId>org.apache.servicemix.bundles</groupId>
             <artifactId>org.apache.servicemix.bundles.kafka-clients</artifactId>
-            <version>${kafkaBundleVersion}</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>

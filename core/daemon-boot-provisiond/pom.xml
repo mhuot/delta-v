@@ -7,8 +7,9 @@
 
     <parent>
         <groupId>org.opennms</groupId>
-        <artifactId>org.opennms.core</artifactId>
-        <version>36.0.0-SNAPSHOT</version>
+        <artifactId>delta-v-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <groupId>org.opennms.core</groupId>
@@ -17,127 +18,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <spring-boot.version>4.0.3</spring-boot.version>
-        <enforcer-skip-banned-dependencies>true</enforcer-skip-banned-dependencies>
-        <enforcer-skip-dependency-convergence>true</enforcer-skip-dependency-convergence>
     </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <!-- Import Spring Boot BOM for version management.
-                 Listed FIRST so it takes precedence over the parent POM's
-                 managed versions for JUnit, Spring, etc. -->
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring-boot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <!-- Pin logback to match Spring Boot 4's requirements -->
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>1.5.32</version>
-            </dependency>
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-core</artifactId>
-                <version>1.5.32</version>
-            </dependency>
-            <!-- Pin jboss-logging — Hibernate 7.2.4 requires 3.6+ -->
-            <dependency>
-                <groupId>org.jboss.logging</groupId>
-                <artifactId>jboss-logging</artifactId>
-                <version>3.6.1.Final</version>
-            </dependency>
-            <!-- Pin Jakarta XML Bind 4.x — Hibernate 7 needs 4.0+ -->
-            <dependency>
-                <groupId>jakarta.xml.bind</groupId>
-                <artifactId>jakarta.xml.bind-api</artifactId>
-                <version>4.0.2</version>
-            </dependency>
-            <!-- Pin SLF4J 2.x — parent POM manages 1.7.36 -->
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>2.0.17</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>jcl-over-slf4j</artifactId>
-                <version>2.0.17</version>
-            </dependency>
-            <!-- Pin Jackson 2.19.4 — parent POM manages 2.16.2 which lacks
-                 JsonFormat$Shape.POJO required by Spring Boot 4.0.3 -->
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.datatype</groupId>
-                <artifactId>jackson-datatype-jsr310</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.datatype</groupId>
-                <artifactId>jackson-datatype-jdk8</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.module</groupId>
-                <artifactId>jackson-module-parameter-names</artifactId>
-                <version>2.19.4</version>
-            </dependency>
-            <!-- Pin JUnit 5.12.2 -->
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter</artifactId>
-                <version>5.12.2</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-api</artifactId>
-                <version>5.12.2</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-engine</artifactId>
-                <version>5.12.2</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-params</artifactId>
-                <version>5.12.2</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.platform</groupId>
-                <artifactId>junit-platform-commons</artifactId>
-                <version>1.12.2</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.platform</groupId>
-                <artifactId>junit-platform-engine</artifactId>
-                <version>1.12.2</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.platform</groupId>
-                <artifactId>junit-platform-launcher</artifactId>
-                <version>1.12.2</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <dependencies>
         <!-- ========== Jakarta model + JPA DAOs (MUST be first) ========== -->
@@ -201,7 +82,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-provisiond</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-aop</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-aspects</artifactId></exclusion>
@@ -245,7 +125,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-provision-persistence</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-aop</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
@@ -274,7 +153,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-detectorclient-rpc</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
@@ -292,7 +170,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-detector-simple</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
@@ -307,7 +184,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-detector-lineoriented</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
@@ -322,7 +198,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-detector-datagram</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
@@ -337,7 +212,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-detector-ssh</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
@@ -352,7 +226,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-detector-web</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
@@ -367,7 +240,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-detector-jmx</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
@@ -384,7 +256,6 @@
         <dependency>
             <groupId>org.opennms.core.snmp</groupId>
             <artifactId>org.opennms.core.snmp.proxy.rpc-impl</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
@@ -415,13 +286,11 @@
         <dependency>
             <groupId>org.opennms.core.snmp</groupId>
             <artifactId>org.opennms.core.snmp.config</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-snmp-asset-provisioning-adapter</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-aop</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
@@ -446,7 +315,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-snmp-metadata-provisioning-adapter</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-aop</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
@@ -473,7 +341,6 @@
         <dependency>
             <groupId>org.opennms.core</groupId>
             <artifactId>org.opennms.core.soa</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
@@ -489,7 +356,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-icmp-api</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
@@ -499,7 +365,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-icmp-best</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
@@ -509,7 +374,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>org.opennms.icmp.proxy.rpc-impl</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-beans</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
@@ -527,7 +391,6 @@
         <dependency>
             <groupId>org.opennms</groupId>
             <artifactId>opennms-provision-api</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
@@ -537,7 +400,6 @@
         <dependency>
             <groupId>org.opennms.core.mate</groupId>
             <artifactId>org.opennms.core.mate.api</artifactId>
-            <version>${project.version}</version>
             <exclusions>
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
@@ -553,12 +415,10 @@
         <dependency>
             <groupId>io.opentracing</groupId>
             <artifactId>opentracing-api</artifactId>
-            <version>${opentracingVersion}</version>
         </dependency>
         <dependency>
             <groupId>io.opentracing</groupId>
             <artifactId>opentracing-util</artifactId>
-            <version>${opentracingVersion}</version>
         </dependency>
 
         <!-- ========== JPA/Hibernate support (from Alarmd pattern) ========== -->
@@ -656,7 +516,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>${spring-boot.version}</version>
                 <executions>
                     <execution>
                         <goals>
