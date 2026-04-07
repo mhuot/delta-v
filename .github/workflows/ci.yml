@@ -38,8 +38,22 @@ jobs:
           distribution: temurin
           cache: maven
 
-      - name: Build daemon-boot modules
+      - name: Configure Maven for GitHub Packages
         run: |
-          ulimit -n 65536 || true
-          DAEMON_BOOTS=":org.opennms.core.daemon-boot-alarmd,:org.opennms.core.daemon-boot-bsmd,:org.opennms.core.daemon-boot-collectd,:org.opennms.core.daemon-boot-discovery,:org.opennms.core.daemon-boot-enlinkd,:org.opennms.core.daemon-boot-eventtranslator,:org.opennms.core.daemon-boot-minion,:org.opennms.core.daemon-boot-perspectivepollerd,:org.opennms.core.daemon-boot-pollerd,:org.opennms.core.daemon-boot-provisiond,:org.opennms.core.daemon-boot-syslogd,:org.opennms.core.daemon-boot-telemetryd,:org.opennms.core.daemon-boot-trapd"
-          ./mvnw -B -DskipTests --projects "${DAEMON_BOOTS}" -am install
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml << SETTINGS
+          <settings>
+            <servers>
+              <server>
+                <id>github-deltav-horizon</id>
+                <username>${GITHUB_ACTOR}</username>
+                <password>${PACKAGES_TOKEN}</password>
+              </server>
+            </servers>
+          </settings>
+          SETTINGS
+        env:
+          PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build all modules
+        run: ./mvnw -B -DskipTests install
