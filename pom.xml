@@ -98,11 +98,21 @@
   <!-- ============================================================ -->
   <!-- Dependency Management                                         -->
   <!-- ============================================================ -->
-  <!-- Priority: spring-boot-starter-parent (actual parent) > horizon BOM (import).
-       Spring Boot 4.0.3 versions for Jackson, SLF4J, Kafka, etc. automatically
-       override the horizon POM's older values. -->
+  <!-- BOM import precedence: first declared wins.
+       spring-boot-dependencies must come BEFORE the horizon BOM so that
+       modern Jackson, SLF4J, logback, etc. are not downgraded by the
+       horizon POM's older managed versions. -->
   <dependencyManagement>
     <dependencies>
+      <!-- Spring Boot BOM — must be first to ensure modern dep versions win -->
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>4.0.3</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
       <!-- Horizon BOM — all org.opennms:* deps + third-party managed deps -->
       <dependency>
         <groupId>org.opennms</groupId>

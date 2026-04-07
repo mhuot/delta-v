@@ -60,10 +60,10 @@ declare -A FAT_JAR
 missing=0
 for daemon in "${DAEMONS[@]}"; do
     base="${REPO_ROOT}/${DAEMON_JAR_BASE[$daemon]}"
-    if [[ -f "${base}-boot.jar" ]]; then
-        FAT_JAR[$daemon]="${base}-boot.jar"
-    elif [[ -f "${base}.jar" ]]; then
+    if [[ -f "${base}.jar" ]]; then
         FAT_JAR[$daemon]="${base}.jar"
+    elif [[ -f "${base}-boot.jar" ]]; then
+        FAT_JAR[$daemon]="${base}-boot.jar"
     else
         echo "ERROR: No fat JAR found for ${daemon}"
         echo "  Tried: ${base}-boot.jar"

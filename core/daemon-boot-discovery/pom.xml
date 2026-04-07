@@ -25,6 +25,11 @@
         <dependency>
             <groupId>org.opennms.core</groupId>
             <artifactId>org.opennms.core.daemon-common</artifactId>
+        </dependency>
+        <!-- Detector/Monitor/Collector registry (provides ServiceDetectorRegistry bean) -->
+        <dependency>
+            <groupId>org.opennms.core</groupId>
+            <artifactId>org.opennms.core.daemon-registry</artifactId>
             <version>${project.version}</version>
             <exclusions>
                 <!-- Exclude ALL ServiceMix Spring 4.2.x bundles — Spring Boot 4 provides Spring 7 -->
