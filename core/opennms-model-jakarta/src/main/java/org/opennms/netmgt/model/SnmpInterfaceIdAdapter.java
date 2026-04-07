@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
 public class SnmpInterfaceIdAdapter extends XmlAdapter<ArrayList<Integer>, Set<OnmsIpInterface>> {
 
