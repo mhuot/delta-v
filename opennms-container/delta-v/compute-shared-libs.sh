@@ -94,7 +94,19 @@ for daemon in "${DAEMONS[@]}"; do
     jar="${FAT_JAR[$daemon]}"
     dest="${EXTRACT_DIR}/${daemon}"
     echo "  ${daemon}: $(basename "${jar}")"
-    java -Djarmode=tools -jar "${jar}" extract --destination "${dest}" 2>&1 | sed 's/^/    /'
+    if ! java -Djarmode=tools -jar "${jar}" extract --destination "${dest}" 2>/dev/null; then
+        echo "    jarmode extraction failed, falling back to manual extract..."
+        mkdir -p "${dest}/lib"
+        tmpdir=$(mktemp -d)
+        (cd "$tmpdir" && jar xf "${jar}")
+        # Move BOOT-INF/lib/* to lib/
+        mv "$tmpdir"/BOOT-INF/lib/* "${dest}/lib/" 2>/dev/null || true
+        # Create thin app JAR from BOOT-INF/classes
+        (cd "$tmpdir/BOOT-INF/classes" && jar cf "${dest}/$(basename "${jar}")" .)
+        # Copy manifest
+        cp -r "$tmpdir/META-INF" "${dest}/META-INF" 2>/dev/null || true
+        rm -rf "$tmpdir"
+    fi
 done
 echo ""
 
