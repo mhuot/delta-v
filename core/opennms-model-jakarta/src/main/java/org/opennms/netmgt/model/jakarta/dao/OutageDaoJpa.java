@@ -83,9 +83,24 @@ public class OutageDaoJpa extends AbstractDaoJpa<OnmsOutage, Integer> implements
         super.update(entity);
     }
 
+    /**
+     * Saves an outage, merging any detached entity references first.
+     *
+     * <p>PerspectivePollerd's event handlers load {@code OnmsMonitoredService} and
+     * {@code OnmsMonitoringLocation} in separate transactions from where
+     * {@code outageDao.save()} runs. These entities are detached by the time
+     * {@code save()} is called. JPA's {@code persist()} rejects detached references,
+     * so we merge them into the current persistence context first.</p>
+     */
     @Override
     @Transactional
     public Integer save(OnmsOutage entity) {
+        if (entity.getMonitoredService() != null) {
+            entity.setMonitoredService(entityManager().merge(entity.getMonitoredService()));
+        }
+        if (entity.getPerspective() != null) {
+            entity.setPerspective(entityManager().merge(entity.getPerspective()));
+        }
         return super.save(entity);
     }
 

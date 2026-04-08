@@ -36,8 +36,9 @@ import org.opennms.core.criteria.Criteria;
 import org.opennms.core.criteria.restrictions.InRestriction;
 import org.opennms.core.criteria.restrictions.Restriction;
 import org.opennms.core.daemon.common.AbstractDaoJpa;
-import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.dao.api.MonitoredServiceDao;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.opennms.netmgt.model.OnmsApplication;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.ServiceSelector;
@@ -55,6 +56,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class MonitoredServiceDaoJpa extends AbstractDaoJpa<OnmsMonitoredService, Integer>
         implements MonitoredServiceDao {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MonitoredServiceDaoJpa.class);
 
     public MonitoredServiceDaoJpa() {
         super(OnmsMonitoredService.class);
@@ -100,11 +103,6 @@ public class MonitoredServiceDaoJpa extends AbstractDaoJpa<OnmsMonitoredService,
 
     // ---- MonitoredServiceDao methods ----
 
-    // NOTE: InetAddress parameters are passed as strings via InetAddressUtils.str()
-    // because Hibernate 7's autoApply converter does not reliably convert
-    // InetAddress bind parameters in JPQL queries. The ipaddr column is VARCHAR,
-    // so string comparison works correctly.
-
     @Override
     public OnmsMonitoredService get(Integer nodeId, InetAddress ipAddress, Integer serviceId) {
         return findUnique(
@@ -112,7 +110,7 @@ public class MonitoredServiceDaoJpa extends AbstractDaoJpa<OnmsMonitoredService,
                 + "JOIN svc.ipInterface ip "
                 + "JOIN ip.node n "
                 + "WHERE n.id = ?1 AND ip.ipAddress = ?2 AND svc.serviceType.id = ?3",
-                nodeId, InetAddressUtils.str(ipAddress), serviceId);
+                nodeId, ipAddress, serviceId);
     }
 
     @Override
@@ -122,17 +120,21 @@ public class MonitoredServiceDaoJpa extends AbstractDaoJpa<OnmsMonitoredService,
                 + "JOIN svc.ipInterface ip "
                 + "JOIN ip.node n "
                 + "WHERE n.id = ?1 AND ip.ipAddress = ?2 AND ip.snmpInterface.ifIndex = ?3 AND svc.serviceType.id = ?4",
-                nodeId, InetAddressUtils.str(ipAddr), ifIndex, serviceId);
+                nodeId, ipAddr, ifIndex, serviceId);
     }
 
     @Override
     public OnmsMonitoredService get(Integer nodeId, InetAddress ipAddress, String svcName) {
-        return findUnique(
+        var result = findUnique(
                 "SELECT svc FROM OnmsMonitoredService svc "
                 + "JOIN svc.ipInterface ip "
                 + "JOIN ip.node n "
                 + "WHERE n.id = ?1 AND ip.ipAddress = ?2 AND svc.serviceType.name = ?3",
-                nodeId, InetAddressUtils.str(ipAddress), svcName);
+                nodeId, ipAddress, svcName);
+        if (result == null) {
+            LOG.warn("MonitoredServiceDaoJpa.get({}, {}, {}) returned null", nodeId, ipAddress, svcName);
+        }
+        return result;
     }
 
     @Override
