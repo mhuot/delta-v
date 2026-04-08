@@ -357,7 +357,24 @@ else
     exit 1
 fi
 
-# Secondary assertion: no service should be in a stuck-open outage state immediately after detection.
+# Verify polls actually COMPLETED — not just dispatched. A poll that times out
+# on Minion (e.g., PSM page-sequence serialization bug) would still show dispatch
+# in logs but never update lastgood/lastfail timestamps.
+LASTPOLL_QUERY="SELECT count(*) FROM ifservices s JOIN ipinterface ip ON s.ipinterfaceid = ip.id JOIN node n ON ip.nodeid = n.nodeid WHERE n.foreignsource = '${FOREIGN_SOURCE}' AND (s.lastgood IS NOT NULL OR s.lastfail IS NOT NULL)"
+if wait_for_db "$LASTPOLL_QUERY" 120 "poll results recorded (lastgood/lastfail timestamp)" 10; then
+    ok "Poll results recorded — polls completed successfully via Minion RPC (not just dispatched)"
+else
+    fail "No poll results recorded within 120s — polls may be dispatched but timing out on Minion"
+    show_diagnostics
+    log ""
+    log "Hint: Check Minion logs for XML parse errors (PSM page-sequence serialization bug)"
+    log "      or Kafka consumer rebalances (max.poll.interval.ms exceeded)"
+    log ""
+    log "Results: $PASS passed, $FAIL failed"
+    exit 1
+fi
+
+# No service should be in a stuck-open outage state immediately after detection.
 # If the monitor IS running but cannot reach the service, an open outage would appear.
 # If the monitor is running AND the service is reachable, the service is up and no open outage exists.
 STUCK_OUTAGE_QUERY="SELECT count(*) FROM outages o JOIN ifservices s ON o.ifserviceid = s.id JOIN ipinterface ip ON s.ipinterfaceid = ip.id JOIN node n ON ip.nodeid = n.nodeid WHERE n.foreignsource = '${FOREIGN_SOURCE}' AND o.ifregainedservice IS NULL"
@@ -388,6 +405,6 @@ log ""
 log "Validated:"
 log "  Phase 1: Canary node provisioned at location=Default"
 log "  Phase 2: ICMP + SNMP detectors executed via Minion RPC"
-log "  Phase 3: Pollerd actively polling canary services via Minion RPC"
+log "  Phase 3: Pollerd polls dispatched, completed, and services reachable via Minion RPC"
 log "══════════════════════════════════════════════════════════════"
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1
