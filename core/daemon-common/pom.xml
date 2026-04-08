@@ -122,19 +122,11 @@
                      that conflict with Spring 7 provided by Spring Boot 4 -->
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-web-dependencies</artifactId></exclusion>
-                <!-- ActiveMQ is unused — all daemons use Kafka for messaging -->
-                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>activemq-dependencies</artifactId></exclusion>
-                <exclusion><groupId>org.apache.activemq</groupId><artifactId>activemq-camel</artifactId></exclusion>
-                <exclusion><groupId>org.opennms.features.activemq</groupId><artifactId>*</artifactId></exclusion>
-                <exclusion><groupId>org.apache.activemq</groupId><artifactId>*</artifactId></exclusion>
                 <!-- opennms-model contains javax.persistence entities that clash with
                      model-jakarta (jakarta.persistence) under Hibernate 7 entity scanning.
                      AbstractServiceDaemon and SpringServiceDaemon (the only classes we use
                      from core/daemon) reference ServiceDaemon from model-api, not opennms-model. -->
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
-                <!-- C3P0 connection pool — replaced by HikariCP via Spring Boot -->
-                <exclusion><groupId>com.mchange</groupId><artifactId>c3p0</artifactId></exclusion>
-                <exclusion><groupId>com.mchange</groupId><artifactId>mchange-commons-java</artifactId></exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -163,9 +155,6 @@
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-context</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-core</artifactId></exclusion>
                 <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.spring-tx</artifactId></exclusion>
-                <!-- ipc.common.kafka pulls ServiceMix Kafka OSGi wrappers — redundant with kafka-clients from Spring Boot -->
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.kafka-clients</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>org.apache.servicemix.bundles.kafka_2.13</artifactId></exclusion>
                 <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
                 <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion>
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
