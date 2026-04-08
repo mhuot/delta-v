@@ -1,0 +1,7 @@
+<model-import xmlns="http://xmlns.opennms.org/xsd/config/model-import" date-stamp="2026-03-24T00:00:00.000-07:00" foreign-source="delta-v" last-import="2026-04-08T01:32:40.167Z">
+   <node location="Default" foreign-id="localhost" node-label="localhost">
+      <interface ip-addr="127.0.0.1" status="1" snmp-primary="N">
+         <monitored-service service-name="ICMP"/>
+      </interface>
+   </node>
+</model-import>
