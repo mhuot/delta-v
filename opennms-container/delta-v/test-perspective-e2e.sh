@@ -10,7 +10,9 @@
 # Creates an Application ("Google-Search-App") that maps the service to
 # two perspective locations (Default + mhuot-labs), then verifies that
 # PerspectivePollerd executes polls from both Minions without creating
-# perspective outages.
+# perspective outages. Phases 4/5 simulate a real service failure by
+# DNS-blocking google.com on the Default Minion, verifying outage creation
+# and recovery while confirming RPC timeouts do NOT create false outages.
 #
 # Usage:
 #   ./test-perspective-e2e.sh              Run the test
@@ -144,8 +146,9 @@ show_diagnostics() {
 }
 
 cleanup() {
-    # Always unpause Minion if it was paused (safety net for early exit)
-    docker unpause delta-v-minion >/dev/null 2>&1 || true
+    # Always undo /etc/hosts override on Default Minion (safety net for early exit)
+    docker exec -u root delta-v-minion sh -c \
+        'grep -v "192.0.2.1" /etc/hosts > /tmp/h && cat /tmp/h > /etc/hosts && rm /tmp/h' 2>/dev/null || true
     if $POST_CLEANUP; then
         log "Post-run cleanup..."
         psql_query "DELETE FROM application_perspective_location_map WHERE appid IN (SELECT id FROM applications WHERE name = '${APP_NAME}')" || true
@@ -393,29 +396,122 @@ else
     log "  No log evidence found — checking DB directly"
 fi
 
-# NOTE: PerspectivePollerd's RPC polls currently all timeout (see Phase 4 skip).
-# The tracker discovers and schedules the service, proving the Application wiring
-# works. Outage creation/clearance will be testable once the RPC path is fixed.
-ok "Perspective polling scheduled (RPC path validation deferred to Phase 4)"
+# Verify no open perspective outages (steady-state healthy)
+OPEN_OUTAGES=$(psql_query "SELECT count(*) FROM outages o
+    WHERE o.perspective IS NOT NULL
+      AND o.ifregainedservice IS NULL
+      AND o.ifserviceid IN (
+        SELECT s.id FROM ifservices s
+        JOIN ipinterface ip ON s.ipinterfaceid = ip.id
+        JOIN node n ON ip.nodeid = n.nodeid
+        WHERE n.foreignsource = '${FOREIGN_SOURCE}'
+      )")
+if [ "${OPEN_OUTAGES:-0}" -eq 0 ]; then
+    ok "No open perspective outages (healthy baseline)"
+else
+    fail "Expected 0 open perspective outages, found ${OPEN_OUTAGES}"
+    show_diagnostics
+fi
 
 # ===========================================================================
-# Phase 4: Perspective outage simulation
+# Phase 4: Simulate service failure from Default Minion
 # ===========================================================================
-# BLOCKED: PerspectivePollerd's LocationAwarePollerClient RPC requests all
-# timeout (107/107 attempts). Minion handles Pollerd/Provisiond RPCs fine,
-# so this is a PerspectivePollerd-specific RPC wiring issue — likely the
-# poll request isn't being routed to the correct Kafka RPC topic or the
-# Minion doesn't have the perspective poll module registered.
+# Block google.com on the Default Minion by redirecting DNS to a TEST-NET
+# address (RFC 5737). PSM will resolve google.com → 192.0.2.1 → connection
+# fails → Unavailable. This is a real service failure (monitor executed,
+# target unreachable), not an infrastructure failure (RPC timeout).
 #
-# Once RPC polling works, enable Phase 4 (docker pause) and Phase 5 (unpause).
+# The mhuot-labs Minion (if connected) would still reach google.com, proving
+# perspective isolation. If mhuot-labs RPC times out, the onTimedOut() fix
+# ensures no false outage is created for that location.
 log ""
-log "Phase 4: Perspective outage simulation (SKIPPED — RPC polls timeout, see followup)"
-ok "Phase 4 skipped — PerspectivePollerd RPC wiring needs investigation"
+log "Phase 4: Simulating service failure from Default Minion..."
 
-# Phase 4/5 code preserved as comments for when RPC polling is fixed:
-# Phase 4: docker pause delta-v-minion → wait for perspective outage from Default
-# Phase 5: docker unpause → wait for outage to clear
-# Outage queries must use ifserviceid join (no nodeid column in outages table)
+# Record outage count before the block
+OUTAGE_COUNT_BEFORE=$(psql_query "SELECT count(*) FROM outages o
+    WHERE o.perspective = '${LOCATION_A}'
+      AND o.ifserviceid IN (
+        SELECT s.id FROM ifservices s
+        JOIN ipinterface ip ON s.ipinterfaceid = ip.id
+        JOIN node n ON ip.nodeid = n.nodeid
+        WHERE n.foreignsource = '${FOREIGN_SOURCE}'
+      )")
+OUTAGE_COUNT_BEFORE=${OUTAGE_COUNT_BEFORE:-0}
+
+# Block google.com on Default Minion (requires root — container runs as uid 10001)
+docker exec -u root delta-v-minion sh -c 'echo "192.0.2.1 google.com www.google.com" >> /etc/hosts'
+ok "Blocked google.com on Default Minion (→ 192.0.2.1)"
+
+# Wait for perspective outage from Default location.
+# Poll interval=30s, timeout=10s, retry=1 → worst case ~80s to detect failure.
+OUTAGE_TIMEOUT=120
+if wait_for_db \
+    "SELECT count(*) FROM outages o
+     WHERE o.perspective = '${LOCATION_A}'
+       AND o.ifregainedservice IS NULL
+       AND o.ifserviceid IN (
+         SELECT s.id FROM ifservices s
+         JOIN ipinterface ip ON s.ipinterfaceid = ip.id
+         JOIN node n ON ip.nodeid = n.nodeid
+         WHERE n.foreignsource = '${FOREIGN_SOURCE}'
+       )" \
+    "$OUTAGE_TIMEOUT" \
+    "perspective outage from ${LOCATION_A}"; then
+    ok "Perspective outage created for ${LOCATION_A} (service failure detected)"
+else
+    fail "No perspective outage from ${LOCATION_A} within ${OUTAGE_TIMEOUT}s"
+    show_diagnostics
+fi
+
+# Verify mhuot-labs did NOT get a false outage from RPC timeout
+MHUOT_OPEN=$(psql_query "SELECT count(*) FROM outages o
+    WHERE o.perspective = '${LOCATION_B}'
+      AND o.ifregainedservice IS NULL
+      AND o.ifserviceid IN (
+        SELECT s.id FROM ifservices s
+        JOIN ipinterface ip ON s.ipinterfaceid = ip.id
+        JOIN node n ON ip.nodeid = n.nodeid
+        WHERE n.foreignsource = '${FOREIGN_SOURCE}'
+      )")
+if [ "${MHUOT_OPEN:-0}" -eq 0 ]; then
+    ok "No false outage for ${LOCATION_B} (RPC timeout handled correctly)"
+else
+    fail "${LOCATION_B} has ${MHUOT_OPEN} open outage(s) — onTimedOut() may be broken"
+fi
+
+# ===========================================================================
+# Phase 5: Restore service — outage should clear
+# ===========================================================================
+log ""
+log "Phase 5: Restoring google.com on Default Minion..."
+
+docker exec -u root delta-v-minion sh -c \
+    'grep -v "192.0.2.1" /etc/hosts > /tmp/h && cat /tmp/h > /etc/hosts && rm /tmp/h'
+ok "Unblocked google.com on Default Minion"
+
+# Wait for all open perspective outages to clear.
+# The wait_for_db helper returns success when the result is non-zero, so we
+# invert: query returns 1 when NO open outages remain (count == 0).
+RECOVERY_TIMEOUT=180
+if wait_for_db \
+    "SELECT CASE WHEN count(*) = 0 THEN 1 ELSE 0 END
+     FROM outages o
+     WHERE o.perspective IS NOT NULL
+       AND o.ifregainedservice IS NULL
+       AND o.ifserviceid IN (
+         SELECT s.id FROM ifservices s
+         JOIN ipinterface ip ON s.ipinterfaceid = ip.id
+         JOIN node n ON ip.nodeid = n.nodeid
+         WHERE n.foreignsource = '${FOREIGN_SOURCE}'
+       )" \
+    "$RECOVERY_TIMEOUT" \
+    "perspective outage recovery (zero open outages)"; then
+    ok "Perspective outage cleared for ${LOCATION_A} (service recovered)"
+    ok "All perspective outages resolved — steady state restored"
+else
+    fail "Perspective outage from ${LOCATION_A} did not clear within ${RECOVERY_TIMEOUT}s"
+    show_diagnostics
+fi
 
 # ===========================================================================
 # Summary
