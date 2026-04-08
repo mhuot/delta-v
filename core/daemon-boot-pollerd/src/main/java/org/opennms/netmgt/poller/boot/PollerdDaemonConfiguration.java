@@ -23,12 +23,14 @@ package org.opennms.netmgt.poller.boot;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 
 import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
+import org.opennms.core.daemon.common.XmlConfigPostProcessor;
 import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.core.tsid.TsidFactory;
 import org.opennms.core.utils.InetAddressUtils;
@@ -107,6 +109,7 @@ public class PollerdDaemonConfiguration {
         var configFile = new java.io.File(opennmsHome, "etc/poller-configuration.xml");
         LOG.info("Loading PollerConfigFactory from {}", configFile);
         var config = XML_MAPPER.readValue(configFile, PollerConfiguration.class);
+        patchNestedXmlParameters(configFile, config);
         PollerConfigFactory.validate(config, filterDao);
         var factory = new PollerConfigFactory(configFile.lastModified(), config, filterDao);
         PollerConfigFactory.setInstance(factory);
@@ -206,5 +209,35 @@ public class PollerdDaemonConfiguration {
     @Bean
     public SmartLifecycle pollerLifecycle(Poller poller) {
         return new SpringServiceDaemonSmartLifecycle(poller);
+    }
+
+    /**
+     * Patches parameters with nested XML content that Jackson XmlMapper
+     * silently drops (e.g., {@code <page-sequence>} inside {@code <parameter>}).
+     *
+     * <p>Jackson's JaxbAnnotationModule does not support {@code @XmlAnyElement}
+     * with {@code @XmlJavaTypeAdapter}, so nested XML is lost during
+     * deserialization. This method re-reads the file with a DOM parser and
+     * sets the nested XML as a string value on the affected parameters.
+     * PageSequenceMonitor accepts both PageSequence objects and XML strings.</p>
+     */
+    private void patchNestedXmlParameters(File configFile, PollerConfiguration config) {
+        Map<String, String> nestedParams = XmlConfigPostProcessor.extractNestedXmlParameters(configFile);
+        if (nestedParams.isEmpty()) {
+            return;
+        }
+        for (var pkg : config.getPackages()) {
+            for (var service : pkg.getServices()) {
+                for (var param : service.getParameters()) {
+                    String lookupKey = pkg.getName() + ":" + service.getName() + ":" + param.getKey();
+                    String xmlString = nestedParams.get(lookupKey);
+                    if (xmlString != null && param.getValue() == null) {
+                        param.setValue(xmlString);
+                        LOG.debug("Patched parameter {}.{}.{} with nested XML",
+                                pkg.getName(), service.getName(), param.getKey());
+                    }
+                }
+            }
+        }
     }
 }
