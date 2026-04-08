@@ -283,13 +283,7 @@
         <parameter key="rrd-status" value="false"/>
         <parameter key="timeout" value="3000"/>
         <parameter key="retry" value="0"/>
-        <parameter key="strict-timeout" value="true"/>
-        <parameter key="page-sequence">
-          <page-sequence>
-            <page host="${nodelabel}" path="/minion/rest/health/probe" port="8181"
-                  response-range="200-299"/>
-          </page-sequence>
-        </parameter>
+        <parameter key="port" value="8181"/>
       </service>
       <!-- Delta-V infrastructure TCP monitors -->
       <service name="PostgreSQL" interval="30000" user-defined="false" status="on">
