@@ -105,6 +105,7 @@
             <exclusions>
                 <!-- Brings in ServiceMix Spring 4.2.9 bundles which conflict with Spring Boot 4 -->
                 <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
             </exclusions>
         </dependency>
 
