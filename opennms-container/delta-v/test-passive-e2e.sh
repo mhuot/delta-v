@@ -311,20 +311,21 @@ PROVEOF
     fi
 fi
 
-# Restart syslogd and eventtranslator to pick up new eventconf definitions
-# and refresh InterfaceToNodeCache. Do NOT restart Pollerd — it needs its
-# Twin publisher (KafkaTwinPublisher) which only works on a fresh Karaf volume.
-# Pollerd discovers new services via nodeGainedService events from Provisiond.
+# Restart syslogd, eventtranslator, and pollerd to pick up new eventconf
+# definitions, refresh InterfaceToNodeCache, and rebuild Pollerd's in-memory
+# poll schedule with the current node IDs. Without a Pollerd restart, stale
+# node IDs from prior test runs cause MonitoredServiceDaoJpa.get() to return
+# null, preventing outage creation for passive services.
 log ""
-log "Restarting syslogd, eventtranslator for new node..."
-docker compose restart syslogd eventtranslator
+log "Restarting syslogd, eventtranslator, pollerd for new node..."
+docker compose restart syslogd eventtranslator pollerd
 
 wait_for_healthy delta-v-syslogd && ok "Syslogd healthy" || fail "Syslogd not healthy"
 wait_for_healthy delta-v-eventtranslator && ok "EventTranslator healthy" || fail "EventTranslator not healthy"
+wait_for_healthy delta-v-pollerd && ok "Pollerd healthy" || fail "Pollerd not healthy"
 
-# Give Pollerd time to discover services from nodeGainedService events
-# and for the Twin API to sync initial state to Minion
-log "Waiting 30s for Pollerd service discovery and Twin API sync..."
+# Give Pollerd time to rebuild its poll schedule from the database
+log "Waiting 30s for Pollerd poll schedule rebuild..."
 sleep 30
 
 # ── Start Kafka Consumers ─────────────────────────────────────────
