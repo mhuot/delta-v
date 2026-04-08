@@ -65,6 +65,11 @@ fail() { echo "  [FAIL] $*"; FAIL=$((FAIL + 1)); }
 err()  { echo "ERROR: $*" >&2; exit 2; }
 
 cleanup() {
+    # Kill background Kafka consumers
+    docker compose exec -T kafka sh -c 'for p in $(ps -eo pid,args 2>/dev/null | grep kafka-console-consumer | grep -v grep | awk "{print \$1}"); do kill "$p" 2>/dev/null; done' || true
+    rm -rf "${TEST_TMPDIR:-}"
+    # Safety: ensure Minion is unpaused if script exits mid-Phase-4
+    docker unpause delta-v-minion 2>/dev/null || true
     if $POST_CLEANUP; then
         log "Post-run cleanup (--post-cleanup): removing canary node..."
         psql_query "DELETE FROM outages WHERE nodeid IN (SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}')" || true
@@ -72,7 +77,6 @@ cleanup() {
         psql_query "UPDATE ipinterface SET snmpinterfaceid = NULL WHERE nodeid IN (SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}')" || true
         psql_query "DELETE FROM snmpinterface WHERE nodeid IN (SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}')" || true
         psql_query "DELETE FROM ipinterface WHERE nodeid IN (SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}')" || true
-        psql_query "DELETE FROM events WHERE nodeid IN (SELECT nodeid FROM node WHERE foreignsource = '${FOREIGN_SOURCE}')" || true
         psql_query "DELETE FROM node WHERE foreignsource = '${FOREIGN_SOURCE}'" || true
         log "  Canary node deleted"
     fi
@@ -124,6 +128,17 @@ wait_for_health() {
     done
     return 1
 }
+
+# ── Kafka consumer for fault-events (needed for Phase 4 negative assertions) ──
+TEST_TMPDIR=$(mktemp -d)
+FAULT_LOG="$TEST_TMPDIR/fault-events.log"
+
+docker compose exec -T kafka /opt/kafka/bin/kafka-console-consumer.sh \
+    --bootstrap-server localhost:9092 \
+    --topic opennms-fault-events \
+    > "$FAULT_LOG" 2>/dev/null &
+FAULT_CONSUMER_PID=$!
+sleep 3
 
 # Resolves the snmp-agent container's IP on the Docker internal network.
 # Uses docker inspect from the host — more reliable than exec'ing into Minion
@@ -392,6 +407,104 @@ else
     exit 1
 fi
 # ══════════════════════════════════════════════════════════════════
+# Phase 4: RPC Timeout Resilience
+# ══════════════════════════════════════════════════════════════════
+# Pause the Minion container to simulate a complete RPC black-hole.
+# All RPC requests (polls, detections, collections) will timeout.
+# Policy: RPC timeout = infrastructure problem, NOT service problem.
+# No outages, no alarms, no fault events should be created.
+#
+# Timing: Default Kafka RPC TTL = 20s. With retry=2, worst case per
+# poll = 3 × 20s = 60s. Pause window = 120s covers this + margin.
+log ""
+log "Phase 4: RPC timeout resilience (docker pause)..."
+
+# 4a: Snapshot current state
+OUTAGE_BASELINE=$(psql_query "SELECT count(*) FROM outages o
+    JOIN ifservices s ON o.ifserviceid = s.id
+    JOIN ipinterface ip ON s.ipinterfaceid = ip.id
+    JOIN node n ON ip.nodeid = n.nodeid
+    WHERE n.foreignsource = '${FOREIGN_SOURCE}'" || echo "0")
+ALARM_BASELINE=$(psql_query "SELECT count(*) FROM alarms a
+    JOIN node n ON a.nodeid = n.nodeid
+    WHERE n.foreignsource = '${FOREIGN_SOURCE}'
+      AND a.alarmtype = 1" || echo "0")
+KAFKA_BASELINE=$(wc -l < "$FAULT_LOG" 2>/dev/null || echo "0")
+
+# 4b: Pause Minion — all RPC requests will timeout
+docker pause delta-v-minion
+ok "Minion paused (RPC black-hole active)"
+
+# 4c: Wait 120s for poll cycles to timeout
+log "Waiting 120s for RPC timeouts to occur..."
+sleep 120
+
+# 4d: Unpause Minion
+docker unpause delta-v-minion
+ok "Minion unpaused"
+
+# 4e: Negative Kafka assertion — no nodeLostService or dataCollectionFailed
+# events should have been published during the pause window.
+# IMPORTANT: grep returns exit code 1 when no match (which is SUCCESS here).
+# Use if-! guard to prevent set -e from killing the script.
+KAFKA_EVENTS_DURING_PAUSE=$(tail -n +"$((KAFKA_BASELINE + 1))" "$FAULT_LOG" 2>/dev/null || true)
+if ! echo "$KAFKA_EVENTS_DURING_PAUSE" | grep -q "nodeLostService\|dataCollectionFailed" 2>/dev/null; then
+    ok "No nodeLostService or dataCollectionFailed events on Kafka during pause"
+else
+    fail "False fault events detected on Kafka during Minion pause — RPC timeout created events"
+    if $VERBOSE; then
+        log "  Events during pause window:"
+        echo "$KAFKA_EVENTS_DURING_PAUSE" | grep "nodeLostService\|dataCollectionFailed" || true
+    fi
+fi
+
+# 4f: Assert no new outages
+OUTAGE_AFTER=$(psql_query "SELECT count(*) FROM outages o
+    JOIN ifservices s ON o.ifserviceid = s.id
+    JOIN ipinterface ip ON s.ipinterfaceid = ip.id
+    JOIN node n ON ip.nodeid = n.nodeid
+    WHERE n.foreignsource = '${FOREIGN_SOURCE}'" || echo "0")
+if [ "${OUTAGE_AFTER:-0}" -eq "${OUTAGE_BASELINE:-0}" ]; then
+    ok "No new outages created during Minion pause (${OUTAGE_AFTER} total, unchanged)"
+else
+    fail "New outages created during pause: before=${OUTAGE_BASELINE}, after=${OUTAGE_AFTER}"
+fi
+
+# 4g: Assert no new problem alarms
+ALARM_AFTER=$(psql_query "SELECT count(*) FROM alarms a
+    JOIN node n ON a.nodeid = n.nodeid
+    WHERE n.foreignsource = '${FOREIGN_SOURCE}'
+      AND a.alarmtype = 1" || echo "0")
+if [ "${ALARM_AFTER:-0}" -eq "${ALARM_BASELINE:-0}" ]; then
+    ok "No new problem alarms created during Minion pause (${ALARM_AFTER} total, unchanged)"
+else
+    fail "New problem alarms during pause: before=${ALARM_BASELINE}, after=${ALARM_AFTER}"
+    if $VERBOSE; then
+        psql_query "SELECT a.alarmid, a.eventuei, a.severity, a.firsteventtime FROM alarms a JOIN node n ON a.nodeid = n.nodeid WHERE n.foreignsource = '${FOREIGN_SOURCE}' AND a.alarmtype = 1" || true
+    fi
+fi
+
+# 4h: Wait for Minion health recovery
+if wait_for_health minion "http://localhost:8080/actuator/health" 120; then
+    ok "Minion health recovered after unpause"
+else
+    fail "Minion health check did not recover within 120s"
+fi
+
+# 4i: Verify polling resumes — lastgood should advance beyond pause start
+RESUME_QUERY="SELECT count(*) FROM ifservices s
+    JOIN ipinterface ip ON s.ipinterfaceid = ip.id
+    JOIN node n ON ip.nodeid = n.nodeid
+    WHERE n.foreignsource = '${FOREIGN_SOURCE}'
+      AND s.lastgood > NOW() - INTERVAL '3 minutes'"
+if wait_for_db "$RESUME_QUERY" 180 "polling resume (lastgood advancing)" 15; then
+    ok "Polling resumed after Minion recovery (lastgood advancing)"
+else
+    fail "Polling did not resume within 180s after Minion unpause"
+    show_diagnostics
+fi
+
+# ══════════════════════════════════════════════════════════════════
 # Summary
 # ══════════════════════════════════════════════════════════════════
 if $VERBOSE; then
@@ -406,5 +519,7 @@ log "Validated:"
 log "  Phase 1: Canary node provisioned at location=Default"
 log "  Phase 2: ICMP + SNMP detectors executed via Minion RPC"
 log "  Phase 3: Pollerd polls dispatched, completed, and services reachable via Minion RPC"
+log "  Phase 4: RPC timeout resilience — Minion paused 120s, zero false outages/alarms/events"
 log "══════════════════════════════════════════════════════════════"
-[ "$FAIL" -eq 0 ] && exit 0 || exit 1
+
+[ $FAIL -eq 0 ] || exit 1
