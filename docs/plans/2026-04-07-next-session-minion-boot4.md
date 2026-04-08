@@ -77,7 +77,7 @@ Move these classes from `opennms-model` to `core/model-api`:
 
 ## Outstanding Followups
 
-- **PerspectivePollJob.onTimedOut()** — swallows RPC timeouts in horizon JAR. Needs fix in delta-v-horizon to enable Phase 4/5 of test-perspective-e2e.sh.
+- **PerspectivePollerd RPC polls all timeout** — 0/107 polls succeed. PerspectivePollJob timeout reporting and OutageDaoJpa merge are fixed, but RPC requests never reach the Minion. Likely missing PollerClientRpcModule registration. See project_perspectivepollerd_outage_bug.md.
 - **Minion ServiceMix/ActiveMQ cleanup** — 17 ActiveMQ + 15 ServiceMix bundles still in Minion (own dep paths, not daemon-common).
 
 ## Important Reminders
