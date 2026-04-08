@@ -132,6 +132,9 @@
                      AbstractServiceDaemon and SpringServiceDaemon (the only classes we use
                      from core/daemon) reference ServiceDaemon from model-api, not opennms-model. -->
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+                <!-- C3P0 connection pool — replaced by HikariCP via Spring Boot -->
+                <exclusion><groupId>com.mchange</groupId><artifactId>c3p0</artifactId></exclusion>
+                <exclusion><groupId>com.mchange</groupId><artifactId>mchange-commons-java</artifactId></exclusion>
             </exclusions>
         </dependency>
         <dependency>
