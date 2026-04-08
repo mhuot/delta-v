@@ -146,6 +146,8 @@ show_diagnostics() {
 }
 
 cleanup() {
+    docker compose exec -T kafka sh -c 'for p in $(ps -eo pid,args 2>/dev/null | grep kafka-console-consumer | grep -v grep | awk "{print \$1}"); do kill "$p" 2>/dev/null; done' || true
+    rm -rf "$TEST_TMPDIR"
     # Always undo /etc/hosts override on Default Minion (safety net for early exit)
     docker exec -u root delta-v-minion sh -c \
         'grep -v "192.0.2.1" /etc/hosts > /tmp/h && cat /tmp/h > /etc/hosts && rm /tmp/h' 2>/dev/null || true
@@ -165,6 +167,33 @@ cleanup() {
     fi
 }
 trap cleanup EXIT
+
+TEST_TMPDIR=$(mktemp -d)
+FAULT_LOG="$TEST_TMPDIR/fault-events.log"
+
+docker compose exec -T kafka /opt/kafka/bin/kafka-console-consumer.sh \
+    --bootstrap-server localhost:9092 \
+    --topic opennms-fault-events \
+    > "$FAULT_LOG" 2>/dev/null &
+FAULT_CONSUMER_PID=$!
+sleep 3
+
+wait_for_kafka_event() {
+    local log_file="$1"
+    local pattern="$2"
+    local timeout="$3"
+    local description="$4"
+    local elapsed=0
+    log "Waiting for $description (timeout: ${timeout}s)..."
+    while [ $elapsed -lt "$timeout" ]; do
+        if grep -q "$pattern" "$log_file" 2>/dev/null; then
+            return 0
+        fi
+        sleep 2
+        elapsed=$((elapsed + 2))
+    done
+    return 1
+}
 
 # ===========================================================================
 # Prerequisites
@@ -413,6 +442,19 @@ else
     show_diagnostics
 fi
 
+# Verify polls actually completed on Minion (not just dispatched).
+LASTGOOD_QUERY="SELECT count(*) FROM ifservices s
+    JOIN ipinterface ip ON s.ipinterfaceid = ip.id
+    JOIN node n ON ip.nodeid = n.nodeid
+    WHERE n.foreignsource = '${FOREIGN_SOURCE}'
+      AND s.lastgood IS NOT NULL"
+if wait_for_db "$LASTGOOD_QUERY" 120 "poll completion (lastgood timestamp)"; then
+    ok "Perspective polls completed on Minion (lastgood recorded)"
+else
+    fail "No lastgood timestamps recorded — polls may be dispatched but timing out on Minion"
+    show_diagnostics
+fi
+
 # ===========================================================================
 # Phase 4: Simulate service failure from Default Minion
 # ===========================================================================
@@ -460,6 +502,19 @@ if wait_for_db \
     ok "Perspective outage created for ${LOCATION_A} (service failure detected)"
 else
     fail "No perspective outage from ${LOCATION_A} within ${OUTAGE_TIMEOUT}s"
+    show_diagnostics
+fi
+
+# Verify corresponding perspective alarm was created.
+PERSPECTIVE_ALARM_QUERY="SELECT count(*) FROM alarms a
+    JOIN node n ON a.nodeid = n.nodeid
+    WHERE n.foreignsource = '${FOREIGN_SOURCE}'
+      AND a.eventuei = 'uei.opennms.org/perspective/nodes/nodeLostService'
+      AND a.alarmtype = 1"
+if wait_for_db "$PERSPECTIVE_ALARM_QUERY" 30 "perspective alarm creation"; then
+    ok "Perspective alarm created (nodeLostService from ${LOCATION_A})"
+else
+    fail "No perspective alarm found for ${LOCATION_A}"
     show_diagnostics
 fi
 
@@ -513,6 +568,37 @@ else
     show_diagnostics
 fi
 
+# Verify the resolution event reached Kafka (authoritative — no events table).
+if wait_for_kafka_event "$FAULT_LOG" "nodeRegainedService" 30 "perspective nodeRegainedService on Kafka"; then
+    ok "Perspective nodeRegainedService event confirmed on Kafka"
+else
+    fail "nodeRegainedService event not seen on Kafka fault-events topic"
+fi
+
+# Verify alarm lifecycle: cleared by Alarmd, then deleted by Drools.
+# Drools delete can happen very quickly, so accept either state.
+ALARM_CLEARED_QUERY="SELECT count(*) FROM alarms a
+    JOIN node n ON a.nodeid = n.nodeid
+    WHERE n.foreignsource = '${FOREIGN_SOURCE}'
+      AND a.eventuei = 'uei.opennms.org/perspective/nodes/nodeLostService'
+      AND a.severity = 2"
+ALARM_GONE_QUERY="SELECT CASE WHEN count(*) = 0 THEN 1 ELSE 0 END FROM alarms a
+    JOIN node n ON a.nodeid = n.nodeid
+    WHERE n.foreignsource = '${FOREIGN_SOURCE}'
+      AND a.eventuei = 'uei.opennms.org/perspective/nodes/nodeLostService'
+      AND a.alarmtype = 1"
+sleep 5
+CLEARED=$(psql_query "$ALARM_CLEARED_QUERY" || echo "0")
+GONE=$(psql_query "$ALARM_GONE_QUERY" || echo "0")
+if [ "${CLEARED:-0}" -gt 0 ]; then
+    ok "Perspective alarm CLEARED (Drools delete pending)"
+elif [ "${GONE:-0}" -gt 0 ]; then
+    ok "Perspective alarm deleted by Drools (fast clear+delete cycle)"
+else
+    fail "Perspective alarm neither cleared nor deleted — Alarmd/Drools issue"
+    show_diagnostics
+fi
+
 # ===========================================================================
 # Summary
 # ===========================================================================
@@ -522,4 +608,11 @@ fi
 
 log ""
 log "Results: $PASS passed, $FAIL failed"
+log ""
+log "Validated:"
+log "  Phase 1: Requisition + foreign source → google.com node provisioned"
+log "  Phase 2: Application created with Default + mhuot-labs perspectives"
+log "  Phase 3: Perspective polls completed (lastgood), no open outages"
+log "  Phase 4: DNS block → outage + alarm created for Default, no false outage for mhuot-labs"
+log "  Phase 5: DNS unblock → outage cleared, alarm cleared/deleted, nodeRegainedService on Kafka"
 [ $FAIL -eq 0 ] || exit 1
