@@ -125,14 +125,12 @@ public class OutageDaoJpa extends AbstractDaoJpa<OnmsOutage, Integer> implements
     public List<OnmsOutage> findMatching(Criteria criteria) {
         StringBuilder jpql = new StringBuilder("SELECT o FROM OnmsOutage o");
         List<Object> parameters = new ArrayList<>();
-        Map<String, String> aliasMap = new HashMap<>();
 
         // Process aliases as JOINs
         for (Alias alias : criteria.getAliases()) {
             String joinType = mapJoinType(alias.getType());
             jpql.append(" ").append(joinType).append(" o.").append(alias.getAssociationPath())
                 .append(" ").append(alias.getAlias());
-            aliasMap.put(alias.getAlias(), alias.getAssociationPath());
         }
 
         // Process restrictions as WHERE clauses

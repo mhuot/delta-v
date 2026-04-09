@@ -628,7 +628,7 @@ public class OnmsHwEntity implements Serializable, Comparable<OnmsHwEntity> {
      */
     public OnmsHwEntity getChildByIndex(Integer entPhysicalIndex) {
         for (OnmsHwEntity child : m_children) {
-            if (child.getEntPhysicalIndex() == entPhysicalIndex) {
+            if (java.util.Objects.equals(child.getEntPhysicalIndex(), entPhysicalIndex)) {
                 return child;
             }
         }
