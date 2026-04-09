@@ -23,8 +23,11 @@ import javax.sql.DataSource;
 import org.opennms.netmgt.eventd.AbstractEventUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * JDBC-backed {@link org.opennms.netmgt.eventd.EventUtil} for Spring Boot daemons.
@@ -36,15 +39,20 @@ import org.springframework.stereotype.Component;
  * <p>{@link AbstractEventUtil} provides the {@code expandParms()} template method
  * that calls these lookup methods to resolve {@code %nodelabel%}, {@code %ifalias%},
  * {@code %foreignsource%}, etc. tokens in event descriptions and logmsg.</p>
+ *
+ * <p>Only created in daemons that have a database (i.e., where
+ * {@code spring.datasource.url} is configured). Not available in Minion.</p>
  */
 @Component
+@ConditionalOnProperty("spring.datasource.url")
 public class JdbcEventUtil extends AbstractEventUtil {
 
     private static final Logger LOG = LoggerFactory.getLogger(JdbcEventUtil.class);
 
     private final JdbcTemplate jdbc;
 
-    public JdbcEventUtil(DataSource dataSource) {
+    public JdbcEventUtil(DataSource dataSource, PlatformTransactionManager transactionManager) {
+        super(null, new TransactionTemplate(transactionManager));
         this.jdbc = new JdbcTemplate(dataSource);
     }
 
