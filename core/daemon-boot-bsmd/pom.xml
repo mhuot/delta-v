@@ -6,13 +6,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.opennms</groupId>
+        <groupId>org.deltav</groupId>
         <artifactId>delta-v-parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <groupId>org.opennms.core</groupId>
+    <groupId>org.deltav.core</groupId>
     <artifactId>org.opennms.core.daemon-boot-bsmd</artifactId>
     <name>OpenNMS :: Core :: Daemon Boot :: BSMd</name>
 
@@ -34,7 +34,7 @@
 
         <!-- Shared daemon infrastructure -->
         <dependency>
-            <groupId>org.opennms.core</groupId>
+            <groupId>org.deltav.core</groupId>
             <artifactId>org.opennms.core.daemon-common</artifactId>
             <version>${project.version}</version>
             <exclusions>

@@ -124,27 +124,27 @@
 
       <!-- Delta-V internal modules (version managed here, not in horizon BOM) -->
       <dependency>
-        <groupId>org.opennms.core</groupId>
+        <groupId>org.deltav.core</groupId>
         <artifactId>org.opennms.core.daemon-common</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.opennms.core</groupId>
+        <groupId>org.deltav.core</groupId>
         <artifactId>org.opennms.core.daemon-registry</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.opennms.core</groupId>
+        <groupId>org.deltav.core</groupId>
         <artifactId>org.opennms.core.daemon-sink-kafka</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.opennms.core</groupId>
+        <groupId>org.deltav.core</groupId>
         <artifactId>org.opennms.core.dao-jpa-support</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.opennms.core</groupId>
+        <groupId>org.deltav.core</groupId>
         <artifactId>org.opennms.core.event-forwarder-kafka</artifactId>
         <version>${project.version}</version>
       </dependency>
