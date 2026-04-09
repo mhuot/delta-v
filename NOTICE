@@ -1,0 +1,19 @@
+Delta-V
+Copyright (C) 2026 BeaconStrategists, Inc.
+
+This product includes software derived from OpenNMS Horizon
+(https://www.opennms.com/), which is licensed under the
+GNU Affero General Public License v3 (AGPL-3.0).
+
+Original OpenNMS code copyright (C) 1999-2024 The OpenNMS Group, Inc.
+
+The following components contain modifications of OpenNMS source code
+and carry dual copyright attribution:
+
+  - core/opennms-model-jakarta/ — JPA entity classes, DAOs, and converters
+    ported from opennms-model to jakarta.persistence
+  - BSM persistence entities in core/daemon-boot-bsmd/ — Business Service
+    Monitor entity classes ported to jakarta.persistence
+
+All other code in this project is original work by BeaconStrategists, Inc.
+under the org.deltav package namespace.
