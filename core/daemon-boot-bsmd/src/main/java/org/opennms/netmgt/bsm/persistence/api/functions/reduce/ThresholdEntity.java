@@ -19,35 +19,36 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.deltav.netmgt.bsm.persistence.api.functions.reduce;
+package org.opennms.netmgt.bsm.persistence.api.functions.reduce;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
+import com.google.common.base.Preconditions;
+
 @Entity
-@DiscriminatorValue(value="highest-severity-above")
-public class HighestSeverityAboveEntity extends AbstractReductionFunctionEntity {
+@DiscriminatorValue("threshold")
+public class ThresholdEntity extends AbstractReductionFunctionEntity {
 
-    /**
-     * The ordinal number of the Status object.
-     */
-    @Column(name="threshold_severity", nullable=false)
-    private int m_threshold;
+    @Column(name="threshold", nullable=false)    
+    private float m_threshold;
 
-    public HighestSeverityAboveEntity() {
+    public ThresholdEntity() {
 
     }
 
-    public HighestSeverityAboveEntity(int threshold) {
+    public ThresholdEntity(float threshold) {
         setThreshold(threshold);
     }
 
-    public void setThreshold(int threshold) {
+    public void setThreshold(float threshold) {
+        Preconditions.checkArgument(threshold > 0, "threshold must be strictly positive");
+        Preconditions.checkArgument(threshold <= 1, "threshold must be less or equal to 1");
         m_threshold = threshold;
     }
 
-    public int getThreshold() {
+    public float getThreshold() {
         return m_threshold;
     }
 

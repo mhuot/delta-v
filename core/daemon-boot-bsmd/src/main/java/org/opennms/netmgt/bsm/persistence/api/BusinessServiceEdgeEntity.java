@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.deltav.netmgt.bsm.persistence.api;
+package org.opennms.netmgt.bsm.persistence.api;
 
 import java.util.Objects;
 import java.util.Set;
@@ -41,7 +41,7 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
-import org.deltav.netmgt.bsm.persistence.api.functions.map.AbstractMapFunctionEntity;
+import org.opennms.netmgt.bsm.persistence.api.functions.map.AbstractMapFunctionEntity;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;

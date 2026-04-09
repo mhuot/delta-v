@@ -6,9 +6,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(
     scanBasePackages = {
-        "org.opennms.core.daemon.common",
+        "org.deltav.core.daemon.common",
         "org.opennms.netmgt.model.jakarta.dao",
-        "org.opennms.netmgt.provision.boot"
+        "org.deltav.netmgt.provision.boot"
     }
     // Do NOT exclude HibernateJpaAutoConfiguration — Provisiond needs JPA
 )

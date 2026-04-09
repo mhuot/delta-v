@@ -19,17 +19,17 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.deltav.netmgt.bsm.persistence.api.functions.reduce;
+package org.opennms.netmgt.bsm.persistence.api.functions.map;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
 @Entity
-@DiscriminatorValue(value="highest-severity")
-public class HighestSeverityEntity extends AbstractReductionFunctionEntity {
+@DiscriminatorValue(value="ignore")
+public class IgnoreEntity extends AbstractMapFunctionEntity {
 
     @Override
-    public <T> T accept(ReductionFunctionEntityVisitor<T> visitor) {
+    public <T> T accept(MapFunctionEntityVisitor<T> visitor) {
         return visitor.visit(this);
     }
 

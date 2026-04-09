@@ -1,4 +1,4 @@
-<model-import xmlns="http://xmlns.opennms.org/xsd/config/model-import" date-stamp="2026-03-23T00:00:00.000-07:00" foreign-source="mhuot-labs" last-import="2026-04-07T03:03:00.025Z">
+<model-import xmlns="http://xmlns.opennms.org/xsd/config/model-import" date-stamp="2026-03-23T00:00:00.000-07:00" foreign-source="mhuot-labs" last-import="2026-04-09T11:50:00.041Z">
    <node location="mhuot-labs" foreign-id="hub1" node-label="hub1">
       <interface ip-addr="172.20.20.4" status="1" snmp-primary="P">
          <monitored-service service-name="SNMP"/>

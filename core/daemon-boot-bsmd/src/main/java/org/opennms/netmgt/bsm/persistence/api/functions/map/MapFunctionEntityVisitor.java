@@ -19,15 +19,17 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.deltav.netmgt.bsm.persistence.api;
+package org.opennms.netmgt.bsm.persistence.api.functions.map;
 
-public interface EdgeEntityVisitor<T> {
+public interface MapFunctionEntityVisitor<T> {
 
-    T visit(BusinessServiceChildEdgeEntity edgeEntity);
+    T visit(DecreaseEntity decreaseEntity);
 
-    T visit(SingleReductionKeyEdgeEntity edgeEntity);
+    T visit(IdentityEntity identityEntity);
 
-    T visit(IPServiceEdgeEntity edgeEntity);
+    T visit(IgnoreEntity ignoreEntity);
 
-    T visit(ApplicationEdgeEntity applicationEdgeEntity);
+    T visit(IncreaseEntity increaseEntity);
+
+    T visit(SetToEntity setToEntity);
 }

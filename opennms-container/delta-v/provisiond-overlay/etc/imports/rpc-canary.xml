@@ -1,4 +1,4 @@
-<model-import xmlns="http://xmlns.opennms.org/xsd/config/model-import" date-stamp="2026-04-07T06:11:46.000Z" foreign-source="rpc-canary" last-import="2026-04-07T07:52:00.050Z">
+<model-import xmlns="http://xmlns.opennms.org/xsd/config/model-import" date-stamp="2026-04-07T06:11:46.000Z" foreign-source="rpc-canary" last-import="2026-04-09T11:50:00.068Z">
    <node location="Default" foreign-id="snmp-agent-canary" node-label="snmp-agent-canary">
       <interface ip-addr="172.18.0.2" status="1" snmp-primary="P">
          <monitored-service service-name="ICMP"/>

@@ -26,9 +26,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.deltav.core.daemon.common.AbstractDaoJpa;
-import org.deltav.netmgt.bsm.persistence.api.BusinessServiceDao;
-import org.deltav.netmgt.bsm.persistence.api.BusinessServiceEdgeEntity;
-import org.deltav.netmgt.bsm.persistence.api.BusinessServiceEntity;
+import org.opennms.netmgt.bsm.persistence.api.BusinessServiceDao;
+import org.opennms.netmgt.bsm.persistence.api.BusinessServiceEdgeEntity;
+import org.opennms.netmgt.bsm.persistence.api.BusinessServiceEntity;
 import org.springframework.stereotype.Repository;
 
 @Repository

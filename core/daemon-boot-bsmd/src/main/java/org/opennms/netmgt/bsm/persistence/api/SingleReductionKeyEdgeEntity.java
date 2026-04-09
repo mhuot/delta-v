@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.deltav.netmgt.bsm.persistence.api;
+package org.opennms.netmgt.bsm.persistence.api;
 
 import java.util.Objects;
 import java.util.Set;
@@ -27,36 +27,37 @@ import java.util.Set;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Size;
 
-import org.opennms.netmgt.dao.util.ReductionKeyHelper;
-import org.opennms.netmgt.model.OnmsMonitoredService;
+import com.google.common.collect.Sets;
 
 @Entity
-@Table(name = "bsm_service_ifservices")
+@Table(name = "bsm_service_reductionkeys",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"id", "reductionkey"}))
 @PrimaryKeyJoinColumn(name="id")
-@DiscriminatorValue("ipservices")
-public class IPServiceEdgeEntity extends BusinessServiceEdgeEntity {
+@DiscriminatorValue("reductionkeys")
+public class SingleReductionKeyEdgeEntity extends BusinessServiceEdgeEntity {
 
-    private OnmsMonitoredService m_ipService;
-
+    private String reductionKey;
     private String m_friendlyName;
 
-    // NOTE: When we use @Column on this field, Hibernate attempts to serialize the objects as a byte array
-    // Instead, we resort to use @ManyToOne
-    @ManyToOne(optional=false)
-    @JoinColumn(name="ifserviceid", nullable=false)
-    public OnmsMonitoredService getIpService() {
-        return m_ipService;
+    public void setReductionKey(String reductionKey) {
+        this.reductionKey = reductionKey;
     }
 
-    public void setIpService(OnmsMonitoredService ipService) {
-        m_ipService = ipService;
+    @Column(name = "reductionkey", nullable = false)
+    public String getReductionKey() {
+        return reductionKey;
+    }
+
+    @Override
+    @Transient
+    public Set<String> getReductionKeys() {
+        return Sets.newHashSet(reductionKey);
     }
 
     @Column(name="friendlyname", nullable = true)
@@ -70,16 +71,10 @@ public class IPServiceEdgeEntity extends BusinessServiceEdgeEntity {
     }
 
     @Override
-    @Transient
-    public Set<String> getReductionKeys() {
-        return ReductionKeyHelper.getReductionKeys(m_ipService);
-    }
-
-    @Override
     public String toString() {
         return com.google.common.base.MoreObjects.toStringHelper(this)
                 .add("super", super.toString())
-                .add("ipService", m_ipService)
+                .add("reductionKey", reductionKey)
                 .toString();
     }
 
@@ -87,8 +82,8 @@ public class IPServiceEdgeEntity extends BusinessServiceEdgeEntity {
     public boolean equalsDefinition(BusinessServiceEdgeEntity other) {
         boolean equalsSuper = super.equalsDefinition(other);
         if (equalsSuper) {
-            return Objects.equals(m_ipService, ((IPServiceEdgeEntity) other).m_ipService) &&
-                   Objects.equals(m_friendlyName, ((IPServiceEdgeEntity) other).m_friendlyName);
+            return Objects.equals(reductionKey, ((SingleReductionKeyEdgeEntity) other).reductionKey) &&
+                   Objects.equals(m_friendlyName, ((SingleReductionKeyEdgeEntity) other).m_friendlyName);
         }
         return false;
     }

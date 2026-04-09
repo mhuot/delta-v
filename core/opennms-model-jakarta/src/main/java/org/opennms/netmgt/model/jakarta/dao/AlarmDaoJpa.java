@@ -26,7 +26,7 @@ import java.util.Map;
 
 import jakarta.persistence.Query;
 
-import org.opennms.core.daemon.common.AbstractDaoJpa;
+import org.deltav.core.daemon.common.AbstractDaoJpa;
 import org.opennms.netmgt.dao.api.AlarmDao;
 import org.opennms.netmgt.model.HeatMapElement;
 import org.opennms.netmgt.model.OnmsAlarm;

@@ -19,22 +19,18 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.deltav.netmgt.bsm.persistence.api;
+package org.opennms.netmgt.bsm.persistence.api.functions.map;
 
-import java.util.Set;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 
-import org.deltav.netmgt.bsm.persistence.api.functions.map.AbstractMapFunctionEntity;
+@Entity
+@DiscriminatorValue(value="increase")
+public class IncreaseEntity extends AbstractMapFunctionEntity {
 
-public interface EdgeEntity {
-
-    boolean isEnabled();
-
-    int getWeight();
-
-    Set<String> getReductionKeys();
-
-    AbstractMapFunctionEntity getMapFunction();
-
-    <T> T accept(EdgeEntityVisitor<T> visitor);
+    @Override
+    public <T> T accept(MapFunctionEntityVisitor<T> visitor) {
+        return visitor.visit(this);
+    }
 
 }

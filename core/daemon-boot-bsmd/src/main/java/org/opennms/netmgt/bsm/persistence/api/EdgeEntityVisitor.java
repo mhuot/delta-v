@@ -19,18 +19,15 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.deltav.netmgt.bsm.persistence.api.functions.map;
+package org.opennms.netmgt.bsm.persistence.api;
 
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Entity;
+public interface EdgeEntityVisitor<T> {
 
-@Entity
-@DiscriminatorValue(value="ignore")
-public class IgnoreEntity extends AbstractMapFunctionEntity {
+    T visit(BusinessServiceChildEdgeEntity edgeEntity);
 
-    @Override
-    public <T> T accept(MapFunctionEntityVisitor<T> visitor) {
-        return visitor.visit(this);
-    }
+    T visit(SingleReductionKeyEdgeEntity edgeEntity);
 
+    T visit(IPServiceEdgeEntity edgeEntity);
+
+    T visit(ApplicationEdgeEntity applicationEdgeEntity);
 }

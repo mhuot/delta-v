@@ -23,7 +23,7 @@ package org.opennms.netmgt.enlinkd.persistence.impl;
 
 import java.util.List;
 
-import org.opennms.core.daemon.common.AbstractDaoJpa;
+import org.deltav.core.daemon.common.AbstractDaoJpa;
 import org.opennms.netmgt.enlinkd.persistence.api.LldpElementDao;
 import org.opennms.core.utils.LldpUtils.LldpChassisIdSubType;
 import org.opennms.netmgt.enlinkd.model.LldpElement;

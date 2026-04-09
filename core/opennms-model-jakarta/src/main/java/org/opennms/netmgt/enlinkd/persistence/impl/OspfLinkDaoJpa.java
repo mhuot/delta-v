@@ -25,7 +25,7 @@ import java.net.InetAddress;
 import java.util.Date;
 import java.util.List;
 
-import org.opennms.core.daemon.common.AbstractDaoJpa;
+import org.deltav.core.daemon.common.AbstractDaoJpa;
 import org.opennms.netmgt.enlinkd.persistence.api.OspfLinkDao;
 import org.opennms.netmgt.enlinkd.model.OspfLink;
 import org.opennms.netmgt.model.OnmsNode;

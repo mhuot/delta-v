@@ -23,14 +23,16 @@ package org.deltav.netmgt.bsm.boot;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 
 @SpringBootApplication(scanBasePackages = {
-    "org.opennms.core.daemon.common",
-    "org.opennms.netmgt.bsm.boot",
-    "org.opennms.netmgt.bsm.dao",
-    "org.opennms.netmgt.bsm.rest",
+    "org.deltav.core.daemon.common",
+    "org.deltav.netmgt.bsm.boot",
+    "org.deltav.netmgt.bsm.dao",
+    "org.deltav.netmgt.bsm.rest",
     "org.opennms.netmgt.model.jakarta.dao"
 })
+@EntityScan(basePackages = "org.opennms.netmgt.bsm.persistence.api")
 public class BsmdApplication {
 
     public static void main(String[] args) {

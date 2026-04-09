@@ -7,8 +7,8 @@ import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfigur
 
 @SpringBootApplication(
     scanBasePackages = {
-        "org.opennms.core.daemon.common",
-        "org.opennms.netmgt.translator.boot"
+        "org.deltav.core.daemon.common",
+        "org.deltav.netmgt.translator.boot"
     },
     exclude = {
         HibernateJpaAutoConfiguration.class,

@@ -19,17 +19,48 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.deltav.netmgt.bsm.persistence.api.functions.map;
+package org.opennms.netmgt.bsm.persistence.api.functions.reduce;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
 @Entity
-@DiscriminatorValue(value="decrease")
-public class DecreaseEntity extends AbstractMapFunctionEntity {
+@DiscriminatorValue(value="highest-severity-above")
+public class HighestSeverityAboveEntity extends AbstractReductionFunctionEntity {
+
+    /**
+     * The ordinal number of the Status object.
+     */
+    @Column(name="threshold_severity", nullable=false)
+    private int m_threshold;
+
+    public HighestSeverityAboveEntity() {
+
+    }
+
+    public HighestSeverityAboveEntity(int threshold) {
+        setThreshold(threshold);
+    }
+
+    public void setThreshold(int threshold) {
+        m_threshold = threshold;
+    }
+
+    public int getThreshold() {
+        return m_threshold;
+    }
 
     @Override
-    public <T> T accept(MapFunctionEntityVisitor<T> visitor) {
+    public String toString() {
+        return com.google.common.base.MoreObjects.toStringHelper(this)
+                .add("id", getId())
+                .add("threshold", m_threshold)
+                .toString();
+    }
+
+    @Override
+    public <T> T accept(ReductionFunctionEntityVisitor<T> visitor) {
         return visitor.visit(this);
     }
 }

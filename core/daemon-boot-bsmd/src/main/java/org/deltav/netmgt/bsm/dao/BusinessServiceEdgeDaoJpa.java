@@ -22,8 +22,8 @@
 package org.deltav.netmgt.bsm.dao;
 
 import org.deltav.core.daemon.common.AbstractDaoJpa;
-import org.deltav.netmgt.bsm.persistence.api.BusinessServiceEdgeDao;
-import org.deltav.netmgt.bsm.persistence.api.BusinessServiceEdgeEntity;
+import org.opennms.netmgt.bsm.persistence.api.BusinessServiceEdgeDao;
+import org.opennms.netmgt.bsm.persistence.api.BusinessServiceEdgeEntity;
 import org.springframework.stereotype.Repository;
 
 @Repository

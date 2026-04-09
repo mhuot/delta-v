@@ -24,7 +24,7 @@ package org.opennms.netmgt.enlinkd.persistence.impl;
 import java.util.Date;
 import java.util.List;
 
-import org.opennms.core.daemon.common.AbstractDaoJpa;
+import org.deltav.core.daemon.common.AbstractDaoJpa;
 import org.opennms.netmgt.enlinkd.persistence.api.BridgeStpLinkDao;
 import org.opennms.netmgt.enlinkd.model.BridgeStpLink;
 import org.springframework.stereotype.Repository;

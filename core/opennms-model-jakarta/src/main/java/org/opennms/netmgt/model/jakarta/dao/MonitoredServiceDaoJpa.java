@@ -35,7 +35,7 @@ import jakarta.persistence.TypedQuery;
 import org.opennms.core.criteria.Criteria;
 import org.opennms.core.criteria.restrictions.InRestriction;
 import org.opennms.core.criteria.restrictions.Restriction;
-import org.opennms.core.daemon.common.AbstractDaoJpa;
+import org.deltav.core.daemon.common.AbstractDaoJpa;
 import org.opennms.netmgt.dao.api.MonitoredServiceDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

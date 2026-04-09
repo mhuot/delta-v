@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.deltav.netmgt.bsm.persistence.api;
+package org.opennms.netmgt.bsm.persistence.api;
 
 import java.util.Objects;
 import java.util.Set;
@@ -32,38 +32,39 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
-import com.google.common.collect.Sets;
+import org.opennms.netmgt.dao.util.ReductionKeyHelper;
+import org.opennms.netmgt.model.OnmsApplication;
+
+import com.google.common.base.MoreObjects;
 
 @Entity
-@Table(name = "bsm_service_children")
+@Table(name = "bsm_service_applications")
 @PrimaryKeyJoinColumn(name="id")
-@DiscriminatorValue(value="children")
-public class BusinessServiceChildEdgeEntity extends BusinessServiceEdgeEntity {
+@DiscriminatorValue("applications")
+public class ApplicationEdgeEntity extends BusinessServiceEdgeEntity {
 
-    // The Business Service Entity where the parent points to (child relationship)
-    private BusinessServiceEntity child;
-
-    public void setChild(BusinessServiceEntity child) {
-        this.child = child;
-    }
+    private OnmsApplication m_application;
 
     @ManyToOne(optional=false)
-    @JoinColumn(name="bsm_service_child_id", nullable=false)
-    public BusinessServiceEntity getChild() {
-        return child;
+    @JoinColumn(name="applicationid", nullable=false)
+    public OnmsApplication getApplication() {
+        return m_application;
     }
 
-    @Transient
+    public void setApplication(OnmsApplication application) {
+        m_application = application;
+    }
+
     @Override
+    @Transient
     public Set<String> getReductionKeys() {
-        return Sets.newHashSet();
+        return ReductionKeyHelper.getReductionKeys(m_application);
     }
 
     @Override
     public String toString() {
-        return com.google.common.base.MoreObjects.toStringHelper(this)
-                .add("super", super.toString())
-                .add("child", child == null ? null : child.getId())
+        return MoreObjects.toStringHelper(this)
+                .add("m_application", m_application)
                 .toString();
     }
 
@@ -71,7 +72,7 @@ public class BusinessServiceChildEdgeEntity extends BusinessServiceEdgeEntity {
     public boolean equalsDefinition(BusinessServiceEdgeEntity other) {
         boolean equalsSuper = super.equalsDefinition(other);
         if (equalsSuper) {
-            return Objects.equals(child.getId(), ((BusinessServiceChildEdgeEntity) other).getChild().getId());
+            return Objects.equals(m_application, ((ApplicationEdgeEntity) other).m_application);
         }
         return false;
     }

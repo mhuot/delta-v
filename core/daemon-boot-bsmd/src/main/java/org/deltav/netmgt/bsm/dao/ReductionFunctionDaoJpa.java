@@ -22,8 +22,8 @@
 package org.deltav.netmgt.bsm.dao;
 
 import org.deltav.core.daemon.common.AbstractDaoJpa;
-import org.deltav.netmgt.bsm.persistence.api.functions.reduce.AbstractReductionFunctionEntity;
-import org.deltav.netmgt.bsm.persistence.api.functions.reduce.ReductionFunctionDao;
+import org.opennms.netmgt.bsm.persistence.api.functions.reduce.AbstractReductionFunctionEntity;
+import org.opennms.netmgt.bsm.persistence.api.functions.reduce.ReductionFunctionDao;
 import org.springframework.stereotype.Repository;
 
 @Repository

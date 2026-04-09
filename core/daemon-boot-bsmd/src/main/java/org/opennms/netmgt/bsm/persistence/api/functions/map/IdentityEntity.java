@@ -19,44 +19,18 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.deltav.netmgt.bsm.persistence.api.functions.reduce;
+package org.opennms.netmgt.bsm.persistence.api.functions.map;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
 @Entity
-@DiscriminatorValue(value="exponential-propagation")
-public class ExponentialPropagationEntity extends AbstractReductionFunctionEntity {
-
-    @Column(name="base", nullable=false)
-    private double m_base;
-
-    public ExponentialPropagationEntity() {
-    }
-
-    public ExponentialPropagationEntity(double base) {
-        setBase(base);
-    }
-
-    public void setBase(double base) {
-        m_base = base;
-    }
-
-    public double getBase() {
-        return m_base;
-    }
+@DiscriminatorValue(value="identity")
+public class IdentityEntity extends AbstractMapFunctionEntity {
 
     @Override
-    public String toString() {
-        return com.google.common.base.MoreObjects.toStringHelper(this)
-                .add("id", getId())
-                .add("base", m_base)
-                .toString();
-    }
-
-    @Override
-    public <T> T accept(ReductionFunctionEntityVisitor<T> visitor) {
+    public <T> T accept(MapFunctionEntityVisitor<T> visitor) {
         return visitor.visit(this);
     }
+
 }

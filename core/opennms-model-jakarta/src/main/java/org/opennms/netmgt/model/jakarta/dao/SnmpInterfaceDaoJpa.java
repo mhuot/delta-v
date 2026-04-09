@@ -24,7 +24,7 @@ package org.opennms.netmgt.model.jakarta.dao;
 import java.util.Collection;
 import java.util.List;
 
-import org.opennms.core.daemon.common.AbstractDaoJpa;
+import org.deltav.core.daemon.common.AbstractDaoJpa;
 import org.opennms.netmgt.dao.api.SnmpInterfaceDao;
 import org.opennms.netmgt.model.OnmsSnmpInterface;
 import org.springframework.stereotype.Repository;

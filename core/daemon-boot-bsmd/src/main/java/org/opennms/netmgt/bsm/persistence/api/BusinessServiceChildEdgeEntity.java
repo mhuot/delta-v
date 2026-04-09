@@ -19,62 +19,51 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.deltav.netmgt.bsm.persistence.api;
+package org.opennms.netmgt.bsm.persistence.api;
 
 import java.util.Objects;
 import java.util.Set;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
-import jakarta.persistence.UniqueConstraint;
-import jakarta.validation.constraints.Size;
 
 import com.google.common.collect.Sets;
 
 @Entity
-@Table(name = "bsm_service_reductionkeys",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"id", "reductionkey"}))
+@Table(name = "bsm_service_children")
 @PrimaryKeyJoinColumn(name="id")
-@DiscriminatorValue("reductionkeys")
-public class SingleReductionKeyEdgeEntity extends BusinessServiceEdgeEntity {
+@DiscriminatorValue(value="children")
+public class BusinessServiceChildEdgeEntity extends BusinessServiceEdgeEntity {
 
-    private String reductionKey;
-    private String m_friendlyName;
+    // The Business Service Entity where the parent points to (child relationship)
+    private BusinessServiceEntity child;
 
-    public void setReductionKey(String reductionKey) {
-        this.reductionKey = reductionKey;
+    public void setChild(BusinessServiceEntity child) {
+        this.child = child;
     }
 
-    @Column(name = "reductionkey", nullable = false)
-    public String getReductionKey() {
-        return reductionKey;
+    @ManyToOne(optional=false)
+    @JoinColumn(name="bsm_service_child_id", nullable=false)
+    public BusinessServiceEntity getChild() {
+        return child;
     }
 
-    @Override
     @Transient
+    @Override
     public Set<String> getReductionKeys() {
-        return Sets.newHashSet(reductionKey);
-    }
-
-    @Column(name="friendlyname", nullable = true)
-    @Size(min = 0, max = 30)
-    public String getFriendlyName() {
-        return m_friendlyName;
-    }
-
-    public void setFriendlyName(String friendlyName) {
-        m_friendlyName = friendlyName;
+        return Sets.newHashSet();
     }
 
     @Override
     public String toString() {
         return com.google.common.base.MoreObjects.toStringHelper(this)
                 .add("super", super.toString())
-                .add("reductionKey", reductionKey)
+                .add("child", child == null ? null : child.getId())
                 .toString();
     }
 
@@ -82,8 +71,7 @@ public class SingleReductionKeyEdgeEntity extends BusinessServiceEdgeEntity {
     public boolean equalsDefinition(BusinessServiceEdgeEntity other) {
         boolean equalsSuper = super.equalsDefinition(other);
         if (equalsSuper) {
-            return Objects.equals(reductionKey, ((SingleReductionKeyEdgeEntity) other).reductionKey) &&
-                   Objects.equals(m_friendlyName, ((SingleReductionKeyEdgeEntity) other).m_friendlyName);
+            return Objects.equals(child.getId(), ((BusinessServiceChildEdgeEntity) other).getChild().getId());
         }
         return false;
     }

@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.deltav.netmgt.bsm.persistence.api.functions.reduce;
+package org.opennms.netmgt.bsm.persistence.api.functions.map;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
@@ -34,11 +34,11 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "bsm_reduce")
+@Table(name = "bsm_map")
 @Inheritance(strategy=InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name="type", discriminatorType=DiscriminatorType.STRING)
 @DiscriminatorValue(value="")
-public abstract class AbstractReductionFunctionEntity {
+public abstract class AbstractMapFunctionEntity {
 
     private Long m_id;
 
@@ -61,5 +61,15 @@ public abstract class AbstractReductionFunctionEntity {
                 .toString();
     }
 
-    public abstract <T> T accept(ReductionFunctionEntityVisitor<T> visitor);
+    /**
+     * Defines if the definition of the map function is equal to the given one.
+     *
+     * @return true if equal, otherwise false
+     */
+    public <T extends AbstractMapFunctionEntity> boolean equalsDefinition(T other) {
+        if (other == null) return false;
+        return other.getClass().equals(getClass());
+    }
+
+    public abstract <T> T accept(MapFunctionEntityVisitor<T> visitor);
 }

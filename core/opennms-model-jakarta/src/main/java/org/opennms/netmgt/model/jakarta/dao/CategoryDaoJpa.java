@@ -24,7 +24,7 @@ package org.opennms.netmgt.model.jakarta.dao;
 import java.util.List;
 
 import org.hibernate.criterion.Criterion;
-import org.opennms.core.daemon.common.AbstractDaoJpa;
+import org.deltav.core.daemon.common.AbstractDaoJpa;
 import org.opennms.netmgt.dao.api.CategoryDao;
 import org.opennms.netmgt.model.OnmsCategory;
 import org.springframework.stereotype.Repository;

@@ -34,9 +34,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(
     scanBasePackages = {
-        "org.opennms.minion.common",
-        "org.opennms.minion.boot",
-        "org.opennms.core.daemon.common"
+        "org.deltav.minion.common",
+        "org.deltav.minion.boot",
+        "org.deltav.core.daemon.common"
     },
     exclude = {
         HibernateJpaAutoConfiguration.class,
@@ -48,9 +48,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 )
 @ComponentScan(
     basePackages = {
-        "org.opennms.minion.common",
-        "org.opennms.minion.boot",
-        "org.opennms.core.daemon.common"
+        "org.deltav.minion.common",
+        "org.deltav.minion.boot",
+        "org.deltav.core.daemon.common"
     },
     excludeFilters = @ComponentScan.Filter(
         type = FilterType.ASSIGNABLE_TYPE,

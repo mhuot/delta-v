@@ -8,9 +8,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(
     scanBasePackages = {
-        "org.opennms.core.daemon.common",
-        "org.opennms.core.daemon.sink.kafka",
-        "org.opennms.netmgt.syslogd.boot"
+        "org.deltav.core.daemon.common",
+        "org.deltav.core.daemon.sink.kafka",
+        "org.deltav.netmgt.syslogd.boot"
     },
     exclude = {
         HibernateJpaAutoConfiguration.class,

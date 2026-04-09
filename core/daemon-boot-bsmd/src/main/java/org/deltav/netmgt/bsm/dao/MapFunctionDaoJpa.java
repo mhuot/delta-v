@@ -22,8 +22,8 @@
 package org.deltav.netmgt.bsm.dao;
 
 import org.deltav.core.daemon.common.AbstractDaoJpa;
-import org.deltav.netmgt.bsm.persistence.api.functions.map.AbstractMapFunctionEntity;
-import org.deltav.netmgt.bsm.persistence.api.functions.map.MapFunctionDao;
+import org.opennms.netmgt.bsm.persistence.api.functions.map.AbstractMapFunctionEntity;
+import org.opennms.netmgt.bsm.persistence.api.functions.map.MapFunctionDao;
 import org.springframework.stereotype.Repository;
 
 @Repository

@@ -25,7 +25,7 @@ import java.net.InetAddress;
 import java.util.Collections;
 import java.util.List;
 
-import org.opennms.core.daemon.common.AbstractDaoJpa;
+import org.deltav.core.daemon.common.AbstractDaoJpa;
 import org.opennms.netmgt.dao.api.ApplicationDao;
 import org.opennms.netmgt.dao.api.ApplicationStatus;
 import org.opennms.netmgt.dao.api.MonitoredServiceStatusEntity;

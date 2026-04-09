@@ -21,7 +21,7 @@
  */
 package org.opennms.netmgt.model.jakarta.dao;
 
-import org.opennms.core.daemon.common.AbstractDaoJpa;
+import org.deltav.core.daemon.common.AbstractDaoJpa;
 import org.opennms.netmgt.dao.api.HwEntityDao;
 import org.opennms.netmgt.model.OnmsHwEntity;
 import org.springframework.stereotype.Repository;
