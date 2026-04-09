@@ -40,6 +40,12 @@
             <artifactId>org.opennms.core.model-api</artifactId>
         </dependency>
 
+        <!-- SNMP4J implementation (Enlinkd collectors need org.snmp4j classes) -->
+        <dependency>
+            <groupId>org.opennms.core.snmp</groupId>
+            <artifactId>org.opennms.core.snmp.implementations.snmp4j</artifactId>
+        </dependency>
+
         <!-- Shared daemon infrastructure -->
         <dependency>
             <groupId>org.opennms.core</groupId>
@@ -70,7 +76,6 @@
                 <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
                 <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
-                <exclusion><groupId>org.apache.activemq</groupId><artifactId>activemq-camel</artifactId></exclusion>
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
                 <!-- Exclude legacy Hibernate 3.x DAOs — model-jakarta provides Jakarta JPA DAOs -->
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-dao</artifactId></exclusion>
