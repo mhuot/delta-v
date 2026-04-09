@@ -233,9 +233,9 @@ public class NetworkBuilder {
             m_currentMonSvc = new OnmsMonitoredService(m_currentIf, serviceType);
             m_currentMonSvc.setStatus("A");
             return m_currentMonSvc;
-        } else {
+        } else if (m_currentSnmpIf != null) {
             final Set<OnmsIpInterface> ipInterfaces = m_currentSnmpIf.getIpInterfaces();
-            if (m_currentSnmpIf != null && ipInterfaces != null && ipInterfaces.size() > 0) {
+            if (ipInterfaces != null && ipInterfaces.size() > 0) {
                 final OnmsIpInterface current = ipInterfaces.toArray(new OnmsIpInterface[]{})[ipInterfaces.size() - 1];
                 m_currentMonSvc = new OnmsMonitoredService(current, serviceType);
                 m_currentMonSvc.setStatus("A");
