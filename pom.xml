@@ -11,7 +11,7 @@
     <relativePath/>
   </parent>
 
-  <groupId>org.opennms</groupId>
+  <groupId>org.deltav</groupId>
   <artifactId>delta-v-parent</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
