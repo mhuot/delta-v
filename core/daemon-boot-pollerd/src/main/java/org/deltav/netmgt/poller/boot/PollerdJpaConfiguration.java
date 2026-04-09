@@ -40,7 +40,6 @@ import org.opennms.netmgt.dao.api.MonitoredServiceDao;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.dao.api.OutageDao;
 import org.opennms.netmgt.dao.api.SessionUtils;
-import org.opennms.netmgt.eventd.EventUtil;
 import org.opennms.netmgt.filter.FilterDaoFactory;
 import org.opennms.netmgt.filter.JdbcFilterDao;
 import org.opennms.netmgt.model.OnmsCategory;
@@ -306,31 +305,4 @@ public class PollerdJpaConfiguration {
         };
     }
 
-    /**
-     * Minimal EventUtil implementation for parameter expansion.
-     * The full EventUtilDaoImpl depends on the legacy Hibernate DAO layer.
-     * This pass-through implementation returns inputs unchanged when no
-     * database-backed token resolution is available.
-     */
-    @Bean
-    public EventUtil eventUtil() {
-        return new EventUtil() {
-            @Override public String expandParms(String inp, org.opennms.netmgt.xml.event.Event event) { return inp; }
-            @Override public String expandParms(String inp, org.opennms.netmgt.xml.event.Event event, java.util.Map<String, java.util.Map<String, String>> decode) { return inp; }
-            @Override public String getNamedParmValue(String string, org.opennms.netmgt.xml.event.Event event) { return ""; }
-            @Override public void expandMapValues(java.util.Map<String, String> parmMap, org.opennms.netmgt.xml.event.Event event) {}
-            @Override public String getHardwareFieldValue(String parm, long nodeId) { return ""; }
-            @Override public String getHostName(int nodeId, String hostip) { return hostip; }
-            @Override public String getEventHost(org.opennms.netmgt.xml.event.Event event) { return ""; }
-            @Override public String getIfAlias(long nodeId, String ipAddr) { return ""; }
-            @Override public String getAssetFieldValue(String parm, long nodeId) { return ""; }
-            @Override public String getForeignId(long nodeId) { return ""; }
-            @Override public String getForeignSource(long nodeId) { return ""; }
-            @Override public String getNodeLabel(long nodeId) { return ""; }
-            @Override public String getNodeLocation(long nodeId) { return ""; }
-            @Override public org.opennms.netmgt.eventd.processor.expandable.ExpandableParameterResolver getResolver(String token) { return null; }
-            @Override public java.util.Date decodeSnmpV2TcDateAndTime(java.math.BigInteger value) { return new java.util.Date(); }
-            @Override public String getPrimaryInterface(long nodeId) { return ""; }
-        };
-    }
 }
