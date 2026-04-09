@@ -251,7 +251,7 @@ public abstract class EventUtils {
      *            the source of the event
      * @param nodeId
      *            the nodeId that the service resides on
-     * @param ipAddr
+     * @param addr
      *            the interface that the service resides on
      * @param service
      *            the name of the service that was deleted
