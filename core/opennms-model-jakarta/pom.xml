@@ -79,6 +79,17 @@
         <!-- Enlinkd enum types are now defined as inner classes in our Jakarta entities.
              No dependency on enlinkd-persistence-api needed. -->
 
+        <!-- javax.xml.bind — compile-only for PrimaryTypeAdapter (extends XmlAdapter).
+             Horizon's RequisitionInterface has @XmlJavaTypeAdapter(PrimaryTypeAdapter.class)
+             baked into its bytecode; the adapter must extend the javax XmlAdapter at runtime.
+             jaxb-api-2.3.1.jar is already on the Docker classpath (external layer). -->
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.3.1</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- Jackson for @JsonIgnoreProperties -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
