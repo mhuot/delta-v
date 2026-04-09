@@ -21,9 +21,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.opennms.netmgt.provision.detector.registry.api.ServiceDetectorRegistry;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 /**
@@ -38,8 +38,7 @@ public class DetectorsEndpoint {
 
     private final ServiceDetectorRegistry registry;
 
-    @Autowired(required = false)
-    public DetectorsEndpoint(ServiceDetectorRegistry registry) {
+    public DetectorsEndpoint(@Nullable ServiceDetectorRegistry registry) {
         this.registry = registry;
     }
 
