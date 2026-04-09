@@ -40,6 +40,12 @@
             <artifactId>org.opennms.core.model-api</artifactId>
         </dependency>
 
+        <!-- SNMP4J implementation (Telemetryd protocols may need org.snmp4j classes) -->
+        <dependency>
+            <groupId>org.opennms.core.snmp</groupId>
+            <artifactId>org.opennms.core.snmp.implementations.snmp4j</artifactId>
+        </dependency>
+
         <!-- Shared daemon infrastructure.
              Exclude ALL ServiceMix Spring bundles (spring-dependencies POM pulls in
              Spring 4.2.x through multiple transitive paths via opennms-core-daemon,

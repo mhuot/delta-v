@@ -144,6 +144,12 @@
             <artifactId>org.opennms.core.model-api</artifactId>
         </dependency>
 
+        <!-- SNMP4J implementation (TrapSinkModule needs org.snmp4j.PDU) -->
+        <dependency>
+            <groupId>org.opennms.core.snmp</groupId>
+            <artifactId>org.opennms.core.snmp.implementations.snmp4j</artifactId>
+        </dependency>
+
         <!-- javax.persistence API (legacy classes need it loadable) -->
         <dependency>
             <groupId>javax.persistence</groupId>
