@@ -4,16 +4,13 @@
 
 > For the original OpenNMS Horizon project description, see [OPENNMS.md](OPENNMS.md).
 
-## Architectural Direction: Karaf Eliminated
+## Architectural Direction
 
 Delta-V has removed Apache Karaf/OSGi from the runtime architecture. All 12 service daemons and Minion run as standalone **Spring Boot 4** applications on a **jlink custom JRE** built from `alpine:3.21`, deployed as individually-sized Docker images via layered JAR deduplication.
 
-**Why:** The monolithic Karaf container was a 4.75GB image carrying the full Sentinel runtime, OSGi framework, and ServiceMix-repackaged Spring 4.2.x — all dead weight for daemons that just need a JVM and a JAR. The Karaf deployment model also couples daemon lifecycles, prevents independent scaling, and makes dependency management painful (ServiceMix Spring 4.x conflicts with Spring Boot 4's Spring 7).
+Delta-V code lives in the `org.deltav` package namespace with `org.deltav.core` Maven groupIds. Horizon-derived entity classes (`opennms-model-jakarta`) remain at `org.opennms` since horizon JARs reference them by FQN. Horizon dependencies are pre-built in the [delta-v-horizon](https://github.com/pbrane/delta-v-horizon) repository and consumed as Maven artifacts from GitHub Packages.
 
-**Where we are:** All 12 daemons + Minion migrated to Spring Boot 4. The legacy `opennms-config` and `opennms-model` modules are fully decoupled from the daemon stack — all XML config loading uses Jackson XmlMapper with `defaultUseWrapper(false)`. Layered JAR deduplication extracts shared dependencies (~80% overlap) into a common `daemon-base` Docker image (~415MB), with per-daemon overlay images adding only unique libraries. Each daemon starts in 2–4 seconds. **93 E2E tests pass** across 6 test suites.
-
-**Where we're going:**
-- **Deferred items:** HW inventory adapter (Hibernate 7 entity issue), Minion echo probes (replace with Kafka lag monitoring), service detector RPC, MATE scopes
+**Where we are:** All 12 daemons + Minion migrated to Spring Boot 4. The legacy `opennms-config` and `opennms-model` modules are fully decoupled from the daemon stack — all XML config loading uses Jackson XmlMapper with `defaultUseWrapper(false)`. Layered JAR deduplication extracts shared dependencies (~80% overlap) into a common `daemon-base` Docker image (~415MB), with per-daemon overlay images adding only unique libraries. Each daemon starts in 2-4 seconds. **98 E2E tests pass** across 8 test suites.
 
 ---
 
@@ -21,57 +18,58 @@ Delta-V has removed Apache Karaf/OSGi from the runtime architecture. All 12 serv
 
 ### Deleted (12 daemons)
 
-| Daemon | Reason | PR |
-|--------|--------|-----|
-| **Scriptd** | Event-driven BSF scripting — unused, eliminated | #55 |
-| **Notifd** | Notification system eliminated — alerts handled externally | — |
-| **Ackd** | Acknowledgment daemon — unused | — |
-| **Actiond** | Legacy shell-command execution on events | — |
-| **Vacuumd** | Database maintenance automations — replaced by PostgreSQL native | — |
-| **Statsd** | Unused statistics reporting | — |
-| **Tl1d** | Legacy TL1 telecom protocol support | — |
-| **Queued** | RRD write optimization — no longer needed | — |
-| **RTCd** | Real-Time Console — dead without webapp | #27 |
-| **Ticketer** | Trouble ticketing integration — not in microservice architecture | #29 |
-| **DHCPd** | DHCP monitor/detector service | — |
+| Daemon | Reason |
+|--------|--------|
+| **Scriptd** | Event-driven BSF scripting — unused, eliminated |
+| **Notifd** | Notification system eliminated — alerts handled externally |
+| **Ackd** | Acknowledgment daemon — unused |
+| **Actiond** | Legacy shell-command execution on events |
+| **Vacuumd** | Database maintenance automations — replaced by PostgreSQL native |
+| **Statsd** | Unused statistics reporting |
+| **Tl1d** | Legacy TL1 telecom protocol support |
+| **Queued** | RRD write optimization — no longer needed |
+| **RTCd** | Real-Time Console — dead without webapp |
+| **Ticketer** | Trouble ticketing integration — not in microservice architecture |
+| **DHCPd** | DHCP monitor/detector service |
 
 ### Migrated to Spring Boot 4 (12 daemons + Minion — complete)
 
-| Daemon | Spring Boot Module | Startup | Key Feature | PR |
-|--------|--------------------|---------|------------|-----|
-| **Alarmd** | `daemon-boot-alarmd` | 2.7s | Full JPA (Hibernate 7) | #27–#30 |
-| **EventTranslator** | `daemon-boot-eventtranslator` | 2.4s | JDBC-only, event-conf enrichment | #30 |
-| **Trapd** | `daemon-boot-trapd` | 2.0s | Kafka Sink bridge pattern (`daemon-sink-kafka`) | #33 |
-| **Syslogd** | `daemon-boot-syslogd` | 2.2s | Reuses Sink bridge, local DNS resolver | #34, #35 |
-| **Discovery** | `daemon-boot-discovery` | ~2s | Kafka RPC client pattern (`KafkaRpcClientConfiguration`) | — |
-| **Provisiond** | `daemon-boot-provisiond` | 4.2s | JPA + 3× Kafka RPC + Quartz + SNMP adapters (Tier 5) | #41 |
-| **BSMd** | `daemon-boot-bsmd` | 3.3s | JPA + AlarmLifecycleListener + REST API | #44 |
-| **Pollerd** | `daemon-boot-pollerd` | 4.1s | JPA + Kafka RPC + Twin API + PassiveStatusKeeper | #47 |
-| **PerspectivePollerd** | `daemon-boot-perspectivepollerd` | 3.6s | JPA + Kafka RPC + perspective outages + event self-consumption | — |
-| **Telemetryd** | `daemon-boot-telemetryd` | 3s | Pure ingestion bridge, multi-bridge KafkaSink (N queues), Twin API for OpenConfig | — |
-| **Enlinkd** | `daemon-boot-enlinkd` | 3.5s | JPA + Kafka RPC + LLDP/CDP/OSPF/ISIS/Bridge topology, E2E validated with Containerlab cEOS | #53 |
-| **Collectd** | `daemon-boot-collectd` | ~3s | JPA + Kafka RPC + SNMP collection + thresholding | #56 |
-| **Minion** | `daemon-boot-minion` | ~4s | Kafka RPC server + Kafka Sink + Twin API subscriber, Spring Boot 4 | — |
+| Daemon | Spring Boot Module | Startup | Key Feature |
+|--------|--------------------|---------|------------|
+| **Alarmd** | `daemon-boot-alarmd` | 2.7s | Full JPA (Hibernate 7) |
+| **EventTranslator** | `daemon-boot-eventtranslator` | 2.4s | JDBC-only, event-conf enrichment |
+| **Trapd** | `daemon-boot-trapd` | 2.0s | Kafka Sink bridge pattern (`daemon-sink-kafka`) |
+| **Syslogd** | `daemon-boot-syslogd` | 2.2s | Reuses Sink bridge, local DNS resolver |
+| **Discovery** | `daemon-boot-discovery` | ~2s | Kafka RPC client pattern (`KafkaRpcClientConfiguration`) |
+| **Provisiond** | `daemon-boot-provisiond` | 4.2s | JPA + 3x Kafka RPC + Quartz + SNMP adapters |
+| **BSMd** | `daemon-boot-bsmd` | 3.3s | JPA + AlarmLifecycleListener + REST API |
+| **Pollerd** | `daemon-boot-pollerd` | 4.1s | JPA + Kafka RPC + Twin API + PassiveStatusKeeper |
+| **PerspectivePollerd** | `daemon-boot-perspectivepollerd` | 3.6s | JPA + Kafka RPC + perspective outages + event self-consumption |
+| **Telemetryd** | `daemon-boot-telemetryd` | 3s | Pure ingestion bridge, multi-bridge KafkaSink, Twin API for OpenConfig |
+| **Enlinkd** | `daemon-boot-enlinkd` | 3.5s | JPA + Kafka RPC + LLDP/CDP/OSPF/ISIS/Bridge topology |
+| **Collectd** | `daemon-boot-collectd` | ~3s | JPA + Kafka RPC + SNMP collection + thresholding |
+| **Minion** | `daemon-boot-minion` | ~4s | Kafka RPC server + Kafka Sink + Twin API subscriber |
 
 ### Docker Images
 
 | Image | Base | Contents |
 |-------|------|----------|
-| `opennms/jre-deltav:21` | `alpine:3.21` | jlink custom JRE (22 modules) + diagnostic tools (jcmd, curl, tcpdump, htop, etc.) |
+| `opennms/jre-deltav:21` | `alpine:3.21` | jlink custom JRE (22 modules) + diagnostic tools |
 | `opennms/daemon-base` | `jre-deltav:21` | Shared libraries (~321 JARs deduped across 12 daemons) |
-| `opennms/<daemon>` | `daemon-base` | Per-daemon unique libs + thin app JAR (12 images: alarmd, bsmd, collectd, discovery, enlinkd, eventtranslator, perspectivepollerd, pollerd, provisiond, syslogd, telemetryd, trapd) |
+| `opennms/<daemon>` | `daemon-base` | Per-daemon unique libs + thin app JAR (12 images) |
 | `opennms/minion-boot` | `jre-deltav:21` | Spring Boot 4 Minion — Kafka RPC server + Sink listeners + Twin API |
-| `opennms/minion-deltav` | `opennms/minion` | Legacy Karaf Minion with Kafka-only transport (deprecated) |
 | `opennms/db-init` | `jre-deltav:21` | One-shot Liquibase schema migration |
 
 ### Shared Infrastructure
 
-| Module | Purpose |
-|--------|---------|
-| `daemon-common` | DataSource, Kafka event transport (with EventConfDao enrichment), Kafka RPC client, JdbcDistPollerDao, JdbcInterfaceToNodeCache, AbstractDaoJpa, EventIpcManagerEnrichingWrapper |
-| `daemon-boot-minion-common` | Minion shared infra: KafkaTwinSubscriberConfiguration, PassiveStatusTwinSubscriber, SnmpV3 config sync |
-| `daemon-sink-kafka` | KafkaSinkBridge — consumes from Minion Sink topics (`OpenNMS.Sink.*`) |
-| `opennms-model-jakarta` | 43 Jakarta Persistence entities + 15 JPA DAOs for Hibernate 7 + 15 Enlinkd AttributeConverters |
+| Module | Package | Purpose |
+|--------|---------|---------|
+| `daemon-common` | `org.deltav.core.daemon.common` | DataSource, Kafka event transport, Kafka RPC client, AbstractDaoJpa, EventIpcManagerEnrichingWrapper |
+| `daemon-boot-minion-common` | `org.deltav.minion.common` | Minion shared infra: KafkaTwinSubscriberConfiguration, PassiveStatusTwinSubscriber, SnmpV3 config sync |
+| `daemon-sink-kafka` | `org.deltav.core.daemon.sink.kafka` | KafkaSinkBridge — consumes from Minion Sink topics (`OpenNMS.Sink.*`) |
+| `dao-jpa-support` | `org.deltav.core.daemon.common` | AbstractDaoJpa base class + UpsertTemplate for JPA DAOs |
+| `event-forwarder-kafka` | `org.deltav.core.event.forwarder.kafka` | KafkaEventForwarder + EventConfEnrichmentService |
+| `opennms-model-jakarta` | `org.opennms.netmgt.model` | Jakarta Persistence entities + JPA DAOs + Enlinkd DAOs + utility classes (stays `org.opennms`) |
 
 ### Other Components Removed
 
@@ -88,106 +86,8 @@ Delta-V has removed Apache Karaf/OSGi from the runtime architecture. All 12 serv
 | **Self-monitoring** | Deprecated monitors for monitoring OpenNMS itself |
 | **Eventd TCP/UDP listeners** | Events arrive via Kafka only |
 | **MessageBus JMS** | JMS implementation removed; Kafka-only |
-| **Minion webapp dependency** | Minion no longer needs REST connection to core |
-| **Zenith Connect** | Cloud registration feature — removed (persistence, REST, UI) |
-| **RPM/Debian packaging** | Native OS packages — removed; Docker-only deployment |
-
----
-
-## Plan Status Dashboard
-
-### Complete (58 docs)
-
-| Date | Plan | Key Achievement |
-|------|------|-----------------|
-| 03-02 | EventBus Redesign (design + impl + phase2) | Kafka-backed fault events, TSID generation, Alarmd extraction |
-| 03-05 | KafkaEventForwarder (design + impl + OSGi) | Per-daemon event enrichment + Kafka publish, no centralized Eventd |
-| 03-05 | Karaf-Only Daemon Assembly | Daemon-loader bundle pattern established |
-| 03-07 | Strike Fighter Completion (design + impl) | **18/18 tasks**, 4 dead daemons deleted, 8 daemons extracted |
-| 03-08 | Feature Removal (design + impl) | Tl1d, Charts, Device Config Backup, Database Reports/Jasper all deleted |
-| 03-08 | Enlinkd & Scriptd Extraction | Both running as standalone containers |
-| 03-10 | E2E Integration Test | `test-e2e.sh` — 11 tests, 3 phases all passing |
-| 03-10 | Project Status Analysis | Snapshot: 100% Strike Fighter, 100% Phase A |
-| 03-11 | Db-Init Extraction | Spring Boot 4.0.3 app, 312 MB image (vs 35.6 GB Horizon) |
-| 03-11 | EventDao/Notifd/Minion REST Elimination | EventDao/OnmsEvent deleted, Notifd eliminated, Minion REST replaced with Twin API |
-| 03-12 | Minion E2E Pipeline Report | 13/13 tests passing, 3 race-condition bugs fixed |
-| 03-12 | Minion-Mandatory RPC Migration | **All 6 daemons migrated** to real KafkaRpcClientFactory (PR #17) |
-| 03-12 | PerspectivePollerd Cleanup | Standalone container running healthy (TSID=7, PR #15) |
-| 03-13 | Minion-Only Listeners (design + impl) | Eventd/DHCP deleted, Syslogd KafkaSinkBridge, Telemetryd container (TSID=18) |
-| 03-14 | Java 21 Runtime Upgrade (design + impl) | Karaf 4.4.9, Felix 7.0.5, OSGi R8, Pax Web 8.0 — all daemons + Minion on JRE 21 |
-| 03-14 | Webapp Elimination from Test Pipeline | E2E tests use SQL-only verification, webapp removed from docker-compose |
-| 03-15 | opennms-model-jakarta (design + impl) | 13 Jakarta Persistence entities, 5 AttributeConverters, 4 JPA DAOs for Hibernate 7 |
-| 03-15 | Alarmd Spring Boot 4 Migration | First daemon on Spring Boot 4 — fat JAR, 2.7s startup, HikariCP + Hibernate 7 |
-| 03-15 | EventTranslator Spring Boot 4 Migration | Second daemon migrated — JPA excluded, raw JDBC, event-conf enrichment |
-| 03-15 | Ticketer/Webapp Deletion | Ticketer daemon deleted, webapp removed from Maven reactor |
-| 03-15 | Trapd Spring Boot 4 Migration | Kafka Sink bridge pattern — `daemon-sink-kafka` shared module, E2E trap pipeline verified |
-| 03-15 | Syslogd Spring Boot 4 Migration | Reuses Sink bridge, shared JDBC extracted to `daemon-common`, local DNS resolver |
-| 03-16 | Discovery Spring Boot 4 Migration | Kafka RPC client pattern — `KafkaRpcClientConfiguration` in `daemon-common`, Minion ping sweeps |
-| 03-16 | Provisiond Shared Infrastructure | `DaemonProvisioningConfiguration` — shared NoOpEntityScopeProvider, LocalServiceDetectorRegistry |
-| 03-17 | Provisiond Spring Boot 4 Migration | Tier 5: JPA + 3× Kafka RPC + Quartz + SNMP adapters, constructor injection, 13 JPA DAOs, E2E with 22 SNMP interfaces |
-| 03-20 | BSMd Spring Boot 4 Migration | JPA + AlarmLifecycleListener + REST API, alarm snapshot polling (10s interval) |
-| 03-21 | Pollerd Spring Boot 4 Migration | JPA + Kafka RPC + Twin API + PassiveStatusKeeper, constructor injection, `%service%` token fix, transport-layer EventConfDao enrichment |
-| 03-21 | PerspectivePollerd Spring Boot 4 Migration | First daemon without opennms-services dep, JPA + Kafka RPC + perspective outages |
-| 03-22 | Lightweight Docker Images | jlink custom JRE on Alpine (143MB base), `-XX:MaxMetaspaceSize=256m` cap |
-| 03-22 | Telemetryd Spring Boot 4 Migration | Pure ingestion bridge, multi-bridge KafkaSink, Twin API for OpenConfig |
-| 03-24 | Enlinkd Spring Boot 4 Migration + E2E Test | JPA + Kafka RPC + LLDP/CDP/OSPF/ISIS/Bridge topology, E2E test with Containerlab cEOS (20/20) |
-| 03-24 | Scriptd Deletion + RPM/Debian Removal | Daemon removed (PR #55), native OS packaging eliminated (PR #54) |
-| 03-24 | Collectd Spring Boot 4 Migration | **Last Karaf daemon migrated** — JPA + Kafka RPC + SNMP collection + thresholding (PR #56) |
-| 03-25 | SpringServiceDaemon Standardization | All daemon lifecycle classes standardized on `SpringServiceDaemonSmartLifecycle` (PR #58) |
-| 03-25 | Layered JAR Deduplication | `daemon-base` shared image + 12 per-daemon overlay images, split-package classloading fix (PR #60) |
-| 03-26 | Zenith Connect Removal | Cloud registration feature fully removed (PR #63) |
-| 03-27 | Eliminate opennms-services | Monolith deleted; Poller/Collector/Translator extracted to focused modules (PR #65) |
-| 03-28 | Karaf Removal Phase 1–2 | Dead Karaf modules deleted, bundle→jar packaging, maven-bundle-plugin removed (PRs #84, #89, #90) |
-| 03-29 | Karaf Removal Phase 3 | EventBuilder→events/api, DTOs→model-api, entity convenience methods removed (PR #90) |
-| 03-29 | opennms-config Decoupling — Trapd, Syslogd, EventTranslator, Discovery | Jackson XmlMapper replaces JaxbUtils/JAXB for XML config loading (PRs #91, #93, #95, #96) |
-| 03-30 | opennms-config Decoupling — SnmpPeerFactory, PollerConfig, FilterDao | All daemon-boot modules free of opennms-config (PRs #97, #99, #100) |
-| 03-30 | opennms-config Decoupling — DatabaseSchema, CollectdConfig | Config-api defaults for non-config-aware daemons (PR #98) |
-| 03-31 | opennms-model Elimination | opennms-model removed from Spring Boot dependency tree — dao-jpa-support extracted (PR #102) |
-| 04-01 | Hibernate 7 E2E Fixes | UpsertTemplate port for Enlinkd, allocationSize=1, priority classpath (PR #104) |
-| 04-01 | Jackson XmlMapper `defaultUseWrapper(false)` | EventTranslator fix + Kafka OOM tuning (PR #105) |
-| 04-02 | Passive Outages — Twin API Fix | PassiveStatusTwinSubscriber wired in Spring Boot Minion + XmlMapper audit (PR #106) |
-
-### Superseded (2 docs)
-
-| Date | Plan | Superseded By |
-|------|------|---------------|
-| 03-02 | EventBus Follow-ups | Later phases (Vacuumd deleted, not migrated) |
-| 03-07 | Strike Fighter Design | Exceeded — 17 services achieved vs. 15 planned |
-
-### Deferred (1 doc)
-
-| Date | Plan | Reason |
-|------|------|--------|
-| 03-09 | Minion-Mandatory Architecture | Non-distributable monitors, collector delegation gaps |
-
-### Architectural Milestones Achieved
-
-1. **Events table eliminated** — events never touch PostgreSQL
-2. **ActiveMQ eliminated** — all IPC via Kafka
-3. **Core container eliminated** — replaced by lightweight `db-init` Spring Boot app
-4. **Spring Boot 4 migration complete** — all 12 daemons + Minion migrated, 2–4s startup on jlink Alpine JRE
-5. **Karaf/Sentinel retired** — no OSGi runtime in production
-6. **Layered JAR deduplication** — shared `daemon-base` image (~415MB) + 12 per-daemon overlay images; split-package classloading fix for Hibernate 7
-7. **opennms-services monolith eliminated** — Each daemon's implementation lives in its own focused module; ~120K lines of dead code removed
-8. **opennms-config fully decoupled** — All daemon-boot modules use Jackson XmlMapper with `defaultUseWrapper(false)` for XML config; legacy JaxbUtils/JAXB eliminated from daemon stack
-9. **opennms-model eliminated** — Removed from Spring Boot dependency tree; dao-jpa-support extracted to break the cycle
-10. **Kafka Sink bridge** — `daemon-sink-kafka` module consumes from Minion Sink topics (`OpenNMS.Sink.*`), reused by Trapd, Syslogd, and Telemetryd
-11. **Kafka RPC client** — `KafkaRpcClientConfiguration` in `daemon-common` sends RPC requests to Minions, used by Discovery, Provisiond, Pollerd, Collectd, Enlinkd, PerspectivePollerd
-12. **Twin API** — Bidirectional config/state sync between Pollerd and Minion (passive status, SNMPv3 users, OpenConfig)
-13. **opennms-model-jakarta** — Jakarta Persistence entities with JPA AttributeConverters + JPA DAOs replacing Hibernate 3.6 UserTypes
-14. **Event-conf enrichment** — `EventConfEnrichmentService` in daemon-common loads alarm-data from PostgreSQL for all Spring Boot daemons
-15. **12 daemons deleted** — Notifd, Ackd, Actiond, Vacuumd, Statsd, Tl1d, Queued, RTCd, Ticketer, DHCPd, Scriptd, plus Zenith Connect feature
-16. **Minion RPC mandatory** — all polling/collection goes through Minion via Kafka RPC; `force-remote=true` enforced
-17. **93 E2E tests passing** — 6 test suites: direct (13), Minion (14), syslog (16), passive (20), collectd (10), enlinkd (20)
-18. **Legacy features removed** — Tl1d, Charts, Device Config Backup, Database Reports/Jasper, DHCP monitor, webapp, notifications, Zenith Connect, RPM/Debian packaging
-19. **Minion-only network ingress** — Eventd listeners deleted, Syslogd/Telemetryd consume via KafkaSinkBridge from Minion
-20. **Java 21 runtime** — all daemon + Minion containers run JRE 21
-
-### Remaining Work
-
-**Deferred** — HW inventory adapter (Hibernate 7 entity issue), Minion echo probes (replace with Kafka lag monitoring), service detector RPC, MATE scopes.
-
-All plan documents are in [`docs/plans/`](docs/plans/) and [`docs/superpowers/`](docs/superpowers/).
+| **Zenith Connect** | Cloud registration feature |
+| **RPM/Debian packaging** | Native OS packages — Docker-only deployment |
 
 ---
 
@@ -198,9 +98,10 @@ OpenNMS Horizon is an enterprise-grade open-source network monitoring platform. 
 - **Each daemon runs in its own container** — independent scaling, isolation, and restartability
 - **Kafka-only event transport** — no ActiveMQ, no shared event bus
 - **Events never touch PostgreSQL** — only alarms are persisted to the database
-- **Layered Docker images** — shared `daemon-base` (~415MB) + 12 per-daemon overlay images on a 143MB jlink Alpine JRE; Minion on `opennms/minion-boot`
-- **Spring Boot 4 migration complete** — all 12 daemons + Minion run as fat JARs (2–4s startup); Karaf fully retired
-- **One-shot database initialization** — `opennms/db-init` (312 MB) replaces the Core container for schema setup
+- **Layered Docker images** — shared `daemon-base` (~415MB) + 12 per-daemon overlay images on a 143MB jlink Alpine JRE
+- **Spring Boot 4 migration complete** — all 12 daemons + Minion run as JARs (2-4s startup); Karaf fully retired
+- **One-shot database initialization** — `opennms/db-init` replaces the Core container for schema setup
+- **`org.deltav` package namespace** — original delta-v code uses `org.deltav.*` packages; horizon-derived model-jakarta stays `org.opennms`
 
 ## Architecture
 
@@ -222,24 +123,24 @@ Minion → Kafka Sink → Trapd/Syslogd
 
 ### Services
 
-| Service | Runtime | TSID | Purpose |
-|---------|---------|------|---------|
-| alarmd | Spring Boot 4 | 23 | Kafka → alarm creation/reduction → PostgreSQL |
-| pollerd | Spring Boot 4 | 4 | Service availability polling |
-| collectd | Spring Boot 4 | 5 | Performance data collection |
-| perspectivepollerd | Spring Boot 4 | 7 | Perspective (remote location) polling |
-| discovery | Spring Boot 4 | 24 | Network discovery (via Minion Kafka RPC) |
-| trapd | Spring Boot 4 | 20 | SNMP trap reception (via Minion Kafka Sink) |
-| syslogd | Spring Boot 4 | 21 | Syslog reception (via Minion Kafka Sink) |
-| eventtranslator | Spring Boot 4 | 22 | Event translation rules + enrichment |
-| enlinkd | Spring Boot 4 | — | Enhanced link discovery (LLDP/CDP/OSPF/ISIS/Bridge) |
-| provisiond | Spring Boot 4 | 25 | Node provisioning and scanning (via Minion 3× Kafka RPC) |
-| bsmd | Spring Boot 4 | 17 | Business service monitoring |
-| telemetryd | Spring Boot 4 | 18 | Telemetry/flow ingestion bridge (via Minion Kafka Sink) |
-| minion | Spring Boot 4 | — | Distributed data collection agent (Kafka RPC + Sink + Twin API) |
-| db-init | Spring Boot 4 | — | One-shot Liquibase schema migration |
-| postgres | postgres:15 | — | PostgreSQL database (alarms only) |
-| kafka | Apache Kafka | — | Event transport backbone |
+| Service | Runtime | Purpose |
+|---------|---------|---------|
+| alarmd | Spring Boot 4 | Kafka → alarm creation/reduction → PostgreSQL |
+| pollerd | Spring Boot 4 | Service availability polling |
+| collectd | Spring Boot 4 | Performance data collection |
+| perspectivepollerd | Spring Boot 4 | Perspective (remote location) polling |
+| discovery | Spring Boot 4 | Network discovery (via Minion Kafka RPC) |
+| trapd | Spring Boot 4 | SNMP trap reception (via Minion Kafka Sink) |
+| syslogd | Spring Boot 4 | Syslog reception (via Minion Kafka Sink) |
+| eventtranslator | Spring Boot 4 | Event translation rules + enrichment |
+| enlinkd | Spring Boot 4 | Enhanced link discovery (LLDP/CDP/OSPF/ISIS/Bridge) |
+| provisiond | Spring Boot 4 | Node provisioning and scanning (via Minion Kafka RPC) |
+| bsmd | Spring Boot 4 | Business service monitoring |
+| telemetryd | Spring Boot 4 | Telemetry/flow ingestion bridge (via Minion Kafka Sink) |
+| minion | Spring Boot 4 | Distributed data collection agent (Kafka RPC + Sink + Twin API) |
+| db-init | Spring Boot 4 | One-shot Liquibase schema migration |
+| postgres | postgres:15 | PostgreSQL database (alarms only) |
+| kafka | Apache Kafka | Event transport backbone |
 
 ### Kafka Topics
 
@@ -258,22 +159,21 @@ Minion → Kafka Sink → Trapd/Syslogd
 ```bash
 cd opennms-container/delta-v
 
-# Start core infrastructure + all daemons
-COMPOSE_PROFILES=full docker compose up -d
-
-# Start minimal set (alarmd, pollerd, trapd, provisiond)
-COMPOSE_PROFILES=lite docker compose up -d
+# Start all 16 services
+./deploy.sh up full
 
 # Check service health
-docker compose ps
+./deploy.sh status
 
-# Run all E2E tests (no webapp required — SQL-only verification)
-./test-e2e.sh            # 13 tests: trap → provision → alarm lifecycle
-./test-minion-e2e.sh     # 14 tests: Minion → Kafka Sink → alarm lifecycle
-./test-syslog-e2e.sh     # 16 tests: syslog → Minion → Cisco alarm lifecycle
-./test-passive-e2e.sh    # 20 tests: syslog → EventTranslator → Twin API → Minion → outage
-./test-collectd-e2e.sh   # 10 tests: node provisioned, Collectd healthy
-./test-enlinkd-e2e.sh    # 20 tests: LLDP topology via remote Minion + Containerlab cEOS
+# Run E2E tests
+./test-e2e.sh              # Core: trap → provision → alarm lifecycle
+./test-minion-e2e.sh       # Minion: trap → Kafka Sink → alarm lifecycle
+./test-minion-rpc-e2e.sh   # Minion RPC: provision → detect → poll
+./test-syslog-e2e.sh       # Syslog: Cisco syslog → alarm lifecycle
+./test-passive-e2e.sh      # Passive: syslog → EventTranslator → Twin API → outage
+./test-collectd-e2e.sh     # Collectd: SNMP collection health
+./test-perspective-e2e.sh  # Perspective: remote-location polling + outage lifecycle
+./test-enlinkd-e2e.sh      # Enlinkd: LLDP topology via Containerlab cEOS
 ```
 
 ### Prerequisites
@@ -284,59 +184,53 @@ docker compose ps
 
 ## Building
 
-Requires **JDK 21** (`jenv`, `JAVA_HOME`, or temurin-21 auto-detected).
+See [BUILD.md](BUILD.md) for detailed build instructions.
 
 ```bash
 cd opennms-container/delta-v
 
-# Full build: compile → assemble → images → deltav
+# Full build: compile → JRE image → layered daemon images
 ./build.sh
 
 # Or individual steps:
-./build.sh compile    # Maven compile with JDK 21
-./build.sh assemble   # Build Karaf assemblies (sentinel, minion, daemon, alarmd)
-./build.sh images     # Build base Docker images (sentinel, minion, db-init)
+./build.sh compile    # Maven compile (22 modules, ~16s incremental)
 ./build.sh jre        # Build jlink custom JRE base image (rarely needed)
-./build.sh deltav     # Build Delta-V layered images (daemon-base + 12 per-daemon + minion-deltav)
+./build.sh deltav     # Build Delta-V layered images (daemon-base + 12 per-daemon + minion-boot)
 ```
-
-See [BUILD.md](BUILD.md) for detailed build instructions.
 
 ## Key Design Decisions
 
-1. **No events table** — Events flow exclusively via Kafka. Only alarms are persisted to PostgreSQL by Alarmd. The `events`, `event_parameters`, `notifications`, and `usersnotified` tables are eliminated.
+1. **No events table** — Events flow exclusively via Kafka. Only alarms are persisted to PostgreSQL by Alarmd.
 
-2. **No ActiveMQ** — All cross-container communication uses Kafka topics. The AMQ hub-and-spoke transport is fully removed.
+2. **No ActiveMQ** — All cross-container communication uses Kafka topics.
 
-3. **Each daemon is self-contained** — Every daemon container has its own `EventWriter`, `EventListener`, `EventExpander`, and `KafkaEventForwarder`. No dependency on Eventd or a central event bus.
+3. **Each daemon is self-contained** — Every daemon container has its own `EventWriter`, `EventListener`, `EventExpander`, and `KafkaEventForwarder`.
 
-4. **Producer-side event enrichment** — Each daemon's `KafkaEventForwarder` loads 157 event definitions from the database via `EventConfInitializer` and applies severity + alarm-data to events before publishing to Kafka.
+4. **Producer-side event enrichment** — Each daemon's `KafkaEventForwarder` loads event definitions from the database via `EventConfEnrichmentService` and applies severity + alarm-data before publishing to Kafka.
 
-5. **Minion communicates via Kafka only** — No REST dependency. SNMPv3 user config distributed via Twin API. Traps, syslog, and telemetry forwarded via Kafka Sink topics.
+5. **Minion communicates via Kafka only** — No REST dependency. SNMPv3 user config distributed via Twin API.
 
-6. **Minion is sole network ingress** — No daemon container binds external UDP/TCP monitoring ports. All protocol data (traps, syslog, flows) enters via Minion → Kafka Sink → KafkaSinkBridge → daemon container. All polling/collection executes on Minion via Kafka RPC (`force-remote=true`).
+6. **Minion is sole network ingress** — No daemon container binds external UDP/TCP monitoring ports. All protocol data enters via Minion → Kafka Sink → KafkaSinkBridge. All polling/collection executes on Minion via Kafka RPC (`force-remote=true`).
 
-7. **Twin API state sync** — Bidirectional config/state sync between daemons and Minion via Kafka Twin topics. Used for passive service status (Pollerd → Minion), SNMPv3 user config, and OpenConfig subscriptions.
+7. **Twin API state sync** — Bidirectional config/state sync between daemons and Minion via Kafka Twin topics.
 
-8. **Jackson XmlMapper for config** — All daemon-boot modules use Jackson XmlMapper with `defaultUseWrapper(false)` and `JaxbAnnotationModule` for XML config loading. Legacy JaxbUtils/JAXB/BeanUtils config factories are eliminated from the daemon stack.
+8. **Jackson XmlMapper for config** — All daemon-boot modules use Jackson XmlMapper with `defaultUseWrapper(false)` and `JaxbAnnotationModule`. Legacy JaxbUtils/JAXB eliminated.
 
-## Project Status
+9. **`org.deltav` package namespace** — All original delta-v code uses `org.deltav.*` packages with BeaconStrategists copyright. Horizon-derived code (model-jakarta, BSM entities) stays `org.opennms` with dual copyright attribution.
 
-See [DELTA-V_Status.md](DELTA-V_Status.md) for detailed progress tracking.
-
-**Current state:** 16 services running (12 daemons deleted, 12 daemons + Minion migrated to Spring Boot 4). All containers run as Spring Boot 4 fat JARs (2–4s startup) on per-daemon Docker images. Karaf fully retired. Legacy `opennms-config` and `opennms-model` decoupled from the daemon stack. **93 E2E tests passing** across 6 test suites. Four shared infrastructure patterns: Kafka event transport, Kafka Sink bridge, Kafka RPC client, Twin API state sync.
+10. **Horizon as pre-built dependency** — Horizon modules are built in `pbrane/delta-v-horizon` and consumed as Maven artifacts, keeping delta-v's 22-module reactor fast (~16s compile).
 
 ## Documentation
 
 | Document | Description |
 |----------|-------------|
 | [OPENNMS.md](OPENNMS.md) | Original OpenNMS Horizon project description |
-| [DELTA-V_Status.md](DELTA-V_Status.md) | Detailed status of all Delta-V work |
 | [BUILD.md](BUILD.md) | Build instructions |
 | [CLAUDE.md](CLAUDE.md) | AI assistant project context |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guidelines |
+| [SECURITY.md](SECURITY.md) | Security policy |
+| [NOTICE](NOTICE) | OpenNMS derivation attribution |
 
-Design documents are in `docs/plans/`.
+Design documents are in `docs/plans/` and `docs/superpowers/`.
 
 ## License
 
