@@ -1,4 +1,4 @@
-<model-import xmlns="http://xmlns.opennms.org/xsd/config/model-import" date-stamp="2026-04-07T18:32:42.000Z" foreign-source="perspective-test" last-import="2026-04-07T18:34:21.057Z">
+<model-import xmlns="http://xmlns.opennms.org/xsd/config/model-import" date-stamp="2026-04-07T18:32:42.000Z" foreign-source="perspective-test" last-import="2026-04-09T11:50:00.033Z">
    <node location="Default" foreign-id="google-search" node-label="google.com">
       <interface ip-addr="169.254.1.1" status="1" snmp-primary="N">
          <monitored-service service-name="Google-Search"/>

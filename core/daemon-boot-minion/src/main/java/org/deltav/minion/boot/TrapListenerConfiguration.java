@@ -1,0 +1,103 @@
+/*
+ * Copyright (C) 2026 BeaconStrategists, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package org.deltav.minion.boot;
+
+import org.opennms.core.ipc.sink.api.MessageDispatcherFactory;
+import org.opennms.netmgt.dao.api.DistPollerDao;
+import org.opennms.netmgt.trapd.TrapdConfigBean;
+import org.opennms.netmgt.trapd.TrapListener;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.SmartLifecycle;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * Wires the SNMP trap listener and its Sink producer.
+ *
+ * <p>When enabled, opens UDP port 1162 (configurable) to receive SNMP traps
+ * and forwards them to the core instance via the Sink API. Port binding
+ * is inside this conditional -- when disabled, port 1162 is never opened.</p>
+ *
+ * <p>Lifecycle phase 400: listeners start last, after RPC server (300)
+ * and Sink client (200) are ready.</p>
+ */
+@Configuration
+@ConditionalOnProperty(name = "opennms.minion.traps.enabled", havingValue = "true", matchIfMissing = true)
+public class TrapListenerConfiguration {
+
+    @Value("${opennms.minion.traps.port:1162}")
+    private int trapPort;
+
+    @Value("${opennms.minion.traps.address:*}")
+    private String trapAddress;
+
+    @Bean
+    public TrapdConfigBean trapdConfigBean() {
+        TrapdConfigBean config = new TrapdConfigBean();
+        config.setSnmpTrapPort(trapPort);
+        config.setSnmpTrapAddress(trapAddress);
+        config.setNewSuspectOnTrap(false);
+        config.setBatchSize(100);
+        config.setBatchIntervalMs(500);
+        config.setQueueSize(10000);
+        return config;
+    }
+
+    @Bean
+    public TrapListener trapListener(TrapdConfigBean config,
+                                     MessageDispatcherFactory messageDispatcherFactory,
+                                     DistPollerDao distPollerDao) throws Exception {
+        return new TrapListener(config, messageDispatcherFactory, distPollerDao);
+    }
+
+    /**
+     * SmartLifecycle that activates the TrapListener at phase 400.
+     *
+     * <p>Opens the trap port synchronously with default config. No Twin
+     * subscription — the Delta-V trapd daemon doesn't publish TrapListenerConfig
+     * via Twin, so we bypass the Twin/timer path entirely.</p>
+     */
+    @Bean
+    public SmartLifecycle trapListenerLifecycle(TrapListener trapListener) {
+        return new SmartLifecycle() {
+            private volatile boolean running;
+
+            @Override
+            public void start() {
+                trapListener.openWithDefaultConfig();
+                running = true;
+            }
+
+            @Override
+            public void stop() {
+                trapListener.stop();
+                running = false;
+            }
+
+            @Override
+            public boolean isRunning() {
+                return running;
+            }
+
+            @Override
+            public int getPhase() {
+                return 400;
+            }
+        };
+    }
+}

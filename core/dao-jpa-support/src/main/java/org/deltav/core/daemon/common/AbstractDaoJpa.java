@@ -1,0 +1,250 @@
+/*
+ * Copyright (C) 2026 BeaconStrategists, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package org.deltav.core.daemon.common;
+
+import java.io.Serializable;
+import java.util.List;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+
+import org.opennms.core.criteria.Criteria;
+import org.opennms.netmgt.dao.api.OnmsDao;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * JPA-native replacement for {@code AbstractDaoHibernate}.
+ *
+ * <p>This base class implements {@link OnmsDao} using a JPA {@link EntityManager}
+ * instead of Hibernate's {@code HibernateDaoSupport}. It is intended for use in
+ * Spring Boot migrated daemons that run on Hibernate 6.x / Jakarta Persistence.</p>
+ *
+ * <p>Subclass DAOs (e.g. {@code AlarmDaoJpa}) extend this class and use the
+ * protected helper methods ({@link #find(String, Object...)},
+ * {@link #findUnique(String, Object...)}, {@link #queryInt(String, Object...)})
+ * which mirror the API surface of {@code AbstractDaoHibernate}.</p>
+ *
+ * @param <T> the entity type this DAO manages
+ * @param <K> the primary key type
+ */
+public abstract class AbstractDaoJpa<T, K extends Serializable> implements OnmsDao<T, K> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractDaoJpa.class);
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    private final Class<T> entityClass;
+
+    protected AbstractDaoJpa(Class<T> entityClass) {
+        this.entityClass = entityClass;
+    }
+
+    /**
+     * Returns the JPA EntityManager for subclass use.
+     */
+    protected EntityManager entityManager() {
+        return entityManager;
+    }
+
+    // ---- OnmsDao implementation ----
+
+    @Override
+    public void lock() {
+        // No-op in Spring Boot context. The legacy AbstractDaoHibernate used pessimistic
+        // locking via the accessLocks table to serialize DAO writes. In Spring Boot with
+        // @Transactional and Hibernate 7, database-level row locking handles concurrency.
+        // The accessLocks table entry names (e.g., "NODE_ACCESS") don't match the auto-derived
+        // names from entity class names (e.g., "ONMSNODE_ACCESS"), making the old approach
+        // incompatible without a name mapping table.
+    }
+
+    @Override
+    public void initialize(Object obj) {
+        org.hibernate.Hibernate.initialize(obj);
+    }
+
+    @Override
+    public void flush() {
+        entityManager.flush();
+    }
+
+    @Override
+    public void clear() {
+        entityManager.flush();
+        entityManager.clear();
+    }
+
+    @Override
+    public int countAll() {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+        cq.select(cb.count(cq.from(entityClass)));
+        return entityManager.createQuery(cq).getSingleResult().intValue();
+    }
+
+    @Override
+    public void delete(T entity) {
+        entityManager.remove(
+                entityManager.contains(entity) ? entity : entityManager.merge(entity));
+    }
+
+    @Override
+    public void delete(K key) {
+        T entity = get(key);
+        if (entity != null) {
+            delete(entity);
+        }
+    }
+
+    @Override
+    public List<T> findAll() {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<T> cq = cb.createQuery(entityClass);
+        cq.from(entityClass);
+        return entityManager.createQuery(cq).getResultList();
+    }
+
+    @Override
+    public List<T> findMatching(Criteria criteria) {
+        JpaCriteriaConverter converter = new JpaCriteriaConverter(entityManager);
+        return converter.convert(criteria, entityClass).getResultList();
+    }
+
+    @Override
+    public int countMatching(Criteria criteria) {
+        JpaCriteriaConverter converter = new JpaCriteriaConverter(entityManager);
+        return converter.convertForCount(criteria, entityClass).getSingleResult().intValue();
+    }
+
+    @Override
+    public T get(K id) {
+        return entityManager.find(entityClass, id);
+    }
+
+    @Override
+    public T load(K id) {
+        return entityManager.getReference(entityClass, id);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public K save(T entity) {
+        entityManager.persist(entity);
+        entityManager.flush();
+        return (K) entityManager.getEntityManagerFactory()
+                .getPersistenceUnitUtil().getIdentifier(entity);
+    }
+
+    @Override
+    public void saveOrUpdate(T entity) {
+        if (entityManager.contains(entity)) {
+            // Already managed — just let the persistence context track changes
+            return;
+        }
+        @SuppressWarnings("unchecked")
+        K id = (K) entityManager.getEntityManagerFactory()
+                .getPersistenceUnitUtil().getIdentifier(entity);
+        if (id == null) {
+            // New entity — persist so the ID is assigned on the original instance
+            entityManager.persist(entity);
+        } else {
+            entityManager.merge(entity);
+        }
+    }
+
+    @Override
+    public void update(T entity) {
+        entityManager.merge(entity);
+    }
+
+    // ---- Helper methods (matching AbstractDaoHibernate API surface) ----
+
+    /**
+     * Execute an HQL query returning a list of entities.
+     */
+    @SuppressWarnings("unchecked")
+    protected List<T> find(String hql) {
+        return entityManager.createQuery(hql).getResultList();
+    }
+
+    /**
+     * Execute an HQL query with positional parameters returning a list of entities.
+     * Parameters are bound as {@code ?1}, {@code ?2}, etc.
+     */
+    @SuppressWarnings("unchecked")
+    protected List<T> find(String hql, Object... values) {
+        Query query = entityManager.createQuery(hql);
+        for (int i = 0; i < values.length; i++) {
+            query.setParameter(i + 1, values[i]);
+        }
+        return query.getResultList();
+    }
+
+    /**
+     * Execute an HQL query expecting a single result, or {@code null} if none found.
+     * Parameters are bound as {@code ?1}, {@code ?2}, etc.
+     */
+    protected T findUnique(String hql, Object... args) {
+        TypedQuery<T> query = entityManager.createQuery(hql, entityClass);
+        for (int i = 0; i < args.length; i++) {
+            query.setParameter(i + 1, args[i]);
+        }
+        List<T> results = query.getResultList();
+        return results.isEmpty() ? null : results.get(0);
+    }
+
+    /**
+     * Execute an HQL query returning a list of arbitrary typed objects.
+     * Parameters are bound as {@code ?1}, {@code ?2}, etc.
+     */
+    @SuppressWarnings("unchecked")
+    protected <S> List<S> findObjects(Class<S> clazz, String hql, Object... values) {
+        Query query = entityManager.createQuery(hql);
+        for (int i = 0; i < values.length; i++) {
+            query.setParameter(i + 1, values[i]);
+        }
+        return query.getResultList();
+    }
+
+    /**
+     * Execute an HQL query returning a single integer result.
+     */
+    protected int queryInt(String hql) {
+        Number result = (Number) entityManager.createQuery(hql).getSingleResult();
+        return result.intValue();
+    }
+
+    /**
+     * Execute an HQL query with positional parameters returning a single integer result.
+     * Parameters are bound as {@code ?1}, {@code ?2}, etc.
+     */
+    protected int queryInt(String hql, Object... args) {
+        Query query = entityManager.createQuery(hql);
+        for (int i = 0; i < args.length; i++) {
+            query.setParameter(i + 1, args[i]);
+        }
+        Number result = (Number) query.getSingleResult();
+        return result.intValue();
+    }
+}
