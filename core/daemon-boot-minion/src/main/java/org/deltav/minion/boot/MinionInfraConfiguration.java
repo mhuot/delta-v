@@ -19,15 +19,15 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.minion.boot;
+package org.deltav.minion.boot;
 
-import org.opennms.core.daemon.common.NoOpTracerRegistry;
+import org.deltav.core.daemon.common.NoOpTracerRegistry;
 import org.opennms.core.tracing.api.TracerRegistry;
 import org.opennms.distributed.core.api.Identity;
 import org.opennms.distributed.core.api.MinionIdentity;
-import org.opennms.minion.common.MinionDistPollerDao;
-import org.opennms.minion.common.MinionProperties;
-import org.opennms.minion.common.SpringMinionIdentity;
+import org.deltav.minion.common.MinionDistPollerDao;
+import org.deltav.minion.common.MinionProperties;
+import org.deltav.minion.common.SpringMinionIdentity;
 import org.opennms.netmgt.dao.api.DistPollerDao;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

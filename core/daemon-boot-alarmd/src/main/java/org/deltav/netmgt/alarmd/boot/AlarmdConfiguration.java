@@ -19,11 +19,11 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.alarmd.boot;
+package org.deltav.netmgt.alarmd.boot;
 
 
 
-import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
+import org.deltav.core.daemon.common.SpringServiceDaemonSmartLifecycle;
 import org.opennms.netmgt.dao.api.AlarmEntityNotifier;
 import org.opennms.netmgt.eventd.EventUtil;
 import org.opennms.netmgt.model.OnmsSeverity;

@@ -19,14 +19,14 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.telemetry.boot;
+package org.deltav.netmgt.telemetry.boot;
 
 import java.io.Closeable;
 import java.util.function.Consumer;
 
 import com.codahale.metrics.MetricRegistry;
 
-import org.opennms.core.daemon.common.NoOpTracerRegistry;
+import org.deltav.core.daemon.common.NoOpTracerRegistry;
 import org.opennms.core.ipc.sink.api.MessageConsumerManager;
 import org.opennms.core.ipc.sink.api.MessageDispatcherFactory;
 import org.opennms.core.ipc.twin.api.LocalTwinSubscriber;
@@ -46,7 +46,7 @@ import org.opennms.netmgt.telemetry.protocols.registry.api.TelemetryServiceRegis
 import org.opennms.netmgt.telemetry.protocols.registry.impl.TelemetryRegistryImpl;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
+import org.deltav.core.daemon.common.SpringServiceDaemonSmartLifecycle;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;

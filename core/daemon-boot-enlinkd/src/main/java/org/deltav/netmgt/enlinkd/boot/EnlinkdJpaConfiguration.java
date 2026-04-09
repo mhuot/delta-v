@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.enlinkd.boot;
+package org.deltav.netmgt.enlinkd.boot;
 
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.opennms.netmgt.dao.api.SessionUtils;

@@ -19,11 +19,11 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.bsm.persistence.api;
+package org.deltav.netmgt.bsm.persistence.api;
 
 import java.util.Set;
 
-import org.opennms.netmgt.bsm.persistence.api.functions.map.AbstractMapFunctionEntity;
+import org.deltav.netmgt.bsm.persistence.api.functions.map.AbstractMapFunctionEntity;
 
 public interface EdgeEntity {
 

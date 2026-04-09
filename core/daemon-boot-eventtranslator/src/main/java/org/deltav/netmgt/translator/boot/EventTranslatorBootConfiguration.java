@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.translator.boot;
+package org.deltav.netmgt.translator.boot;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +30,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 
-import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
+import org.deltav.core.daemon.common.SpringServiceDaemonSmartLifecycle;
 import org.opennms.netmgt.config.EventTranslatorConfig;
 import org.opennms.netmgt.config.EventTranslatorConfigFactory;
 import org.opennms.netmgt.config.translator.EventTranslatorConfiguration;

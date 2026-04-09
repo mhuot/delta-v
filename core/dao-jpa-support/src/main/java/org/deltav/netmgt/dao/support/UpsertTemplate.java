@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.dao.support;
+package org.deltav.netmgt.dao.support;
 
 import org.opennms.netmgt.dao.api.OnmsDao;
 import org.springframework.transaction.PlatformTransactionManager;

@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.core.daemon.common;
+package org.deltav.core.daemon.common;
 
 import static org.opennms.core.mate.api.EntityScopeProvider.Contexts.ASSET;
 import static org.opennms.core.mate.api.EntityScopeProvider.Contexts.INTERFACE;

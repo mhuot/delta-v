@@ -1,4 +1,4 @@
-package org.opennms.core.dbinit;
+package org.deltav.core.dbinit;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

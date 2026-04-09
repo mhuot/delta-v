@@ -1,4 +1,4 @@
-package org.opennms.netmgt.perspectivepoller.boot;
+package org.deltav.netmgt.perspectivepoller.boot;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

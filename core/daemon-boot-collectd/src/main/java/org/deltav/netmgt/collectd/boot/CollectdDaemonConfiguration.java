@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.collectd.boot;
+package org.deltav.netmgt.collectd.boot;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +30,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 
 import org.opennms.core.cache.CacheConfig;
-import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
+import org.deltav.core.daemon.common.SpringServiceDaemonSmartLifecycle;
 import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.features.distributed.kvstore.json.noop.NoOpJsonStore;
 import org.opennms.features.timeseries.plugin.InMemoryStorage;

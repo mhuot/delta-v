@@ -1,4 +1,4 @@
-package org.opennms.core.dbinit;
+package org.deltav.core.dbinit;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

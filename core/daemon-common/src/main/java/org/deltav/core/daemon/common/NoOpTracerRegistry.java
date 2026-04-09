@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.core.daemon.common;
+package org.deltav.core.daemon.common;
 
 import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;

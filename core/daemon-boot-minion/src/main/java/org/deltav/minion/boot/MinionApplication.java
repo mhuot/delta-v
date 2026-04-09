@@ -19,10 +19,10 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.minion.boot;
+package org.deltav.minion.boot;
 
-import org.opennms.core.daemon.common.EventConfEnrichmentService;
-import org.opennms.minion.common.MinionProperties;
+import org.deltav.core.daemon.common.EventConfEnrichmentService;
+import org.deltav.minion.common.MinionProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

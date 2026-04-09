@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.core.daemon.registry;
+package org.deltav.core.daemon.registry;
 
 import java.io.IOException;
 import java.net.InetAddress;

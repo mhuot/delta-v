@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.poller.boot;
+package org.deltav.netmgt.poller.boot;
 
 import org.opennms.core.tsid.TsidFactory;
 import org.opennms.netmgt.config.PollerConfig;

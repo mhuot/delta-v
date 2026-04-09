@@ -19,12 +19,12 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.core.daemon.common;
+package org.deltav.core.daemon.common;
 
 import java.util.Collection;
 import java.util.Objects;
 
-import org.opennms.core.daemon.common.EventConfEnrichmentService;
+import org.deltav.core.daemon.common.EventConfEnrichmentService;
 import org.opennms.netmgt.events.api.EventIpcManager;
 import org.opennms.netmgt.events.api.EventListener;
 import org.opennms.netmgt.events.api.EventProxyException;

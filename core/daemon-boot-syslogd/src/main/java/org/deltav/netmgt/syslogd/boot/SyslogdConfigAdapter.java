@@ -1,4 +1,4 @@
-package org.opennms.netmgt.syslogd.boot;
+package org.deltav.netmgt.syslogd.boot;
 
 import java.io.IOException;
 import java.util.ArrayList;

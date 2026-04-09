@@ -19,9 +19,9 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.poller.boot;
+package org.deltav.netmgt.poller.boot;
 
-import org.opennms.core.daemon.registry.MonitorRegistryConfiguration;
+import org.deltav.core.daemon.registry.MonitorRegistryConfiguration;
 import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.core.rpc.api.RpcClientFactory;
 import org.opennms.core.rpc.utils.RpcTargetHelper;
@@ -50,7 +50,7 @@ import java.util.concurrent.Executors;
  *
  * <p>{@link RpcClientFactory} and {@link RpcTargetHelper} are provided by
  * {@code KafkaRpcClientConfiguration} in daemon-common (auto-scanned via
- * {@code org.opennms.core.daemon.common}). {@link EntityScopeProvider} is
+ * {@code org.deltav.core.daemon.common}). {@link EntityScopeProvider} is
  * provided by {@code DaemonProvisioningConfiguration} as a no-op default.</p>
  */
 @Configuration

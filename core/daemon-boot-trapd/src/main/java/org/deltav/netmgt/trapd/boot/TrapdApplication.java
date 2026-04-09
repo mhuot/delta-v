@@ -1,4 +1,4 @@
-package org.opennms.netmgt.trapd.boot;
+package org.deltav.netmgt.trapd.boot;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

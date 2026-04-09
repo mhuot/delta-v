@@ -19,12 +19,12 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.minion.boot.actuator;
+package org.deltav.minion.boot.actuator;
 
 import java.util.Map;
 import java.util.Set;
 
-import org.opennms.minion.common.RpcModuleRegistry;
+import org.deltav.minion.common.RpcModuleRegistry;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.stereotype.Component;

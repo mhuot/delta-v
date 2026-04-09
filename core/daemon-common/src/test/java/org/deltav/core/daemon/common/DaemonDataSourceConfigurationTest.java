@@ -1,4 +1,4 @@
-package org.opennms.core.daemon.common;
+package org.deltav.core.daemon.common;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

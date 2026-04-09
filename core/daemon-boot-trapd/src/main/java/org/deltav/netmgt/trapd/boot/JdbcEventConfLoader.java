@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.trapd.boot;
+package org.deltav.netmgt.trapd.boot;
 
 import java.util.ArrayList;
 import java.util.HashMap;

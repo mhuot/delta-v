@@ -1,4 +1,4 @@
-package org.opennms.netmgt.alarmd.boot;
+package org.deltav.netmgt.alarmd.boot;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

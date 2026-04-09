@@ -19,13 +19,13 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.minion.boot;
+package org.deltav.minion.boot;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import org.opennms.core.daemon.registry.DetectorRegistryConfiguration;
-import org.opennms.core.daemon.registry.NoOpSnmpAgentConfigFactory;
+import org.deltav.core.daemon.registry.DetectorRegistryConfiguration;
+import org.deltav.core.daemon.registry.NoOpSnmpAgentConfigFactory;
 import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 import org.opennms.netmgt.provision.detector.client.rpc.DetectorClientRpcModule;
 import org.opennms.netmgt.provision.detector.registry.api.ServiceDetectorRegistry;

@@ -1,4 +1,4 @@
-package org.opennms.netmgt.syslogd.boot;
+package org.deltav.netmgt.syslogd.boot;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

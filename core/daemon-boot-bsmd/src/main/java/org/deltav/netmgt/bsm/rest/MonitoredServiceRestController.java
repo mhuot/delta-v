@@ -19,12 +19,12 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.bsm.rest;
+package org.deltav.netmgt.bsm.rest;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.opennms.netmgt.bsm.rest.model.MonitoredServiceDto;
+import org.deltav.netmgt.bsm.rest.model.MonitoredServiceDto;
 import org.opennms.netmgt.bsm.service.BusinessServiceManager;
 import org.opennms.netmgt.bsm.service.model.IpService;
 import org.springframework.transaction.support.TransactionTemplate;

@@ -1,4 +1,4 @@
-package org.opennms.core.dbinit;
+package org.deltav.core.dbinit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;

@@ -1,4 +1,4 @@
-package org.opennms.core.daemon.sink.kafka;
+package org.deltav.core.daemon.sink.kafka;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

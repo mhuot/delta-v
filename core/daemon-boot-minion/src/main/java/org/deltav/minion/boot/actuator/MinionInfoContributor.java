@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.minion.boot.actuator;
+package org.deltav.minion.boot.actuator;
 
 import java.util.Map;
 

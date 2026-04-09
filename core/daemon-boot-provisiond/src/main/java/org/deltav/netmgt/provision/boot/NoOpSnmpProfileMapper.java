@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.provision.boot;
+package org.deltav.netmgt.provision.boot;
 
 import java.net.InetAddress;
 import java.util.Optional;

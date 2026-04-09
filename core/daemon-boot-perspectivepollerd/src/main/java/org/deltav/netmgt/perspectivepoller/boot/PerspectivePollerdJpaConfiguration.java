@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.perspectivepoller.boot;
+package org.deltav.netmgt.perspectivepoller.boot;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;

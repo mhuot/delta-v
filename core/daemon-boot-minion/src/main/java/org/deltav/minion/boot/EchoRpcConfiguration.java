@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.minion.boot;
+package org.deltav.minion.boot;
 
 import org.opennms.core.rpc.echo.EchoRpcModule;
 import org.springframework.context.annotation.Bean;

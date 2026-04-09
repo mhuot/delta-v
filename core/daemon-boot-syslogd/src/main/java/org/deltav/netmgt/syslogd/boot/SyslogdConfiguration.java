@@ -1,4 +1,4 @@
-package org.opennms.netmgt.syslogd.boot;
+package org.deltav.netmgt.syslogd.boot;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,8 +11,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 
-import org.opennms.core.daemon.common.JdbcDistPollerDao;
-import org.opennms.core.daemon.common.JdbcInterfaceToNodeCache;
+import org.deltav.core.daemon.common.JdbcDistPollerDao;
+import org.deltav.core.daemon.common.JdbcInterfaceToNodeCache;
 import org.opennms.netmgt.config.SyslogdConfig;
 import org.opennms.netmgt.config.syslogd.SyslogdConfigurationGroup;
 import org.opennms.netmgt.config.syslogd.HideMatch;

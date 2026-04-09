@@ -21,5 +21,5 @@ opennms:
 logging:
   level:
     org.opennms.core.schema: INFO
-    org.opennms.core.dbinit: INFO
+    org.deltav.core.dbinit: INFO
     liquibase: INFO

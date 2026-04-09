@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.bsm.persistence.api;
+package org.deltav.netmgt.bsm.persistence.api;
 
 public interface EdgeEntityVisitor<T> {
 

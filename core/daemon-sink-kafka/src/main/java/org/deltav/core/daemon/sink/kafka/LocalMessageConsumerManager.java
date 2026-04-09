@@ -1,4 +1,4 @@
-package org.opennms.core.daemon.sink.kafka;
+package org.deltav.core.daemon.sink.kafka;
 
 import org.opennms.core.ipc.sink.api.Message;
 import org.opennms.core.ipc.sink.api.SinkModule;

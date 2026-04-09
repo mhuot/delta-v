@@ -19,11 +19,11 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.bsm.dao;
+package org.deltav.netmgt.bsm.dao;
 
-import org.opennms.core.daemon.common.AbstractDaoJpa;
-import org.opennms.netmgt.bsm.persistence.api.functions.reduce.AbstractReductionFunctionEntity;
-import org.opennms.netmgt.bsm.persistence.api.functions.reduce.ReductionFunctionDao;
+import org.deltav.core.daemon.common.AbstractDaoJpa;
+import org.deltav.netmgt.bsm.persistence.api.functions.reduce.AbstractReductionFunctionEntity;
+import org.deltav.netmgt.bsm.persistence.api.functions.reduce.ReductionFunctionDao;
 import org.springframework.stereotype.Repository;
 
 @Repository

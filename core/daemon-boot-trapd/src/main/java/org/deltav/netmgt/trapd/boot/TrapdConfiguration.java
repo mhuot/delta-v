@@ -1,4 +1,4 @@
-package org.opennms.netmgt.trapd.boot;
+package org.deltav.netmgt.trapd.boot;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 
-import org.opennms.core.daemon.common.DaemonEventConfDao;
+import org.deltav.core.daemon.common.DaemonEventConfDao;
 import org.opennms.netmgt.config.api.EventConfDao;
 import org.opennms.netmgt.dao.api.DistPollerDao;
 import org.opennms.netmgt.dao.api.InterfaceToNodeCache;
@@ -72,12 +72,12 @@ public class TrapdConfiguration {
 
     @Bean
     public DistPollerDao distPollerDao(DataSource dataSource) {
-        return new org.opennms.core.daemon.common.JdbcDistPollerDao(dataSource);
+        return new org.deltav.core.daemon.common.JdbcDistPollerDao(dataSource);
     }
 
     @Bean
     public InterfaceToNodeCache interfaceToNodeCache(DataSource dataSource) {
-        return new org.opennms.core.daemon.common.JdbcInterfaceToNodeCache(dataSource);
+        return new org.deltav.core.daemon.common.JdbcInterfaceToNodeCache(dataSource);
     }
 
     @Bean

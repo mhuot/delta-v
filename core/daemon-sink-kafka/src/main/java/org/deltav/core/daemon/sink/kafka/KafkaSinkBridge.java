@@ -1,4 +1,4 @@
-package org.opennms.core.daemon.sink.kafka;
+package org.deltav.core.daemon.sink.kafka;
 
 import java.time.Duration;
 import java.util.Collections;

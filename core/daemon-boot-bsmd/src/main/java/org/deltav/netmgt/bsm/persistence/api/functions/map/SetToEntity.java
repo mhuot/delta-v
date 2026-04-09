@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.bsm.persistence.api.functions.map;
+package org.deltav.netmgt.bsm.persistence.api.functions.map;
 
 import java.util.Objects;
 

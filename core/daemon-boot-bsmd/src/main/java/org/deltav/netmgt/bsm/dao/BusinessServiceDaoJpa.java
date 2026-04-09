@@ -19,16 +19,16 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.bsm.dao;
+package org.deltav.netmgt.bsm.dao;
 
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.opennms.core.daemon.common.AbstractDaoJpa;
-import org.opennms.netmgt.bsm.persistence.api.BusinessServiceDao;
-import org.opennms.netmgt.bsm.persistence.api.BusinessServiceEdgeEntity;
-import org.opennms.netmgt.bsm.persistence.api.BusinessServiceEntity;
+import org.deltav.core.daemon.common.AbstractDaoJpa;
+import org.deltav.netmgt.bsm.persistence.api.BusinessServiceDao;
+import org.deltav.netmgt.bsm.persistence.api.BusinessServiceEdgeEntity;
+import org.deltav.netmgt.bsm.persistence.api.BusinessServiceEntity;
 import org.springframework.stereotype.Repository;
 
 @Repository

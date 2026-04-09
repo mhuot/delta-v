@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.core.daemon.common;
+package org.deltav.core.daemon.common;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -65,8 +65,8 @@ class KafkaEventTransportConfigurationTest {
     void eventIpcManagerBeanMethodExists() throws NoSuchMethodException {
         var method = KafkaEventTransportConfiguration.class
                 .getDeclaredMethod("eventIpcManager",
-                        org.opennms.core.event.forwarder.kafka.KafkaEventForwarder.class,
-                        org.opennms.core.event.forwarder.kafka.KafkaEventSubscriptionService.class);
+                        org.deltav.core.event.forwarder.kafka.KafkaEventForwarder.class,
+                        org.deltav.core.event.forwarder.kafka.KafkaEventSubscriptionService.class);
         assertThat(method.isAnnotationPresent(Bean.class)).isTrue();
     }
 }

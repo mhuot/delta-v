@@ -1,4 +1,4 @@
-package org.opennms.netmgt.discovery.boot;
+package org.deltav.netmgt.discovery.boot;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,11 +11,11 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 
-import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
-import org.opennms.core.daemon.common.JdbcDistPollerDao;
-import org.opennms.core.daemon.common.JdbcInterfaceToNodeCache;
-import org.opennms.core.daemon.registry.DetectorRegistryConfiguration;
-import org.opennms.core.daemon.registry.NoOpSnmpAgentConfigFactory;
+import org.deltav.core.daemon.common.SpringServiceDaemonSmartLifecycle;
+import org.deltav.core.daemon.common.JdbcDistPollerDao;
+import org.deltav.core.daemon.common.JdbcInterfaceToNodeCache;
+import org.deltav.core.daemon.registry.DetectorRegistryConfiguration;
+import org.deltav.core.daemon.registry.NoOpSnmpAgentConfigFactory;
 import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 import org.opennms.netmgt.config.DiscoveryConfigFactory;
 import org.opennms.netmgt.config.api.DiscoveryConfigurationFactory;

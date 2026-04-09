@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.minion.common;
+package org.deltav.minion.common;
 
 import java.io.IOException;
 import java.util.Properties;

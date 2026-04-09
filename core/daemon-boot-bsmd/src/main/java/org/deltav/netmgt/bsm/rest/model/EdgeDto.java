@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.bsm.rest.model;
+package org.deltav.netmgt.bsm.rest.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

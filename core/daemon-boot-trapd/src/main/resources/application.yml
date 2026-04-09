@@ -40,4 +40,4 @@ opennms:
 logging:
   level:
     org.opennms: INFO
-    org.opennms.core.daemon.sink.kafka: INFO
+    org.deltav.core.daemon.sink.kafka: INFO

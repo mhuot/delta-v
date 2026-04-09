@@ -19,12 +19,12 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.core.daemon.common;
+package org.deltav.core.daemon.common;
 
-import org.opennms.core.event.forwarder.kafka.KafkaEventForwarder;
-import org.opennms.core.event.forwarder.kafka.KafkaEventForwarderFactory;
-import org.opennms.core.event.forwarder.kafka.KafkaEventIpcManagerAdapter;
-import org.opennms.core.event.forwarder.kafka.KafkaEventSubscriptionService;
+import org.deltav.core.event.forwarder.kafka.KafkaEventForwarder;
+import org.deltav.core.event.forwarder.kafka.KafkaEventForwarderFactory;
+import org.deltav.core.event.forwarder.kafka.KafkaEventIpcManagerAdapter;
+import org.deltav.core.event.forwarder.kafka.KafkaEventSubscriptionService;
 import org.opennms.netmgt.events.api.EventIpcManager;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.SmartLifecycle;

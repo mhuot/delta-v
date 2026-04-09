@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.perspectivepoller.boot;
+package org.deltav.netmgt.perspectivepoller.boot;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,8 +56,8 @@ import org.opennms.netmgt.threshd.api.ThresholdingService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
-import org.opennms.core.daemon.common.XmlConfigPostProcessor;
+import org.deltav.core.daemon.common.SpringServiceDaemonSmartLifecycle;
+import org.deltav.core.daemon.common.XmlConfigPostProcessor;
 import org.springframework.context.SmartLifecycle;
 
 /**

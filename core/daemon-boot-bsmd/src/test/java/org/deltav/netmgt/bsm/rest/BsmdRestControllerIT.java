@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.bsm.rest;
+package org.deltav.netmgt.bsm.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -40,9 +40,9 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.opennms.netmgt.bsm.boot.BsmdApplication;
-import org.opennms.netmgt.bsm.rest.model.BusinessServiceDto;
-import org.opennms.netmgt.bsm.rest.model.ReduceFunctionDto;
+import org.deltav.netmgt.bsm.boot.BsmdApplication;
+import org.deltav.netmgt.bsm.rest.model.BusinessServiceDto;
+import org.deltav.netmgt.bsm.rest.model.ReduceFunctionDto;
 import org.opennms.netmgt.bsm.service.AlarmProvider;
 import org.opennms.netmgt.events.api.EventSubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;

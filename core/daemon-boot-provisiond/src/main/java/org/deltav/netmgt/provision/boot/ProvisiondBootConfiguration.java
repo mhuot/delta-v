@@ -1,4 +1,4 @@
-package org.opennms.netmgt.provision.boot;
+package org.deltav.netmgt.provision.boot;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,10 +23,10 @@ import org.opennms.netmgt.provision.SnmpMetadataProvisioningAdapter;
 
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.opennms.core.concurrent.PausibleScheduledThreadPoolExecutor;
-import org.opennms.core.daemon.common.JdbcDistPollerDao;
-import org.opennms.core.daemon.common.JdbcInterfaceToNodeCache;
-import org.opennms.core.daemon.common.NoOpEntityScopeProvider;
-import org.opennms.core.daemon.registry.DetectorRegistryConfiguration;
+import org.deltav.core.daemon.common.JdbcDistPollerDao;
+import org.deltav.core.daemon.common.JdbcInterfaceToNodeCache;
+import org.deltav.core.daemon.common.NoOpEntityScopeProvider;
+import org.deltav.core.daemon.registry.DetectorRegistryConfiguration;
 import org.opennms.core.mate.api.EntityScopeProvider;
 import org.opennms.core.soa.ServiceRegistry;
 import org.opennms.core.soa.support.DefaultServiceRegistry;
@@ -105,7 +105,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.FileSystemResource;
-import org.opennms.core.daemon.common.SpringServiceDaemonSmartLifecycle;
+import org.deltav.core.daemon.common.SpringServiceDaemonSmartLifecycle;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;

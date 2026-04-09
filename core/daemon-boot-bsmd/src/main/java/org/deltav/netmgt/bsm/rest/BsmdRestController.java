@@ -19,16 +19,16 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.bsm.rest;
+package org.deltav.netmgt.bsm.rest;
 
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
-import org.opennms.netmgt.bsm.rest.mapper.BusinessServiceMapper;
-import org.opennms.netmgt.bsm.rest.model.BusinessServiceDto;
-import org.opennms.netmgt.bsm.rest.model.BusinessServiceStatusDto;
-import org.opennms.netmgt.bsm.rest.model.EdgeDto;
+import org.deltav.netmgt.bsm.rest.mapper.BusinessServiceMapper;
+import org.deltav.netmgt.bsm.rest.model.BusinessServiceDto;
+import org.deltav.netmgt.bsm.rest.model.BusinessServiceStatusDto;
+import org.deltav.netmgt.bsm.rest.model.EdgeDto;
 import org.opennms.netmgt.bsm.service.BusinessServiceManager;
 import org.opennms.netmgt.bsm.service.BusinessServiceStateMachine;
 import org.opennms.netmgt.bsm.service.model.BusinessService;

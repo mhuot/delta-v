@@ -1,4 +1,4 @@
-package org.opennms.netmgt.syslogd.boot;
+package org.deltav.netmgt.syslogd.boot;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

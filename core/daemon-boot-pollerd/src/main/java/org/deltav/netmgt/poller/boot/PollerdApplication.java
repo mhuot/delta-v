@@ -1,4 +1,4 @@
-package org.opennms.netmgt.poller.boot;
+package org.deltav.netmgt.poller.boot;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

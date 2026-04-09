@@ -19,7 +19,7 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.netmgt.telemetry.boot;
+package org.deltav.netmgt.telemetry.boot;
 
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.opennms.netmgt.dao.api.SessionUtils;

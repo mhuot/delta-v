@@ -19,12 +19,12 @@
  * language governing permissions and limitations under the
  * License.
  */
-package org.opennms.minion.boot;
+package org.deltav.minion.boot;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import org.opennms.core.daemon.registry.MonitorRegistryConfiguration;
+import org.deltav.core.daemon.registry.MonitorRegistryConfiguration;
 import org.opennms.netmgt.poller.ServiceMonitorRegistry;
 import org.opennms.netmgt.poller.client.rpc.PollerClientRpcModule;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
