@@ -1,4 +1,4 @@
-<model-import xmlns="http://xmlns.opennms.org/xsd/config/model-import" date-stamp="2026-03-21T15:16:09.000Z" foreign-source="cloud-services" last-import="2026-04-09T11:50:00.028Z">
+<model-import xmlns="http://xmlns.opennms.org/xsd/config/model-import" date-stamp="2026-03-21T15:16:09.000Z" foreign-source="cloud-services" last-import="2026-04-09T14:09:00.012Z">
    <node foreign-id="the-internet" node-label="The Internet">
       <interface ip-addr="172.18.0.1" managed="true" status="1" snmp-primary="N">
          <monitored-service service-name="GoogleCloud"/>

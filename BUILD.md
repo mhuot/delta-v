@@ -1,31 +1,29 @@
-# Building Delta-V from Scratch
+# Building Delta-V
 
-This guide covers building the OpenNMS Delta-V microservice architecture from source,
-producing Docker images, and deploying locally.
+This guide covers building Delta-V from source and deploying locally.
 
 ## Prerequisites
 
 | Requirement | Version | Notes |
 |-------------|---------|-------|
-| Java | JDK 17 (exact) | Enforced range `[17,18)`. Temurin recommended. |
-| Java | JDK 21 | Required for `core/db-init` Spring Boot module only. |
-| Docker Desktop | 4.x+ | **16 GB memory** required for full profile (16 JVMs). 8 GB causes OOM kills. |
-| Perl | 5.x | Required by `compile.pl` / `assemble.pl` wrappers. |
-| pnpm | 10.24+ | For the Vue UI build (invoked automatically by Maven). |
-| net-snmp | any | Optional. `snmptrap` needed for E2E tests. |
+| Java | JDK 21 | Temurin recommended. Auto-detected on macOS. |
+| Docker Desktop | 4.x+ | **16 GB memory** required for full profile. |
+| net-snmp | any | Optional — `snmptrap` needed for E2E tests. |
 
 ### Docker Desktop Memory
 
-Open Docker Desktop > Settings > Resources and set Memory to **16 GB** (or higher).
-With the full profile, 16 daemon JVMs + webapp + minion use ~14 GB.
+Open Docker Desktop → Settings → Resources and set Memory to **16 GB** (or higher).
+The full profile runs 16 containers.
 
 ### Java Home
 
-If `JAVA_HOME` is not set, the build scripts auto-detect Temurin 17 on macOS:
+If `JAVA_HOME` is not set, `build.sh` auto-detects Temurin 21 on macOS:
 
 ```bash
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
 ```
+
+Or use `jenv` to manage Java versions.
 
 ## Quick Start
 
@@ -34,253 +32,156 @@ The fastest path from a clean checkout to a running system:
 ```bash
 cd opennms-container/delta-v
 
-# Full build: compile + assemble + overlay + Docker images (~45 min first time)
+# Full build: compile + JRE image + layered daemon images
 ./build.sh
 
-# Deploy
-docker compose up -d                           # Base: postgres + kafka + webapp + minion
-COMPOSE_PROFILES=full docker compose up -d     # All 17 services
+# Deploy all 16 services
+./deploy.sh up full
+
+# Check health (wait ~45s for startup)
+./deploy.sh status
 ```
 
-## Build Steps (Manual)
-
-If you prefer to run each phase individually, or need to rebuild only part of the
-stack, here are the steps that `./build.sh` performs:
+## Build Steps
 
 ### 1. Compile
 
-Full Maven compile of all modules:
-
-```bash
-./compile.pl -DskipTests
-```
-
-This takes 30-60 minutes on a first run. Subsequent incremental builds are faster.
-
-### 2. Assemble
-
-Produces the Horizon distribution tarball and the Daemon (Sentinel-based) assembly:
-
-```bash
-# Horizon distribution (populates opennms-container/core/tarball-root/)
-./assemble.pl -Dopennms.home=/opt/opennms -DskipTests -p dir
-
-# Container features (Karaf feature descriptors)
-./maven/bin/mvn -DskipTests -pl container/features install
-
-# Sentinel features (Karaf assembly for daemon containers)
-./maven/bin/mvn -DskipTests -pl features/container/sentinel install
-
-# Daemon assembly (produces the tarball used by opennms-container/sentinel/)
-cd opennms-assemblies/daemon && ../../maven/bin/mvn -DskipTests install && cd ../..
-
-# Alarmd assembly
-cd opennms-assemblies/alarmd && ../../maven/bin/mvn -DskipTests install && cd ../..
-```
-
-### 3. Webapp Overlay
-
-Copies updated webapp JARs and config into the overlay directory that gets
-bind-mounted into the webapp container:
+Maven builds all 22 modules (parent + 21 under `core/`):
 
 ```bash
 cd opennms-container/delta-v
-./build.sh overlay
+./build.sh compile
 ```
 
-### 4. Docker Images
+Or directly with Maven:
 
-Builds three images:
+```bash
+mvn clean install -DskipTests    # ~16s incremental, ~45s clean
+```
 
-| Image | Source | Purpose |
-|-------|--------|---------|
-| `opennms/horizon` | `opennms-container/core/` | Webapp container |
-| `opennms/daemon` | `opennms-container/sentinel/` | All 14 daemon containers |
-| `opennms/db-init` | `core/db-init/` | Schema migration (run-and-exit, ~312 MB) |
+GroupIds are `org.deltav.core` for delta-v modules and `org.opennms.core` for the
+horizon-derived `opennms-model-jakarta` module. Horizon dependencies are pulled from
+the `pbrane/delta-v-horizon` GitHub Packages repository (version managed by
+`deltav.horizon.version` in the root POM).
+
+### 2. Build Docker Images
 
 ```bash
 cd opennms-container/delta-v
-./build.sh images
+
+# Build JRE base image (only needed once, or after JRE changes)
+./build.sh jre
+
+# Build all Delta-V images (daemon-base + 12 per-daemon + minion-boot + db-init)
+./build.sh deltav
 ```
 
-**Docker Desktop buildx note:** Docker Desktop defaults to the `desktop-linux` buildx
-instance, but the Makefiles require `default`. The `build.sh` script handles this
-automatically. If building manually:
+The layered image build:
+1. `opennms/jre-deltav:21` — jlink custom JRE on Alpine 3.21 (22 modules, ~143MB)
+2. `opennms/daemon-base` — shared libraries (~321 JARs deduped across 12 daemons, ~415MB)
+3. `opennms/<daemon>` — per-daemon overlay (unique libs + thin app JAR)
+4. `opennms/minion-boot` — Spring Boot 4 Minion fat JAR
+5. `opennms/db-init` — one-shot Liquibase schema migration
+
+### 3. Full Build (All Steps)
 
 ```bash
-docker context use default
-cd opennms-container/core && make image && cd ../..
-cd opennms-container/sentinel && make image && cd ../..
-docker image tag opennms/sentinel:36.0.0-SNAPSHOT opennms/daemon:36.0.0-SNAPSHOT
+cd opennms-container/delta-v
+./build.sh          # compile + jre (if missing) + deltav
 ```
-
-The sentinel Makefile tags its output as `opennms/sentinel`, but the docker-compose
-expects `opennms/daemon`. The re-tag step is required when building manually.
 
 ## Deployment
 
-### Compose Profiles
-
-The docker-compose uses native profiles to control which daemons run:
-
-| Profile | Services | Use Case |
-|---------|----------|----------|
-| _(none)_ | postgres, kafka, db-init, webapp, minion | Webapp-only development |
-| `lite` | + pollerd, collectd, rtcd, notifd, discovery, provisiond, bsmd, alarmd | Core monitoring without passive receivers |
-| `passive` | + trapd, syslogd, eventtranslator | Trap/syslog processing |
-| `full` | All 14 daemon containers | Complete Delta-V deployment |
+### Deploy Scripts
 
 ```bash
 cd opennms-container/delta-v
 
-# Base profile (webapp + minion only)
-docker compose up -d
-
-# Lite profile
-COMPOSE_PROFILES=lite docker compose up -d
-
-# Full profile (all 17 services)
-COMPOSE_PROFILES=full docker compose up -d
+./deploy.sh up full     # Start all 16 services
+./deploy.sh up lite     # Core monitoring only
+./deploy.sh status      # Check container health
+./deploy.sh down        # Stop (preserve data)
+./deploy.sh reset       # Stop and wipe all data
+./deploy.sh logs trapd  # Tail logs for a specific service
 ```
+
+### Compose Profiles
+
+| Profile | Services |
+|---------|----------|
+| `lite` | postgres, kafka, db-init, minion, alarmd, pollerd, provisiond, discovery, bsmd |
+| `passive` | + trapd, syslogd, eventtranslator |
+| `full` | All 16: + collectd, enlinkd, perspectivepollerd, telemetryd, trapd, syslogd, eventtranslator |
 
 ### Verifying Health
 
-All containers expose health checks. Check status with:
-
 ```bash
-COMPOSE_PROFILES=full docker compose ps
+./deploy.sh status
 ```
 
-Expected: all containers show `(healthy)` except:
-- `db-init` — exits with code 0 after schema migration
-- `minion` — shows `(unhealthy)` because the Echo RPC (passive) check fails
-  without a Core RPC responder. Kafka RPC/Sink/Twin connections are healthy.
-
-Webapp REST API:
-```bash
-curl -u admin:admin http://localhost:8980/opennms/rest/info
-```
-
-### Clean Restart
-
-To wipe all data and start fresh:
-
-```bash
-cd opennms-container/delta-v
-./build.sh clean              # docker compose down -v
-docker compose up -d          # fresh deployment
-```
-
-Or manually:
-
-```bash
-COMPOSE_PROFILES=full docker compose down -v
-COMPOSE_PROFILES=full docker compose up -d
-```
+Expected: all containers show `(healthy)` except `db-init` (exits after schema migration).
 
 ## Rebuilding Individual Components
 
-After the initial build, you rarely need to rebuild everything. Common scenarios:
+After the initial build, you rarely need to rebuild everything.
 
-### Changed a daemon-loader module
+### Changed a daemon-boot module
 
-Rebuild the module, then recreate the affected container:
-
-```bash
-./compile.pl -DskipTests --projects :opennms-daemon-loader-alarmd -am install
-docker compose up -d --force-recreate alarmd
-```
-
-### Changed core/event-forwarder-kafka
-
-This JAR is bind-mounted from the build tree into daemon containers, so just rebuild:
+Rebuild the module, rebuild the image, and redeploy:
 
 ```bash
-./compile.pl -DskipTests --projects :org.opennms.core.event-forwarder-kafka -am install
-COMPOSE_PROFILES=full docker compose up -d --force-recreate
-```
-
-### Changed opennms-webapp
-
-Rebuild the module, update the overlay, and restart:
-
-```bash
-./maven/bin/mvn -DskipTests -pl opennms-webapp -am install
-cd opennms-container/delta-v && ./build.sh overlay
-docker compose up -d --force-recreate webapp
-```
-
-### Changed Liquibase schema or db-init module
-
-Rebuild the schema module, package the db-init fat JAR, rebuild the image,
-and restart with clean volumes:
-
-```bash
-./maven/bin/mvn -DskipTests -pl core/schema install
-cd core/db-init && \
-  JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home \
-  ../../maven/bin/mvn -DskipTests package && \
-  docker build -t opennms/db-init:36.0.0-SNAPSHOT . && cd ../..
+mvn -DskipTests -pl :org.opennms.core.daemon-boot-alarmd install
 cd opennms-container/delta-v
-COMPOSE_PROFILES=full docker compose down -v
-COMPOSE_PROFILES=full docker compose up -d
+./build.sh deltav
+./deploy.sh down && ./deploy.sh up full
 ```
 
-### Changed Karaf features.xml
+### Changed daemon-common (shared infrastructure)
 
-The features.xml overlay is pre-built and shared by webapp and minion. If you change
-`container/features/src/main/resources/features.xml`:
+All daemons depend on this — rebuild everything:
 
 ```bash
-./maven/bin/mvn -DskipTests -pl container/features install
+mvn -DskipTests install
+cd opennms-container/delta-v && ./build.sh deltav
+./deploy.sh down && ./deploy.sh up full
 ```
 
-Then extract the assembled features.xml from the image and patch as needed.
-See the `webapp-overlay/system/` directory for the current overlay.
-
-### Picking Up New JARs in Daemon Containers
-
-Daemon containers cache JARs in named Docker volumes. After rebuilding JARs that
-are overlayed into the Karaf `system/` directory, you must delete the volume:
+### Changed opennms-model-jakarta
 
 ```bash
-docker volume rm delta-v_alarmd-data
-docker compose up -d --force-recreate alarmd
+mvn -DskipTests -pl :org.opennms.core.model-jakarta install
+cd opennms-container/delta-v && ./build.sh deltav
+./deploy.sh down && ./deploy.sh up full
 ```
 
-Or use `docker compose down -v` to remove all volumes at once.
+### Changed Liquibase schema or db-init
+
+```bash
+mvn -DskipTests -pl :org.opennms.core.db-init package
+cd opennms-container/delta-v
+./build.sh deltav
+./deploy.sh reset    # Must wipe data for schema changes
+./deploy.sh up full
+```
 
 ## End-to-End Testing
 
-An integration test script validates the full trap-to-alarm pipeline:
-
 ```bash
 cd opennms-container/delta-v
+./deploy.sh up full    # Must be running
 
-# Requires: passive profile + snmptrap (net-snmp)
-COMPOSE_PROFILES=full docker compose up -d
-./test-e2e.sh
+# Individual suites
+./test-e2e.sh              # Core: trap → provision → alarm lifecycle
+./test-minion-e2e.sh       # Minion: trap → Kafka Sink → alarm lifecycle
+./test-minion-rpc-e2e.sh   # Minion RPC: provision → detect → poll
+./test-syslog-e2e.sh       # Syslog: Cisco syslog → alarm lifecycle
+./test-passive-e2e.sh      # Passive: syslog → EventTranslator → Twin API → outage
+./test-collectd-e2e.sh     # Collectd: SNMP collection health
+./test-perspective-e2e.sh  # Perspective: remote-location polling + outage lifecycle
+./test-enlinkd-e2e.sh      # Enlinkd: LLDP topology via Containerlab cEOS
 ```
-
-The test sends SNMP traps through the pipeline and verifies:
-1. **Phase 1:** coldStart trap -> newSuspect -> Provisiond -> node created
-2. **Phase 2:** linkDown trap -> EventTranslator -> Alarmd -> alarm in PostgreSQL
-3. **Phase 3:** linkUp trap -> EventTranslator -> Alarmd -> alarm cleared
-
-The database must be clean (no pre-existing test node) for Phase 1 to pass.
-Use `./build.sh clean` before re-running if the test node already exists.
 
 ## Troubleshooting
-
-### `make image` fails with buildx error
-
-```
-DOCKERX_INSTANCE is not set but there is a non-default docker buildx instance
-active: desktop-linux
-```
-
-Fix: `docker context use default` before running `make image`. The `build.sh` script
-handles this automatically.
 
 ### Container exits with code 137
 
@@ -288,37 +189,36 @@ Out-of-memory kill. Increase Docker Desktop memory to 16 GB.
 
 ### db-init fails with Liquibase error
 
-Check logs: `docker compose logs db-init`. If a table/sequence doesn't exist,
-the changeset may need a `<preConditions onFail="MARK_RAN">` guard. This is common
-when changesets drop objects that were already removed by earlier migrations.
-
-### Webapp fails with ClassNotFoundException
-
-The webapp overlay JAR at `webapp-jetty-webinf-overlay/lib/opennms-webapp-*.jar`
-may be stale. Rebuild and re-run the overlay:
-
 ```bash
-./maven/bin/mvn -DskipTests -pl opennms-webapp -am install
-cd opennms-container/delta-v && ./build.sh overlay
-docker compose up -d --force-recreate webapp
+docker logs delta-v-db-init-1
 ```
 
-### Daemon container stays unhealthy
+If a table/sequence doesn't exist, the changeset may need a
+`<preConditions onFail="MARK_RAN">` guard.
 
-Check Karaf logs inside the container:
+### ClassNotFoundException at runtime
+
+Check if the class was ported to `model-jakarta`. Some horizon utility classes
+may still need porting. Check:
 
 ```bash
-docker exec delta-v-alarmd cat /opt/sentinel/data/log/karaf.log | tail -50
+docker logs delta-v-<daemon> 2>&1 | grep -E "ClassNotFoundException|NoClassDefFoundError"
+```
+
+### Daemon fails to start
+
+Spring Boot daemons log to stdout. Check container logs:
+
+```bash
+docker logs delta-v-alarmd
 ```
 
 Common causes:
-- Missing bundles: check that the feature was added to `features/container/sentinel/pom.xml`
-  `<installedFeatures>` so Maven places the JARs in `system/`.
-- OSGi resolution failures: read error messages backwards from "Unable to resolve root".
-- Stale volume data: `docker volume rm delta-v_<service>-data` and recreate.
+- Missing Kafka connectivity (check `delta-v-kafka-1` is healthy)
+- PostgreSQL not ready (check `delta-v-postgres-1` is healthy)
+- Stale `.m2` SNAPSHOT artifacts (run `mvn clean install -DskipTests`)
 
 ## Architecture Reference
 
-See `docs/plans/2026-03-07-strike-fighter-completion-design.md` for the full
-Delta-V microservice architecture, including Kafka topic design, TSID assignment,
-and the event routing model.
+Design documents are in `docs/plans/` and `docs/superpowers/`.
+See [README.md](README.md) for the full architecture overview.
