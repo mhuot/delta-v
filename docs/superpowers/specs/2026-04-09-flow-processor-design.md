@@ -151,6 +151,8 @@ Check cache: is (5, 12) already marked?
 
 `ConcurrentHashMap<Long, Set<Integer>>` with scheduled cleanup sweep. One DB write per interface per TTL period instead of per-flow.
 
+**Cache invalidation:** The flow-enricher subscribes to `nodeDeleted` events on the Kafka event topic. When a node is deleted, all cache entries for that nodeId are evicted immediately. This prevents stale markings if a node is deleted and its ID reused, or if interfaces change after rediscovery.
+
 ### Dependencies
 
 - **Horizon JARs:** protocol adapters, classification engine, Flow model
@@ -236,7 +238,7 @@ Materialize to Elasticsearch (netflow_agg-YYYY.MM index)
 | `netflow_agg-YYYY.MM` | Windowed aggregation summaries | Always on |
 | `netflow-YYYY.MM` | Raw enriched flow documents | Off (configurable) |
 
-Uses the Elasticsearch Java REST client directly — no Jest, no Drift plugin, no horizon ES dependencies. Bulk indexing with configurable flush size and interval.
+Uses the official Elasticsearch Java client (`co.elastic.clients:elasticsearch-java`) for ES 8.x — no Jest, no Drift plugin, no deprecated HLRC, no horizon ES dependencies. Bulk indexing with configurable flush size and interval.
 
 ### Dependencies
 
@@ -385,6 +387,8 @@ flow-generator:
 
 The `flow-generator` image is a minimal Alpine container with `softflowd` installed, built as part of `build.sh deltav`. Exact image definition determined during Phase 3 implementation.
 
+**Template frequency:** NetFlow v9 and IPFIX are template-based — Minion must receive a Template FlowSet before decoding Data FlowSets. Templates are cached in Minion memory and lost on restart. Configure `softflowd` to send templates every 60 seconds. The E2E test should allow time for template receipt before expecting flow data.
+
 ### Test Flow
 
 1. Start `softflowd` flow generator targeting Minion
@@ -446,3 +450,13 @@ The `flow-generator` image is a minimal Alpine container with `softflowd` instal
 | KafkaFlowForwarder (horizon) | **Replaced** — flow-enricher publishes to `deltav-flows` |
 | DocumentEnricherImpl (horizon) | **Rewritten** — JDBC-based enrichment in flow-enricher (no Hibernate/DAO) |
 | AggregatedFlowQueryService (horizon) | **Future** — REST API for querying aggregated data (separate service or added to flow-aggregator later) |
+
+## Future Considerations (Out of Scope)
+
+| Item | Description |
+|------|-------------|
+| Custom field pass-through | Add `map<string, string> custom_fields` to FlowDocument proto for vendor-specific fields (Palo Alto, Cisco extensions). Wait for community feedback before designing. Additive proto change — non-breaking. |
+| Minion template persistence | Persist NetFlow v9/IPFIX templates to Kafka so Minion survives restarts without waiting for template retransmission. Requires Minion-level change in delta-v-horizon. |
+| Streaming telemetry protocols | JTI, OpenConfig, NXOS, BMP, Graphite — separate services with different data models and persistence paths. |
+| Flow query REST API | REST endpoint for querying aggregated flow data from ES. Either added to flow-aggregator or a separate query service. |
+| Grafana integration | Grafana dashboards querying ES indices directly or via the flow query API. |
