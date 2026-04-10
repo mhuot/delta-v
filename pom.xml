@@ -43,6 +43,9 @@
     <!-- Horizon JAR version (published by pbrane/delta-v-horizon) -->
     <deltav.horizon.version>1.0.7</deltav.horizon.version>
 
+    <!-- Spring Cloud release train (for flow-enricher / flow-aggregator) -->
+    <spring-cloud.version>2025.1.1</spring-cloud.version>
+
     <!-- Plugin versions not inherited from spring-boot-starter-parent -->
     <maven-enforcer-plugin.version>3.4.1</maven-enforcer-plugin.version>
   </properties>
@@ -101,7 +104,9 @@
   <!-- BOM import precedence: first declared wins.
        spring-boot-dependencies must come BEFORE the horizon BOM so that
        modern Jackson, SLF4J, logback, etc. are not downgraded by the
-       horizon POM's older managed versions. -->
+       horizon POM's older managed versions. Spring Cloud BOM sits between
+       so that it cannot override Boot's managed versions but still wins
+       over horizon for Spring Framework / Reactor / Micrometer. -->
   <dependencyManagement>
     <dependencies>
       <!-- Spring Boot BOM — must be first to ensure modern dep versions win -->
@@ -109,6 +114,15 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
         <version>4.0.3</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <!-- Spring Cloud BOM — for flow-enricher / flow-aggregator (Spring Cloud Stream) -->
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-dependencies</artifactId>
+        <version>${spring-cloud.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
