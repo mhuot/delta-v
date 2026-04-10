@@ -59,7 +59,7 @@ class FlowToDocumentMapperTest {
         when(flow.getVlan()).thenReturn(42);
 
         FlowDocumentProtos.FlowDocument doc = mapper.map(
-                flow, null, null, null, null, null, null, null);
+                flow, null, null, null, null, null, null, null, null, null, 0L);
 
         assertThat(doc.getTimestamp()).isEqualTo(1_700_000_000_000L);
         assertThat(doc.getSrcAddress()).isEqualTo("10.0.0.1");
@@ -82,7 +82,7 @@ class FlowToDocumentMapperTest {
         when(flow.getDeltaSwitched()).thenReturn(null);
 
         FlowDocumentProtos.FlowDocument doc = mapper.map(
-                flow, null, null, null, null, null, null, null);
+                flow, null, null, null, null, null, null, null, null, null, 0L);
 
         assertThat(doc.hasNumBytes()).isFalse();
         assertThat(doc.hasNumPackets()).isFalse();
@@ -104,7 +104,7 @@ class FlowToDocumentMapperTest {
         when(flow.getDeltaSwitched()).thenReturn(Instant.EPOCH);
 
         FlowDocumentProtos.FlowDocument doc = mapper.map(
-                flow, null, null, null, null, null, null, null);
+                flow, null, null, null, null, null, null, null, null, null, 0L);
 
         assertThat(doc.hasNumBytes()).isTrue();
         assertThat(doc.getNumBytes().getValue()).isEqualTo(0L);
@@ -124,7 +124,7 @@ class FlowToDocumentMapperTest {
                 42, "delta-v", "exporter-1", "Default");
 
         FlowDocumentProtos.FlowDocument doc = mapper.map(
-                flow, exporter, null, null, null, null, null, null);
+                flow, exporter, null, null, null, null, null, null, null, null, 0L);
 
         assertThat(doc.hasExporterNode()).isTrue();
         assertThat(doc.getExporterNode().getNodeId()).isEqualTo(42);
@@ -135,7 +135,7 @@ class FlowToDocumentMapperTest {
     @Test
     void omitsNodeInfoMessagesWhenLookupReturnedNull() {
         FlowDocumentProtos.FlowDocument doc = mapper.map(
-                flow, null, null, null, null, null, null, null);
+                flow, null, null, null, null, null, null, null, null, null, 0L);
 
         assertThat(doc.hasExporterNode()).isFalse();
         assertThat(doc.hasSrcNode()).isFalse();
@@ -145,7 +145,7 @@ class FlowToDocumentMapperTest {
     @Test
     void populatesApplicationAndLocalityFromEnrichmentParameters() {
         FlowDocumentProtos.FlowDocument doc = mapper.map(
-                flow, null, null, null, "HTTPS", "PRIVATE", "PUBLIC", "PUBLIC");
+                flow, null, null, null, "HTTPS", "PRIVATE", "PUBLIC", "PUBLIC", null, null, 0L);
 
         assertThat(doc.getApplication()).isEqualTo("HTTPS");
         assertThat(doc.getSrcLocality()).isEqualTo(FlowDocumentProtos.Locality.PRIVATE);
@@ -162,7 +162,7 @@ class FlowToDocumentMapperTest {
         when(flow.getEcn()).thenReturn(null);
 
         FlowDocumentProtos.FlowDocument doc = mapper.map(
-                flow, null, null, null, null, null, null, null);
+                flow, null, null, null, null, null, null, null, null, null, 0L);
 
         assertThat(doc.hasSrcPort()).isFalse();
         assertThat(doc.hasDstPort()).isFalse();
@@ -180,7 +180,7 @@ class FlowToDocumentMapperTest {
         when(flow.getEcn()).thenReturn(0);
 
         FlowDocumentProtos.FlowDocument doc = mapper.map(
-                flow, null, null, null, null, null, null, null);
+                flow, null, null, null, null, null, null, null, null, null, 0L);
 
         assertThat(doc.hasSrcPort()).isTrue();
         assertThat(doc.getSrcPort().getValue()).isEqualTo(0);
@@ -194,15 +194,15 @@ class FlowToDocumentMapperTest {
     void mapsDirectionEnum() {
         when(flow.getDirection()).thenReturn(Direction.INGRESS);
         FlowDocumentProtos.FlowDocument doc = mapper.map(
-                flow, null, null, null, null, null, null, null);
+                flow, null, null, null, null, null, null, null, null, null, 0L);
         assertThat(doc.getDirection()).isEqualTo(FlowDocumentProtos.Direction.INGRESS);
 
         when(flow.getDirection()).thenReturn(Direction.EGRESS);
-        doc = mapper.map(flow, null, null, null, null, null, null, null);
+        doc = mapper.map(flow, null, null, null, null, null, null, null, null, null, 0L);
         assertThat(doc.getDirection()).isEqualTo(FlowDocumentProtos.Direction.EGRESS);
 
         when(flow.getDirection()).thenReturn(Direction.UNKNOWN);
-        doc = mapper.map(flow, null, null, null, null, null, null, null);
+        doc = mapper.map(flow, null, null, null, null, null, null, null, null, null, 0L);
         assertThat(doc.getDirection()).isEqualTo(FlowDocumentProtos.Direction.DIRECTION_UNKNOWN);
     }
 
@@ -210,19 +210,19 @@ class FlowToDocumentMapperTest {
     void mapsNetflowVersionEnum() {
         when(flow.getNetflowVersion()).thenReturn(NetflowVersion.V9);
         FlowDocumentProtos.FlowDocument doc = mapper.map(
-                flow, null, null, null, null, null, null, null);
+                flow, null, null, null, null, null, null, null, null, null, 0L);
         assertThat(doc.getNetflowVersion()).isEqualTo(FlowDocumentProtos.NetflowVersion.V9);
 
         when(flow.getNetflowVersion()).thenReturn(NetflowVersion.V5);
-        doc = mapper.map(flow, null, null, null, null, null, null, null);
+        doc = mapper.map(flow, null, null, null, null, null, null, null, null, null, 0L);
         assertThat(doc.getNetflowVersion()).isEqualTo(FlowDocumentProtos.NetflowVersion.V5);
 
         when(flow.getNetflowVersion()).thenReturn(NetflowVersion.IPFIX);
-        doc = mapper.map(flow, null, null, null, null, null, null, null);
+        doc = mapper.map(flow, null, null, null, null, null, null, null, null, null, 0L);
         assertThat(doc.getNetflowVersion()).isEqualTo(FlowDocumentProtos.NetflowVersion.IPFIX);
 
         when(flow.getNetflowVersion()).thenReturn(NetflowVersion.SFLOW);
-        doc = mapper.map(flow, null, null, null, null, null, null, null);
+        doc = mapper.map(flow, null, null, null, null, null, null, null, null, null, 0L);
         assertThat(doc.getNetflowVersion()).isEqualTo(FlowDocumentProtos.NetflowVersion.SFLOW);
     }
 
@@ -230,12 +230,12 @@ class FlowToDocumentMapperTest {
     void mapsSamplingAlgorithmEnum() {
         when(flow.getSamplingAlgorithm()).thenReturn(SamplingAlgorithm.SystematicCountBasedSampling);
         FlowDocumentProtos.FlowDocument doc = mapper.map(
-                flow, null, null, null, null, null, null, null);
+                flow, null, null, null, null, null, null, null, null, null, 0L);
         assertThat(doc.getSamplingAlgorithm())
                 .isEqualTo(FlowDocumentProtos.SamplingAlgorithm.SYSTEMATIC_COUNT_BASED_SAMPLING);
 
         when(flow.getSamplingAlgorithm()).thenReturn(SamplingAlgorithm.Unassigned);
-        doc = mapper.map(flow, null, null, null, null, null, null, null);
+        doc = mapper.map(flow, null, null, null, null, null, null, null, null, null, 0L);
         assertThat(doc.getSamplingAlgorithm())
                 .isEqualTo(FlowDocumentProtos.SamplingAlgorithm.SAMPLING_ALGORITHM_UNKNOWN);
     }
@@ -250,7 +250,7 @@ class FlowToDocumentMapperTest {
                 3, "fs", "dst", "Default");
 
         FlowDocumentProtos.FlowDocument doc = mapper.map(
-                flow, exporter, src, dst, null, null, null, null);
+                flow, exporter, src, dst, null, null, null, null, null, null, 0L);
 
         assertThat(doc.hasExporterNode()).isTrue();
         assertThat(doc.getExporterNode().getNodeId()).isEqualTo(1);
@@ -263,11 +263,56 @@ class FlowToDocumentMapperTest {
     @Test
     void leavesApplicationAsUnknownWhenNullProvided() {
         FlowDocumentProtos.FlowDocument doc = mapper.map(
-                flow, null, null, null, null, null, null, null);
+                flow, null, null, null, null, null, null, null, null, null, 0L);
 
         assertThat(doc.getApplication()).isEqualTo("unknown");
         assertThat(doc.getSrcLocality()).isEqualTo(FlowDocumentProtos.Locality.LOCALITY_UNKNOWN);
         assertThat(doc.getDstLocality()).isEqualTo(FlowDocumentProtos.Locality.LOCALITY_UNKNOWN);
         assertThat(doc.getFlowLocality()).isEqualTo(FlowDocumentProtos.Locality.LOCALITY_UNKNOWN);
+    }
+
+    @Test
+    void populatesHostLocationAndClockCorrectionWhenProvided() {
+        FlowDocumentProtos.FlowDocument doc = mapper.map(
+                flow, null, null, null,
+                "unknown", "UNKNOWN", "UNKNOWN", "UNKNOWN",
+                "router-1.example.com", "MainOffice", 123L);
+
+        assertThat(doc.getHost()).isEqualTo("router-1.example.com");
+        assertThat(doc.getLocation()).isEqualTo("MainOffice");
+        assertThat(doc.getClockCorrection()).isEqualTo(123L);
+    }
+
+    @Test
+    void leavesHostAndLocationEmptyWhenNullProvided() {
+        FlowDocumentProtos.FlowDocument doc = mapper.map(
+                flow, null, null, null,
+                "unknown", "UNKNOWN", "UNKNOWN", "UNKNOWN",
+                null, null, 0L);
+
+        assertThat(doc.getHost()).isEmpty();
+        assertThat(doc.getLocation()).isEmpty();
+        assertThat(doc.getClockCorrection()).isEqualTo(0L);
+    }
+
+    @Test
+    void omitsSamplingIntervalWhenFlowGetterReturnsNull() {
+        when(flow.getSamplingInterval()).thenReturn(null);
+
+        FlowDocumentProtos.FlowDocument doc = mapper.map(
+                flow, null, null, null, null, null, null, null, null, null, 0L);
+
+        assertThat(doc.hasSamplingInterval()).isFalse();
+    }
+
+    @Test
+    void populatesSamplingIntervalWhenFlowGetterReturnsZero() {
+        when(flow.getSamplingInterval()).thenReturn(0.0);
+
+        FlowDocumentProtos.FlowDocument doc = mapper.map(
+                flow, null, null, null, null, null, null, null, null, null, 0L);
+
+        assertThat(doc.hasSamplingInterval()).isTrue();
+        assertThat(doc.getSamplingInterval().getValue()).isEqualTo(0.0);
     }
 }

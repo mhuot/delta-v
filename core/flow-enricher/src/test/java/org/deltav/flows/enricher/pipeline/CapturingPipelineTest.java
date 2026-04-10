@@ -29,7 +29,7 @@ import org.opennms.netmgt.flows.processing.ProcessingOptions;
 class CapturingPipelineTest {
 
     @Test
-    void capturesFlowsAndSourcePassedToProcess() throws Exception {
+    void capturesFlowsAndSourcePassedToProcess() {
         CapturingPipeline pipeline = new CapturingPipeline();
         Flow flow1 = mock(Flow.class);
         Flow flow2 = mock(Flow.class);
@@ -50,7 +50,7 @@ class CapturingPipelineTest {
     }
 
     @Test
-    void secondProcessCallReplacesFirstCaptures() throws Exception {
+    void secondProcessCallReplacesFirstCaptures() {
         CapturingPipeline pipeline = new CapturingPipeline();
         Flow flow1 = mock(Flow.class);
         Flow flow2 = mock(Flow.class);

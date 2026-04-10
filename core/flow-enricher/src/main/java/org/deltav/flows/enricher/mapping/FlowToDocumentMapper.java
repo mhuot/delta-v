@@ -52,6 +52,32 @@ import org.opennms.netmgt.flows.api.Flow;
  */
 public class FlowToDocumentMapper {
 
+    /**
+     * Build a {@link FlowDocumentProtos.FlowDocument} from a horizon {@link Flow}
+     * and its enrichment context.
+     *
+     * @param flow the parsed horizon flow record
+     * @param exporterNodeInfo resolved node info for the exporter, or {@code null}
+     *                         when no matching node was found
+     * @param srcNodeInfo      resolved node info for the source IP, or {@code null}
+     * @param destNodeInfo     resolved node info for the destination IP, or {@code null}
+     * @param application      application classification string (e.g. {@code "HTTPS"}),
+     *                         or {@code null} which maps to {@code "unknown"}
+     * @param srcLocality      source locality (one of {@code "PRIVATE"} / {@code "PUBLIC"},
+     *                         or {@code null} / other values for unknown)
+     * @param dstLocality      destination locality (same semantics as {@code srcLocality})
+     * @param flowLocality     aggregate flow locality (same semantics as {@code srcLocality})
+     * @param host             hostname or FQDN of the exporter (typically derived from
+     *                         {@code FlowSource.getSourceAddress()}). Empty or {@code null}
+     *                         leaves the proto field unset (empty string default).
+     * @param location         Minion location string (typically derived from
+     *                         {@code FlowSource.getLocation()}). Empty or {@code null}
+     *                         leaves the proto field unset.
+     * @param clockCorrection  clock-skew correction in milliseconds applied to timestamps.
+     *                         Phase 1.5 always passes {@code 0}; Phase 1.6 will compute
+     *                         actual skew. Always written to the proto (0 is a valid value).
+     * @return a fully populated {@code FlowDocument} proto message
+     */
     public FlowDocumentProtos.FlowDocument map(
             Flow flow,
             JdbcNodeInfoLookup.NodeInfo exporterNodeInfo,
@@ -60,7 +86,10 @@ public class FlowToDocumentMapper {
             String application,
             String srcLocality,
             String dstLocality,
-            String flowLocality) {
+            String flowLocality,
+            String host,
+            String location,
+            long clockCorrection) {
 
         FlowDocumentProtos.FlowDocument.Builder builder = FlowDocumentProtos.FlowDocument.newBuilder();
 
@@ -222,6 +251,21 @@ public class FlowToDocumentMapper {
         builder.setSrcLocality(mapLocality(srcLocality));
         builder.setDstLocality(mapLocality(dstLocality));
         builder.setFlowLocality(mapLocality(flowLocality));
+
+        // Exporter host/location enrichment (derived from FlowSource by the caller).
+        // Both are proto3 scalar strings that default to "" when unset, so we only
+        // write non-null, non-empty values to keep "unknown" distinguishable from
+        // "reported but empty".
+        if (host != null && !host.isEmpty()) {
+            builder.setHost(host);
+        }
+        if (location != null && !location.isEmpty()) {
+            builder.setLocation(location);
+        }
+
+        // Clock skew correction (milliseconds). Plain uint64; 0 is a valid value
+        // meaning "no correction applied", so we always set it.
+        builder.setClockCorrection(clockCorrection);
 
         return builder.build();
     }
