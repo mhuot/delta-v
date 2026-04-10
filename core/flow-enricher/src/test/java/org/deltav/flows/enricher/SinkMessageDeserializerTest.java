@@ -24,52 +24,62 @@ import org.junit.jupiter.api.Test;
 import org.opennms.core.ipc.sink.model.SinkMessage;
 import org.opennms.netmgt.telemetry.common.ipc.TelemetryProtos;
 
+@SuppressWarnings("deprecation") // intentionally exercises the deprecated single-arg overload
 class SinkMessageDeserializerTest {
 
     private final SinkMessageDeserializer deserializer = new SinkMessageDeserializer();
 
     @Test
     void deserializesSingleChunkMessage() {
-        TelemetryProtos.TelemetryMessageLog messageLog = TelemetryProtos.TelemetryMessageLog.newBuilder()
-                .setLocation("Default")
-                .setSystemId("minion-01")
-                .setSourceAddress("192.168.1.1")
-                .setSourcePort(4729)
-                .build();
+        byte[] bytes = buildSinkMessageBytes("test-1", samplePayloadBytes(), 0, 1);
 
-        SinkMessage sinkMessage = SinkMessage.newBuilder()
-                .setMessageId("test-1")
-                .setContent(ByteString.copyFrom(messageLog.toByteArray()))
-                .setCurrentChunkNumber(0)
-                .setTotalChunks(1)
-                .build();
-
-        TelemetryProtos.TelemetryMessageLog result = deserializer.deserialize(sinkMessage.toByteArray());
+        DeserializedSinkMessage result = deserializer.deserialize(bytes);
 
         assertThat(result).isNotNull();
-        assertThat(result.getLocation()).isEqualTo("Default");
-        assertThat(result.getSystemId()).isEqualTo("minion-01");
-        assertThat(result.getSourceAddress()).isEqualTo("192.168.1.1");
-        assertThat(result.getSourcePort()).isEqualTo(4729);
+        assertThat(result.messageLog()).isNotNull();
+        assertThat(result.messageLog().getLocation()).isEqualTo("Default");
+        assertThat(result.messageLog().getSystemId()).isEqualTo("minion-01");
+        assertThat(result.messageLog().getSourceAddress()).isEqualTo("192.168.1.1");
+        assertThat(result.messageLog().getSourcePort()).isEqualTo(4729);
+    }
+
+    @Test
+    void deserializedMessageModuleIdIsNullForSingleArgOverload() {
+        // The Sink envelope does not carry a moduleId field (see DeserializedSinkMessage
+        // javadoc); the single-arg deserializer therefore always reports null. Wiring
+        // topic-derived moduleId through the function signature is a later commit.
+        byte[] bytes = buildSinkMessageBytes("test-moduleid", samplePayloadBytes(), 0, 1);
+
+        DeserializedSinkMessage result = deserializer.deserialize(bytes);
+
+        assertThat(result).isNotNull();
+        assertThat(result.moduleId()).isNull();
+    }
+
+    @Test
+    void deserializedMessageExposesModuleIdFromTwoArgOverload() {
+        byte[] bytes = buildSinkMessageBytes("test-moduleid-2arg", samplePayloadBytes(), 0, 1);
+
+        DeserializedSinkMessage result = deserializer.deserialize("Telemetry-Netflow-9", bytes);
+
+        assertThat(result).isNotNull();
+        assertThat(result.moduleId()).isEqualTo("Telemetry-Netflow-9");
+        assertThat(result.messageLog()).isNotNull();
+        assertThat(result.messageLog().getLocation()).isEqualTo("Default");
     }
 
     @Test
     void chunkedMessageIsDroppedAndReturnsNull() {
-        TelemetryProtos.TelemetryMessageLog messageLog = TelemetryProtos.TelemetryMessageLog.newBuilder()
-                .setLocation("Default")
-                .setSystemId("minion-01")
-                .setSourceAddress("192.168.1.1")
-                .setSourcePort(4729)
-                .build();
+        byte[] bytes = buildSinkMessageBytes("test-chunked", samplePayloadBytes(), 0, 3);
 
-        SinkMessage sinkMessage = SinkMessage.newBuilder()
-                .setMessageId("test-chunked")
-                .setContent(ByteString.copyFrom(messageLog.toByteArray()))
-                .setCurrentChunkNumber(0)
-                .setTotalChunks(3)
-                .build();
+        assertThat(deserializer.deserialize(bytes)).isNull();
+    }
 
-        assertThat(deserializer.deserialize(sinkMessage.toByteArray())).isNull();
+    @Test
+    void chunkedMessageIsDroppedAndReturnsNullForTwoArgOverload() {
+        byte[] bytes = buildSinkMessageBytes("test-chunked-2arg", samplePayloadBytes(), 0, 3);
+
+        assertThat(deserializer.deserialize("Telemetry-Netflow-5", bytes)).isNull();
     }
 
     @Test
@@ -80,5 +90,30 @@ class SinkMessageDeserializerTest {
     @Test
     void nullBytesReturnNull() {
         assertThat(deserializer.deserialize(null)).isNull();
+    }
+
+    @Test
+    void nullBytesReturnNullForTwoArgOverload() {
+        assertThat(deserializer.deserialize("Telemetry-Netflow-5", null)).isNull();
+    }
+
+    private static byte[] samplePayloadBytes() {
+        return TelemetryProtos.TelemetryMessageLog.newBuilder()
+                .setLocation("Default")
+                .setSystemId("minion-01")
+                .setSourceAddress("192.168.1.1")
+                .setSourcePort(4729)
+                .build()
+                .toByteArray();
+    }
+
+    private static byte[] buildSinkMessageBytes(String messageId, byte[] payload, int currentChunk, int totalChunks) {
+        return SinkMessage.newBuilder()
+                .setMessageId(messageId)
+                .setContent(ByteString.copyFrom(payload))
+                .setCurrentChunkNumber(currentChunk)
+                .setTotalChunks(totalChunks)
+                .build()
+                .toByteArray();
     }
 }

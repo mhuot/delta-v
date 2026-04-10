@@ -23,6 +23,13 @@ spring:
           group: deltav-flow-enricher
         enrichFlows-out-0:
           destination: ${DELTAV_FLOWS_OUTPUT_TOPIC:deltav-flows}
+          # The function returns a List<byte[]> where each element is an
+          # already-serialized FlowDocument protobuf. useNativeEncoding=true
+          # tells Spring Cloud Function not to JSON-wrap the payload, which
+          # also lets the binder treat the List as a splitter (one Kafka
+          # record per list element) instead of a single JSON array.
+          producer:
+            use-native-encoding: true
       kafka:
         binder:
           brokers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}

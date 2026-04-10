@@ -222,6 +222,8 @@
       <dependency><groupId>org.opennms.features.enlinkd</groupId><artifactId>org.opennms.features.enlinkd.daemon</artifactId><version>${deltav.horizon.version}</version></dependency>
       <dependency><groupId>org.opennms.features.enlinkd</groupId><artifactId>org.opennms.features.enlinkd.service.impl</artifactId><version>${deltav.horizon.version}</version></dependency>
       <dependency><groupId>org.opennms.features.events</groupId><artifactId>org.opennms.features.events.kafka-consumer</artifactId><version>${deltav.horizon.version}</version></dependency>
+      <dependency><groupId>org.opennms.features.flows</groupId><artifactId>org.opennms.features.flows.api</artifactId><version>${deltav.horizon.version}</version></dependency>
+      <dependency><groupId>org.opennms.features.flows</groupId><artifactId>org.opennms.features.flows.processing</artifactId><version>${deltav.horizon.version}</version></dependency>
       <dependency><groupId>org.opennms.features.minion</groupId><artifactId>core-impl</artifactId><version>${deltav.horizon.version}</version></dependency>
       <dependency><groupId>org.opennms.features.minion.heartbeat</groupId><artifactId>org.opennms.features.minion.heartbeat.common</artifactId><version>${deltav.horizon.version}</version></dependency>
       <dependency><groupId>org.opennms.features.minion.heartbeat</groupId><artifactId>org.opennms.features.minion.heartbeat.producer</artifactId><version>${deltav.horizon.version}</version></dependency>
@@ -234,6 +236,8 @@
       <dependency><groupId>org.opennms.features.telemetry</groupId><artifactId>org.opennms.features.telemetry.daemon</artifactId><version>${deltav.horizon.version}</version></dependency>
       <dependency><groupId>org.opennms.features.telemetry</groupId><artifactId>org.opennms.features.telemetry.registry</artifactId><version>${deltav.horizon.version}</version></dependency>
       <dependency><groupId>org.opennms.features.telemetry.config</groupId><artifactId>org.opennms.features.telemetry.config.jaxb</artifactId><version>${deltav.horizon.version}</version></dependency>
+      <dependency><groupId>org.opennms.features.telemetry.protocols.netflow</groupId><artifactId>org.opennms.features.telemetry.protocols.netflow.adapter</artifactId><version>${deltav.horizon.version}</version></dependency>
+      <dependency><groupId>org.opennms.features.telemetry.protocols.sflow</groupId><artifactId>org.opennms.features.telemetry.protocols.sflow.adapter</artifactId><version>${deltav.horizon.version}</version></dependency>
       <dependency><groupId>org.opennms.features.topologies</groupId><artifactId>org.opennms.features.topologies.service.impl</artifactId><version>${deltav.horizon.version}</version></dependency>
       <dependency><groupId>org.opennms.protocols</groupId><artifactId>org.opennms.protocols.radius</artifactId><version>${deltav.horizon.version}</version></dependency>
 
