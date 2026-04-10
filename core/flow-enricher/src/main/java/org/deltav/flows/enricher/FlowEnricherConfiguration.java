@@ -17,6 +17,8 @@
 package org.deltav.flows.enricher;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import javax.sql.DataSource;
@@ -73,8 +75,13 @@ public class FlowEnricherConfiguration {
             JdbcNodeInfoLookup nodeInfoLookup,
             FlowLocalityCalculator localityCalculator,
             InterfaceMarkingCache interfaceMarkingCache) {
+        // The dispatch map is empty in Commit 3 (splitter refactor). Commit 5
+        // (Task 12) replaces Map.of() with the real ProtocolMessageProcessor
+        // beans keyed by moduleId (Telemetry-Netflow-5, Telemetry-Netflow-9,
+        // Telemetry-IPFIX, Telemetry-SFlow).
         return new FlowEnrichmentFunction(
-                deserializer, nodeInfoLookup, localityCalculator, interfaceMarkingCache);
+                deserializer, nodeInfoLookup, localityCalculator, interfaceMarkingCache,
+                Map.of());
     }
 
     /**
@@ -83,11 +90,12 @@ public class FlowEnricherConfiguration {
      * application.yml; the suffixes {@code -in-0} / {@code -out-0} are
      * generated automatically by Spring Cloud Function.
      *
-     * <p>Returning {@code null} from the inner function discards the message
-     * (it does not become an output record).
+     * <p>The splitter signature {@code Function<byte[], List<byte[]>>} emits
+     * zero or more output records per input record; an empty list discards
+     * the message entirely.
      */
     @Bean
-    Function<byte[], byte[]> enrichFlows(FlowEnrichmentFunction enrichmentFunction) {
+    Function<byte[], List<byte[]>> enrichFlows(FlowEnrichmentFunction enrichmentFunction) {
         return enrichmentFunction::processMessage;
     }
 

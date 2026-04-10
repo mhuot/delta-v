@@ -23,7 +23,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Unwraps the two-layer protobuf encoding used on Kafka Sink topics:
- * Kafka bytes → {@link SinkMessage} envelope → {@link TelemetryProtos.TelemetryMessageLog}.
+ * Kafka bytes &rarr; {@link SinkMessage} envelope &rarr;
+ * {@link TelemetryProtos.TelemetryMessageLog}.
  *
  * <p>The Sink IPC framework (OpenNMS Minion) supports message chunking for
  * payloads that exceed the Kafka message size limit. Flow telemetry messages
@@ -31,17 +32,36 @@ import org.slf4j.LoggerFactory;
  * the simpler path of dropping any chunked message it encounters and logging
  * a warning. Reassembly across chunks can be added later if it proves
  * necessary in production.
+ *
+ * <p><strong>moduleId source:</strong> the {@link SinkMessage} envelope does
+ * not carry a {@code moduleId} field; in the Sink IPC protocol the module
+ * identifier is derived from the Kafka topic name
+ * ({@code OpenNMS.Sink.{moduleId}}). Callers that know the topic should use
+ * the {@link #deserialize(String, byte[])} overload to supply the moduleId
+ * explicitly. The {@link #deserialize(byte[])} overload populates the
+ * {@link DeserializedSinkMessage#moduleId() moduleId} field as {@code null}.
  */
 public class SinkMessageDeserializer {
 
     private static final Logger LOG = LoggerFactory.getLogger(SinkMessageDeserializer.class);
 
     /**
-     * Deserializes a Kafka payload into a {@link TelemetryProtos.TelemetryMessageLog}.
-     * Returns {@code null} if the payload is null, malformed, or chunked. Callers
-     * should treat null as "drop and continue".
+     * Deserializes a Kafka payload into a {@link DeserializedSinkMessage}
+     * with an unknown (null) moduleId. Returns {@code null} if the payload is
+     * null, malformed, or chunked. Callers should treat null as
+     * "drop and continue".
      */
-    public TelemetryProtos.TelemetryMessageLog deserialize(byte[] kafkaBytes) {
+    public DeserializedSinkMessage deserialize(byte[] kafkaBytes) {
+        return deserialize(null, kafkaBytes);
+    }
+
+    /**
+     * Deserializes a Kafka payload into a {@link DeserializedSinkMessage},
+     * tagging the result with the given moduleId (typically derived from the
+     * Kafka topic name by the caller). Returns {@code null} if the payload is
+     * null, malformed, or chunked.
+     */
+    public DeserializedSinkMessage deserialize(String moduleId, byte[] kafkaBytes) {
         if (kafkaBytes == null) {
             return null;
         }
@@ -52,7 +72,9 @@ public class SinkMessageDeserializer {
                         sinkMessage.getMessageId(), sinkMessage.getTotalChunks());
                 return null;
             }
-            return TelemetryProtos.TelemetryMessageLog.parseFrom(sinkMessage.getContent());
+            TelemetryProtos.TelemetryMessageLog log =
+                    TelemetryProtos.TelemetryMessageLog.parseFrom(sinkMessage.getContent());
+            return new DeserializedSinkMessage(moduleId, log);
         } catch (Exception e) {
             LOG.warn("Failed to deserialize SinkMessage payload ({} bytes): {}",
                     kafkaBytes.length, e.getMessage());
