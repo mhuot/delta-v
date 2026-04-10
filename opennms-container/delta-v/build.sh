@@ -79,6 +79,14 @@ do_db_init_image() {
     docker build -t "opennms/db-init:$VERSION" -t "opennms/db-init:latest" .
 }
 
+do_flow_enricher_image() {
+    log "Building flow-enricher image (opennms/flow-enricher:$VERSION)..."
+    cd "$REPO_ROOT"
+    ./mvnw -B -f core/flow-enricher/pom.xml -DskipTests package
+    cd "$REPO_ROOT/core/flow-enricher"
+    docker build -t "opennms/flow-enricher:$VERSION" -t "opennms/flow-enricher:latest" .
+}
+
 do_jre_image() {
     log "Building opennms/jre-deltav:21..."
     cd "$SCRIPT_DIR"
@@ -153,8 +161,16 @@ do_deltav_images() {
     # Clean up staging
     rm -rf "$SCRIPT_DIR/staging"
 
+    # --- Build flow-enricher (standalone Spring Cloud Stream service) ---
+    # flow-enricher does not share daemon-base because its dependency
+    # profile is fundamentally different from the 12 horizon-derived
+    # daemons (Spring Cloud Stream + Kafka binder + Caffeine + protobuf,
+    # vs. legacy Spring 4.2 / Hibernate / Karaf-era libs). Build it as a
+    # standalone image, like db-init.
+    do_flow_enricher_image
+
     log "Delta-V images built:"
-    docker images --format "  {{.Repository}}:{{.Tag}}\t{{.Size}}" | grep -E "daemon-base|alarmd|bsmd|collectd|discovery|enlinkd|eventtranslator|perspectivepollerd|pollerd|provisiond|syslogd|telemetryd|trapd|daemon-deltav|minion-deltav|minion-boot" | sort | head -20
+    docker images --format "  {{.Repository}}:{{.Tag}}\t{{.Size}}" | grep -E "daemon-base|alarmd|bsmd|collectd|discovery|enlinkd|eventtranslator|perspectivepollerd|pollerd|provisiond|syslogd|telemetryd|trapd|daemon-deltav|minion-deltav|minion-boot|flow-enricher" | sort | head -20
 }
 
 

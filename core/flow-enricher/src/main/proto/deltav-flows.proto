@@ -1,0 +1,127 @@
+// Copyright (C) 2026 BeaconStrategists, Inc.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License,
+// or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// API version: 1
+//
+// Public contract for the deltav-flows Kafka topic.
+//
+// Community consumers: generate client code from this file.
+//
+// Versioning: additive changes (new fields with new tag numbers) are
+// backward-compatible. Renaming or removing existing fields, changing
+// tag numbers, or changing field types are breaking changes that
+// require a major version bump.
+//
+// Field tag numbers are intentionally aligned with the historical
+// org.opennms.netmgt.flows.persistence.model.FlowDocument numbering
+// to ease migration of existing consumers; tag 25 and tag 44 are
+// reserved (formerly src_node_identifier and convo_key respectively).
+
+syntax = "proto3";
+
+package org.deltav.flows;
+
+option java_package = "org.deltav.flows.proto";
+option java_outer_classname = "FlowDocumentProtos";
+
+import "google/protobuf/wrappers.proto";
+
+message NodeInfo {
+    uint32 node_id = 1;
+    string foreign_source = 2;
+    string foreign_id = 3;
+    repeated string categories = 4;
+}
+
+enum Direction {
+    DIRECTION_UNKNOWN = 0;
+    INGRESS = 1;
+    EGRESS = 2;
+}
+
+enum Locality {
+    LOCALITY_UNKNOWN = 0;
+    PRIVATE = 1;
+    PUBLIC = 2;
+}
+
+enum NetflowVersion {
+    NETFLOW_VERSION_UNKNOWN = 0;
+    V5 = 1;
+    V9 = 2;
+    IPFIX = 3;
+    SFLOW = 4;
+}
+
+enum SamplingAlgorithm {
+    SAMPLING_ALGORITHM_UNKNOWN = 0;
+    SYSTEMATIC_COUNT_BASED_SAMPLING = 1;
+    SYSTEMATIC_TIME_BASED_SAMPLING = 2;
+    RANDOM_N_OUT_OF_N_SAMPLING = 3;
+    UNIFORM_PROBABILISTIC_SAMPLING = 4;
+    PROPERTY_MATCH_FILTERING = 5;
+    HASH_BASED_FILTERING = 6;
+    FLOW_STATE_DEPENDENT_INTERMEDIATE_FLOW_SELECTION_PROCESS = 7;
+}
+
+message FlowDocument {
+    uint64 timestamp = 1;
+    google.protobuf.UInt64Value num_bytes = 2;
+    Direction direction = 3;
+    string dst_address = 4;
+    string dst_hostname = 5;
+    google.protobuf.UInt64Value dst_as = 6;
+    google.protobuf.UInt32Value dst_mask_len = 7;
+    google.protobuf.UInt32Value dst_port = 8;
+    google.protobuf.UInt32Value engine_id = 9;
+    google.protobuf.UInt32Value engine_type = 10;
+    google.protobuf.UInt64Value delta_switched = 11;
+    google.protobuf.UInt64Value first_switched = 12;
+    google.protobuf.UInt64Value last_switched = 13;
+    google.protobuf.UInt32Value num_flow_records = 14;
+    google.protobuf.UInt64Value num_packets = 15;
+    google.protobuf.UInt64Value flow_seq_num = 16;
+    google.protobuf.UInt32Value input_snmp_ifindex = 17;
+    google.protobuf.UInt32Value output_snmp_ifindex = 18;
+    google.protobuf.UInt32Value ip_protocol_version = 19;
+    string next_hop_address = 20;
+    string next_hop_hostname = 21;
+    google.protobuf.UInt32Value protocol = 22;
+    SamplingAlgorithm sampling_algorithm = 23;
+    google.protobuf.DoubleValue sampling_interval = 24;
+    // field 25 reserved (formerly src_node_identifier)
+    string src_address = 26;
+    string src_hostname = 27;
+    google.protobuf.UInt64Value src_as = 28;
+    google.protobuf.UInt32Value src_mask_len = 29;
+    google.protobuf.UInt32Value src_port = 30;
+    google.protobuf.UInt32Value tcp_flags = 31;
+    google.protobuf.UInt32Value tos = 32;
+    NetflowVersion netflow_version = 33;
+    string vlan = 34;
+    NodeInfo src_node = 35;
+    NodeInfo exporter_node = 36;
+    NodeInfo dest_node = 37;
+    string application = 38;
+    string host = 39;
+    string location = 40;
+    Locality src_locality = 41;
+    Locality dst_locality = 42;
+    Locality flow_locality = 43;
+    // field 44 reserved (formerly convo_key)
+    uint64 clock_correction = 45;
+    google.protobuf.UInt32Value dscp = 46;
+    google.protobuf.UInt32Value ecn = 47;
+}
