@@ -80,6 +80,9 @@
 
     <!-- Standalone tools -->
     <module>core/db-init</module>
+
+    <!-- Flow processing services (Spring Cloud Stream) -->
+    <module>core/flow-enricher</module>
   </modules>
 
   <!-- ============================================================ -->
