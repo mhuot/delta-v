@@ -46,7 +46,17 @@ import org.opennms.netmgt.telemetry.common.ipc.TelemetryProtos;
  * @param moduleId the Sink module identifier (e.g. {@code "Telemetry-Netflow-5"}),
  *                 or {@code null} when the deserializer cannot determine it
  *                 from the payload alone
- * @param messageLog the decoded telemetry payload
+ * @param messageLog the decoded telemetry payload; must not be {@code null}
  */
 public record DeserializedSinkMessage(String moduleId, TelemetryProtos.TelemetryMessageLog messageLog) {
+
+    /**
+     * Compact constructor enforcing a non-null {@code messageLog}. The
+     * deserializer returns {@code null} in place of this record when the
+     * payload is unparseable, so callers can rely on any non-null
+     * {@code DeserializedSinkMessage} carrying a usable message log.
+     */
+    public DeserializedSinkMessage {
+        java.util.Objects.requireNonNull(messageLog, "messageLog");
+    }
 }

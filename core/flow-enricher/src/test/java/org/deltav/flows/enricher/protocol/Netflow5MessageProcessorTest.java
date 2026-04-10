@@ -152,8 +152,7 @@ class Netflow5MessageProcessorTest {
 
     private static FlowMessage buildNetflow5FlowMessage() {
         // Represents a Netflow v5 record already parsed from wire format into
-        // horizon's normalized FlowMessage protobuf. Field choices mirror the
-        // hand-crafted Netflow5 record in the plan document:
+        // horizon's normalized FlowMessage protobuf.
         //   src=192.0.2.1:54321, dst=198.51.100.2:443, proto=6 (TCP),
         //   packets=10, bytes=1500, tcpFlags=0x18 (PSH+ACK).
         return FlowMessage.newBuilder()

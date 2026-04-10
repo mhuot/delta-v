@@ -50,7 +50,16 @@ public class SinkMessageDeserializer {
      * with an unknown (null) moduleId. Returns {@code null} if the payload is
      * null, malformed, or chunked. Callers should treat null as
      * "drop and continue".
+     *
+     * @deprecated Use {@link #deserialize(String, byte[])} instead. The
+     *     single-arg overload returns a {@link DeserializedSinkMessage} with
+     *     {@code moduleId == null}, which causes
+     *     {@link FlowEnrichmentFunction} to drop the message because protocol
+     *     dispatch requires a known module ID. This overload exists only for
+     *     backward compatibility with test code that doesn't care about
+     *     moduleId.
      */
+    @Deprecated
     public DeserializedSinkMessage deserialize(byte[] kafkaBytes) {
         return deserialize(null, kafkaBytes);
     }

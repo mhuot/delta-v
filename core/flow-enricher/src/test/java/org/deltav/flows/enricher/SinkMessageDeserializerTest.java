@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.opennms.core.ipc.sink.model.SinkMessage;
 import org.opennms.netmgt.telemetry.common.ipc.TelemetryProtos;
 
+@SuppressWarnings("deprecation") // intentionally exercises the deprecated single-arg overload
 class SinkMessageDeserializerTest {
 
     private final SinkMessageDeserializer deserializer = new SinkMessageDeserializer();

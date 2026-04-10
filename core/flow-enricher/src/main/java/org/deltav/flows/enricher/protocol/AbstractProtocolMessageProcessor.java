@@ -100,13 +100,11 @@ public abstract class AbstractProtocolMessageProcessor implements ProtocolMessag
                     e.getMessage(),
                     e);
             return Collections.emptyList();
-        } finally {
-            try {
-                adapter.destroy();
-            } catch (RuntimeException destroyEx) {
-                LOG.debug("Ignoring exception from adapter.destroy()", destroyEx);
-            }
         }
+        // Horizon's AbstractFlowAdapter.destroy() is a no-op in the versions
+        // we target; calling it here would add noise without any real cleanup
+        // and can be re-introduced if horizon ever gives destroy() real
+        // semantics.
         return pipeline.getCapturedFlows();
     }
 
