@@ -71,12 +71,13 @@ public class TelemetryListenerConfiguration {
             dispatchers.put(protocol, messageDispatcherFactory.createAsyncDispatcher(module));
         }
 
+        var self = distPollerDao.whoami();
         return new FlowUdpListener(
                 telemetryPort,
                 bindAddress,
                 dispatchers,
-                distPollerDao.whoami().getLocation(),
-                distPollerDao.whoami().getId());
+                self.getLocation(),
+                self.getId());
     }
 
     @Bean
