@@ -18,7 +18,12 @@ opennms:
     poller.enabled: true
     collector.enabled: true
     detector.enabled: true
-    telemetry.enabled: true
+    telemetry:
+      enabled: true
+      port: 4729
+      address: "*"
+      queue-size: 10000
+      num-threads: 2
     heartbeat.enabled: true
   kafka:
     bootstrap-servers: ${KAFKA_IPC_BOOTSTRAP_SERVERS:localhost:9092}
