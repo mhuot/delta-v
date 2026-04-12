@@ -17,11 +17,13 @@
 package org.deltav.minion.telemetry;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.protobuf.ByteString;
 import org.deltav.minion.telemetry.proto.TelemetryProtos.TelemetryMessage;
 import org.deltav.minion.telemetry.proto.TelemetryProtos.TelemetryMessageLog;
 import org.junit.jupiter.api.Test;
+import org.opennms.core.ipc.sink.api.AsyncPolicy;
 
 class FlowSinkModuleTest {
 
@@ -55,8 +57,8 @@ class FlowSinkModuleTest {
         byte[] bytes = module.marshal(original);
         FlowTelemetryMessage roundTripped = module.unmarshal(bytes);
 
-        TelemetryMessageLog expected = original.getLog();
-        TelemetryMessageLog actual = roundTripped.getLog();
+        TelemetryMessageLog expected = original.getTelemetryMessageLog();
+        TelemetryMessageLog actual = roundTripped.getTelemetryMessageLog();
         assertThat(actual.getLocation()).isEqualTo(expected.getLocation());
         assertThat(actual.getSystemId()).isEqualTo(expected.getSystemId());
         assertThat(actual.getSourceAddress()).isEqualTo(expected.getSourceAddress());
@@ -83,8 +85,28 @@ class FlowSinkModuleTest {
     @Test
     void asyncPolicyReflectsConstructorArgs() {
         FlowSinkModule module = new FlowSinkModule(FlowProtocol.NETFLOW_5, 5_000, 2);
-        assertThat(module.getAsyncPolicy().getQueueSize()).isEqualTo(5_000);
-        assertThat(module.getAsyncPolicy().getNumThreads()).isEqualTo(2);
-        assertThat(module.getAsyncPolicy().isBlockWhenFull()).isFalse();
+        AsyncPolicy policy = module.getAsyncPolicy();
+
+        assertThat(policy.getQueueSize()).isEqualTo(5_000);
+        assertThat(policy.getNumThreads()).isEqualTo(2);
+        assertThat(policy.isBlockWhenFull()).isFalse();
+    }
+
+    @Test
+    void constructorRejectsNonPositiveQueueSize() {
+        assertThatThrownBy(() -> new FlowSinkModule(FlowProtocol.NETFLOW_9, 0, NUM_THREADS))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("queueSize");
+        assertThatThrownBy(() -> new FlowSinkModule(FlowProtocol.NETFLOW_9, -1, NUM_THREADS))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void constructorRejectsNonPositiveNumThreads() {
+        assertThatThrownBy(() -> new FlowSinkModule(FlowProtocol.NETFLOW_9, QUEUE_SIZE, 0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("numThreads");
+        assertThatThrownBy(() -> new FlowSinkModule(FlowProtocol.NETFLOW_9, QUEUE_SIZE, -1))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

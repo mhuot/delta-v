@@ -16,6 +16,7 @@
  */
 package org.deltav.minion.telemetry;
 
+import java.io.UncheckedIOException;
 import java.util.Objects;
 
 import org.deltav.minion.telemetry.proto.TelemetryProtos.TelemetryMessageLog;
@@ -49,6 +50,12 @@ public class FlowSinkModule implements SinkModule<FlowTelemetryMessage, FlowTele
 
     public FlowSinkModule(FlowProtocol protocol, int queueSize, int numThreads) {
         this.protocol = Objects.requireNonNull(protocol, "protocol");
+        if (queueSize <= 0) {
+            throw new IllegalArgumentException("queueSize must be positive, got " + queueSize);
+        }
+        if (numThreads <= 0) {
+            throw new IllegalArgumentException("numThreads must be positive, got " + numThreads);
+        }
         this.queueSize = queueSize;
         this.numThreads = numThreads;
     }
@@ -73,7 +80,7 @@ public class FlowSinkModule implements SinkModule<FlowTelemetryMessage, FlowTele
         try {
             return new FlowTelemetryMessage(TelemetryMessageLog.parseFrom(bytes));
         } catch (InvalidProtocolBufferException e) {
-            throw new RuntimeException("Failed to parse TelemetryMessageLog", e);
+            throw new UncheckedIOException("Failed to parse TelemetryMessageLog", e);
         }
     }
 

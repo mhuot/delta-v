@@ -40,7 +40,7 @@ public final class FlowTelemetryMessage implements Message {
         this.log = Objects.requireNonNull(log, "log");
     }
 
-    public TelemetryMessageLog getLog() {
+    public TelemetryMessageLog getTelemetryMessageLog() {
         return log;
     }
 
