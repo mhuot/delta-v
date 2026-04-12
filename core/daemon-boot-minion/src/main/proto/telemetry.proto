@@ -1,0 +1,36 @@
+// Copyright (C) 2026 BeaconStrategists, Inc.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License,
+// or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+syntax = "proto2";
+option java_package = "org.deltav.minion.telemetry.proto";
+option java_outer_classname = "TelemetryProtos";
+
+// Wire-format-identical to
+// org.opennms.netmgt.telemetry.common.ipc.TelemetryProtos. Protobuf
+// decoding matches by field tag, not Java package, so the flow-enricher
+// parses messages produced by this class without modification.
+
+message TelemetryMessage {
+    required uint64 timestamp = 1;
+    required bytes bytes = 2;
+}
+
+message TelemetryMessageLog {
+    required string location = 1;
+    required string system_id = 2;
+    optional string source_address = 3;
+    optional uint32 source_port = 4;
+    repeated TelemetryMessage message = 5;
+}
