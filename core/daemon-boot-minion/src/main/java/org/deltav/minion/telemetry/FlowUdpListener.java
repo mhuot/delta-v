@@ -95,24 +95,32 @@ public class FlowUdpListener {
             return;
         }
         eventLoopGroup = new NioEventLoopGroup(1);
-        Bootstrap bootstrap = new Bootstrap();
-        bootstrap.group(eventLoopGroup)
-                .channel(NioDatagramChannel.class)
-                .option(ChannelOption.SO_BROADCAST, false)
-                .option(ChannelOption.SO_REUSEADDR, true)
-                .handler(new ChannelInitializer<NioDatagramChannel>() {
-                    @Override
-                    protected void initChannel(NioDatagramChannel ch) {
-                        ch.pipeline().addLast(new DatagramHandler());
-                    }
-                });
+        try {
+            Bootstrap bootstrap = new Bootstrap();
+            bootstrap.group(eventLoopGroup)
+                    .channel(NioDatagramChannel.class)
+                    .option(ChannelOption.SO_BROADCAST, false)
+                    .option(ChannelOption.SO_REUSEADDR, true)
+                    .handler(new ChannelInitializer<NioDatagramChannel>() {
+                        @Override
+                        protected void initChannel(NioDatagramChannel ch) {
+                            ch.pipeline().addLast(new DatagramHandler());
+                        }
+                    });
 
-        InetSocketAddress local = "*".equals(bindAddress)
-                ? new InetSocketAddress(port)
-                : new InetSocketAddress(bindAddress, port);
-        channel = bootstrap.bind(local).sync().channel();
-        LOG.info("Flow telemetry listener started on {}:{} (protocols: Netflow-5, Netflow-9, IPFIX, sFlow)",
-                bindAddress, getBoundPort());
+            InetSocketAddress local = "*".equals(bindAddress)
+                    ? new InetSocketAddress(port)
+                    : new InetSocketAddress(bindAddress, port);
+            channel = bootstrap.bind(local).sync().channel();
+            LOG.info("Flow telemetry listener started on {}:{} (protocols: Netflow-5, Netflow-9, IPFIX, sFlow)",
+                    bindAddress, getBoundPort());
+        } catch (InterruptedException | RuntimeException e) {
+            // Clean up the event loop group so a subsequent start() doesn't leak it
+            // and Spring's lifecycle doesn't get stuck with an orphaned group.
+            eventLoopGroup.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS);
+            eventLoopGroup = null;
+            throw e;
+        }
     }
 
     public synchronized void stop() throws InterruptedException {

@@ -103,15 +103,18 @@ class FlowUdpListenerTest {
 
     @Test
     void dropsUnknownProtocolDatagrams() throws Exception {
-        byte[] payload = new byte[] { 0x00, 0x01, 0x00, 0x00 };
+        // Send an unknown-protocol datagram first, then a known-good sentinel.
+        // Using the sentinel with Awaitility proves the event loop has drained
+        // past both packets in order, without relying on Thread.sleep timing.
+        sendDatagram(new byte[] { 0x00, 0x01, 0x00, 0x00 });
+        sendDatagram(new byte[] { 0x00, 0x09, 0x00, 0x01, 0x02, 0x03 });
 
-        sendDatagram(payload);
+        await().atMost(Duration.ofSeconds(5)).until(() -> !captured.get(FlowProtocol.NETFLOW_9).isEmpty());
 
-        // Give the listener time to process; then verify no dispatcher received anything
-        Thread.sleep(200);
-        for (FlowProtocol p : FlowProtocol.values()) {
-            assertThat(captured.get(p)).isEmpty();
-        }
+        assertThat(captured.get(FlowProtocol.NETFLOW_5)).isEmpty();
+        assertThat(captured.get(FlowProtocol.IPFIX)).isEmpty();
+        assertThat(captured.get(FlowProtocol.SFLOW)).isEmpty();
+        assertThat(captured.get(FlowProtocol.NETFLOW_9)).hasSize(1);
     }
 
     private void sendDatagram(byte[] payload) throws Exception {
