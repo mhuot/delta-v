@@ -496,10 +496,10 @@ services:
       CLICKHOUSE_USER: deltav
       CLICKHOUSE_PASSWORD: deltav
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
-      CLICKHOUSE_FORMAT_SCHEMA_PATH: /var/lib/clickhouse/format_schemas
     volumes:
       - clickhouse-data:/var/lib/clickhouse
-      - ../../core/flow-enricher/src/main/proto:/var/lib/clickhouse/format_schemas:ro
+      - ../../core/flow-enricher/src/main/proto:/opt/clickhouse/format_schemas
+      - ./clickhouse/config.d/format-schema-path.xml:/etc/clickhouse-server/config.d/format-schema-path.xml:ro
     ports:
       - "8123:8123"
       - "9000:9000"
