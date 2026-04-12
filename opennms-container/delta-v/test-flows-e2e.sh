@@ -134,13 +134,13 @@ show_diagnostics() {
 log ""
 log "Phase 1: Prerequisite checks..."
 
-REQUIRED_SERVICES="clickhouse kafka telemetryd flow-enricher"
+REQUIRED_SERVICES="clickhouse kafka telemetryd flow-enricher minion"
 for svc in $REQUIRED_SERVICES; do
   if ! docker compose ps --status running --format '{{.Name}}' 2>/dev/null | grep -qw "$svc"; then
     err "Service '$svc' is not running. Deploy with: ./deploy.sh up full"
   fi
 done
-ok "Required services running (clickhouse, kafka, telemetryd, flow-enricher)"
+ok "Required services running (clickhouse, kafka, telemetryd, flow-enricher, minion)"
 
 # Verify ClickHouse is reachable and responsive
 if ! ch_query "SELECT 1" > /dev/null 2>&1; then
