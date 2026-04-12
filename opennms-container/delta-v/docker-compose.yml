@@ -68,25 +68,6 @@ services:
       retries: 10
       start_period: 10s
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.18.2
-    container_name: delta-v-elasticsearch
-    environment:
-      discovery.type: single-node
-      xpack.security.enabled: "false"
-      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
-      cluster.name: delta-v
-    volumes:
-      - esdata:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health | grep -qE '\"status\":\"(green|yellow)\"'"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 30s
-
   # Database schema initialization — standalone Spring Boot app that runs
   # Liquibase migrations, then exits. All services that need PostgreSQL
   # should depend on this with condition: service_completed_successfully.
@@ -495,12 +476,66 @@ services:
       OPENNMS_TSID_NODE_ID: "18"
     volumes:
       - ./telemetryd-overlay/etc:/opt/deltav/etc:ro
+    ports:
+      - "4729:4729/udp"
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 12
       start_period: 20s
+
+  clickhouse:
+    profiles: [full]
+    image: clickhouse/clickhouse-server:25.8
+    container_name: delta-v-clickhouse
+    hostname: clickhouse
+    restart: unless-stopped
+    ulimits:
+      nofile: { soft: 262144, hard: 262144 }
+    environment:
+      CLICKHOUSE_DB: deltav
+      CLICKHOUSE_USER: deltav
+      CLICKHOUSE_PASSWORD: deltav
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - ../../core/flow-enricher/src/main/proto:/opt/clickhouse/format_schemas
+      - ./clickhouse/config.d/format-schema-path.xml:/etc/clickhouse-server/config.d/format-schema-path.xml:ro
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  clickhouse-init:
+    profiles: [full]
+    image: clickhouse/clickhouse-server:25.8
+    container_name: delta-v-clickhouse-init
+    hostname: clickhouse-init
+    restart: "no"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    environment:
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_USER: deltav
+      CLICKHOUSE_PASSWORD: deltav
+      DELTAV_CLICKHOUSE_FLOWS_RAW_TTL_DAYS: "14"
+      DELTAV_CLICKHOUSE_FLOWS_AGG_TTL_DAYS: "90"
+    volumes:
+      - ./clickhouse/init:/delta-v/init:ro
+      - ./clickhouse/user-init:/delta-v/user-init:ro
+      - ./clickhouse/init-runner.sh:/usr/local/bin/init-runner.sh:ro
+      - ../../core/flow-enricher/src/main/proto:/delta-v/proto:ro
+    entrypoint: ["/bin/bash", "/usr/local/bin/init-runner.sh"]
 
   flow-enricher:
     profiles: [full]
@@ -528,8 +563,23 @@ services:
       retries: 12
       start_period: 30s
 
+  flow-default-testnode-1:
+    profiles: [full]
+    build: ./flow-exporter
+    container_name: flow-default-testnode-1
+    hostname: flow-default-testnode-1
+    cap_add:
+      - NET_RAW
+    depends_on:
+      telemetryd:
+        condition: service_healthy
+    environment:
+      NETFLOW_COLLECTOR: telemetryd:4729
+      NETFLOW_VERSION: "9"
+      TRAFFIC_INTERVAL: "5"
+
 volumes:
   pgdata:
   kafkadata:
-  esdata:
   collectd-data:
+  clickhouse-data:
