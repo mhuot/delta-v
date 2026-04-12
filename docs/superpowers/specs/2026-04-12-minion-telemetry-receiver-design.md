@@ -109,7 +109,7 @@ No collision between sFlow and Netflow v5: a 2-byte read of an sFlow packet
 at offset 0 yields `0x0000` (high bytes of the 4-byte version field), not
 `0x0005`.
 
-### FlowTelemetryBatch (Sink Message Wrapper)
+### FlowTelemetryMessage (Sink Message Wrapper)
 
 The Sink API's `SinkModule<S, T>` requires S and T to extend
 `org.opennms.core.ipc.sink.api.Message` (a marker interface). The
@@ -117,10 +117,10 @@ protobuf-generated `TelemetryMessageLog` doesn't implement this marker, so
 a thin wrapper is needed:
 
 ```java
-public class FlowTelemetryBatch implements Message {
+public class FlowTelemetryMessage implements Message {
     private final byte[] serializedLog;
 
-    public FlowTelemetryBatch(TelemetryMessageLog log) {
+    public FlowTelemetryMessage(TelemetryMessageLog log) {
         this.serializedLog = log.toByteArray();
     }
 
@@ -129,20 +129,20 @@ public class FlowTelemetryBatch implements Message {
 ```
 
 The `FlowUdpListener` builds a `TelemetryMessageLog` from each datagram,
-wraps it in a `FlowTelemetryBatch`, and passes that to the dispatcher.
+wraps it in a `FlowTelemetryMessage`, and passes that to the dispatcher.
 
 ### FlowSinkModule
 
-Implements `SinkModule<FlowTelemetryBatch, FlowTelemetryBatch>` from the
+Implements `SinkModule<FlowTelemetryMessage, FlowTelemetryMessage>` from the
 Sink API (`org.opennms.core.ipc.sink.api`).
 
 - `getId()` returns `"Telemetry-{protocol}"` (e.g., `"Telemetry-Netflow-9"`)
-- `marshal(FlowTelemetryBatch)` returns `batch.getBytes()`
-- `unmarshal(byte[])` returns `new FlowTelemetryBatch(TelemetryMessageLog.parseFrom(bytes))`
+- `marshal(FlowTelemetryMessage)` returns `msg.getBytes()`
+- `unmarshal(byte[])` returns `new FlowTelemetryMessage(TelemetryMessageLog.parseFrom(bytes))`
 - Batching config: batch size 100, interval 500ms, queue size 10000
   (configurable via application.yml)
 
-The `TelemetryMessageLog` used inside `FlowTelemetryBatch` is the
+The `TelemetryMessageLog` used inside `FlowTelemetryMessage` is the
 locally-generated class from `org.deltav.minion.telemetry.proto`, not
 horizon's version. Both produce identical wire bytes.
 
@@ -163,17 +163,22 @@ A Netty `NioDatagramChannel` listener that:
       - `source_address` = exporter IP from datagram
       - `source_port` = exporter port from datagram
       - One `TelemetryMessage` entry: timestamp = now, bytes = raw payload
-   e. Wraps in `FlowTelemetryBatch` and dispatches via
+   e. Wraps in `FlowTelemetryMessage` and dispatches via
       `asyncDispatchers.get(protocol).send(batch)`
-3. Holds a `Map<FlowProtocol, AsyncDispatcher<FlowTelemetryBatch>>`
+3. Holds a `Map<FlowProtocol, AsyncDispatcher<FlowTelemetryMessage>>`
    created at construction time
 
 **Constructor parameters:**
 - `int port`
 - `String bindAddress`
-- `Map<FlowProtocol, AsyncDispatcher<FlowTelemetryBatch>> dispatchers`
+- `Map<FlowProtocol, AsyncDispatcher<FlowTelemetryMessage>> dispatchers`
 - `String location`
 - `String systemId`
+
+**Netty event loop:** Creates its own single-thread `NioEventLoopGroup`.
+The existing Trap listener uses horizon's `TrapListener` (internal socket)
+and Syslog uses `SyslogReceiverJavaNetImpl` (plain Java `DatagramSocket`),
+so there is no existing Netty event loop to share.
 
 **Lifecycle:**
 - `start()` -- binds Netty channel, starts event loop
@@ -222,7 +227,7 @@ opennms:
 |------|---------|---------|--------|
 | `src/main/proto/telemetry.proto` | -- | Protobuf definition for TelemetryMessage + TelemetryMessageLog | ~15 |
 | `src/main/java/.../telemetry/FlowProtocol.java` | `o.d.minion.telemetry` | Protocol enum with version-byte detection | ~50 |
-| `src/main/java/.../telemetry/FlowTelemetryBatch.java` | `o.d.minion.telemetry` | Thin wrapper: TelemetryMessageLog -> Sink Message marker | ~20 |
+| `src/main/java/.../telemetry/FlowTelemetryMessage.java` | `o.d.minion.telemetry` | Thin wrapper: TelemetryMessageLog -> Sink Message marker | ~20 |
 | `src/main/java/.../telemetry/FlowSinkModule.java` | `o.d.minion.telemetry` | Local SinkModule impl for telemetry dispatch | ~60 |
 | `src/main/java/.../telemetry/FlowUdpListener.java` | `o.d.minion.telemetry` | Netty UDP channel handler | ~120 |
 | `src/main/java/.../boot/TelemetryListenerConfiguration.java` | `o.d.minion.boot` | Spring Configuration: beans + lifecycle | ~100 |
@@ -258,7 +263,9 @@ local `telemetry.proto`.
 behavior as Trap/Syslog listeners.
 
 **Malformed datagrams:** Packets < 4 bytes or with unrecognized version
-headers are dropped with rate-limited WARN log. No exception, no retry.
+headers are dropped with rate-limited WARN log (AtomicLong timestamp check,
+at most one warning per 30 seconds to prevent log flooding during
+misconfiguration or DDoS). No exception, no retry.
 
 **Kafka unavailability:** Handled by the Sink API's `AsyncDispatcher`. It
 queues up to `queue-size` messages and drops when full. No custom resilience
