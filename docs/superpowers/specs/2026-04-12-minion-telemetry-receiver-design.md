@@ -3,6 +3,154 @@
 > Unblocks full E2E flow testing by adding flow protocol UDP listeners to the
 > Boot4 Minion, making Minion the sole network ingress point for flow data.
 
+## Implementation Status (2026-04-12 Update)
+
+**Phase 1 (this spec, `feature/minion-telemetry-receiver`):** Minion-side thin
+relay implementation is complete and shipped. The Minion opens UDP port 4729,
+detects Netflow v5 / v9, IPFIX, and sFlow via version-byte peeking, wraps raw
+UDP payload in a `TelemetryMessageLog` protobuf with Minion location/systemId
+metadata and exporter source address/port, and dispatches to per-protocol
+Kafka Sink topics (`OpenNMS.Sink.Telemetry-Netflow-5`, `Telemetry-Netflow-9`,
+`Telemetry-IPFIX`, `Telemetry-SFlow`) via the existing `MessageDispatcherFactory`.
+`FlowSinkModule.getRoutingKey()` returns `location@sourceAddress:sourcePort`
+so the Sink API's Kafka producer sticky-partitions by exporter — important
+for Phase 2's server-side template cache affinity. 18/18 unit tests pass.
+
+**The Minion code is dormant in this PR.** Docker Compose still routes
+softflowd through the legacy `telemetryd` listener, and the existing E2E
+test (`test-flows-e2e.sh`) validates the legacy pipeline. Task 7's
+docker-compose redirect and Task 8's `REQUIRED_SERVICES` update were
+reverted after a wire-format mismatch was discovered during live
+validation (see Phase 2 scope below). When Phase 2 ships, flipping
+`NETFLOW_COLLECTOR` to `minion:4729` and removing the telemetryd
+Netflow-9-UDP-4729 listener becomes a mechanical one-commit change.
+
+**Phase 2 (follow-up, not in this PR):** Flow-enricher server-side parser
+rework. See `project_flow_enricher_phase2_parser.md` in the session memory
+for full scope; summary below.
+
+### Wire Format Mismatch (Discovered 2026-04-12)
+
+The Minion's thin-relay design ships raw UDP wire bytes inside
+`TelemetryMessage.bytes` (the protobuf field within `TelemetryMessageLog`).
+On the consumer side, the flow-enricher's `AbstractProtocolMessageProcessor`
+hands each `TelemetryMessageLog` to a horizon `AbstractFlowAdapter`
+subclass (`Netflow5Adapter`, `Netflow9Adapter`, `IpfixAdapter`,
+`SFlowAdapter`). Horizon's `NetflowAdapter.parse()` at
+`org.opennms.netmgt.telemetry.protocols.netflow.adapter.common.NetflowAdapter`
+line 51 does:
+
+```java
+@Override
+protected FlowMessage parse(TelemetryMessageLogEntry message) {
+    try {
+        return FlowMessage.parseFrom(message.getByteArray());
+    } catch (InvalidProtocolBufferException e) {
+        LOG.error("Unable to parse message from proto", e);
+    }
+    return null;
+}
+```
+
+`FlowMessage` here is
+`org.opennms.netmgt.telemetry.protocols.netflow.transport.FlowMessage` —
+a horizon-internal protobuf representing a single parsed flow record.
+The adapter is not parsing Netflow v9 wire format; it's decoding a
+protobuf envelope that the legacy horizon `Netflow9UdpParser` (which ran
+on Karaf Minions) used to produce.
+
+**Result:** When our thin-relay Minion dispatches raw UDP bytes, the
+flow-enricher throws `InvalidProtocolBufferException: Protocol message
+contained an invalid tag (zero)` on every message. Minion → Kafka path
+verified working (28 messages produced to
+`OpenNMS.Sink.Telemetry-Netflow-9` during validation), but
+`deltav.flows_raw` stays empty because every record is dropped at the
+parse step.
+
+### Phase 2 Scope (Flow-Enricher Server-Side Parser)
+
+The correct architectural fix is to rework the flow-enricher's
+`AbstractProtocolMessageProcessor` (at
+`core/flow-enricher/src/main/java/org/deltav/flows/enricher/protocol/AbstractProtocolMessageProcessor.java`)
+to use horizon's **parser** classes instead of the adapter classes.
+Horizon parsers expose this interface:
+
+```java
+public interface UdpParser extends Parser {
+    CompletableFuture<?> parse(final ByteBuf buffer,
+                               final InetSocketAddress remoteAddress,
+                               final InetSocketAddress localAddress) throws Exception;
+}
+```
+
+The parsers (`Netflow5UdpParser`, `Netflow9UdpParser`, `IpfixUdpParser`,
+`SFlowUdpParser` from `org.opennms.features.telemetry.protocols.netflow.parser`
+and `...sflow.parser`) do the deep wire-format decoding, build
+`FlowMessage` protobufs, and dispatch them to an
+`AsyncDispatcher<TelemetryMessage>` internally. The flow-enricher can
+provide a **capturing dispatcher** that intercepts the FlowMessage
+bytes instead of sending to Kafka, then feeds them through the
+existing enrichment pipeline.
+
+**Phase 2 implementation sketch:**
+
+1. Add horizon parser module deps to `core/flow-enricher/pom.xml`
+   (with the usual exclusion boilerplate: `opennms-config`, `atomikos`,
+   `eclipselink`, `jaxb-xjc`, etc.).
+2. Create a Spring `@Configuration` that wires per-protocol parser beans
+   with their required collaborators: `DnsResolver` (no-op is fine;
+   delta-v's flow-enricher already does its own node lookup),
+   `EventForwarder` (log-only is fine), `Identity`, `MetricRegistry`,
+   and a shared `InformationElementDatabase` (for Netflow v9 + IPFIX
+   template decoding). Each parser takes a per-instance capturing
+   dispatcher.
+3. Rewrite `AbstractProtocolMessageProcessor.process()` to:
+   - For each `TelemetryMessageLogEntry`, create a fresh `ByteBuf` from
+     the entry bytes.
+   - Call `parser.parse(buf, remote, local).join()` — the parser
+     decodes the wire format, builds `FlowMessage` protobufs, and
+     dispatches them to the capturing dispatcher.
+   - Collect the captured `FlowMessage` objects from the dispatcher.
+   - Convert each FlowMessage to a `Flow` via the adapter's `convert()`
+     method (or port `NetflowMessage` locally if importing the full
+     adapter class drags in unwanted deps).
+   - Return the list of Flows to the existing enrichment pipeline.
+4. Flip `docker-compose.yml` to route softflowd through the Minion
+   (`NETFLOW_COLLECTOR: minion:4729`, `depends_on: minion`, expose
+   minion port 4729/udp, remove telemetryd port 4729/udp).
+5. Remove the `Netflow-9-UDP-4729` listener block from
+   `telemetryd-overlay/etc/telemetryd-configuration.xml`.
+6. Add `minion` to `REQUIRED_SERVICES` in `test-flows-e2e.sh`.
+7. Run `test-flows-e2e.sh` — should pass with the Minion in the path.
+
+**Phase 2 design considerations:**
+
+- **Template cache stickiness:** Netflow v9 and IPFIX parsers maintain
+  a per-exporter template cache. Horizontal scaling of flow-enricher
+  replicas requires sticky per-exporter Kafka partitioning so each
+  exporter's session consistently hits the same replica (= same warm
+  template cache). The Minion's `FlowSinkModule.getRoutingKey()`
+  already provides `location@sourceAddress:sourcePort` as the Kafka
+  partition key (shipped in Phase 1) — Phase 2 just needs to enable the
+  Kafka cooperative-sticky partition assignment strategy on the
+  flow-enricher consumer to minimize rebalance churn.
+- **Rebalance cold-cache window:** Even with sticky partitioning, a
+  replica scale-up or scale-down causes transient template cache cold
+  starts on affected partitions. Netflow v9 exporters re-send templates
+  periodically (typically 10-30 minutes), so the cold window is
+  bounded. Acceptable.
+- **One FlowMessage = one Kafka message (no aggregation):** The Minion's
+  `FlowSinkModule.getAggregationPolicy()` returns null in Phase 1 (no
+  aggregation). Phase 2 inherits this — each flow record becomes one
+  Kafka message. If volume becomes a problem, aggregation can be added
+  later matching horizon's `TelemetrySinkModule` pattern (batch up to
+  1000 messages per 500ms keyed by exporter).
+- **sFlow is structurally different:** Horizon's `SFlowUdpParser`
+  produces BSON-serialized output rather than protobuf `FlowMessage`.
+  The flow-enricher's sFlow handling path may need a separate
+  code branch in Phase 2. Confirm before assuming the Netflow
+  implementation generalizes.
+
 ## Problem Statement
 
 The Boot4 Minion (`core/daemon-boot-minion`) lacks telemetry UDP listeners.
