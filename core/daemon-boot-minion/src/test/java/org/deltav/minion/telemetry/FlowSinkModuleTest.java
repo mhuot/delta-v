@@ -109,4 +109,12 @@ class FlowSinkModuleTest {
         assertThatThrownBy(() -> new FlowSinkModule(FlowProtocol.NETFLOW_9, QUEUE_SIZE, -1))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void routingKeyCombinesLocationAndExporter() {
+        FlowSinkModule module = new FlowSinkModule(FlowProtocol.NETFLOW_9, QUEUE_SIZE, NUM_THREADS);
+        FlowTelemetryMessage msg = new FlowTelemetryMessage(sampleLog());
+
+        assertThat(module.getRoutingKey(msg)).hasValue("Default@192.0.2.10:54321");
+    }
 }

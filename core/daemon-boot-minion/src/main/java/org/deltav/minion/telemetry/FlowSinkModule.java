@@ -18,6 +18,7 @@ package org.deltav.minion.telemetry;
 
 import java.io.UncheckedIOException;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.deltav.minion.telemetry.proto.TelemetryProtos.TelemetryMessageLog;
 import org.opennms.core.ipc.sink.api.AggregationPolicy;
@@ -117,5 +118,31 @@ public class FlowSinkModule implements SinkModule<FlowTelemetryMessage, FlowTele
                 return false;
             }
         };
+    }
+
+    /**
+     * Returns a routing key composed of {@code location@sourceAddress:sourcePort}
+     * so the Sink API's Kafka producer partitions messages by exporter.
+     *
+     * <p>This matches horizon's {@code TelemetrySinkModule.getRoutingKey} pattern
+     * and is important for Phase 2 (server-side parsing in the flow-enricher):
+     * Netflow v9 and IPFIX parsers maintain per-exporter template caches, so
+     * all packets from a single exporter must consistently land on the same
+     * consumer instance to keep the template cache warm. Round-robin partitioning
+     * (the default when this method returns {@code Optional.empty()}) would
+     * cause cold-cache storms every time a Kafka rebalance moved an exporter's
+     * session to a different flow-enricher replica.
+     *
+     * <p>Even though the Minion itself does no template caching in the current
+     * thin-relay design, setting the routing key here means Phase 2 can ship
+     * without needing to come back and fix Minion-side partitioning.
+     */
+    @Override
+    public Optional<String> getRoutingKey(FlowTelemetryMessage message) {
+        var log = message.getTelemetryMessageLog();
+        return Optional.of(String.format("%s@%s:%d",
+                log.getLocation(),
+                log.getSourceAddress(),
+                log.getSourcePort()));
     }
 }
