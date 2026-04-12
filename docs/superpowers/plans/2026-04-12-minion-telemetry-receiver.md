@@ -849,14 +849,15 @@ class FlowUdpListenerTest {
 }
 ```
 
-- [ ] **Step 4.2: Ensure `awaitility` is on the test classpath**
+- [ ] **Step 4.2: Confirm `awaitility` is on the test classpath**
 
-Check whether the Spring Boot test starter already brings in `awaitility`:
+`awaitility` 4.3.0 is already transitively available via `spring-boot-starter-test` (verified before writing this plan). Confirm with:
+
 ```bash
 ./mvnw -pl :org.opennms.core.daemon-boot-minion -o dependency:tree 2>/dev/null | grep -i awaitility
 ```
 
-If the grep returns non-empty, skip ahead to Step 4.3. If empty, add the dependency to `core/daemon-boot-minion/pom.xml` inside the existing `<dependencies>` block, just after the existing `spring-boot-starter-test` dependency:
+Expected: a line like `org.awaitility:awaitility:jar:4.3.0:test`. **No POM changes needed.** If for some reason the grep returns empty (e.g., the managed version was excluded in a future refactor), add this dependency to `core/daemon-boot-minion/pom.xml` inside the existing `<dependencies>` block, just after `spring-boot-starter-test` — the version is inherited from the Spring Boot BOM:
 
 ```xml
         <dependency>
@@ -865,8 +866,6 @@ If the grep returns non-empty, skip ahead to Step 4.3. If empty, add the depende
             <scope>test</scope>
         </dependency>
 ```
-
-Then re-run the dependency check to confirm it appears.
 
 - [ ] **Step 4.3: Run the tests — expect compile failure**
 
