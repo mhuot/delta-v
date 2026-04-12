@@ -116,7 +116,6 @@ services:
       - "8301:8080"           # Actuator (was 8201 Karaf SSH)
       - "11162:1162/udp"      # SNMP Trapd
       - "1514:1514/udp"       # Syslog
-      - "4729:4729/udp"       # Netflow-9
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
       interval: 10s
@@ -477,6 +476,8 @@ services:
       OPENNMS_TSID_NODE_ID: "18"
     volumes:
       - ./telemetryd-overlay/etc:/opt/deltav/etc:ro
+    ports:
+      - "4729:4729/udp"
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
       interval: 10s
@@ -570,10 +571,10 @@ services:
     cap_add:
       - NET_RAW
     depends_on:
-      minion:
+      telemetryd:
         condition: service_healthy
     environment:
-      NETFLOW_COLLECTOR: minion-default-01:4729
+      NETFLOW_COLLECTOR: telemetryd:4729
       NETFLOW_VERSION: "9"
       TRAFFIC_INTERVAL: "5"
 

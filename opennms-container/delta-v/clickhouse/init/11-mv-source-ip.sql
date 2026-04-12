@@ -22,10 +22,10 @@ SELECT
     exporter_node_id,
     input_snmp_ifindex,
     src_address,
-    sumIf(num_bytes,   direction = 'INGRESS')       AS bytes_in,
-    sumIf(num_bytes,   direction = 'EGRESS')        AS bytes_out,
-    sumIf(num_packets, direction = 'INGRESS')       AS packets_in,
-    sumIf(num_packets, direction = 'EGRESS')        AS packets_out,
+    ifNull(sumIf(num_bytes, direction = 'INGRESS'), 0)       AS bytes_in,
+    ifNull(sumIf(num_bytes, direction = 'EGRESS'), 0)        AS bytes_out,
+    ifNull(sumIf(num_packets, direction = 'INGRESS'), 0)       AS packets_in,
+    ifNull(sumIf(num_packets, direction = 'EGRESS'), 0)        AS packets_out,
     count()                                         AS flow_count
 FROM deltav.flows_raw
 GROUP BY t_minute, exporter_node_id, input_snmp_ifindex, src_address;
