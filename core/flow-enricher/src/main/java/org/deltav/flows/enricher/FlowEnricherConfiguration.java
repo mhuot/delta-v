@@ -45,6 +45,7 @@ import org.deltav.flows.enricher.protocol.IpfixMessageProcessor;
 import org.deltav.flows.enricher.protocol.Netflow5MessageProcessor;
 import org.deltav.flows.enricher.protocol.Netflow9MessageProcessor;
 import org.deltav.flows.enricher.protocol.ProtocolMessageProcessor;
+import org.deltav.flows.enricher.protocol.SFlowMessageProcessor;
 import org.deltav.flows.enricher.protocol.SimpleAdapterDefinition;
 import org.opennms.netmgt.dnsresolver.api.DnsResolver;
 import org.opennms.netmgt.events.api.EventForwarder;
@@ -53,6 +54,7 @@ import org.opennms.netmgt.telemetry.protocols.netflow.parser.IpfixUdpParser;
 import org.opennms.netmgt.telemetry.protocols.netflow.parser.Netflow5UdpParser;
 import org.opennms.netmgt.telemetry.protocols.netflow.parser.Netflow9UdpParser;
 import org.opennms.netmgt.telemetry.protocols.netflow.parser.ie.InformationElementDatabase;
+import org.opennms.netmgt.telemetry.protocols.sflow.parser.SFlowUdpParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -150,20 +152,21 @@ public class FlowEnricherConfiguration {
     }
 
     /**
-     * Lifecycle bean that starts and stops the Netflow5, Netflow9, and IPFIX
-     * UDP parsers as part of the Spring application context lifecycle. sFlow
-     * is deliberately excluded because its parser is not wired as a bean
-     * (see the comment on the missing sflowUdpParser bean for the reason).
+     * Lifecycle bean that starts and stops the Netflow5, Netflow9, IPFIX, and
+     * sFlow UDP parsers as part of the Spring application context lifecycle.
+     * Each parser's {@code start()} runs in {@code @PostConstruct} with the
+     * shared scheduler, and its {@code stop()} runs on context close.
      */
     @Bean
     ParserLifecycle flowParserLifecycle(
             ScheduledExecutorService flowParserSessionCleanup,
             Netflow5UdpParser netflow5UdpParser,
             Netflow9UdpParser netflow9UdpParser,
-            IpfixUdpParser ipfixUdpParser) {
+            IpfixUdpParser ipfixUdpParser,
+            SFlowUdpParser sflowUdpParser) {
         return new ParserLifecycle(
                 flowParserSessionCleanup,
-                List.of(netflow5UdpParser, netflow9UdpParser, ipfixUdpParser));
+                List.of(netflow5UdpParser, netflow9UdpParser, ipfixUdpParser, sflowUdpParser));
     }
 
     /**
@@ -311,16 +314,30 @@ public class FlowEnricherConfiguration {
                 informationElementDatabase);
     }
 
-    // NOTE: SFlowUdpParser is deliberately NOT wired as a Spring bean.
-    // Horizon's SFlowUdpParser constructor references
-    // org.opennms.core.concurrent.LogPreservingThreadFactory, which lives in
-    // org.opennms:opennms-util — a legacy module that delta-v excludes from
-    // every dependency block (per feedback_fix_horizon_not_exclusions).
-    // Instantiating the bean would fail with NoClassDefFoundError at
-    // Spring startup. sFlow traffic arriving on OpenNMS.Sink.Telemetry-SFlow
-    // is silently dropped by FlowEnrichmentFunction because its moduleId
-    // will not be present in the dispatch map. See
-    // project_flow_enricher_sflow_classpath_gap.md for the unblock path.
+    /**
+     * sFlow UDP parser. Unlike the Netflow5/9/IPFIX parsers, {@link SFlowUdpParser}
+     * does not extend horizon's {@code ParserBase} — it implements
+     * {@link UdpParser} directly and manages its own internal
+     * {@link java.util.concurrent.ThreadPoolExecutor} created from a
+     * {@link org.opennms.core.concurrent.LogPreservingThreadFactory}.
+     *
+     * <p>The delta-v-local shim of {@code LogPreservingThreadFactory} (at
+     * {@code core/flow-enricher/src/main/java/org/opennms/core/concurrent/LogPreservingThreadFactory.java})
+     * shadows horizon's class by fully-qualified name, so both bean
+     * construction and {@link SFlowUdpParser#start(ScheduledExecutorService)}
+     * succeed without pulling in the banned {@code opennms-util} module.
+     * This is the same shim that unblocks the Netflow parsers (see the
+     * {@code feature/flow-enricher-phase2-parser-bridge} merge).
+     */
+    @Bean
+    SFlowUdpParser sflowUdpParser(
+            ThreadLocalDispatcher threadLocalDispatcher,
+            DnsResolver flowParserDnsResolver) {
+        return new SFlowUdpParser(
+                "SFlow",
+                threadLocalDispatcher,
+                flowParserDnsResolver);
+    }
 
     @Bean
     Netflow5MessageProcessor netflow5Processor(
@@ -358,11 +375,17 @@ public class FlowEnricherConfiguration {
                 threadLocalDispatcher);
     }
 
-    // Deliberately no SFlowMessageProcessor @Bean — see the comment on the
-    // missing sflowUdpParser @Bean method above for why. The
-    // SFlowMessageProcessor class itself remains in the codebase (and its
-    // unit test uses FakeUdpParser so it still runs) but it is not wired
-    // into Spring.
+    @Bean
+    SFlowMessageProcessor sflowProcessor(
+            SFlowUdpParser sflowUdpParser,
+            MetricRegistry flowEnricherMetricRegistry,
+            ThreadLocalDispatcher threadLocalDispatcher) {
+        return new SFlowMessageProcessor(
+                sflowUdpParser,
+                new SimpleAdapterDefinition("SFlow"),
+                flowEnricherMetricRegistry,
+                threadLocalDispatcher);
+    }
 
     @Bean
     FlowEnrichmentFunction flowEnrichmentFunction(
@@ -374,12 +397,14 @@ public class FlowEnricherConfiguration {
             FlowToDocumentMapper flowToDocumentMapper,
             Netflow5MessageProcessor netflow5Processor,
             Netflow9MessageProcessor netflow9Processor,
-            IpfixMessageProcessor ipfixProcessor) {
+            IpfixMessageProcessor ipfixProcessor,
+            SFlowMessageProcessor sflowProcessor) {
 
         Map<String, ProtocolMessageProcessor> dispatchMap = Map.of(
                 "Telemetry-Netflow-5", netflow5Processor,
                 "Telemetry-Netflow-9", netflow9Processor,
-                "Telemetry-IPFIX",     ipfixProcessor);
+                "Telemetry-IPFIX",     ipfixProcessor,
+                "Telemetry-SFlow",     sflowProcessor);
 
         return new FlowEnrichmentFunction(
                 deserializer,

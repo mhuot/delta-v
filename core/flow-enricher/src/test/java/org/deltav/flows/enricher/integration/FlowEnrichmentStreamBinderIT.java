@@ -45,6 +45,7 @@ import org.opennms.netmgt.telemetry.protocols.netflow.parser.Netflow5UdpParser;
 import org.opennms.netmgt.telemetry.protocols.netflow.parser.Netflow9UdpParser;
 import org.opennms.netmgt.telemetry.protocols.netflow.transport.FlowMessage;
 import org.opennms.netmgt.telemetry.protocols.netflow.transport.NetflowVersion;
+import org.opennms.netmgt.telemetry.protocols.sflow.parser.SFlowUdpParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.stream.binder.test.InputDestination;
@@ -76,16 +77,23 @@ import io.netty.buffer.ByteBuf;
  * {@code DataSource} bean is ever requested. We still explicitly exclude
  * {@code DataSourceAutoConfiguration} for defense in depth.
  *
- * <p>The four {@link org.opennms.netmgt.telemetry.listeners.UdpParser} beans
- * ({@link Netflow5UdpParser}, {@link Netflow9UdpParser}, {@link IpfixUdpParser},
- * {@link SFlowUdpParser}) are also replaced with Mockito mocks. This avoids
- * classpath issues with {@code LogPreservingThreadFactory} in
- * {@link SFlowUdpParser} and allows the test to inject pre-parsed
- * {@code FlowMessage} / BSON bytes directly as Stage 1 output, bypassing
- * actual wire-format parsing. The mock parsers act as passthrough stubs:
- * they dispatch the received {@link ByteBuf} bytes unchanged via the shared
- * {@link ThreadLocalDispatcher} so Stage 2 sees the same bytes the test
- * put into the Sink message envelope.
+ * <p>The Netflow5/Netflow9/IPFIX {@link org.opennms.netmgt.telemetry.listeners.UdpParser}
+ * beans are replaced with Mockito mocks that dispatch the received
+ * {@link ByteBuf} bytes unchanged via the shared {@link ThreadLocalDispatcher}.
+ * Stage 2 of {@code AbstractProtocolMessageProcessor} therefore sees the
+ * pre-encoded {@code FlowMessage} protobuf bytes the test put into the Sink
+ * message envelope, bypassing wire-format parsing.
+ *
+ * <p>{@link SFlowUdpParser} is deliberately NOT mocked — it is wired as a
+ * real Spring bean. This means the test exercises the delta-v-local
+ * {@link org.opennms.core.concurrent.LogPreservingThreadFactory} shim
+ * transitively via bean construction and {@code flowParserLifecycle} start,
+ * giving unit-test-speed coverage of a class that previously required a
+ * full container rebuild to validate. The sFlow parser sits idle during
+ * this IT because none of the tests feed raw sFlow wire bytes; its Stage 1
+ * ↔ Stage 2 BSON handoff is covered by {@code SFlowMessageProcessorTest}
+ * using a {@code FakeUdpParser}. Live sFlow verification via a real
+ * wire-format exporter is a separate followup.
  *
  * <p>Because {@link JdbcNodeInfoLookup#lookupByIpAddress(String)} always
  * returns {@code null} in this test, the enricher's per-flow logic runs but
@@ -127,13 +135,11 @@ class FlowEnrichmentStreamBinderIT {
     private static final String NF5_DESTINATION = "OpenNMS.Sink.Telemetry-Netflow-5";
     private static final String NF9_DESTINATION = "OpenNMS.Sink.Telemetry-Netflow-9";
     private static final String IPFIX_DESTINATION = "OpenNMS.Sink.Telemetry-IPFIX";
-    // SFLOW_DESTINATION intentionally absent: the real SFlowUdpParser cannot
-    // be instantiated in delta-v's classpath (see
-    // project_flow_enricher_sflow_classpath_gap.md), so sFlow is not wired
-    // into Spring and any messages on OpenNMS.Sink.Telemetry-SFlow are dropped
-    // silently by the enricher's dispatchMap lookup. Phase 2 ships without
-    // sFlow support by design; the SFlowMessageProcessor unit test uses a
-    // FakeUdpParser and remains passing in isolation.
+    // SFLOW_DESTINATION omitted because this IT does not drive raw sFlow
+    // wire bytes through the enricher. The real SFlowUdpParser bean is
+    // constructed in this context (via the LogPreservingThreadFactory shim)
+    // but sits idle; its Stage 1 ↔ Stage 2 BSON handoff is covered by
+    // SFlowMessageProcessorTest with a FakeUdpParser.
 
     @Autowired
     private InputDestination input;
@@ -151,11 +157,11 @@ class FlowEnrichmentStreamBinderIT {
     private InterfaceMarkingCache interfaceMarkingCache;
 
     /**
-     * Mock parsers replace the real horizon UdpParser beans.
+     * Mock parsers replace the real Netflow5/9/IPFIX UdpParser beans.
      * Their {@code parse()} stubs dispatch received buffer bytes unchanged
      * via {@link ThreadLocalDispatcher} so Stage 2 sees the same
-     * pre-parsed bytes the test injected (FlowMessage protobuf).
-     * sFlow is deliberately NOT mocked — it is not wired into Spring at all.
+     * pre-parsed bytes the test injected (FlowMessage protobuf). sFlow uses
+     * its real bean (see class-level javadoc for rationale).
      */
     @MockitoBean
     private Netflow5UdpParser netflow5UdpParser;
