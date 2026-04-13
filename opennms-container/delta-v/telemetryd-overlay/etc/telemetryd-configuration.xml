@@ -6,11 +6,6 @@
      This follows the existing Sentinel deployment model for large-scale telemetry. -->
 <telemetryd-config>
 
-    <listener name="Netflow-9-UDP-4729" class-name="org.opennms.netmgt.telemetry.listeners.UdpListener" enabled="true">
-        <parameter key="port" value="4729"/>
-        <parser name="Netflow-9-Parser" class-name="org.opennms.netmgt.telemetry.protocols.netflow.parser.Netflow9UdpParser" queue="Netflow-9"/>
-    </listener>
-
     <queue name="JTI">
         <adapter name="JTI-GPB" class-name="org.opennms.netmgt.telemetry.protocols.jti.adapter.JtiGpbAdapter" enabled="false">
             <parameter key="script" value="${install.dir}/etc/telemetryd-adapters/junos-telemetry-interface.groovy"/>

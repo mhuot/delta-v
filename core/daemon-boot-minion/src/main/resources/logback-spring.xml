@@ -7,11 +7,13 @@
     </appender>
 
     <logger name="org.opennms" level="${MINION_LOG_LEVEL:-INFO}"/>
+    <logger name="org.deltav" level="${MINION_LOG_LEVEL:-INFO}"/>
     <logger name="org.apache.kafka" level="WARN"/>
     <logger name="org.springframework" level="WARN"/>
 
     <springProfile name="debug">
         <logger name="org.opennms" level="DEBUG"/>
+        <logger name="org.deltav" level="DEBUG"/>
         <logger name="org.apache.kafka" level="INFO"/>
     </springProfile>
 
