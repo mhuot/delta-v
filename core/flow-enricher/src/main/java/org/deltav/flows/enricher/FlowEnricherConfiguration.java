@@ -19,18 +19,24 @@ package org.deltav.flows.enricher;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 import javax.sql.DataSource;
 
 import com.codahale.metrics.MetricRegistry;
 
+import io.micrometer.core.instrument.Clock;
 import org.deltav.flows.enricher.classification.ApplicationClassifier;
 import org.deltav.flows.enricher.classification.PortBasedApplicationClassifier;
 import org.deltav.flows.enricher.enrichment.FlowLocalityCalculator;
 import org.deltav.flows.enricher.enrichment.InterfaceMarkingCache;
 import org.deltav.flows.enricher.enrichment.JdbcNodeInfoLookup;
 import org.deltav.flows.enricher.mapping.FlowToDocumentMapper;
+import org.deltav.flows.enricher.parser.FlowEnricherMicrometerBridge;
 import org.deltav.flows.enricher.parser.LoggingEventForwarder;
 import org.deltav.flows.enricher.parser.NoOpDnsResolver;
 import org.deltav.flows.enricher.parser.StaticIdentity;
@@ -42,10 +48,13 @@ import org.deltav.flows.enricher.protocol.ProtocolMessageProcessor;
 import org.deltav.flows.enricher.protocol.SimpleAdapterDefinition;
 import org.opennms.netmgt.dnsresolver.api.DnsResolver;
 import org.opennms.netmgt.events.api.EventForwarder;
+import org.opennms.netmgt.telemetry.listeners.UdpParser;
 import org.opennms.netmgt.telemetry.protocols.netflow.parser.IpfixUdpParser;
 import org.opennms.netmgt.telemetry.protocols.netflow.parser.Netflow5UdpParser;
 import org.opennms.netmgt.telemetry.protocols.netflow.parser.Netflow9UdpParser;
 import org.opennms.netmgt.telemetry.protocols.netflow.parser.ie.InformationElementDatabase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -102,14 +111,97 @@ public class FlowEnricherConfiguration {
 
     /**
      * A process-local Dropwizard {@link MetricRegistry} shared across the
-     * four horizon flow adapters and parsers. Phase 1.5 does not publish
-     * these metrics anywhere; the registry exists solely because horizon's
-     * {@code AbstractFlowAdapter} and {@code UdpParserBase} constructors
-     * require one. A later phase can wire this to an actuator endpoint.
+     * four horizon flow adapters and parsers. Exposed to Spring Boot Actuator
+     * via {@link FlowEnricherMicrometerBridge} so parser and adapter metrics
+     * are scrapable at {@code /actuator/prometheus}.
      */
     @Bean
     MetricRegistry flowEnricherMetricRegistry() {
         return new MetricRegistry();
+    }
+
+    /**
+     * Bridges the shared Dropwizard {@link MetricRegistry} (used internally
+     * by horizon's UDP parsers and flow adapters for their timers and meters)
+     * into Spring Boot's Micrometer registry, making parser and adapter
+     * metrics scrapable at {@code /actuator/prometheus}.
+     */
+    @Bean
+    FlowEnricherMicrometerBridge flowEnricherMicrometerBridge(
+            MetricRegistry flowEnricherMetricRegistry) {
+        return new FlowEnricherMicrometerBridge(flowEnricherMetricRegistry, Clock.SYSTEM);
+    }
+
+    /**
+     * Single-threaded daemon {@link ScheduledExecutorService} used by the
+     * horizon UDP parsers to schedule periodic session/template cleanup work.
+     * The {@code destroyMethod = "shutdown"} ensures Spring shuts it down
+     * cleanly on context close.
+     */
+    @Bean(destroyMethod = "shutdown")
+    ScheduledExecutorService flowParserSessionCleanup() {
+        AtomicLong counter = new AtomicLong(0);
+        ThreadFactory factory = runnable -> {
+            Thread thread = new Thread(runnable, "flow-parser-session-cleanup-" + counter.incrementAndGet());
+            thread.setDaemon(true);
+            return thread;
+        };
+        return Executors.newSingleThreadScheduledExecutor(factory);
+    }
+
+    /**
+     * Lifecycle bean that starts and stops the Netflow5, Netflow9, and IPFIX
+     * UDP parsers as part of the Spring application context lifecycle. sFlow
+     * is deliberately excluded because its parser is not wired as a bean
+     * (see the comment on the missing sflowUdpParser bean for the reason).
+     */
+    @Bean
+    ParserLifecycle flowParserLifecycle(
+            ScheduledExecutorService flowParserSessionCleanup,
+            Netflow5UdpParser netflow5UdpParser,
+            Netflow9UdpParser netflow9UdpParser,
+            IpfixUdpParser ipfixUdpParser) {
+        return new ParserLifecycle(
+                flowParserSessionCleanup,
+                List.of(netflow5UdpParser, netflow9UdpParser, ipfixUdpParser));
+    }
+
+    /**
+     * Manages the start/stop lifecycle of the horizon UDP parsers. Each
+     * parser must be started with a {@link ScheduledExecutorService} so it
+     * can schedule periodic session cleanup work (template expiry, etc.).
+     */
+    public static class ParserLifecycle {
+
+        private static final Logger LOG = LoggerFactory.getLogger(ParserLifecycle.class);
+
+        private final ScheduledExecutorService scheduler;
+        private final List<UdpParser> parsers;
+
+        ParserLifecycle(ScheduledExecutorService scheduler, List<UdpParser> parsers) {
+            this.scheduler = scheduler;
+            this.parsers = List.copyOf(parsers);
+        }
+
+        @jakarta.annotation.PostConstruct
+        public void start() {
+            for (UdpParser parser : parsers) {
+                parser.start(scheduler);
+                LOG.info("Started horizon parser {}", parser.getName());
+            }
+        }
+
+        @jakarta.annotation.PreDestroy
+        public void stop() {
+            for (UdpParser parser : parsers) {
+                try {
+                    parser.stop();
+                    LOG.info("Stopped horizon parser {}", parser.getName());
+                } catch (Exception ex) {
+                    LOG.warn("Error stopping horizon parser {} — continuing shutdown", parser.getName(), ex);
+                }
+            }
+        }
     }
 
     /**
