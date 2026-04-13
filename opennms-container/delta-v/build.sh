@@ -29,6 +29,64 @@ VERSION="$(cd "$REPO_ROOT" && ./mvnw help:evaluate -Dexpression=project.version 
 log() { echo "==> $*"; }
 err() { echo "ERROR: $*" >&2; exit 1; }
 
+# Detect daemon-boot modules whose source is newer than their target JAR and
+# rebuild them in-place. Guards against the "stale JAR" failure mode where
+# `do_deltav_images` stages a weeks-old JAR into a freshly-built Docker image,
+# producing an image with a recent mtime but stale class files inside.
+# A single mtime comparison per module is much cheaper than a blind rebuild.
+check_daemon_boot_freshness() {
+    log "Checking daemon-boot JAR freshness..."
+    local stale_modules=()
+    local module_dir module_name jar candidate src_dir pom
+
+    for module_dir in "$REPO_ROOT"/core/daemon-boot-*/; do
+        module_name=$(basename "${module_dir%/}")
+        src_dir="${module_dir%/}/src/main"
+        pom="${module_dir%/}/pom.xml"
+
+        # Look for the Spring Boot fat jar, excluding the -sources / -javadoc /
+        # .original siblings that live alongside it after `mvn package`.
+        jar=""
+        for candidate in "${module_dir%/}"/target/org.opennms.core."${module_name}"-*.jar; do
+            case "$candidate" in
+                *-sources.jar|*-javadoc.jar|*.original) continue ;;
+            esac
+            if [ -f "$candidate" ]; then
+                jar="$candidate"
+                break
+            fi
+        done
+
+        if [ -z "$jar" ]; then
+            log "  stale: core/$module_name (no target JAR)"
+            stale_modules+=("core/$module_name")
+            continue
+        fi
+
+        # If any .java under src/main/ or the pom.xml is newer than the JAR,
+        # the module needs a rebuild. find -newer is portable across macOS
+        # BSD find and GNU find.
+        if [ -n "$(find "$src_dir" "$pom" -newer "$jar" -print 2>/dev/null)" ]; then
+            log "  stale: core/$module_name (source newer than $(basename "$jar"))"
+            stale_modules+=("core/$module_name")
+        fi
+    done
+
+    if [ ${#stale_modules[@]} -eq 0 ]; then
+        log "All daemon-boot JARs are up-to-date"
+        return
+    fi
+
+    log "Rebuilding ${#stale_modules[@]} stale daemon-boot module(s)..."
+    local pl_args
+    pl_args=$(IFS=,; echo "${stale_modules[*]}")
+    local test_flag=""
+    [ "$SKIP_TESTS" = "true" ] && test_flag="-DskipTests"
+    ( cd "$REPO_ROOT" && ./mvnw -B $test_flag -pl "$pl_args" -am install ) \
+        || err "Failed to rebuild stale daemon-boot modules"
+    log "Stale modules rebuilt"
+}
+
 check_prereqs() {
     command -v docker >/dev/null 2>&1 || err "docker not found"
     command -v ./mvnw >/dev/null 2>&1 || true  # Maven wrapper
@@ -110,6 +168,13 @@ do_deltav_images() {
     if ! docker image inspect opennms/jre-deltav:21 >/dev/null 2>&1; then
         err "opennms/jre-deltav:21 not found — run './build.sh jre' first"
     fi
+
+    # Phase 0: Self-heal stale daemon-boot JARs before staging. If any
+    # module's source files are newer than its target JAR, `do_deltav_images`
+    # would otherwise stage the stale JAR into the new image, producing a
+    # container with fresh mtime but outdated class files. Rebuild the stale
+    # modules in-place so the images carry current code.
+    check_daemon_boot_freshness
 
     # Phase 1: Extract and deduplicate
     "$SCRIPT_DIR/compute-shared-libs.sh" "$REPO_ROOT" "$VERSION"
