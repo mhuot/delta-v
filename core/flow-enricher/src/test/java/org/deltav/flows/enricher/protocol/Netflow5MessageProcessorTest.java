@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import org.deltav.flows.enricher.parser.ThreadLocalDispatcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opennms.integration.api.v1.flows.Flow.NetflowVersion;
@@ -34,27 +35,27 @@ import com.google.protobuf.UInt32Value;
 import com.google.protobuf.UInt64Value;
 
 /**
- * Tests {@link Netflow5MessageProcessor} by constructing a
- * {@link FlowMessage} protobuf directly (the parser layer's normalized
- * representation), wrapping its serialized bytes in a
- * {@link TelemetryProtos.TelemetryMessageLog}, and asserting that the
- * processor returns the expected parsed flow.
- *
- * <p>The horizon adapter's job at this layer is to take a
- * {@code FlowMessage} protobuf (already parsed from Netflow v5 wire format
- * on the Minion) and wrap it in a {@code NetflowMessage} implementation of
- * the {@link Flow} interface. Constructing the {@code FlowMessage} directly
- * avoids pulling in horizon's Netflow parser module as a test dependency.
+ * Tests {@link Netflow5MessageProcessor}. Under Phase 2 the processor runs
+ * a two-stage bridge: Stage 1 feeds raw bytes to a horizon {@link
+ * org.opennms.netmgt.telemetry.listeners.UdpParser}, which emits
+ * {@code FlowMessage} protobuf bytes; Stage 2 passes those bytes to
+ * horizon's {@code Netflow5Adapter}. Tests use {@link FakeUdpParser} to
+ * script the parser's output without pulling in the real Netflow v5 wire
+ * parser.
  */
 class Netflow5MessageProcessorTest {
 
+    private ThreadLocalDispatcher tld;
+    private FakeUdpParser fakeParser;
     private Netflow5MessageProcessor processor;
 
     @BeforeEach
     void setUp() {
+        tld = new ThreadLocalDispatcher();
+        fakeParser = new FakeUdpParser(tld);
         AdapterDefinition adapterDefinition = TestAdapterDefinitions.testAdapterDefinition("netflow5-test");
         MetricRegistry metricRegistry = new MetricRegistry();
-        processor = new Netflow5MessageProcessor(adapterDefinition, metricRegistry);
+        processor = new Netflow5MessageProcessor(fakeParser, adapterDefinition, metricRegistry, tld);
     }
 
     @Test
@@ -73,11 +74,12 @@ class Netflow5MessageProcessorTest {
     }
 
     @Test
-    void processParsesSingleFlowMessageProtobuf() {
+    void processYieldsFlowsWhenParserEmitsFlowMessageBytes() {
         FlowMessage flowMessage = buildNetflow5FlowMessage();
-        TelemetryProtos.TelemetryMessageLog log = wrapInMessageLog(flowMessage);
+        fakeParser.emitNext(flowMessage.toByteArray());
 
-        List<Flow> flows = processor.process(log);
+        TelemetryProtos.TelemetryMessageLog raw = rawLogWithOneEntry(new byte[]{1, 2, 3, 4});
+        List<Flow> flows = processor.process(raw);
 
         assertThat(flows).hasSize(1);
         Flow flow = flows.get(0);
@@ -92,61 +94,15 @@ class Netflow5MessageProcessorTest {
         assertThat(flow.getNetflowVersion()).isEqualTo(NetflowVersion.V5);
     }
 
-    @Test
-    void processParsesMultipleEntriesInMessageLog() {
-        FlowMessage flowMessage = buildNetflow5FlowMessage();
-        byte[] serialized = flowMessage.toByteArray();
-        TelemetryProtos.TelemetryMessageLog log = TelemetryProtos.TelemetryMessageLog.newBuilder()
-                .setLocation("test-location")
-                .setSystemId("test-system")
-                .setSourceAddress("192.0.2.254")
-                .setSourcePort(2055)
-                .addMessage(TelemetryProtos.TelemetryMessage.newBuilder()
-                        .setBytes(ByteString.copyFrom(serialized))
-                        .setTimestamp(System.currentTimeMillis())
-                        .build())
-                .addMessage(TelemetryProtos.TelemetryMessage.newBuilder()
-                        .setBytes(ByteString.copyFrom(serialized))
-                        .setTimestamp(System.currentTimeMillis())
-                        .build())
-                .build();
-
-        List<Flow> flows = processor.process(log);
-
-        // NetflowAdapter emits one Flow per FlowMessage protobuf entry
-        assertThat(flows).hasSize(2);
-    }
-
-    @Test
-    void processReturnsEmptyListWhenEntryBytesAreInvalid() {
-        TelemetryProtos.TelemetryMessageLog log = TelemetryProtos.TelemetryMessageLog.newBuilder()
-                .setLocation("test-location")
-                .setSystemId("test-system")
-                .setSourceAddress("192.0.2.254")
-                .addMessage(TelemetryProtos.TelemetryMessage.newBuilder()
-                        .setBytes(ByteString.copyFromUtf8("not a valid FlowMessage protobuf"))
-                        .setTimestamp(System.currentTimeMillis())
-                        .build())
-                .build();
-
-        // NetflowAdapter.parse() catches InvalidProtocolBufferException and
-        // returns null, so the adapter publishes an empty flow list to the
-        // pipeline. The processor returns that empty list without throwing.
-        List<Flow> flows = processor.process(log);
-
-        assertThat(flows).isEmpty();
-    }
-
-    private static TelemetryProtos.TelemetryMessageLog wrapInMessageLog(FlowMessage flowMessage) {
+    private static TelemetryProtos.TelemetryMessageLog rawLogWithOneEntry(byte[] bytes) {
         return TelemetryProtos.TelemetryMessageLog.newBuilder()
                 .setLocation("test-location")
                 .setSystemId("test-system")
                 .setSourceAddress("192.0.2.254")
                 .setSourcePort(2055)
                 .addMessage(TelemetryProtos.TelemetryMessage.newBuilder()
-                        .setBytes(ByteString.copyFrom(flowMessage.toByteArray()))
-                        .setTimestamp(System.currentTimeMillis())
-                        .build())
+                        .setBytes(ByteString.copyFrom(bytes))
+                        .setTimestamp(System.currentTimeMillis()))
                 .build();
     }
 

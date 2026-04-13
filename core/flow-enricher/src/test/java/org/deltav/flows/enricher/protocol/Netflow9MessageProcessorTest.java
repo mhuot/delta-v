@@ -20,36 +20,33 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import org.deltav.flows.enricher.parser.ThreadLocalDispatcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.opennms.integration.api.v1.flows.Flow.NetflowVersion;
 import org.opennms.netmgt.flows.api.Flow;
 import org.opennms.netmgt.telemetry.common.ipc.TelemetryProtos;
 import org.opennms.netmgt.telemetry.config.api.AdapterDefinition;
 import org.opennms.netmgt.telemetry.protocols.netflow.transport.FlowMessage;
+import org.opennms.netmgt.telemetry.protocols.netflow.transport.NetflowVersion;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.UInt32Value;
 import com.google.protobuf.UInt64Value;
 
-/**
- * Tests {@link Netflow9MessageProcessor}. Netflow v9 data records share
- * horizon's normalized {@link FlowMessage} protobuf with Netflow v5 and
- * IPFIX; the only difference at this layer is the
- * {@code netflow_version} field. Template/data distinction happens in the
- * parser layer (on the Minion) before the {@code FlowMessage} reaches the
- * adapter.
- */
 class Netflow9MessageProcessorTest {
 
+    private ThreadLocalDispatcher tld;
+    private FakeUdpParser fakeParser;
     private Netflow9MessageProcessor processor;
 
     @BeforeEach
     void setUp() {
+        tld = new ThreadLocalDispatcher();
+        fakeParser = new FakeUdpParser(tld);
         AdapterDefinition adapterDefinition = TestAdapterDefinitions.testAdapterDefinition("netflow9-test");
         MetricRegistry metricRegistry = new MetricRegistry();
-        processor = new Netflow9MessageProcessor(adapterDefinition, metricRegistry);
+        processor = new Netflow9MessageProcessor(fakeParser, adapterDefinition, metricRegistry, tld);
     }
 
     @Test
@@ -58,16 +55,85 @@ class Netflow9MessageProcessorTest {
     }
 
     @Test
-    void processParsesNetflow9FlowMessage() {
-        FlowMessage flowMessage = FlowMessage.newBuilder()
+    void processReturnsEmptyListForEmptyMessageLog() {
+        TelemetryProtos.TelemetryMessageLog empty = TelemetryProtos.TelemetryMessageLog.newBuilder()
+                .setLocation("Default")
+                .setSystemId("test-system")
+                .build();
+        assertThat(processor.process(empty)).isEmpty();
+    }
+
+    @Test
+    void processYieldsFlowsWhenParserEmitsFlowMessageBytes() {
+        byte[] flowMessageBytes = buildFlowMessage("10.0.0.1", "10.0.0.2").toByteArray();
+        fakeParser.emitNext(flowMessageBytes);
+
+        TelemetryProtos.TelemetryMessageLog raw = rawLogWithOneEntry(new byte[]{1, 2, 3, 4});
+        List<Flow> flows = processor.process(raw);
+
+        assertThat(flows).hasSize(1);
+        assertThat(flows.get(0).getSrcAddr()).isEqualTo("10.0.0.1");
+        assertThat(flows.get(0).getDstAddr()).isEqualTo("10.0.0.2");
+        assertThat(fakeParser.getParseCallCount()).isEqualTo(1);
+    }
+
+    @Test
+    void parserExceptionDoesNotLeakThreadLocal() {
+        fakeParser.throwOnNextParse(new IllegalStateException("boom from parser"));
+
+        TelemetryProtos.TelemetryMessageLog raw = rawLogWithOneEntry(new byte[]{1, 2, 3, 4});
+        List<Flow> flows = processor.process(raw);
+
+        // The per-entry catch should swallow the exception at DEBUG and
+        // produce zero flows, NOT rethrow.
+        assertThat(flows).isEmpty();
+        // The critical invariant: thread-local is cleared even after exception.
+        assertThat(tld.current()).isNull();
+    }
+
+    @Test
+    void sequentialCallsDoNotCrossContaminate() {
+        byte[] flowA = buildFlowMessage("10.0.0.11", "10.0.0.12").toByteArray();
+        byte[] flowB = buildFlowMessage("10.0.0.21", "10.0.0.22").toByteArray();
+        fakeParser.emitNext(flowA).emitNext(flowB);
+
+        List<Flow> resultA = processor.process(rawLogWithOneEntry(new byte[]{1}));
+        List<Flow> resultB = processor.process(rawLogWithOneEntry(new byte[]{2}));
+
+        assertThat(resultA).hasSize(1);
+        assertThat(resultA.get(0).getSrcAddr()).isEqualTo("10.0.0.11");
+
+        assertThat(resultB).hasSize(1);
+        assertThat(resultB.get(0).getSrcAddr()).isEqualTo("10.0.0.21");
+
+        // A's flow must not appear in B's result
+        assertThat(resultB).noneMatch(f -> "10.0.0.11".equals(f.getSrcAddr()));
+        // And vice versa
+        assertThat(resultA).noneMatch(f -> "10.0.0.21".equals(f.getSrcAddr()));
+    }
+
+    private static TelemetryProtos.TelemetryMessageLog rawLogWithOneEntry(byte[] bytes) {
+        return TelemetryProtos.TelemetryMessageLog.newBuilder()
+                .setLocation("Default")
+                .setSystemId("test-system")
+                .setSourceAddress("192.0.2.1")
+                .setSourcePort(54321)
+                .addMessage(TelemetryProtos.TelemetryMessage.newBuilder()
+                        .setTimestamp(System.currentTimeMillis())
+                        .setBytes(ByteString.copyFrom(bytes)))
+                .build();
+    }
+
+    private static FlowMessage buildFlowMessage(String srcAddr, String dstAddr) {
+        return FlowMessage.newBuilder()
                 .setTimestamp(System.currentTimeMillis())
-                .setNetflowVersion(org.opennms.netmgt.telemetry.protocols.netflow.transport.NetflowVersion.V9)
-                .setSrcAddress("10.0.0.1")
-                .setDstAddress("10.0.0.2")
+                .setNetflowVersion(NetflowVersion.V9)
+                .setSrcAddress(srcAddr)
+                .setDstAddress(dstAddr)
                 .setNextHopAddress("10.0.0.254")
                 .setSrcPort(UInt32Value.of(12345))
                 .setDstPort(UInt32Value.of(80))
-                .setProtocol(UInt32Value.of(17)) // UDP
+                .setProtocol(UInt32Value.of(17))
                 .setNumBytes(UInt64Value.of(2048L))
                 .setNumPackets(UInt64Value.of(16L))
                 .setFirstSwitched(UInt64Value.of(1_700_000_000_000L))
@@ -77,25 +143,5 @@ class Netflow9MessageProcessorTest {
                 .setOutputSnmpIfindex(UInt32Value.of(4))
                 .setIpProtocolVersion(UInt32Value.of(4))
                 .build();
-
-        TelemetryProtos.TelemetryMessageLog log = TelemetryProtos.TelemetryMessageLog.newBuilder()
-                .setLocation("test-location")
-                .setSystemId("test-system")
-                .setSourceAddress("10.0.0.100")
-                .addMessage(TelemetryProtos.TelemetryMessage.newBuilder()
-                        .setBytes(ByteString.copyFrom(flowMessage.toByteArray()))
-                        .setTimestamp(System.currentTimeMillis())
-                        .build())
-                .build();
-
-        List<Flow> flows = processor.process(log);
-
-        assertThat(flows).hasSize(1);
-        Flow flow = flows.get(0);
-        assertThat(flow.getSrcAddr()).isEqualTo("10.0.0.1");
-        assertThat(flow.getDstAddr()).isEqualTo("10.0.0.2");
-        assertThat(flow.getProtocol()).isEqualTo(17);
-        assertThat(flow.getDstPort()).isEqualTo(80);
-        assertThat(flow.getNetflowVersion()).isEqualTo(NetflowVersion.V9);
     }
 }

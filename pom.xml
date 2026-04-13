@@ -238,6 +238,10 @@
       <dependency><groupId>org.opennms.features.telemetry.config</groupId><artifactId>org.opennms.features.telemetry.config.jaxb</artifactId><version>${deltav.horizon.version}</version></dependency>
       <dependency><groupId>org.opennms.features.telemetry.protocols.netflow</groupId><artifactId>org.opennms.features.telemetry.protocols.netflow.adapter</artifactId><version>${deltav.horizon.version}</version></dependency>
       <dependency><groupId>org.opennms.features.telemetry.protocols.sflow</groupId><artifactId>org.opennms.features.telemetry.protocols.sflow.adapter</artifactId><version>${deltav.horizon.version}</version></dependency>
+      <dependency><groupId>org.opennms.features.telemetry.protocols.netflow</groupId><artifactId>org.opennms.features.telemetry.protocols.netflow.parser</artifactId><version>${deltav.horizon.version}</version></dependency>
+      <dependency><groupId>org.opennms.features.telemetry.protocols.sflow</groupId><artifactId>org.opennms.features.telemetry.protocols.sflow.parser</artifactId><version>${deltav.horizon.version}</version></dependency>
+      <dependency><groupId>org.opennms.features.telemetry</groupId><artifactId>org.opennms.features.telemetry.listeners</artifactId><version>${deltav.horizon.version}</version></dependency>
+      <dependency><groupId>org.opennms.features.events</groupId><artifactId>org.opennms.features.events.api</artifactId><version>${deltav.horizon.version}</version></dependency>
       <dependency><groupId>org.opennms.features.topologies</groupId><artifactId>org.opennms.features.topologies.service.impl</artifactId><version>${deltav.horizon.version}</version></dependency>
       <dependency><groupId>org.opennms.protocols</groupId><artifactId>org.opennms.protocols.radius</artifactId><version>${deltav.horizon.version}</version></dependency>
 

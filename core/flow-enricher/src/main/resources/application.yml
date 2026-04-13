@@ -34,6 +34,11 @@ spring:
         binder:
           brokers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
           auto-create-topics: true
+        bindings:
+          enrichFlows-in-0:
+            consumer:
+              configuration:
+                partition.assignment.strategy: org.apache.kafka.clients.consumer.CooperativeStickyAssignor
 
 server:
   port: 8080
@@ -42,7 +47,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus
   endpoint:
     health:
       show-details: always
@@ -54,6 +59,9 @@ deltav:
       clean-interval-ms: ${DELTAV_FLOWS_INTERFACE_MARKING_CLEAN_INTERVAL_MS:3600000}
     node-lookup:
       cache-ttl: ${DELTAV_FLOWS_NODE_LOOKUP_CACHE_TTL:5m}
+    parser:
+      system-id: flow-enricher
+      location: Default
 
 logging:
   level:

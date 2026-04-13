@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import org.deltav.flows.enricher.parser.ThreadLocalDispatcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opennms.integration.api.v1.flows.Flow.NetflowVersion;
@@ -34,22 +35,30 @@ import com.google.protobuf.UInt32Value;
 import com.google.protobuf.UInt64Value;
 
 /**
- * Tests {@link IpfixMessageProcessor}. IPFIX (Netflow v10) data records
- * share horizon's normalized {@link FlowMessage} protobuf with Netflow v5
- * and Netflow v9; the only difference at this layer is the
- * {@code netflow_version} field. Template/data distinction happens in the
- * parser layer (on the Minion) before the {@code FlowMessage} reaches the
- * adapter.
+ * Tests {@link IpfixMessageProcessor}. Under Phase 2 the processor runs a
+ * two-stage bridge: Stage 1 feeds raw bytes to a horizon {@link
+ * org.opennms.netmgt.telemetry.listeners.UdpParser}, which emits
+ * {@code FlowMessage} protobuf bytes; Stage 2 passes those bytes to
+ * horizon's {@code IpfixAdapter}. Tests use {@link FakeUdpParser} to script
+ * the parser's output without pulling in the real IPFIX wire parser.
+ *
+ * <p>IPFIX (Netflow v10) data records share horizon's normalized
+ * {@link FlowMessage} protobuf with Netflow v5 and Netflow v9; the only
+ * difference at this layer is the {@code netflow_version} field.
  */
 class IpfixMessageProcessorTest {
 
+    private ThreadLocalDispatcher tld;
+    private FakeUdpParser fakeParser;
     private IpfixMessageProcessor processor;
 
     @BeforeEach
     void setUp() {
+        tld = new ThreadLocalDispatcher();
+        fakeParser = new FakeUdpParser(tld);
         AdapterDefinition adapterDefinition = TestAdapterDefinitions.testAdapterDefinition("ipfix-test");
         MetricRegistry metricRegistry = new MetricRegistry();
-        processor = new IpfixMessageProcessor(adapterDefinition, metricRegistry);
+        processor = new IpfixMessageProcessor(fakeParser, adapterDefinition, metricRegistry, tld);
     }
 
     @Test
@@ -58,7 +67,7 @@ class IpfixMessageProcessorTest {
     }
 
     @Test
-    void processParsesIpfixFlowMessage() {
+    void processYieldsFlowsWhenParserEmitsFlowMessageBytes() {
         FlowMessage flowMessage = FlowMessage.newBuilder()
                 .setTimestamp(System.currentTimeMillis())
                 .setNetflowVersion(org.opennms.netmgt.telemetry.protocols.netflow.transport.NetflowVersion.IPFIX)
@@ -79,17 +88,10 @@ class IpfixMessageProcessorTest {
                 .setIpProtocolVersion(UInt32Value.of(6))
                 .build();
 
-        TelemetryProtos.TelemetryMessageLog log = TelemetryProtos.TelemetryMessageLog.newBuilder()
-                .setLocation("test-location")
-                .setSystemId("test-system")
-                .setSourceAddress("10.0.0.100")
-                .addMessage(TelemetryProtos.TelemetryMessage.newBuilder()
-                        .setBytes(ByteString.copyFrom(flowMessage.toByteArray()))
-                        .setTimestamp(System.currentTimeMillis())
-                        .build())
-                .build();
+        fakeParser.emitNext(flowMessage.toByteArray());
 
-        List<Flow> flows = processor.process(log);
+        TelemetryProtos.TelemetryMessageLog raw = rawLogWithOneEntry(new byte[]{1, 2, 3, 4});
+        List<Flow> flows = processor.process(raw);
 
         assertThat(flows).hasSize(1);
         Flow flow = flows.get(0);
@@ -99,5 +101,17 @@ class IpfixMessageProcessorTest {
         assertThat(flow.getDstPort()).isEqualTo(22);
         assertThat(flow.getIpProtocolVersion()).isEqualTo(6);
         assertThat(flow.getNetflowVersion()).isEqualTo(NetflowVersion.IPFIX);
+    }
+
+    private static TelemetryProtos.TelemetryMessageLog rawLogWithOneEntry(byte[] bytes) {
+        return TelemetryProtos.TelemetryMessageLog.newBuilder()
+                .setLocation("test-location")
+                .setSystemId("test-system")
+                .setSourceAddress("10.0.0.100")
+                .setSourcePort(2055)
+                .addMessage(TelemetryProtos.TelemetryMessage.newBuilder()
+                        .setBytes(ByteString.copyFrom(bytes))
+                        .setTimestamp(System.currentTimeMillis()))
+                .build();
     }
 }

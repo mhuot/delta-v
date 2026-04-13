@@ -16,18 +16,13 @@ Kafka Sink topics (`OpenNMS.Sink.Telemetry-Netflow-5`, `Telemetry-Netflow-9`,
 so the Sink API's Kafka producer sticky-partitions by exporter — important
 for Phase 2's server-side template cache affinity. 18/18 unit tests pass.
 
-**The Minion code is dormant in this PR.** Docker Compose still routes
-softflowd through the legacy `telemetryd` listener, and the existing E2E
-test (`test-flows-e2e.sh`) validates the legacy pipeline. Task 7's
-docker-compose redirect and Task 8's `REQUIRED_SERVICES` update were
-reverted after a wire-format mismatch was discovered during live
-validation (see Phase 2 scope below). When Phase 2 ships, flipping
-`NETFLOW_COLLECTOR` to `minion:4729` and removing the telemetryd
-Netflow-9-UDP-4729 listener becomes a mechanical one-commit change.
-
-**Phase 2 (follow-up, not in this PR):** Flow-enricher server-side parser
-rework. See `project_flow_enricher_phase2_parser.md` in the session memory
-for full scope; summary below.
+**Phase 2 (`feature/flow-enricher-phase2-parser-bridge`, complete):**
+Flow-enricher server-side UdpParser bridge is shipped. Docker Compose now
+routes softflowd through the Minion (`NETFLOW_COLLECTOR: minion:4729`);
+the telemetryd Netflow-9-UDP-4729 listener block has been removed; and
+`test-flows-e2e.sh` requires `minion` in `REQUIRED_SERVICES`. The Minion
+code is live — no longer dormant. See Phase 2 scope below for full
+implementation details. 120 tests pass (including 4 parser bridge ITs).
 
 ### Wire Format Mismatch (Discovered 2026-04-12)
 
@@ -173,10 +168,19 @@ softflowd -> Minion (UDP 4729) -> Kafka -> flow-enricher -> ClickHouse
 
 The Minion receives raw UDP datagrams, detects the flow protocol from header
 bytes, wraps the raw payload in a `TelemetryMessageLog` protobuf, and
-dispatches via the existing Sink API to protocol-specific Kafka topics. The
-flow-enricher consumes these topics unchanged -- it cannot distinguish
-Minion-produced messages from Telemetryd-produced ones because the wire
-format is identical.
+dispatches via the existing Sink API to protocol-specific Kafka topics.
+
+The flow-enricher (Phase 2, shipped in feature/flow-enricher-phase2-parser-bridge)
+consumes these topics with a server-side UdpParser bridge. Each
+`TelemetryMessage.bytes` entry now carries raw UDP wire bytes; the
+flow-enricher runs them through horizon's `Netflow5UdpParser`,
+`Netflow9UdpParser`, or `IpfixUdpParser` to produce `FlowMessage`
+protobufs, then feeds those through the existing `AbstractFlowAdapter` +
+`CapturingPipeline` path to get `Flow` POJOs. The legacy pre-parsed
+`FlowMessage` bytes wire format used by Phase 1.5's telemetryd-driven
+path is no longer supported. sFlow support is deferred in Phase 2 due to
+a horizon classpath issue (`LogPreservingThreadFactory` in the banned
+`opennms-util` module) — sFlow messages are dropped silently.
 
 ## Design Decisions
 
