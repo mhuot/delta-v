@@ -18,79 +18,95 @@ package org.deltav.flows.enricher.parser;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.opennms.core.ipc.sink.api.AsyncDispatcher;
 import org.opennms.netmgt.telemetry.api.receiver.TelemetryMessage;
 
 /**
- * A singleton {@link AsyncDispatcher} that delegates every {@code send()}
- * call to a per-thread {@link CapturingDispatcher} installed by the
- * enricher's processor code immediately before it calls
- * {@code UdpParser.parse()} and cleared in the corresponding {@code finally}.
+ * A call-scoped {@link AsyncDispatcher} that delegates every {@code send()}
+ * call to the {@link CapturingDispatcher} currently installed for the active
+ * parse call. Horizon {@code UdpParser} instances hold their dispatcher as a
+ * final constructor field — it cannot be swapped per call. However, the
+ * parser's per-exporter template cache (in {@code UdpSessionManager}) must
+ * persist across calls, so fresh parsers per call are not viable. This class
+ * resolves the conflict: the parser is a singleton wired to one instance of
+ * this dispatcher; each {@code process()} call installs a private
+ * {@link CapturingDispatcher}, runs the parse, reads captured messages, then
+ * clears the dispatcher.
  *
- * <p>Horizon {@code UdpParser} instances take their {@code AsyncDispatcher}
- * as a final constructor field — the dispatcher cannot be swapped per call
- * on a singleton parser. But the parser's per-exporter template cache must
- * persist across calls, so fresh parsers per call are unusable. This class
- * resolves the conflict: the parser is a long-lived singleton bean wired to
- * this {@code ThreadLocalDispatcher}; each processor call installs a private
- * {@link CapturingDispatcher} onto the current thread, lets the parser write
- * into it, reads the captured messages after {@code parse()} returns, and
- * clears the thread-local in {@code finally}.
+ * <h2>Threading model</h2>
  *
- * <p><strong>Critical invariant:</strong> every {@link #install} call must be
- * paired with a {@link #clear} call in a {@code finally} block that runs
- * regardless of parser outcome. A leaked thread-local silently cross-contaminates
- * the next parse call on the same thread — a correctness bug that will not
- * surface in tests or staging without explicit coverage (see
- * {@code Netflow9MessageProcessorTest.sequentialCallsDoNotCrossContaminate}).
+ * <p>Horizon's {@code ParserBase} serializes and dispatches flow records on an
+ * internal thread pool (distinct from the calling thread). Consequently,
+ * {@link #send} is called on a background thread — not the thread that called
+ * {@link #install}. A {@code ThreadLocal}-based design therefore fails silently
+ * (the background thread has an empty slot). This implementation uses a
+ * {@link ReentrantLock} + {@link AtomicReference} instead:
+ *
+ * <ul>
+ *   <li>{@link #install} acquires the lock and stores the dispatcher. It blocks
+ *       if a previous call has not yet cleared — which guarantees serialized
+ *       parse calls per parser instance and prevents cross-call contamination.</li>
+ *   <li>{@link #send} reads the {@link AtomicReference} directly — visible to
+ *       any thread, including the parser's background worker threads.</li>
+ *   <li>{@link #clear} clears the {@link AtomicReference} and releases the lock.
+ *       It MUST be called in a {@code finally} block paired with {@link #install}
+ *       or the lock is never released and the next call blocks forever.</li>
+ * </ul>
+ *
+ * <h2>Concurrency</h2>
+ *
+ * <p>Calls to {@code process()} on the same parser instance are serialized by the
+ * lock. This is consistent with the production deployment where Spring Cloud Stream
+ * Kafka bindings default to {@code concurrency=1} per topic — one consumer thread
+ * drives one processor at a time. If higher concurrency is needed in the future,
+ * each parser + processor pair should be given its own {@code ThreadLocalDispatcher}
+ * instance (i.e., remove the shared singleton in {@code FlowEnricherConfiguration}).
  */
 public class ThreadLocalDispatcher implements AsyncDispatcher<TelemetryMessage> {
 
-    private final ThreadLocal<CapturingDispatcher> delegate = new ThreadLocal<>();
+    private final ReentrantLock lock = new ReentrantLock();
+    private final AtomicReference<CapturingDispatcher> current = new AtomicReference<>();
 
     /**
-     * Install the given {@link CapturingDispatcher} as the per-thread delegate.
+     * Install the given {@link CapturingDispatcher} as the delegate for the
+     * current parse call. Acquires the per-instance lock; blocks if a previous
+     * call has not yet cleared.
      *
-     * <p><strong>Throws {@link IllegalStateException} if a dispatcher is already
-     * installed on the current thread.</strong> The whole point of this class is
-     * to enforce the install/clear pairing contract, so silently overwriting a
-     * previously-installed dispatcher would hide the most dangerous failure mode
-     * (a missing {@code clear()} in a {@code finally} block leaks captures from
-     * one parse call into the next). We'd rather crash immediately with a pointer
-     * at the offending thread than silently cross-contaminate flows.
+     * <p><strong>Must be paired with a {@link #clear} call in a {@code finally}
+     * block.</strong> A missing {@code clear()} leaves the lock permanently
+     * acquired, blocking all future parse calls on this instance.
+     *
+     * @throws NullPointerException if {@code dispatcher} is {@code null}
      */
     public void install(CapturingDispatcher dispatcher) {
         Objects.requireNonNull(dispatcher, "dispatcher");
-        CapturingDispatcher existing = delegate.get();
-        if (existing != null) {
-            throw new IllegalStateException(
-                    "CapturingDispatcher already installed on thread "
-                            + Thread.currentThread().getName()
-                            + "; a previous parse call leaked its ThreadLocal — missing clear() in a finally block?");
-        }
-        delegate.set(dispatcher);
+        lock.lock();
+        current.set(dispatcher);
     }
 
     /**
-     * Remove the per-thread delegate. Must be called in a {@code finally} block
-     * paired with {@link #install}.
+     * Clear the installed dispatcher and release the lock. Must be called in a
+     * {@code finally} block paired with {@link #install}.
      */
     public void clear() {
-        delegate.remove();
+        current.set(null);
+        lock.unlock();
     }
 
     /**
-     * Returns the currently-installed {@link CapturingDispatcher} on this
-     * thread, or {@code null} if nothing is installed.
+     * Returns the currently-installed {@link CapturingDispatcher}, or
+     * {@code null} if nothing is installed.
      */
     public CapturingDispatcher current() {
-        return delegate.get();
+        return current.get();
     }
 
     @Override
     public CompletableFuture<DispatchStatus> send(TelemetryMessage message) {
-        CapturingDispatcher d = delegate.get();
+        CapturingDispatcher d = current.get();
         if (d == null) {
             throw new IllegalStateException(
                     "No CapturingDispatcher installed on thread "
@@ -102,12 +118,12 @@ public class ThreadLocalDispatcher implements AsyncDispatcher<TelemetryMessage> 
 
     @Override
     public int getQueueSize() {
-        CapturingDispatcher d = delegate.get();
+        CapturingDispatcher d = current.get();
         return d == null ? 0 : d.getQueueSize();
     }
 
     @Override
     public void close() {
-        // Thread-local dispatchers are cleared per-call; no global cleanup.
+        // Call-scoped dispatchers are cleared per-call; no global cleanup.
     }
 }
