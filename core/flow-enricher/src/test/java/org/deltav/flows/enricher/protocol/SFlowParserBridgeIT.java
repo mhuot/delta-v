@@ -22,12 +22,14 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.deltav.flows.enricher.parser.NoOpDnsResolver;
 import org.deltav.flows.enricher.parser.ThreadLocalDispatcher;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.opennms.netmgt.flows.api.Flow;
 import org.opennms.netmgt.telemetry.common.ipc.TelemetryProtos;
 import org.opennms.netmgt.telemetry.protocols.sflow.parser.SFlowUdpParser;
@@ -88,6 +90,14 @@ class SFlowParserBridgeIT {
                 "test-sflow",
                 tld,
                 new NoOpDnsResolver());
+        // Mirror the production wiring in FlowEnricherConfiguration: disable
+        // DNS lookups so the parser short-circuits SampleDatagramEnricher.enrich()
+        // and never calls SampleDatagram.visit(). The visit() path triggers a
+        // latent horizon NPE in FlowRecord.visit() whenever a flow record's
+        // data format is outside horizon's flowDataFormats map — which is
+        // exactly what hsflowd produces on real wire bytes. Regression
+        // coverage for that bug lives in hsflowdWireBytesProduceFlows() below.
+        parser.setDnsLookupsEnabled(false);
         parser.start(scheduler);
 
         processor = new SFlowMessageProcessor(
@@ -126,6 +136,50 @@ class SFlowParserBridgeIT {
 
         assertThat(flows)
                 .as("sFlow v5 fixture (sflow3.dat) with flow samples should produce at least one flow")
+                .isNotEmpty();
+    }
+
+    /**
+     * Regression test for the flow-enricher sFlow silent-drop bug observed
+     * in production against hsflowd. The fixture
+     * {@code fixtures/hsflowd-sample.dat} is a single UDP payload captured
+     * from hsflowd 2.1.23 running with {@code sampling = 1} and
+     * {@code pcap { dev = eth0 }}; it contains three samples, at least one
+     * of which is an expanded flow sample whose {@code FlowRecord} carries
+     * a data format outside horizon's {@code flowDataFormats} map. Those
+     * records decode to {@code Opaque} instances with {@code value == null},
+     * and when {@link org.opennms.netmgt.telemetry.protocols.sflow.parser.SampleDatagramEnricher#enrich}
+     * walks the datagram via {@code SampleDatagram.visit()} the unguarded
+     * {@code FlowRecord.visit()} at line 108 throws {@link NullPointerException}.
+     * The exception escapes the parser's {@link java.util.concurrent.ExecutorService}
+     * task, its {@link java.util.concurrent.CompletableFuture} is never
+     * completed, and the calling thread blocks on {@code join()} until the
+     * Kafka consumer rebalances — causing silent lag without any WARN/ERROR.
+     *
+     * <p>The fix is in {@code FlowEnricherConfiguration.sflowUdpParser()}:
+     * call {@code setDnsLookupsEnabled(false)} so {@code enrich()}
+     * short-circuits before invoking {@code visit()}. The matching call in
+     * {@link #setUp()} above mirrors that production wiring. Without it
+     * this test throws the same NPE and never produces flows.
+     *
+     * <p>The fixture's first sample is a counter sample expansion, so it is
+     * dropped by {@code SFlowAdapter} (counter samples are not flow records),
+     * but the remaining samples include flow records with IP header data
+     * that convert to {@link Flow} objects. A non-empty result proves the
+     * full hsflowd → Minion → Kafka → flow-enricher → ClickHouse path works
+     * against the actual wire format produced by the test exporter.
+     */
+    @Test
+    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+    void hsflowdWireBytesProduceFlows() throws Exception {
+        byte[] wireBytes = readFixture("fixtures/hsflowd-sample.dat");
+        TelemetryProtos.TelemetryMessageLog log = rawLog(wireBytes);
+
+        List<Flow> flows = processor.process(log);
+
+        assertThat(flows)
+                .as("hsflowd-produced sFlow v5 datagram should produce at least one flow "
+                        + "when DNS lookups are disabled on the parser (production wiring)")
                 .isNotEmpty();
     }
 

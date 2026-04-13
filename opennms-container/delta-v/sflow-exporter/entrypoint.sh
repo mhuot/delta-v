@@ -15,11 +15,23 @@ if [[ "$SFLOW_COLLECTOR_HOST" == "$SFLOW_COLLECTOR_PORT" ]]; then
 fi
 
 echo "[sflow-exporter] Writing /etc/hsflowd.conf..."
+# hsflowd applies a link-speed-tiered default for the pcap sampling rate:
+# sampling.10G=10000, sampling.1G=1000, sampling.100M=100. The generic
+# `sampling = N` line is ignored when a per-speed match exists. Docker veth
+# interfaces report themselves as 10G via ETHTOOL_GLINKSETTINGS, so without
+# explicit per-speed overrides mod_pcap silently samples 1-in-10000 — and
+# this low-traffic test bed never hits the threshold, producing only counter
+# samples and zero flow samples. We override every realistic speed tier so
+# the test exporter samples every packet regardless of what Docker reports.
 cat > /etc/hsflowd.conf <<EOF
 sflow {
   DNSSD = off
   polling = ${POLLING_INTERVAL}
   sampling = ${SAMPLING_RATE}
+  sampling.10G = ${SAMPLING_RATE}
+  sampling.1G = ${SAMPLING_RATE}
+  sampling.100M = ${SAMPLING_RATE}
+  sampling.10M = ${SAMPLING_RATE}
   agent = ${CAPTURE_INTERFACE}
   collector {
     ip = ${SFLOW_COLLECTOR_HOST}
