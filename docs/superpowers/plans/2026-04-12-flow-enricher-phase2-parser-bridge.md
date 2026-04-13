@@ -164,16 +164,30 @@ Open `core/flow-enricher/pom.xml` and find the `<!-- Horizon: sFlow protocol ada
             </exclusions>
         </dependency>
 
-        <!-- Horizon: Events API (EventForwarder interface required by Netflow parsers) -->
+        <!-- Horizon: Events API (EventForwarder interface required by Netflow parsers).
+             Needs a deeper exclusion list than the adapter modules because events.api
+             transitively pulls in legacy core.model-api → jaxb-dependencies → eclipselink
+             and spring-dependencies → hibernate-dependencies → hibernate-core:3 chains. -->
         <dependency>
             <groupId>org.opennms.features.events</groupId>
             <artifactId>org.opennms.features.events.api</artifactId>
             <exclusions>
-                <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
+                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>jaxb-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>atomikos-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
+                <exclusion><groupId>org.hibernate.javax.persistence</groupId><artifactId>hibernate-jpa-2.0-api</artifactId></exclusion>
                 <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion>
+                <exclusion><groupId>org.slf4j</groupId><artifactId>jcl-over-slf4j</artifactId></exclusion>
+                <exclusion><groupId>org.slf4j</groupId><artifactId>log4j-over-slf4j</artifactId></exclusion>
+                <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
                 <exclusion><groupId>org.opennms</groupId><artifactId>opennms-util</artifactId></exclusion>
-                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-config</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.features.config</groupId><artifactId>*</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.core</groupId><artifactId>org.opennms.core.model-api</artifactId></exclusion>
             </exclusions>
         </dependency>
 
@@ -186,13 +200,13 @@ Open `core/flow-enricher/pom.xml` and find the `<!-- Horizon: sFlow protocol ada
 
 - [ ] **Step 3: Run a dependency convergence check**
 
-Run: `cd /Users/david/development/src/opennms/delta-v && ./compile.pl -DskipTests --projects :org.deltav.flows.flow-enricher -am compile 2>&1 | tail -30`
+Run: `cd /Users/david/development/src/opennms/delta-v && ./mvnw -DskipTests --projects :org.deltav.flows.flow-enricher -am compile 2>&1 | tail -30`
 
 Expected: `BUILD SUCCESS`. If the build fails with "Cannot find", the artifact coordinates may differ — confirm against the horizon module POM at `.claude/worktrees/provisiond-spring-boot/features/telemetry/protocols/netflow/parser/pom.xml`.
 
 - [ ] **Step 4: Verify no banned transitive dependencies leaked in**
 
-Run: `cd core/flow-enricher && ../../maven/bin/mvn dependency:tree -Dverbose=true 2>&1 | grep -E "opennms-config|atomikos|eclipselink|jaxb-xjc|features.config" | head`
+Run: `cd core/flow-enricher && ../../mvnw dependency:tree -Dverbose=true 2>&1 | grep -E "opennms-config|atomikos|eclipselink|jaxb-xjc|features.config" | head`
 
 Expected: no output. If any banned dep appears, locate the parser module that transitively brings it in and add the appropriate `<exclusion>` block.
 
@@ -310,7 +324,7 @@ class CapturingDispatcherTest {
 
 - [ ] **Step 2: Run the test and verify it fails with a compile error**
 
-Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../maven/bin/mvn -q test -Dtest=CapturingDispatcherTest 2>&1 | tail -20`
+Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../mvnw -q test -Dtest=CapturingDispatcherTest 2>&1 | tail -20`
 
 Expected: compile error saying `CapturingDispatcher` cannot be resolved.
 
@@ -390,7 +404,7 @@ public class CapturingDispatcher implements AsyncDispatcher<TelemetryMessage> {
 
 - [ ] **Step 4: Run the test and verify it passes**
 
-Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../maven/bin/mvn -q test -Dtest=CapturingDispatcherTest 2>&1 | tail -20`
+Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../mvnw -q test -Dtest=CapturingDispatcherTest 2>&1 | tail -20`
 
 Expected: `Tests run: 4, Failures: 0, Errors: 0, Skipped: 0` and `BUILD SUCCESS`.
 
@@ -540,7 +554,7 @@ class ThreadLocalDispatcherTest {
 
 - [ ] **Step 2: Run and verify compile failure**
 
-Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../maven/bin/mvn -q test -Dtest=ThreadLocalDispatcherTest 2>&1 | tail -15`
+Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../mvnw -q test -Dtest=ThreadLocalDispatcherTest 2>&1 | tail -15`
 
 Expected: compile error saying `ThreadLocalDispatcher` cannot be resolved.
 
@@ -655,7 +669,7 @@ public class ThreadLocalDispatcher implements AsyncDispatcher<TelemetryMessage> 
 
 - [ ] **Step 4: Run the tests and verify they pass**
 
-Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../maven/bin/mvn -q test -Dtest=ThreadLocalDispatcherTest 2>&1 | tail -15`
+Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../mvnw -q test -Dtest=ThreadLocalDispatcherTest 2>&1 | tail -15`
 
 Expected: `Tests run: 6, Failures: 0, Errors: 0, Skipped: 0`.
 
@@ -994,7 +1008,7 @@ public class StaticIdentity implements Identity {
 
 - [ ] **Step 6: Run all parser-package tests**
 
-Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../maven/bin/mvn -q test -Dtest='org.deltav.flows.enricher.parser.*' 2>&1 | tail -15`
+Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../mvnw -q test -Dtest='org.deltav.flows.enricher.parser.*' 2>&1 | tail -15`
 
 Expected: all tests pass.
 
@@ -1372,7 +1386,7 @@ public abstract class AbstractProtocolMessageProcessor implements ProtocolMessag
 
 - [ ] **Step 3: Run the flow-enricher build to surface every subclass that needs updating**
 
-Run: `cd /Users/david/development/src/opennms/delta-v && ./compile.pl -DskipTests --projects :org.deltav.flows.flow-enricher -am compile 2>&1 | tail -30`
+Run: `cd /Users/david/development/src/opennms/delta-v && ./mvnw -DskipTests --projects :org.deltav.flows.flow-enricher -am compile 2>&1 | tail -30`
 
 Expected: compile errors in `Netflow5MessageProcessor`, `Netflow9MessageProcessor`, `IpfixMessageProcessor`, and `SFlowMessageProcessor` because they don't pass `ThreadLocalDispatcher` to the base constructor and don't implement `getParser()`. These will be fixed in Task 6. Do not commit yet.
 
@@ -1654,7 +1668,7 @@ Do NOT duplicate the two ThreadLocal stress tests across the four files — they
 
 - [ ] **Step 5: Run all four processor tests and verify they pass**
 
-Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../maven/bin/mvn -q test -Dtest='org.deltav.flows.enricher.protocol.*MessageProcessorTest' 2>&1 | tail -30`
+Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../mvnw -q test -Dtest='org.deltav.flows.enricher.protocol.*MessageProcessorTest' 2>&1 | tail -30`
 
 Expected: all tests pass across the four processor test classes.
 
@@ -2099,7 +2113,7 @@ public class FlowEnricherConfiguration {
 
 - [ ] **Step 2: Build to verify wiring compiles and Spring context loads**
 
-Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../maven/bin/mvn -q compile 2>&1 | tail -20`
+Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../mvnw -q compile 2>&1 | tail -20`
 
 Expected: `BUILD SUCCESS`. If the compile fails because of `jakarta.annotation.PostConstruct` not being found, that's a missing transitive — add `<dependency><groupId>jakarta.annotation</groupId><artifactId>jakarta.annotation-api</artifactId></dependency>` to the POM, but Spring Boot Starter typically brings it already.
 
@@ -2232,7 +2246,7 @@ management:
 
 - [ ] **Step 4: Verify build and Spring context load**
 
-Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../maven/bin/mvn -q compile test-compile 2>&1 | tail -15`
+Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../mvnw -q compile test-compile 2>&1 | tail -15`
 
 Expected: `BUILD SUCCESS`.
 
@@ -2414,7 +2428,7 @@ class Netflow9ParserBridgeIT {
 
 - [ ] **Step 3: Run the IT**
 
-Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../maven/bin/mvn -q test -Dtest=Netflow9ParserBridgeIT 2>&1 | tail -30`
+Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../mvnw -q test -Dtest=Netflow9ParserBridgeIT 2>&1 | tail -30`
 
 Expected: `Tests run: 1, Failures: 0, Errors: 0`. If the test errors with `Fixture not found`, the fixture copy in Step 1 did not land — verify the file path. If it errors with a parse exception, the chosen fixture may require a multi-packet sequence (template then data); split into two feeds.
 
@@ -2486,7 +2500,7 @@ Since each IT is ~75 lines and structurally identical to Task 9's IT, use Task 9
 
 - [ ] **Step 3: Run all four parser bridge ITs**
 
-Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../maven/bin/mvn -q test -Dtest='*ParserBridgeIT' 2>&1 | tail -30`
+Run: `cd /Users/david/development/src/opennms/delta-v/core/flow-enricher && ../../mvnw -q test -Dtest='*ParserBridgeIT' 2>&1 | tail -30`
 
 Expected: all four tests run. Any with `@Disabled` report as skipped. Remaining tests pass.
 
