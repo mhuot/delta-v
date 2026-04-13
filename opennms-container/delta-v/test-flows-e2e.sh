@@ -180,6 +180,22 @@ else
   exit 1
 fi
 
+# Per-protocol assertions. Proves each exporter's datagrams travel the full
+# Minion → Kafka → flow-enricher → ClickHouse path. The netflow_version
+# column is a String whose value comes from the FlowDocument protobuf enum
+# name (NetflowVersion.V9 → "V9", NetflowVersion.SFLOW → "SFLOW").
+for proto in V9 SFLOW; do
+  PROTO_QUERY="SELECT count() FROM deltav.flows_raw WHERE netflow_version = '${proto}' AND timestamp > now() - INTERVAL 10 MINUTE"
+  if wait_for_ch "$PROTO_QUERY" 120 "flows_raw ${proto} rows (last 10 min)" 10; then
+    PROTO_COUNT=$(ch_query "$PROTO_QUERY" 2>/dev/null || echo "0")
+    ok "flows_raw has ${PROTO_COUNT} ${proto} records in the last 10 minutes"
+  else
+    PROTO_TOTAL=$(ch_query "SELECT count() FROM deltav.flows_raw WHERE netflow_version = '${proto}'" 2>/dev/null || echo "0")
+    SEEN_VERSIONS=$(ch_query "SELECT DISTINCT netflow_version FROM deltav.flows_raw WHERE timestamp > now() - INTERVAL 10 MINUTE" 2>/dev/null | tr '\n' ',' || echo "")
+    fail "No recent ${proto} rows in flows_raw within 120s (total ${proto} rows: ${PROTO_TOTAL}, versions seen recently: ${SEEN_VERSIONS:-none})"
+  fi
+done
+
 # ══════════════════════════════════════════════════════════════════
 # Phase 3: Dimension materialized views have data
 # ══════════════════════════════════════════════════════════════════
@@ -242,7 +258,8 @@ echo "========================================"
 echo ""
 echo "Validated:"
 echo "  Phase 1: ClickHouse healthy + all DDL tables exist"
-echo "  Phase 2: flows_raw receiving data (Telemetryd → flow-enricher → ClickHouse)"
+echo "  Phase 2: flows_raw receiving data (Minion → flow-enricher → ClickHouse)"
+echo "  Phase 2: Per-protocol rows (Netflow v9 from softflowd, sFlow from hsflowd)"
 echo "  Phase 3: All 4 dimension MVs populated (application, source_ip, conversation, dscp)"
 echo "  Phase 4: Enrichment integrity (exporter_node_id, src_address)"
 [[ $FAIL -eq 0 ]] || exit 1
