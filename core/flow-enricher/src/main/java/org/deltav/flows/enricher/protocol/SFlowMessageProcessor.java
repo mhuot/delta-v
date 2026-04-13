@@ -18,29 +18,46 @@ package org.deltav.flows.enricher.protocol;
 
 import java.util.Objects;
 
+import org.deltav.flows.enricher.parser.ThreadLocalDispatcher;
 import org.deltav.flows.enricher.pipeline.CapturingPipeline;
 import org.opennms.netmgt.telemetry.config.api.AdapterDefinition;
+import org.opennms.netmgt.telemetry.listeners.UdpParser;
 import org.opennms.netmgt.telemetry.protocols.flows.AbstractFlowAdapter;
 import org.opennms.netmgt.telemetry.protocols.sflow.adapter.SFlowAdapter;
 
 import com.codahale.metrics.MetricRegistry;
 
 /**
- * Protocol processor for sFlow messages. Wraps horizon's
- * {@link SFlowAdapter}, which expects each
- * {@code TelemetryMessageLogEntry} to carry a serialized BSON document
- * (the sFlow parser layer's normalized representation). Each BSON document
- * contains a top-level {@code data.samples} array that may produce zero or
- * more {@link org.opennms.netmgt.flows.api.Flow} records.
+ * Protocol processor for sFlow. Stage 1 parses raw sFlow UDP wire bytes via
+ * a horizon {@link UdpParser}; Stage 2 turns the parser-emitted BSON
+ * documents into {@link org.opennms.netmgt.flows.api.Flow} POJOs via
+ * horizon's {@link SFlowAdapter}.
+ *
+ * <p><strong>Best-effort per Phase 2 spec.</strong> sFlow is structurally
+ * different from Netflow (BSON vs FlowMessage protobuf) and the unit tests
+ * use a minimal FlowMessage fixture. Live E2E verification is deferred to a
+ * followup.
  */
 public class SFlowMessageProcessor extends AbstractProtocolMessageProcessor {
 
+    private final UdpParser parser;
     private final AdapterDefinition adapterDefinition;
     private final MetricRegistry metricRegistry;
 
-    public SFlowMessageProcessor(AdapterDefinition adapterDefinition, MetricRegistry metricRegistry) {
+    public SFlowMessageProcessor(
+            UdpParser parser,
+            AdapterDefinition adapterDefinition,
+            MetricRegistry metricRegistry,
+            ThreadLocalDispatcher threadLocalDispatcher) {
+        super(threadLocalDispatcher);
+        this.parser = Objects.requireNonNull(parser, "parser");
         this.adapterDefinition = Objects.requireNonNull(adapterDefinition, "adapterDefinition");
         this.metricRegistry = Objects.requireNonNull(metricRegistry, "metricRegistry");
+    }
+
+    @Override
+    protected UdpParser getParser() {
+        return parser;
     }
 
     @Override

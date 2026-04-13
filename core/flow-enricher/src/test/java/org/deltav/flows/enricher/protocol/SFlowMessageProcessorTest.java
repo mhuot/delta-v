@@ -28,6 +28,7 @@ import org.bson.BsonDocument;
 import org.bson.codecs.BsonDocumentCodec;
 import org.bson.codecs.EncoderContext;
 import org.bson.io.BasicOutputBuffer;
+import org.deltav.flows.enricher.parser.ThreadLocalDispatcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opennms.netmgt.flows.api.Flow;
@@ -38,27 +39,37 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.protobuf.ByteString;
 
 /**
- * Tests {@link SFlowMessageProcessor}. sFlow uses a BSON document (not a
- * protobuf) as the parser layer's normalized representation. The test
- * fixture {@code test-packets/sflow-sample.json} is a JSON text
- * representation of a BSON document lifted verbatim from horizon's own
- * sFlow adapter test suite; at test time we parse it into a
- * {@link BsonDocument} and re-serialize it to canonical BSON bytes before
- * feeding it to the processor. The horizon adapter expects exactly those
- * BSON bytes as the {@code TelemetryMessageLogEntry} payload.
+ * Tests {@link SFlowMessageProcessor}. Under Phase 2 the processor runs a
+ * two-stage bridge: Stage 1 feeds raw bytes to a horizon {@link
+ * org.opennms.netmgt.telemetry.listeners.UdpParser}, which emits bytes that
+ * become the Stage 2 input; Stage 2 passes those bytes to horizon's
+ * {@code SFlowAdapter}. Tests use {@link FakeUdpParser} to script the
+ * parser's output.
  *
- * <p>The fixture contains seven sample records, five of which are valid
- * IPv4/IPv6 flows per horizon's {@code SFlowConverterTest}.
+ * <p>sFlow uses a BSON document (not a protobuf) as the parser layer's
+ * normalized representation. The test fixture
+ * {@code test-packets/sflow-sample.json} is a JSON text representation of a
+ * BSON document lifted verbatim from horizon's own sFlow adapter test suite;
+ * at test time we parse it into a {@link BsonDocument} and re-serialize it
+ * to canonical BSON bytes. The {@link FakeUdpParser} emits those BSON bytes,
+ * which the {@code SFlowAdapter} in Stage 2 then decodes.
+ *
+ * <p><strong>Best-effort per Phase 2 spec.</strong> Live E2E verification of
+ * the full sFlow parser bridge is deferred to a followup.
  */
 class SFlowMessageProcessorTest {
 
+    private ThreadLocalDispatcher tld;
+    private FakeUdpParser fakeParser;
     private SFlowMessageProcessor processor;
 
     @BeforeEach
     void setUp() {
+        tld = new ThreadLocalDispatcher();
+        fakeParser = new FakeUdpParser(tld);
         AdapterDefinition adapterDefinition = TestAdapterDefinitions.testAdapterDefinition("sflow-test");
         MetricRegistry metricRegistry = new MetricRegistry();
-        processor = new SFlowMessageProcessor(adapterDefinition, metricRegistry);
+        processor = new SFlowMessageProcessor(fakeParser, adapterDefinition, metricRegistry, tld);
     }
 
     @Test
@@ -67,21 +78,21 @@ class SFlowMessageProcessorTest {
     }
 
     @Test
-    void processParsesSflowBsonDocument() throws Exception {
+    void processYieldsFlowsWhenParserEmitsSflowBsonBytes() throws Exception {
         byte[] bsonBytes = loadFixtureAsBsonBytes("/test-packets/sflow-sample.json");
+        fakeParser.emitNext(bsonBytes);
 
-        TelemetryProtos.TelemetryMessageLog log = TelemetryProtos.TelemetryMessageLog.newBuilder()
+        TelemetryProtos.TelemetryMessageLog raw = TelemetryProtos.TelemetryMessageLog.newBuilder()
                 .setLocation("test-location")
                 .setSystemId("test-system")
                 .setSourceAddress("127.0.0.1")
                 .setSourcePort(6343)
                 .addMessage(TelemetryProtos.TelemetryMessage.newBuilder()
-                        .setBytes(ByteString.copyFrom(bsonBytes))
-                        .setTimestamp(1521618510235L)
-                        .build())
+                        .setBytes(ByteString.copyFrom(new byte[]{1, 2, 3, 4}))
+                        .setTimestamp(1521618510235L))
                 .build();
 
-        List<Flow> flows = processor.process(log);
+        List<Flow> flows = processor.process(raw);
 
         // Matches horizon's own SFlowConverterTest expectation: the fixture
         // contains seven samples, five of which carry IPv4/IPv6 information
