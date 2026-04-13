@@ -168,6 +168,105 @@
             </exclusions>
         </dependency>
 
+        <!-- Horizon: Netflow UDP parsers (Netflow5/Netflow9/IPFIX) -->
+        <dependency>
+            <groupId>org.opennms.features.telemetry.protocols.netflow</groupId>
+            <artifactId>org.opennms.features.telemetry.protocols.netflow.parser</artifactId>
+            <exclusions>
+                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
+                <exclusion><groupId>org.hibernate.javax.persistence</groupId><artifactId>hibernate-jpa-2.0-api</artifactId></exclusion>
+                <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion>
+                <exclusion><groupId>org.slf4j</groupId><artifactId>jcl-over-slf4j</artifactId></exclusion>
+                <exclusion><groupId>org.slf4j</groupId><artifactId>log4j-over-slf4j</artifactId></exclusion>
+                <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-log4j2</artifactId></exclusion>
+                <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
+                <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
+                <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-util</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-config</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>atomikos-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>jaxb-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.features.config</groupId><artifactId>*</artifactId></exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Horizon: sFlow UDP parser -->
+        <dependency>
+            <groupId>org.opennms.features.telemetry.protocols.sflow</groupId>
+            <artifactId>org.opennms.features.telemetry.protocols.sflow.parser</artifactId>
+            <exclusions>
+                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
+                <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion>
+                <exclusion><groupId>org.slf4j</groupId><artifactId>jcl-over-slf4j</artifactId></exclusion>
+                <exclusion><groupId>org.slf4j</groupId><artifactId>log4j-over-slf4j</artifactId></exclusion>
+                <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-log4j2</artifactId></exclusion>
+                <exclusion><groupId>org.ops4j.pax.logging</groupId><artifactId>pax-logging-api</artifactId></exclusion>
+                <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
+                <exclusion><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-scala_2.13</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-util</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-config</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>jaxb-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.features.config</groupId><artifactId>*</artifactId></exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Horizon: Telemetry listeners (UdpParser interface, TelemetryMessage, AsyncDispatcher) -->
+        <dependency>
+            <groupId>org.opennms.features.telemetry</groupId>
+            <artifactId>org.opennms.features.telemetry.listeners</artifactId>
+            <exclusions>
+                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion>
+                <exclusion><groupId>org.slf4j</groupId><artifactId>jcl-over-slf4j</artifactId></exclusion>
+                <exclusion><groupId>org.slf4j</groupId><artifactId>log4j-over-slf4j</artifactId></exclusion>
+                <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-util</artifactId></exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Horizon: Events API (EventForwarder interface required by Netflow parsers).
+             Needs a deep exclusion list because events.api transitively pulls in
+             legacy core.model-api → jaxb-dependencies → eclipselink and
+             spring-dependencies → hibernate-dependencies → hibernate-core:3 chains. -->
+        <dependency>
+            <groupId>org.opennms.features.events</groupId>
+            <artifactId>org.opennms.features.events.api</artifactId>
+            <exclusions>
+                <exclusion><groupId>org.apache.servicemix.bundles</groupId><artifactId>*</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-security-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>jaxb-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>atomikos-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
+                <exclusion><groupId>org.hibernate.javax.persistence</groupId><artifactId>hibernate-jpa-2.0-api</artifactId></exclusion>
+                <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion>
+                <exclusion><groupId>org.slf4j</groupId><artifactId>jcl-over-slf4j</artifactId></exclusion>
+                <exclusion><groupId>org.slf4j</groupId><artifactId>log4j-over-slf4j</artifactId></exclusion>
+                <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-util</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-config</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.features.config</groupId><artifactId>*</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.core</groupId><artifactId>org.opennms.core.model-api</artifactId></exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Micrometer Prometheus registry for /actuator/prometheus -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
         <!-- Horizon: Flow API (Flow interface, FlowSource, etc.) -->
         <dependency>
             <groupId>org.opennms.features.flows</groupId>
