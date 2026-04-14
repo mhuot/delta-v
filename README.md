@@ -45,10 +45,11 @@ Delta-V code lives in the `org.deltav` package namespace with `org.deltav.core` 
 | **BSMd** | `daemon-boot-bsmd` | 3.3s | JPA + AlarmLifecycleListener + REST API |
 | **Pollerd** | `daemon-boot-pollerd` | 4.1s | JPA + Kafka RPC + Twin API + PassiveStatusKeeper |
 | **PerspectivePollerd** | `daemon-boot-perspectivepollerd` | 3.6s | JPA + Kafka RPC + perspective outages + event self-consumption |
-| **Telemetryd** | `daemon-boot-telemetryd` | 3s | Pure ingestion bridge, multi-bridge KafkaSink, Twin API for OpenConfig |
+| **Telemetryd** | `daemon-boot-telemetryd` | 3s | Pure ingestion bridge for non-flow telemetry (OpenConfig via Twin API). Flow protocols (Netflow5/9, IPFIX, sFlow) bypass Telemetryd — they route Minion → Kafka Sink → flow-enricher directly. |
 | **Enlinkd** | `daemon-boot-enlinkd` | 3.5s | JPA + Kafka RPC + LLDP/CDP/OSPF/ISIS/Bridge topology |
 | **Collectd** | `daemon-boot-collectd` | ~3s | JPA + Kafka RPC + SNMP collection + thresholding |
-| **Minion** | `daemon-boot-minion` | ~4s | Kafka RPC server + Kafka Sink + Twin API subscriber |
+| **flow-enricher** | `core/flow-enricher` | ~4s | Spring Cloud Stream + horizon UDP parsers (Netflow5/9, IPFIX, sFlow) on raw wire bytes via capturing dispatcher; per-flow enrichment (`JdbcNodeInfoLookup`, application classification, locality); publishes to ClickHouse via `deltav-flows` Kafka topic. 41 `flow_enricher_*` Prometheus meters exposed via `DropwizardToPrometheusBridge`. |
+| **Minion** | `daemon-boot-minion` | ~4s | Kafka RPC server + Kafka Sink + Twin API subscriber + UDP flow listener (port 4729) |
 
 ### Docker Images
 
@@ -136,10 +137,13 @@ Minion → Kafka Sink → Trapd/Syslogd
 | enlinkd | Spring Boot 4 | Enhanced link discovery (LLDP/CDP/OSPF/ISIS/Bridge) |
 | provisiond | Spring Boot 4 | Node provisioning and scanning (via Minion Kafka RPC) |
 | bsmd | Spring Boot 4 | Business service monitoring |
-| telemetryd | Spring Boot 4 | Telemetry/flow ingestion bridge (via Minion Kafka Sink) |
-| minion | Spring Boot 4 | Distributed data collection agent (Kafka RPC + Sink + Twin API) |
+| telemetryd | Spring Boot 4 | Non-flow telemetry ingestion bridge (OpenConfig via Twin API) |
+| flow-enricher | Spring Boot 4 + Spring Cloud Stream | Flow decode via horizon UDP parsers, per-flow enrichment, publish to ClickHouse |
+| minion | Spring Boot 4 | Distributed data collection agent (Kafka RPC + Sink + Twin API + UDP flow listener) |
 | db-init | Spring Boot 4 | One-shot Liquibase schema migration |
 | postgres | postgres:15 | PostgreSQL database (alarms only) |
+| clickhouse | clickhouse/clickhouse-server | Flow storage: `deltav.flows_raw` + 4 dimension materialized views (application, source_ip, conversation, dscp) |
+| clickhouse-init | one-shot | ClickHouse DDL bootstrap for `deltav.flows_raw` and dimension MVs |
 | kafka | Apache Kafka | Event transport backbone |
 
 ### Kafka Topics
@@ -150,7 +154,8 @@ Minion → Kafka Sink → Trapd/Syslogd
 | `opennms-ipc-events` | Daemon-to-daemon internal events (newSuspect, nodeScanCompleted, reloadDaemonConfig) |
 | `OpenNMS.Sink.Trap` | Minion → Trapd raw trap forwarding |
 | `OpenNMS.Sink.Syslog` | Minion → Syslogd raw syslog forwarding |
-| `OpenNMS.Sink.Telemetry-*` | Minion → Telemetryd per-protocol flow forwarding |
+| `OpenNMS.Sink.Telemetry-*` | Minion → flow-enricher per-protocol flow forwarding (Netflow5/9, IPFIX, sFlow) |
+| `deltav-flows` | flow-enricher → ClickHouse enriched flow records (ClickHouse Kafka engine table consumes this topic) |
 | `OpenNMS.twin.response` | Pollerd → Minion Twin API state sync (passive status, SNMPv3 users) |
 | `OpenNMS.twin.request` | Minion → Pollerd Twin API subscription requests |
 
@@ -174,6 +179,7 @@ cd opennms-container/delta-v
 ./test-collectd-e2e.sh     # Collectd: SNMP collection health
 ./test-perspective-e2e.sh  # Perspective: remote-location polling + outage lifecycle
 ./test-enlinkd-e2e.sh      # Enlinkd: LLDP topology via Containerlab cEOS
+./test-flows-e2e.sh        # Flows: softflowd + hsflowd → Minion → flow-enricher → ClickHouse (18 assertions across 4 phases)
 ```
 
 ### Prerequisites

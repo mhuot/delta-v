@@ -2,7 +2,7 @@
 
 **Composable, containerized deployment of OpenNMS Horizon.**
 
-Delta-V decomposes the monolithic OpenNMS into 16 independently scalable services connected by Kafka and PostgreSQL. Each daemon runs in its own container as a Spring Boot fat JAR, communicating via Kafka event topics. There is no core container — schema migration is handled by a one-shot db-init container, and the webapp serves only the Web UI and REST API.
+Delta-V decomposes the monolithic OpenNMS into independently scalable services connected by Kafka, PostgreSQL, and (for the flow pipeline) ClickHouse. Each daemon runs in its own container as a Spring Boot fat JAR, communicating via Kafka event topics. There is no core container and no legacy webapp — schema migration is handled by one-shot `db-init` and `clickhouse-init` containers, and operator observability lives on each daemon's Spring Boot Actuator endpoints (`/actuator/health`, `/actuator/prometheus`).
 
 ```
                     ┌──────────────────────────────────────────────────┐
@@ -50,24 +50,30 @@ With all 12 daemons on Spring Boot, the Karaf-based Sentinel image (`opennms/dae
 
 ## Services
 
-| Service          | Image                          | Purpose                                       | Host Port |
-|------------------|--------------------------------|-----------------------------------------------|-----------|
-| postgres         | postgres:15                    | Shared database                               | 5432      |
-| kafka            | apache/kafka                   | Event bus (KRaft mode)                        | 19092     |
-| db-init          | opennms/db-init                | One-shot schema migration (exits after init)  | —         |
-| minion           | opennms/minion-deltav          | Distributed data collection agent (Karaf)     | —         |
-| alarmd           | opennms/daemon-deltav-springboot | Alarm processing (Kafka consumer)           | —         |
-| pollerd          | opennms/daemon-deltav-springboot | Service polling via Minion RPC              | —         |
-| collectd         | opennms/daemon-deltav-springboot | SNMP data collection via Minion SNMP proxy  | —         |
-| discovery        | opennms/daemon-deltav-springboot | Network discovery via Minion RPC            | —         |
-| provisiond       | opennms/daemon-deltav-springboot | Node provisioning and detection             | —         |
-| trapd            | opennms/daemon-deltav-springboot | SNMP trap reception (Kafka Sink)            | —         |
-| syslogd          | opennms/daemon-deltav-springboot | Syslog reception (Kafka Sink)               | —         |
-| eventtranslator  | opennms/daemon-deltav-springboot | Event transformation rules                  | —         |
-| enlinkd          | opennms/daemon-deltav-springboot | Link discovery (CDP, LLDP, OSPF, IS-IS, Bridge) | —  |
-| bsmd             | opennms/daemon-deltav-springboot | Business Service Monitor                    | 8180      |
-| perspectivepollerd | opennms/daemon-deltav-springboot | Perspective polling from remote locations | —         |
-| telemetryd       | opennms/daemon-deltav-springboot | Telemetry ingestion bridge                  | —         |
+| Service            | Image                         | Purpose                                                                  | Host Port |
+|--------------------|-------------------------------|--------------------------------------------------------------------------|-----------|
+| postgres           | postgres:15                   | Shared database (alarms only)                                            | 5432      |
+| kafka              | apache/kafka                  | Event bus (KRaft mode)                                                   | 19092     |
+| db-init            | opennms/db-init               | One-shot PostgreSQL schema migration (exits after init)                  | —         |
+| clickhouse         | clickhouse/clickhouse-server  | Flow storage: `deltav.flows_raw` + 4 dimension MVs                       | 8123      |
+| clickhouse-init    | one-shot                      | One-shot ClickHouse DDL bootstrap                                         | —         |
+| minion             | opennms/minion-boot           | Spring Boot 4 distributed data collection agent + UDP flow listener      | 4729/udp  |
+| snmp-agent         | tandrup/netsnmp               | Local SNMP test target for Collectd / detectors                          | —         |
+| alarmd             | opennms/alarmd                | Alarm processing (Kafka consumer)                                        | —         |
+| pollerd            | opennms/pollerd               | Service polling via Minion RPC                                           | —         |
+| collectd           | opennms/collectd              | SNMP data collection via Minion SNMP proxy                               | —         |
+| discovery          | opennms/discovery             | Network discovery via Minion RPC                                         | —         |
+| provisiond         | opennms/provisiond            | Node provisioning and detection                                          | —         |
+| trapd              | opennms/trapd                 | SNMP trap reception (Kafka Sink)                                         | —         |
+| syslogd            | opennms/syslogd               | Syslog reception (Kafka Sink)                                            | —         |
+| eventtranslator    | opennms/eventtranslator       | Event transformation rules                                               | —         |
+| enlinkd            | opennms/enlinkd               | Link discovery (CDP, LLDP, OSPF, IS-IS, Bridge)                          | —         |
+| bsmd               | opennms/bsmd                  | Business Service Monitor                                                 | 8180      |
+| perspectivepollerd | opennms/perspectivepollerd    | Perspective polling from remote locations                                | —         |
+| telemetryd         | opennms/telemetryd            | Non-flow telemetry ingestion (OpenConfig via Twin API)                   | —         |
+| flow-enricher      | opennms/flow-enricher         | Flow decode (horizon UDP parsers) + enrich + publish to ClickHouse       | 8080      |
+
+All daemon containers extend a shared `opennms/daemon-base` image built on top of `opennms/jre-deltav:21` (a jlink custom JRE on `alpine:3.21`). Each per-daemon image adds only the libraries unique to that daemon via layered Docker image deduplication.
 
 ## Quick Start
 
@@ -108,7 +114,16 @@ cd opennms-container/delta-v
 ./deploy.sh test
 ```
 
-Web UI: **http://localhost:8980/opennms** (admin / admin)
+**No Web UI.** The legacy OpenNMS JSP webapp has been removed from the Maven reactor (`opennms-webapp` + `opennms-webapp-rest`). Operator observability lives on each daemon's Spring Boot Actuator:
+
+```bash
+# Per-daemon health (reachable when the daemon exposes a management port)
+curl http://localhost:8180/actuator/health       # bsmd
+docker compose exec flow-enricher wget -qO- http://localhost:8080/actuator/health
+
+# Prometheus metrics from the flow-enricher (41 flow_enricher_* meters)
+docker compose exec flow-enricher wget -qO- http://localhost:8080/actuator/prometheus | grep '^flow_enricher_'
+```
 
 ### Manage
 
@@ -126,18 +141,20 @@ Web UI: **http://localhost:8980/opennms** (admin / admin)
 
 ## E2E Tests
 
-Six end-to-end test suites validate the full pipeline:
+Nine end-to-end test suites validate the full pipeline:
 
 ```bash
 cd opennms-container/delta-v
 
-bash test-collectd-e2e.sh        # SNMP data collection via Minion
+bash test-e2e.sh                 # Full alarm create/clear via SNMP traps
 bash test-minion-e2e.sh          # Trap → Minion → Kafka → Alarmd lifecycle
-bash test-minion-rpc-e2e.sh      # Detector + Monitor via Minion RPC (Phase 3 canary)
+bash test-minion-rpc-e2e.sh      # Detector + Monitor via Minion RPC
 bash test-syslog-e2e.sh          # Syslog → Minion → Kafka → Alarmd lifecycle
 bash test-passive-e2e.sh         # Passive status via EventTranslator + Pollerd
+bash test-collectd-e2e.sh        # SNMP data collection via Minion
+bash test-perspective-e2e.sh     # Perspective polling from remote locations + outage lifecycle
 bash test-enlinkd-e2e.sh         # LLDP/CDP link discovery on Containerlab cEOS
-bash test-e2e.sh                 # Full alarm create/clear via SNMP traps
+bash test-flows-e2e.sh           # softflowd + hsflowd → Minion → flow-enricher → ClickHouse (18 assertions across 4 phases)
 ```
 
 All scripts support:
