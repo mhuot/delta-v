@@ -29,14 +29,13 @@ import javax.sql.DataSource;
 
 import com.codahale.metrics.MetricRegistry;
 
-import io.micrometer.core.instrument.Clock;
 import org.deltav.flows.enricher.classification.ApplicationClassifier;
 import org.deltav.flows.enricher.classification.PortBasedApplicationClassifier;
 import org.deltav.flows.enricher.enrichment.FlowLocalityCalculator;
 import org.deltav.flows.enricher.enrichment.InterfaceMarkingCache;
 import org.deltav.flows.enricher.enrichment.JdbcNodeInfoLookup;
 import org.deltav.flows.enricher.mapping.FlowToDocumentMapper;
-import org.deltav.flows.enricher.parser.FlowEnricherMicrometerBridge;
+import org.deltav.flows.enricher.parser.DropwizardToPrometheusBridge;
 import org.deltav.flows.enricher.parser.LoggingEventForwarder;
 import org.deltav.flows.enricher.parser.NoOpDnsResolver;
 import org.deltav.flows.enricher.parser.StaticIdentity;
@@ -114,7 +113,7 @@ public class FlowEnricherConfiguration {
     /**
      * A process-local Dropwizard {@link MetricRegistry} shared across the
      * four horizon flow adapters and parsers. Exposed to Spring Boot Actuator
-     * via {@link FlowEnricherMicrometerBridge} so parser and adapter metrics
+     * via {@link DropwizardToPrometheusBridge} so parser and adapter metrics
      * are scrapable at {@code /actuator/prometheus}.
      */
     @Bean
@@ -123,15 +122,16 @@ public class FlowEnricherConfiguration {
     }
 
     /**
-     * Bridges the shared Dropwizard {@link MetricRegistry} (used internally
-     * by horizon's UDP parsers and flow adapters for their timers and meters)
-     * into Spring Boot's Micrometer registry, making parser and adapter
-     * metrics scrapable at {@code /actuator/prometheus}.
+     * Mirrors every metric in the shared Dropwizard {@link MetricRegistry}
+     * into Spring Boot's Micrometer composite registry via a
+     * {@link com.codahale.metrics.MetricRegistryListener}, making horizon
+     * parser and adapter metrics scrapable at {@code /actuator/prometheus}
+     * under the {@code flow_enricher_*} prefix.
      */
     @Bean
-    FlowEnricherMicrometerBridge flowEnricherMicrometerBridge(
+    DropwizardToPrometheusBridge dropwizardToPrometheusBridge(
             MetricRegistry flowEnricherMetricRegistry) {
-        return new FlowEnricherMicrometerBridge(flowEnricherMetricRegistry, Clock.SYSTEM);
+        return new DropwizardToPrometheusBridge(flowEnricherMetricRegistry, "flow_enricher");
     }
 
     /**
