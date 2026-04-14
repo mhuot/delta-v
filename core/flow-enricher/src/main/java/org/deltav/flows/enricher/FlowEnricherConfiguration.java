@@ -328,33 +328,15 @@ public class FlowEnricherConfiguration {
      * succeed without pulling in the banned {@code opennms-util} module.
      * This is the same shim that unblocks the Netflow parsers (see the
      * {@code feature/flow-enricher-phase2-parser-bridge} merge).
-     *
-     * <p>DNS lookups are disabled on the parser. With {@link NoOpDnsResolver}
-     * wired in, reverse lookups are no-ops anyway, but the parser's default
-     * {@code dnsLookupsEnabled=true} causes {@code SampleDatagramEnricher.enrich}
-     * to walk every datagram via {@code SampleDatagram.visit()} to collect
-     * addresses for lookup. That walk triggers a latent horizon NPE in
-     * {@code FlowRecord.visit()} (line 108), which does not null-guard
-     * {@code data.value} the way the sibling {@code writeBson} does, whenever
-     * hsflowd emits a flow record whose data format falls outside horizon's
-     * {@code flowDataFormats} map. The NPE escapes the parser's executor
-     * Runnable, the {@code CompletableFuture} it returns is never completed,
-     * and the enricher thread calling {@code parser.parse(...).join()} stalls
-     * until Kafka rebalances — causing silent lag without any WARN/ERROR in
-     * the flow-enricher logs. Disabling DNS lookups short-circuits the
-     * {@code enrich()} path before {@code visit()} is called, which both
-     * avoids pointless work and sidesteps the horizon bug.
      */
     @Bean
     SFlowUdpParser sflowUdpParser(
             ThreadLocalDispatcher threadLocalDispatcher,
             DnsResolver flowParserDnsResolver) {
-        SFlowUdpParser parser = new SFlowUdpParser(
+        return new SFlowUdpParser(
                 "SFlow",
                 threadLocalDispatcher,
                 flowParserDnsResolver);
-        parser.setDnsLookupsEnabled(false);
-        return parser;
     }
 
     @Bean
