@@ -17,8 +17,8 @@
 package org.deltav.flows.enricher.parser;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 import org.opennms.core.ipc.sink.api.AsyncDispatcher;
@@ -30,12 +30,32 @@ import org.opennms.netmgt.telemetry.api.receiver.TelemetryMessage;
  * capture sink for horizon {@link org.opennms.netmgt.telemetry.listeners.UdpParser}
  * instances during the flow-enricher's Stage 1 parse step.
  *
- * <p><strong>This class is NOT thread-safe.</strong> A fresh instance must be
- * created per {@code process()} call and installed into the singleton
- * {@link ThreadLocalDispatcher}. Sharing one instance across concurrent
- * threads or across sequential calls on the same thread will mix flows from
- * different exporters, which is a correctness bug the Stage 1 error-handling
- * contract explicitly forbids.
+ * <p><strong>Thread-safety:</strong> {@link #send} is safe to call concurrently
+ * from multiple threads. Horizon's {@code Netflow9UdpParser} (and the rest of
+ * its {@code ParserBase} family) dispatches flow records on an internal
+ * {@code ThreadPoolExecutor}, so a single batch parse can spread its
+ * {@code dispatcher.send(...)} calls across many worker threads. The earlier
+ * implementation used a plain {@link ArrayList} without synchronisation, which
+ * is fine in single-threaded sFlow tests but raced under concurrent Netflow9
+ * dispatches: {@code ArrayList.add} occasionally threw
+ * {@code ArrayIndexOutOfBoundsException} on capacity expansion and even more
+ * often produced a {@code null} entry that bombed downstream iteration in
+ * {@code AbstractProtocolMessageProcessor.synthesizeParsedLog} with an NPE on
+ * {@code msg.getBuffer()}. This implementation guards both {@link #send} and
+ * {@link #getCaptured} with synchronisation on the captured list.
+ *
+ * <p>Each call to {@link #getCaptured} returns an immutable defensive copy
+ * snapshot rather than a wrapper, so callers can iterate without any
+ * additional locking even if a parser thread is still dispatching after the
+ * snapshot is taken (which should not happen in production because the
+ * processor calls {@code parser.parse(...).join()} before reading captures,
+ * but defensive snapshots keep the contract simple).
+ *
+ * <p>One {@link CapturingDispatcher} instance is still created per
+ * {@code process()} call and installed into the singleton
+ * {@link ThreadLocalDispatcher}. Sharing one instance across sequential calls
+ * would mix flows from different exporters, which is a correctness bug the
+ * Stage 1 error-handling contract explicitly forbids.
  */
 public class CapturingDispatcher implements AsyncDispatcher<TelemetryMessage> {
 
@@ -43,13 +63,18 @@ public class CapturingDispatcher implements AsyncDispatcher<TelemetryMessage> {
 
     @Override
     public CompletableFuture<DispatchStatus> send(TelemetryMessage message) {
-        captured.add(message);
+        Objects.requireNonNull(message, "message");
+        synchronized (captured) {
+            captured.add(message);
+        }
         return CompletableFuture.completedFuture(DispatchStatus.DISPATCHED);
     }
 
     @Override
     public int getQueueSize() {
-        return captured.size();
+        synchronized (captured) {
+            return captured.size();
+        }
     }
 
     @Override
@@ -58,10 +83,14 @@ public class CapturingDispatcher implements AsyncDispatcher<TelemetryMessage> {
     }
 
     /**
-     * Returns an unmodifiable view of the messages dispatched to this
-     * instance since it was created. Order matches dispatch order.
+     * Returns an immutable snapshot of the messages dispatched to this
+     * instance since it was created. The returned list is a defensive copy:
+     * subsequent {@link #send} calls do not mutate it, and callers can
+     * iterate it without external locking.
      */
     public List<TelemetryMessage> getCaptured() {
-        return Collections.unmodifiableList(captured);
+        synchronized (captured) {
+            return List.copyOf(captured);
+        }
     }
 }
