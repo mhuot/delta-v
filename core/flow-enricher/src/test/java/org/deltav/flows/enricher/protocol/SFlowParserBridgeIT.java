@@ -90,14 +90,6 @@ class SFlowParserBridgeIT {
                 "test-sflow",
                 tld,
                 new NoOpDnsResolver());
-        // Mirror the production wiring in FlowEnricherConfiguration: disable
-        // DNS lookups so the parser short-circuits SampleDatagramEnricher.enrich()
-        // and never calls SampleDatagram.visit(). The visit() path triggers a
-        // latent horizon NPE in FlowRecord.visit() whenever a flow record's
-        // data format is outside horizon's flowDataFormats map — which is
-        // exactly what hsflowd produces on real wire bytes. Regression
-        // coverage for that bug lives in hsflowdWireBytesProduceFlows() below.
-        parser.setDnsLookupsEnabled(false);
         parser.start(scheduler);
 
         processor = new SFlowMessageProcessor(
@@ -140,27 +132,32 @@ class SFlowParserBridgeIT {
     }
 
     /**
-     * Regression test for the flow-enricher sFlow silent-drop bug observed
-     * in production against hsflowd. The fixture
+     * Regression guard for the horizon {@code FlowRecord.visit()} null guard
+     * shipped in horizon 1.0.8 (commit {@code c24a319708c}). The fixture
      * {@code fixtures/hsflowd-sample.dat} is a single UDP payload captured
      * from hsflowd 2.1.23 running with {@code sampling = 1} and
      * {@code pcap { dev = eth0 }}; it contains three samples, at least one
      * of which is an expanded flow sample whose {@code FlowRecord} carries
      * a data format outside horizon's {@code flowDataFormats} map. Those
-     * records decode to {@code Opaque} instances with {@code value == null},
-     * and when {@link org.opennms.netmgt.telemetry.protocols.sflow.parser.SampleDatagramEnricher#enrich}
-     * walks the datagram via {@code SampleDatagram.visit()} the unguarded
-     * {@code FlowRecord.visit()} at line 108 throws {@link NullPointerException}.
-     * The exception escapes the parser's {@link java.util.concurrent.ExecutorService}
-     * task, its {@link java.util.concurrent.CompletableFuture} is never
-     * completed, and the calling thread blocks on {@code join()} until the
-     * Kafka consumer rebalances — causing silent lag without any WARN/ERROR.
+     * records decode to {@code Opaque} instances with {@code value == null}.
      *
-     * <p>The fix is in {@code FlowEnricherConfiguration.sflowUdpParser()}:
-     * call {@code setDnsLookupsEnabled(false)} so {@code enrich()}
-     * short-circuits before invoking {@code visit()}. The matching call in
-     * {@link #setUp()} above mirrors that production wiring. Without it
-     * this test throws the same NPE and never produces flows.
+     * <p>Before horizon 1.0.8, {@code FlowRecord.visit()} dereferenced
+     * {@code data.value} without a null guard (the sibling {@code writeBson}
+     * was correctly guarded). When
+     * {@link org.opennms.netmgt.telemetry.protocols.sflow.parser.SampleDatagramEnricher#enrich}
+     * walked the datagram via {@code SampleDatagram.visit()}, the unguarded
+     * dereference threw a {@link NullPointerException} that escaped the
+     * parser's {@link java.util.concurrent.ExecutorService} task, left its
+     * {@link java.util.concurrent.CompletableFuture} uncompleted, and caused
+     * the calling thread to block on {@code join()} until the Kafka consumer
+     * rebalanced — silent lag with no WARN/ERROR in the flow-enricher logs.
+     *
+     * <p>This test is wired exactly as production: DNS lookups enabled (the
+     * default), {@code NoOpDnsResolver} making reverse lookups no-ops,
+     * {@code enrich()} walking every datagram via {@code visit()}. If the
+     * horizon null guard is ever reverted or the horizon dependency is
+     * downgraded below 1.0.8, the stall returns and {@code @Timeout(10s)}
+     * fails the test fast instead of letting it hang forever.
      *
      * <p>The fixture's first sample is a counter sample expansion, so it is
      * dropped by {@code SFlowAdapter} (counter samples are not flow records),
@@ -179,7 +176,7 @@ class SFlowParserBridgeIT {
 
         assertThat(flows)
                 .as("hsflowd-produced sFlow v5 datagram should produce at least one flow "
-                        + "when DNS lookups are disabled on the parser (production wiring)")
+                        + "with the horizon 1.0.8 FlowRecord.visit() null guard")
                 .isNotEmpty();
     }
 
