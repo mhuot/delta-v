@@ -3,7 +3,7 @@
 # Builds all Delta-V Docker images (16 total) and pushes them to GitHub
 # Container Registry (GHCR) as multi-arch images (linux/amd64 + linux/arm64).
 #
-# Trigger: Push a tag matching 'delta-v-*' (e.g., delta-v-1.0.0)
+# Trigger: Push a tag matching 'v*' (e.g., v1.1.0)
 #          or run manually via workflow_dispatch.
 #
 # Images built:
@@ -51,7 +51,7 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - 'delta-v-*'
+      - 'v*'
 
 env:
   REGISTRY: ghcr.io
