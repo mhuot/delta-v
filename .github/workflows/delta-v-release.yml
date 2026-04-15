@@ -1,11 +1,11 @@
 name: Delta-V Release
 
-# Triggered by pushing tags like 'delta-v-1.0.0'
+# Triggered by pushing tags like 'v1.1.0'
 # Only repo owners can push tags, so GITHUB_REF_NAME is trusted input.
 on:
   push:
     tags:
-      - 'delta-v-*'
+      - 'v*'
 
 env:
   DOCKER_ORG: pbranestrategy
@@ -35,7 +35,7 @@ jobs:
           VERSION=$(.circleci/scripts/pom2version.sh pom.xml)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           # Tag name is safe — only repo owners can push tags
-          TAG_VERSION="${GITHUB_REF_NAME#delta-v-}"
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
           echo "tag_version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
