@@ -64,6 +64,26 @@
             <artifactId>org.opennms.features.events.api</artifactId>
         </dependency>
 
+        <!-- core.model-api supplies compile-time helper types used by our ported
+             entities and DAO classes: OnmsSeverity, PrimaryType, HeatMapElement,
+             FilterManager, SurveillanceStatus, ServiceSelector, OutageSummary,
+             AlarmSummary/SituationSummary, and the org.opennms.netmgt.model.{alarm,outage}
+             subpackages. Before horizon 1.0.9, this was inherited transitively through
+             events.api; horizon 1.0.9 marked core.model-api as <optional>true</optional>
+             so it no longer propagates. Declared here explicitly with exclusions to
+             keep the legacy eclipselink/hibernate-3/servicemix-spring chain out. -->
+        <dependency>
+            <groupId>org.opennms.core</groupId>
+            <artifactId>org.opennms.core.model-api</artifactId>
+            <exclusions>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>spring-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.opennms.dependencies</groupId><artifactId>jaxb-dependencies</artifactId></exclusion>
+                <exclusion><groupId>org.hibernate</groupId><artifactId>hibernate-core</artifactId></exclusion>
+                <exclusion><groupId>org.hibernate.javax.persistence</groupId><artifactId>hibernate-jpa-2.0-api</artifactId></exclusion>
+                <exclusion><groupId>org.opennms</groupId><artifactId>opennms-model</artifactId></exclusion>
+            </exclusions>
+        </dependency>
+
         <!-- Hibernate 3.x — compile-only for CategoryDao.getCriterionForCategorySetsUnion return type.
              The method always throws UnsupportedOperationException in CategoryDaoJpa; the jar is
              needed only so javac can resolve org.hibernate.criterion.Criterion. It is excluded from
