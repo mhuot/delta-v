@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: collectd
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/opennms}
     username: ${SPRING_DATASOURCE_USERNAME:opennms}
@@ -14,6 +16,30 @@ spring:
     properties:
       hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
       hibernate.archive.autodetection: none
+  cloud:
+    stream:
+      bindings:
+        publishTimeseries-out-0:
+          destination: deltav-timeseries
+          producer:
+            partition-count: ${DELTAV_TIMESERIES_PARTITIONS:16}
+            use-native-encoding: true
+      kafka:
+        binder:
+          brokers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+          auto-create-topics: true
+        bindings:
+          publishTimeseries-out-0:
+            producer:
+              configuration:
+                key.serializer: org.apache.kafka.common.serialization.ByteArraySerializer
+                value.serializer: org.apache.kafka.common.serialization.ByteArraySerializer
+                compression.type: lz4
+                linger.ms: 50
+                batch.size: 65536
+                acks: all
+                enable.idempotence: true
+                max.in.flight.requests.per.connection: 5
 
 opennms:
   home: ${OPENNMS_HOME:/opt/deltav}
@@ -37,3 +63,22 @@ opennms:
       force-remote: ${OPENNMS_RPC_KAFKA_FORCE_REMOTE:false}
   timeseries:
     strategy: ${OPENNMS_TIMESERIES_STRATEGY:inmemory}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name:collectd}
+
+deltav:
+  timeseries:
+    enabled: ${DELTAV_TIMESERIES_ENABLED:false}
+    partitions: ${DELTAV_TIMESERIES_PARTITIONS:16}
+    replication-factor: ${DELTAV_TIMESERIES_REPLICATION_FACTOR:1}
+    retention-days: ${DELTAV_TIMESERIES_RETENTION_DAYS:7}
+  node-context:
+    partitions: ${DELTAV_NODE_CONTEXT_PARTITIONS:8}
+    replication-factor: ${DELTAV_NODE_CONTEXT_REPLICATION_FACTOR:1}
