@@ -180,4 +180,108 @@ class CollectionSetToProtobufTranslatorTest {
         when(attr.getStringValue()).thenReturn(value);
         return attr;
     }
+
+    @Test
+    void stringAttributeMapsToTextValue() {
+        CollectionAttribute attr = stringAttribute("sysDescr", "Linux 6.1.0");
+        CollectionSet set = oneResourceSet(7, "Default", "node", null, "mib2-system",
+                List.of(attr), 1700000000000L);
+
+        TimeseriesBatch batch = translator.translate(set, "default", 7, "Default");
+
+        Attribute out = batch.getResources(0).getGroups(0).getAttributes(0);
+        assertThat(out.getType()).isEqualTo(AttributeType.ATTRIBUTE_TYPE_STRING);
+        assertThat(out.getText()).isEqualTo("Linux 6.1.0");
+        assertThat(out.getValueCase()).isEqualTo(Attribute.ValueCase.TEXT);
+    }
+
+    @Test
+    void structuredJsonStringAttributeIsCarriedVerbatim() {
+        String json = "{\"cpu\":42,\"mem\":{\"used\":1024,\"free\":2048}}";
+        CollectionAttribute attr = stringAttribute("structuredPayload", json);
+        CollectionSet set = oneResourceSet(7, "Default", "node", null, "structured",
+                List.of(attr), 1700000000000L);
+
+        TimeseriesBatch batch = translator.translate(set, "default", 7, "Default");
+
+        assertThat(batch.getResources(0).getGroups(0).getAttributes(0).getText()).isEqualTo(json);
+    }
+
+    @Test
+    void unicodeAttributeAndGroupNamesSurviveRoundtripInProto() {
+        CollectionAttribute attr = numericAttribute("répondéz",
+                org.opennms.netmgt.collection.api.AttributeType.GAUGE, 1);
+        CollectionSet set = oneResourceSet(7, "Default", "node", null, "αβγ-group",
+                List.of(attr), 1700000000000L);
+
+        TimeseriesBatch batch = translator.translate(set, "default", 7, "Default");
+
+        assertThat(batch.getResources(0).getGroups(0).getName()).isEqualTo("αβγ-group");
+        assertThat(batch.getResources(0).getGroups(0).getAttributes(0).getName()).isEqualTo("répondéz");
+    }
+
+    @Test
+    void statusFailedCollectionSetProducesEmptyBatch() {
+        CollectionSet set = mock(CollectionSet.class);
+        when(set.getStatus()).thenReturn(CollectionStatus.FAILED);
+
+        TimeseriesBatch batch = translator.translate(set, "default", 7, "Default");
+
+        assertThat(batch.getResourcesList()).isEmpty();
+        // After the Task 4 fix, the failed-set early return now also stamps nodeId/location
+        // from the caller-provided values (previously they were zeroed on FAILED).
+        assertThat(batch.getNodeId()).isEqualTo(7);
+        assertThat(batch.getLocation()).isEqualTo("Default");
+    }
+
+    @Test
+    void nullCollectionSetYieldsEmptyBatchNotNpe() {
+        TimeseriesBatch batch = translator.translate(null, "default", 0, "");
+
+        assertThat(batch.getResourcesList()).isEmpty();
+        assertThat(batch.getProducer()).isEqualTo(ProducerType.PRODUCER_COLLECTD);
+    }
+
+    @Test
+    void resourceWithNoAttributesIsOmittedFromBatch() {
+        CollectionAttribute attr = numericAttribute("x",
+                org.opennms.netmgt.collection.api.AttributeType.GAUGE, 1);
+        CollectionSet set = oneResourceSet(7, "Default", "node", null, "with-attr",
+                List.of(attr), 1700000000000L);
+        CollectionSet emptySet = oneResourceSet(7, "Default", "node", null, "empty-group",
+                List.of(), 1700000000000L);
+
+        TimeseriesBatch withAttr = translator.translate(set, "default", 7, "Default");
+        TimeseriesBatch withoutAttr = translator.translate(emptySet, "default", 7, "Default");
+
+        assertThat(withAttr.getResourcesCount()).isEqualTo(1);
+        assertThat(withoutAttr.getResourcesList()).isEmpty();
+    }
+
+    @Test
+    void interfaceScopedResourceEmitsInstanceAndResourceIdCorrectly() {
+        CollectionAttribute attr = numericAttribute("ifInOctets",
+                org.opennms.netmgt.collection.api.AttributeType.COUNTER, 1000L);
+        CollectionSet set = oneResourceSet(7, "Default", "interfaceSnmp", "eth0",
+                "mib2-interfaces", List.of(attr), 1700000000000L);
+
+        TimeseriesBatch batch = translator.translate(set, "default", 7, "Default");
+        var resource = batch.getResources(0);
+
+        assertThat(resource.getType()).isEqualTo("interfaceSnmp");
+        assertThat(resource.getInstance()).isEqualTo("eth0");
+        assertThat(resource.getResourceId()).contains("interfaceSnmp[eth0]");
+    }
+
+    @Test
+    void packageNameIsCopiedIntoBatch() {
+        CollectionAttribute attr = numericAttribute("x",
+                org.opennms.netmgt.collection.api.AttributeType.GAUGE, 1);
+        CollectionSet set = oneResourceSet(7, "Default", "node", null, "g",
+                List.of(attr), 1700000000000L);
+
+        TimeseriesBatch batch = translator.translate(set, "critical-infra", 7, "Default");
+
+        assertThat(batch.getCollectionPackage()).isEqualTo("critical-infra");
+    }
 }
