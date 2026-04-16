@@ -5,12 +5,15 @@
 #
 # Layer 5 end-to-end smoke test for the Kafka Time Series producer. Starts
 # the delta-v Docker Compose stack with DELTAV_TIMESERIES_ENABLED=true,
-# provisions a test node, waits for Collectd to poll it, taps the
-# deltav-timeseries topic, and asserts a record arrives whose protobuf
-# parses as a TimeseriesBatch with the expected node_id and location.
-# Also scrapes /actuator/prometheus on Collectd to verify the
-# batches_published_total counter incremented and batches_failed_total
-# stayed at zero. Tears down cleanly on success or failure.
+# provisions a test node, waits for Collectd to poll it, then asserts:
+#   1. at least one record arrives on the deltav-timeseries topic
+#      (via kafka-console-consumer, payload not deserialized)
+#   2. deltav_timeseries_batches_published_total{producer="collectd"} > 0
+#      on the Collectd /actuator/prometheus endpoint
+#   3. deltav_timeseries_batches_failed_total counters stay at zero
+# Protobuf deserialization is out of scope for Phase 0; the Prometheus
+# counter assertion is the load-bearing check. Tears down cleanly on
+# success or failure.
 
 set -euo pipefail
 

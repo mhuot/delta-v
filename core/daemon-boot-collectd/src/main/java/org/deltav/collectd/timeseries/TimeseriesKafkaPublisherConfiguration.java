@@ -146,10 +146,12 @@ public class TimeseriesKafkaPublisherConfiguration {
     }
 
     /**
-     * Forwards each visitor callback to both delegate persisters. Errors in
-     * one delegate must not prevent the other from running: the Kafka path
-     * is already error-isolated in the publisher, and the inner factory is
-     * assumed well-behaved.
+     * Forwards each visitor callback to both delegate persisters, inner first
+     * then Kafka. If the inner persister throws unexpectedly, the Kafka path
+     * is skipped for that poll cycle — this is an accepted tradeoff for
+     * Phase 0 because the inner TimeseriesPersisterFactory is assumed
+     * well-behaved. The Kafka side's own error paths are isolated inside
+     * {@link TimeseriesKafkaPublisher#publish} and never propagate up.
      */
     static final class FanoutPersister implements Persister {
         private final Persister innerPersister;
