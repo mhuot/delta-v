@@ -58,11 +58,13 @@ class FanoutPersisterTest {
     }
 
     @Test
-    void innerPersisterThrowingPropagatesAndSkipsKafkaDelegate() {
-        // This documents the Phase 0 tradeoff: if the inner persister throws
-        // during completeCollectionSet, the Kafka delegate is skipped for that
-        // poll. The inner factory is assumed well-behaved; if this assumption
-        // becomes wrong, the split-per-delegate try/catch is the fix.
+    void innerPersisterThrowingRuntimeExceptionDoesNotBlockKafkaDelegate() {
+        // Per-delegate isolation contract: a RuntimeException from the inner
+        // persister must not prevent the Kafka publish for the same poll.
+        // Horizon's TimeseriesPersister has surfaced several pre-existing
+        // delta-v failure modes (transaction rollback-only, NPE in
+        // TimeseriesPersistOperationBuilder, etc.); the Kafka path must
+        // survive all of them so consumers still receive the protobuf record.
         Persister inner = mock(Persister.class);
         TimeseriesKafkaPublisher publisher = mock(TimeseriesKafkaPublisher.class);
         ServiceParameters sp = mock(ServiceParameters.class);
@@ -75,11 +77,32 @@ class FanoutPersisterTest {
                 .when(inner).completeCollectionSet(set);
 
         fanout.visitCollectionSet(set);
-        try {
-            fanout.completeCollectionSet(set);
-        } catch (RuntimeException ignored) { /* expected */ }
+        fanout.completeCollectionSet(set);  // must not throw
 
-        verify(publisher, never()).publish(any(), any(), any(Integer.class), any());
+        verify(publisher).publish(any(), any(), any(Integer.class), any());
+    }
+
+    @Test
+    void innerPersisterThrowingLinkageErrorDoesNotBlockKafkaDelegate() {
+        // The catch widens to Throwable (not just RuntimeException) because
+        // delta-v Collectd has surfaced NoSuchMethodError (LinkageError) on
+        // classpath-mismatched horizon jars (ResourceTypeUtils). Errors from
+        // the inner persister must not kill the Kafka path either.
+        Persister inner = mock(Persister.class);
+        TimeseriesKafkaPublisher publisher = mock(TimeseriesKafkaPublisher.class);
+        ServiceParameters sp = mock(ServiceParameters.class);
+        when(sp.getParameters()).thenReturn(new HashMap<>());
+        TimeseriesKafkaPersister kafka = new TimeseriesKafkaPersister(publisher, sp);
+        FanoutPersister fanout = new FanoutPersister(inner, kafka);
+
+        CollectionSet set = mock(CollectionSet.class);
+        doThrow(new NoSuchMethodError("simulated classpath mismatch"))
+                .when(inner).visitCollectionSet(set);
+
+        fanout.visitCollectionSet(set);  // must not propagate
+        fanout.completeCollectionSet(set);
+
+        verify(publisher).publish(any(), any(), any(Integer.class), any());
     }
 
     @Test

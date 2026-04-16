@@ -16,6 +16,13 @@ spring:
     properties:
       hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
       hibernate.archive.autodetection: none
+  # Spring Kafka's KafkaAdmin (which provisions the NewTopic beans in
+  # TimeseriesKafkaPublisherConfiguration) binds to spring.kafka.bootstrap-servers.
+  # Without this, KafkaAdmin defaults to localhost:9092 and spins endlessly trying
+  # to reach a broker — the SCS binder's `brokers` property is consumed by the
+  # binder itself, not by the KafkaAdmin auto-configuration.
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
   cloud:
     stream:
       bindings:

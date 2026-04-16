@@ -30,6 +30,8 @@ import org.opennms.netmgt.collection.api.Persister;
 import org.opennms.netmgt.collection.api.PersisterFactory;
 import org.opennms.netmgt.collection.api.ServiceParameters;
 import org.opennms.netmgt.rrd.RrdRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -147,13 +149,18 @@ public class TimeseriesKafkaPublisherConfiguration {
 
     /**
      * Forwards each visitor callback to both delegate persisters, inner first
-     * then Kafka. If the inner persister throws unexpectedly, the Kafka path
-     * is skipped for that poll cycle — this is an accepted tradeoff for
-     * Phase 0 because the inner TimeseriesPersisterFactory is assumed
-     * well-behaved. The Kafka side's own error paths are isolated inside
-     * {@link TimeseriesKafkaPublisher#publish} and never propagate up.
+     * then Kafka. Each delegate is invoked inside its own try/catch so that
+     * an exception in one does not prevent the other from running. This
+     * matters in practice: horizon's TimeseriesPersister has surfaced
+     * transaction-propagation failures in delta-v (MetaTagDataLoader marks
+     * a read-only transaction rollback-only on certain DB states), and
+     * without isolation a single inner failure would silently swallow every
+     * Kafka publish for the affected poll cycle. Exceptions are logged at
+     * WARN so they do not disappear without operator signal.
      */
     static final class FanoutPersister implements Persister {
+        private static final Logger LOG = LoggerFactory.getLogger(FanoutPersister.class);
+
         private final Persister innerPersister;
         private final TimeseriesKafkaPersister kafkaPersister;
 
@@ -162,64 +169,86 @@ public class TimeseriesKafkaPublisherConfiguration {
             this.kafkaPersister = kafkaPersister;
         }
 
+        private void runInner(String step, Runnable task) {
+            try {
+                task.run();
+            } catch (Throwable e) {
+                // Catch Throwable (not just RuntimeException) because horizon's
+                // AbstractPersister has surfaced LinkageErrors (NoSuchMethodError
+                // on ResourceTypeUtils.getResourcePathWithRepository) in delta-v
+                // from pre-existing daemon-boot classpath mismatches. Kafka path
+                // isolation must hold for all failure modes, not just unchecked
+                // exceptions.
+                LOG.warn("Inner persister threw during {}; continuing with Kafka path", step, e);
+            }
+        }
+
+        private void runKafka(String step, Runnable task) {
+            try {
+                task.run();
+            } catch (Throwable e) {
+                LOG.warn("Kafka persister threw during {}; continuing", step, e);
+            }
+        }
+
         @Override
         public void visitCollectionSet(CollectionSet s) {
-            innerPersister.visitCollectionSet(s);
-            kafkaPersister.visitCollectionSet(s);
+            runInner("visitCollectionSet", () -> innerPersister.visitCollectionSet(s));
+            runKafka("visitCollectionSet", () -> kafkaPersister.visitCollectionSet(s));
         }
 
         @Override
         public void visitResource(CollectionResource r) {
-            innerPersister.visitResource(r);
-            kafkaPersister.visitResource(r);
+            runInner("visitResource", () -> innerPersister.visitResource(r));
+            runKafka("visitResource", () -> kafkaPersister.visitResource(r));
         }
 
         @Override
         public void visitGroup(AttributeGroup g) {
-            innerPersister.visitGroup(g);
-            kafkaPersister.visitGroup(g);
+            runInner("visitGroup", () -> innerPersister.visitGroup(g));
+            runKafka("visitGroup", () -> kafkaPersister.visitGroup(g));
         }
 
         @Override
         public void visitAttribute(CollectionAttribute a) {
-            innerPersister.visitAttribute(a);
-            kafkaPersister.visitAttribute(a);
+            runInner("visitAttribute", () -> innerPersister.visitAttribute(a));
+            runKafka("visitAttribute", () -> kafkaPersister.visitAttribute(a));
         }
 
         @Override
         public void completeAttribute(CollectionAttribute a) {
-            innerPersister.completeAttribute(a);
-            kafkaPersister.completeAttribute(a);
+            runInner("completeAttribute", () -> innerPersister.completeAttribute(a));
+            runKafka("completeAttribute", () -> kafkaPersister.completeAttribute(a));
         }
 
         @Override
         public void completeGroup(AttributeGroup g) {
-            innerPersister.completeGroup(g);
-            kafkaPersister.completeGroup(g);
+            runInner("completeGroup", () -> innerPersister.completeGroup(g));
+            runKafka("completeGroup", () -> kafkaPersister.completeGroup(g));
         }
 
         @Override
         public void completeResource(CollectionResource r) {
-            innerPersister.completeResource(r);
-            kafkaPersister.completeResource(r);
+            runInner("completeResource", () -> innerPersister.completeResource(r));
+            runKafka("completeResource", () -> kafkaPersister.completeResource(r));
         }
 
         @Override
         public void completeCollectionSet(CollectionSet s) {
-            innerPersister.completeCollectionSet(s);
-            kafkaPersister.completeCollectionSet(s);
+            runInner("completeCollectionSet", () -> innerPersister.completeCollectionSet(s));
+            runKafka("completeCollectionSet", () -> kafkaPersister.completeCollectionSet(s));
         }
 
         @Override
         public void persistNumericAttribute(CollectionAttribute a) {
-            innerPersister.persistNumericAttribute(a);
-            kafkaPersister.persistNumericAttribute(a);
+            runInner("persistNumericAttribute", () -> innerPersister.persistNumericAttribute(a));
+            runKafka("persistNumericAttribute", () -> kafkaPersister.persistNumericAttribute(a));
         }
 
         @Override
         public void persistStringAttribute(CollectionAttribute a) {
-            innerPersister.persistStringAttribute(a);
-            kafkaPersister.persistStringAttribute(a);
+            runInner("persistStringAttribute", () -> innerPersister.persistStringAttribute(a));
+            runKafka("persistStringAttribute", () -> kafkaPersister.persistStringAttribute(a));
         }
     }
 }

@@ -22,6 +22,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication(scanBasePackages = {
     "org.deltav.core.daemon.common",
     "org.deltav.netmgt.collectd.boot",
+    "org.deltav.collectd.timeseries",
     "org.opennms.netmgt.model.jakarta.dao"
 })
 public class CollectdApplication {
