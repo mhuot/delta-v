@@ -315,13 +315,13 @@ public class CollectdDaemonConfiguration {
      * annotations for disambiguation, which we satisfy by passing the correct
      * beans explicitly.</p>
      */
-    @Bean
-    public PersisterFactory persisterFactory(MetaTagDataLoader metaTagDataLoader,
-                                              StatisticsCollector statisticsCollector,
-                                              TimeseriesStorageManager timeseriesStorageManager,
-                                              CacheConfig timeseriesPersisterMetaTagCache,
-                                              MetricRegistry kafkaRpcMetricRegistry,
-                                              TimeseriesWriterConfig timeseriesWriterConfig) {
+    @Bean(name = "timeseriesPersisterFactory")
+    public PersisterFactory timeseriesPersisterFactory(MetaTagDataLoader metaTagDataLoader,
+                                                         StatisticsCollector statisticsCollector,
+                                                         TimeseriesStorageManager timeseriesStorageManager,
+                                                         CacheConfig timeseriesPersisterMetaTagCache,
+                                                         MetricRegistry kafkaRpcMetricRegistry,
+                                                         TimeseriesWriterConfig timeseriesWriterConfig) {
         return new TimeseriesPersisterFactory(metaTagDataLoader, statisticsCollector,
                 timeseriesStorageManager, timeseriesPersisterMetaTagCache,
                 kafkaRpcMetricRegistry, timeseriesWriterConfig);
