@@ -1,9 +1,32 @@
-// Licensed to Delta-V under the GNU Affero General Public License v3.
-// See LICENSE.md in the repository root for full license text.
+// Copyright (C) 2026 BeaconStrategists, Inc.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License,
+// or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// API version: 1
+//
+// Public contract for the deltav-timeseries Kafka topic.
+//
+// Versioning: during Phase 1 (feature flag off in production) breaking
+// schema changes are permissible. Once Phase 2 ships (flag on by default),
+// only forward-compatible changes are allowed: new fields with new tag
+// numbers, new enum values at the end. Renaming or renumbering existing
+// fields, deleting fields, or changing field types are breaking changes
+// that require a deprecation cycle.
 
 syntax = "proto3";
 
-package deltav.timeseries;
+package org.deltav.timeseries;
 
 option java_package = "org.deltav.timeseries.proto";
 option java_multiple_files = true;
@@ -50,28 +73,66 @@ enum ProducerType {
   PRODUCER_COLLECTD = 1;
   PRODUCER_POLLERD = 2;
   PRODUCER_PERSPECTIVE_POLLERD = 3;
-  PRODUCER_MINION_SNMP_COLLECTOR = 4;
-  PRODUCER_STREAMING_TELEMETRY = 5;
+  PRODUCER_MINION_SNMP_COLLECTOR = 4;  // Future phase
+  PRODUCER_STREAMING_TELEMETRY = 5;    // Future phase (gNMI/GPB)
 }
 
+// A single resource in the CollectionSet. For Collectd this maps 1:1 to
+// org.opennms.netmgt.collection.api.CollectionResource. For Pollerd this is
+// the monitored service; for PerspectivePollerd, the (service, perspective)
+// pair.
 message Resource {
+  // Stable resource identifier string. Format matches horizon's resource
+  // ID convention: "node[N]", "node[N].interfaceSnmp[eth0]", etc. Used
+  // for deduplication, display grouping, and as a Prometheus-style
+  // "instance" label component.
   string resource_id = 1;
+
+  // Resource type name (e.g. "node", "interfaceSnmp", "hrStorageIndex").
+  // Comes from the collectd-configuration.xml resource type definitions.
   string type = 2;
+
+  // Per-instance key for tabular resources (e.g. "eth0" for an interface,
+  // "1.3.6.1.2.1.25.2.3.1.1.1" for a storage row). Empty for non-tabular
+  // resources. Distinct from resource_id because instance is the raw
+  // collector-side key without the "node[N]." prefix.
   string instance = 3;
+
+  // Attribute groups defined in the collectd-configuration.xml datacollection
+  // config for this resource type.
   repeated AttributeGroup groups = 4;
 }
 
+// A named group of attributes. Matches horizon's AttributeGroup concept —
+// typically one per MIB table or one per logical grouping of metrics.
 message AttributeGroup {
+  // Group name, e.g. "mib2-tcp", "hrStorage", "response-time".
   string name = 1;
+
+  // The individual metrics in this group.
   repeated Attribute attributes = 2;
 }
 
+// One individual metric sample within a group.
+//
+// Invariant: when type == ATTRIBUTE_TYPE_STRING, the `text` arm of the
+// value oneof is set; for all other type values the `numeric` arm is set.
+// Producers MUST uphold this invariant; consumers MAY treat a violation
+// as a malformed record and drop it.
 message Attribute {
+  // Attribute name, e.g. "tcpActiveOpens", "hrStorageUsed", "response".
   string name = 1;
+
+  // The measured value. Use oneof because metrics are either numeric
+  // (gauge/counter) or string (stringAttribute in horizon terminology).
   oneof value {
     double numeric = 2;
     string text = 3;
   }
+
+  // Attribute type. Matches horizon's AttributeType enum. Consumers use
+  // this to decide how to treat the value (rate for counters, absolute
+  // for gauges, ignore for strings unless explicitly handled).
   AttributeType type = 4;
 }
 
