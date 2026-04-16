@@ -225,6 +225,65 @@ Running all services requires significant memory. If Docker Desktop runs out of 
 | passive | ~13      | ~10 GB          |
 | full    | all      | ~12 GB          |
 
+## Kafka Time-Series Producer (Collectd)
+
+### Enabling
+
+The Kafka Time-Series producer in the Collectd daemon is off by default. To enable:
+
+```bash
+export DELTAV_TIMESERIES_ENABLED=true
+docker compose up -d
+```
+
+When enabled, Collectd publishes one `TimeseriesBatch` protobuf record per CollectionSet poll to the `deltav-timeseries` Kafka topic, keyed `{location}@{node_id}`. The existing `InMemoryStorage` TSS backend continues to run alongside — the Kafka publisher is additive, not a replacement.
+
+### Topic provisioning
+
+Both topics are declared as Spring Boot `NewTopic` beans in the Collectd application and are created with the following default configuration the first time Collectd starts with the flag on:
+
+| Topic | Partitions | Retention | Cleanup | Compression |
+|-------|-----------|-----------|---------|-------------|
+| `deltav-timeseries` | 16 | 7 days | delete | lz4 |
+| `deltav-node-context` | 8 | infinite | compact | default |
+
+Do **not** rely on Kafka broker auto-create: defaults are 1 partition / 1 replica, which silently defeats the 16-partition design.
+
+### Tunables (environment variables)
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `DELTAV_TIMESERIES_ENABLED` | `false` | Kill switch — opt-in feature flag |
+| `DELTAV_TIMESERIES_PARTITIONS` | `16` | `deltav-timeseries` partition count |
+| `DELTAV_TIMESERIES_REPLICATION_FACTOR` | `1` dev / `3` prod | `deltav-timeseries` replication |
+| `DELTAV_TIMESERIES_RETENTION_DAYS` | `7` | Time-series record retention |
+| `DELTAV_NODE_CONTEXT_PARTITIONS` | `8` | Context topic partitions |
+| `DELTAV_NODE_CONTEXT_REPLICATION_FACTOR` | `1` dev / `3` prod | Context topic replication |
+
+### Observability
+
+Collectd's `/actuator/prometheus` endpoint exposes:
+
+| Metric | Type | Purpose |
+|---|---|---|
+| `deltav_timeseries_batches_published_total` | counter | Successful publishes |
+| `deltav_timeseries_batches_failed_total{reason}` | counter | Failures by reason (`serialization_error`, `kafka_send_error`, `empty_batch`, `translator_error`) |
+| `deltav_timeseries_batch_size_bytes` | distribution summary | Wire size per record |
+| `deltav_timeseries_batch_size_warning_total` | counter | Records over 800 KB |
+| `deltav_timeseries_resources_per_batch` | distribution summary | Resource count per record |
+| `deltav_timeseries_publish_duration_seconds` | timer | End-to-end publish latency |
+
+### Expected disk footprint
+
+A 1,000-node deployment polling every 5 minutes with default settings produces roughly 140 GB of `deltav-timeseries` log on disk before the 7-day retention window rolls. Adjust `DELTAV_TIMESERIES_RETENTION_DAYS` to shape this, or reduce per-poll scope in `collectd-configuration.xml` for dense nodes.
+
+### Known limitations (schema v1)
+
+- Collectd is a singleton service today: there is no horizontal scale and no leader election. If Collectd restarts mid-poll, the current CollectionSet may not reach Kafka. The scheduler/publisher split that addresses this is tracked separately.
+- The wire format is subject to breaking changes during Phase 1 (dev-only). Once Phase 2 ships (production-enabled), only forward-compatible schema changes are allowed.
+- The `deltav-node-context` topic has no producer in this release — provisiond's change feed ships in a separate follow-up PR. Consumers that depend on context joining will need to wait for that PR or tolerate "unknown node" fallback behavior.
+- Node identity on the wire (`node_id`, `location`) is sourced from Collectd's `ServiceParameters` keys `node-id` and `location`. If Collectd does not populate these keys in a given deployment, records land with `node_id=0` / `location=""`; consumers must still be able to join via the `deltav-node-context` GlobalKTable to resolve identity.
+
 ## Troubleshooting
 
 **Images not found:** Run `./build.sh` to build all images. Verify with `docker images | grep opennms`.
