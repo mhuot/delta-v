@@ -1,0 +1,83 @@
+// Licensed to Delta-V under the GNU Affero General Public License v3.
+// See LICENSE.md in the repository root for full license text.
+
+syntax = "proto3";
+
+package deltav.timeseries;
+
+option java_package = "org.deltav.timeseries.proto";
+option java_multiple_files = true;
+
+// One record per CollectionSet poll. Published to the deltav-timeseries topic,
+// keyed by "{location}@{node_id}". Deliberately producer-agnostic: the same
+// shape is valid whether the producer is Collectd, Pollerd, PerspectivePollerd,
+// or a future SnmpCollector-on-Minion deployment. No identity labels are
+// carried here — consumers join against the deltav-node-context GlobalKTable
+// at process time.
+message TimeseriesBatch {
+  // Milliseconds since Unix epoch when the poll was produced by the collector.
+  // "Collection time," not "publish time" — stamped by the producer before
+  // serialization and immutable through the pipeline.
+  int64 timestamp_ms = 1;
+
+  // Numeric node ID from the nodes table. Used as part of the partition key
+  // and as the join key against deltav-node-context.
+  int32 node_id = 2;
+
+  // Logical location name (e.g. "Default", "Site-A"). Part of the partition
+  // key. Redundant with NodeContext.location but carried here so consumers
+  // can derive the join key from the metric record alone.
+  string location = 3;
+
+  // The package that produced this batch (e.g. "default", "interfaceSnmp").
+  // Used by consumers to filter rules (e.g. "only evaluate threshold X on
+  // records from the 'critical-infra' package").
+  string collection_package = 4;
+
+  // The producer that emitted this batch. Identifies which daemon wrote the
+  // record so consumers can distinguish e.g. Collectd vs. Pollerd origin
+  // without adding a separate topic. Enum because the set is small and
+  // closed.
+  ProducerType producer = 5;
+
+  // The resource tree. A single CollectionSet usually has multiple resources
+  // (one per collected entity: node, interface, storage row, etc).
+  repeated Resource resources = 6;
+}
+
+enum ProducerType {
+  PRODUCER_UNSPECIFIED = 0;
+  PRODUCER_COLLECTD = 1;
+  PRODUCER_POLLERD = 2;
+  PRODUCER_PERSPECTIVE_POLLERD = 3;
+  PRODUCER_MINION_SNMP_COLLECTOR = 4;
+  PRODUCER_STREAMING_TELEMETRY = 5;
+}
+
+message Resource {
+  string resource_id = 1;
+  string type = 2;
+  string instance = 3;
+  repeated AttributeGroup groups = 4;
+}
+
+message AttributeGroup {
+  string name = 1;
+  repeated Attribute attributes = 2;
+}
+
+message Attribute {
+  string name = 1;
+  oneof value {
+    double numeric = 2;
+    string text = 3;
+  }
+  AttributeType type = 4;
+}
+
+enum AttributeType {
+  ATTRIBUTE_TYPE_UNSPECIFIED = 0;
+  ATTRIBUTE_TYPE_COUNTER = 1;
+  ATTRIBUTE_TYPE_GAUGE = 2;
+  ATTRIBUTE_TYPE_STRING = 3;
+}
