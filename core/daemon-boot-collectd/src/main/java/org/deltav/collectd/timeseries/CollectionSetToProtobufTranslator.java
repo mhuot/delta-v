@@ -27,7 +27,6 @@ import org.deltav.timeseries.proto.AttributeType;
 import org.deltav.timeseries.proto.ProducerType;
 import org.deltav.timeseries.proto.Resource;
 import org.deltav.timeseries.proto.TimeseriesBatch;
-import org.opennms.netmgt.collection.api.CollectionAgent;
 import org.opennms.netmgt.collection.api.CollectionAttribute;
 import org.opennms.netmgt.collection.api.CollectionResource;
 import org.opennms.netmgt.collection.api.CollectionSet;
@@ -37,21 +36,26 @@ import org.opennms.netmgt.collection.api.CollectionStatus;
 /**
  * Pure function that walks a horizon CollectionSet visitor tree and emits a
  * TimeseriesBatch protobuf. No side effects, no Spring state, no logging.
- * Callers translate per poll; concurrent calls are safe because each call
- * uses a fresh VisitorState instance.
  *
- * <p>nodeId and location are captured from the first CollectionAgent encountered
- * during the visitor walk (via reflection, because CollectionResource does not
- * expose getAgent() on its public API in all horizon versions). For empty
- * CollectionSets where no resources are visited, nodeId defaults to 0 and
- * location defaults to "".
+ * <p>The translator does NOT extract node identity from the CollectionSet —
+ * horizon's CollectionResource and CollectionSet interfaces do not expose
+ * the CollectionAgent publicly. Callers must supply {@code nodeId} and
+ * {@code location} from their own agent context (typically the
+ * CollectionAgent that was scheduled for collection).</p>
+ *
+ * <p>Each call uses a fresh VisitorState instance; concurrent calls are
+ * therefore safe.</p>
  */
 public class CollectionSetToProtobufTranslator {
 
-    public TimeseriesBatch translate(CollectionSet set, String collectionPackage) {
+    public TimeseriesBatch translate(CollectionSet set, String collectionPackage,
+                                     int nodeId, String location) {
         if (set == null || set.getStatus() == CollectionStatus.FAILED) {
             return TimeseriesBatch.newBuilder()
                     .setProducer(ProducerType.PRODUCER_COLLECTD)
+                    .setNodeId(nodeId)
+                    .setLocation(location != null ? location : "")
+                    .setCollectionPackage(collectionPackage != null ? collectionPackage : "")
                     .build();
         }
 
@@ -64,8 +68,8 @@ public class CollectionSetToProtobufTranslator {
 
         TimeseriesBatch.Builder batch = TimeseriesBatch.newBuilder()
                 .setTimestampMs(timestampMs)
-                .setNodeId(state.nodeId)
-                .setLocation(state.location != null ? state.location : "")
+                .setNodeId(nodeId)
+                .setLocation(location != null ? location : "")
                 .setCollectionPackage(collectionPackage != null ? collectionPackage : "")
                 .setProducer(ProducerType.PRODUCER_COLLECTD);
 
@@ -91,8 +95,6 @@ public class CollectionSetToProtobufTranslator {
     }
 
     private static class VisitorState implements CollectionSetVisitor {
-        int nodeId;
-        String location;
         final Map<String, ResourceAccumulator> resources = new LinkedHashMap<>();
         ResourceAccumulator currentResource;
         AttributeGroupAccumulator currentGroup;
@@ -104,11 +106,6 @@ public class CollectionSetToProtobufTranslator {
 
         @Override
         public void visitResource(CollectionResource resource) {
-            CollectionAgent agent = resourceAgent(resource);
-            if (agent != null) {
-                nodeId = agent.getNodeId();
-                location = agent.getLocationName();
-            }
             String parent = String.valueOf(resource.getParent());
             String typeName = resource.getResourceTypeName();
             String inst = resource.getInstance();
@@ -154,19 +151,6 @@ public class CollectionSetToProtobufTranslator {
         @Override
         public void completeCollectionSet(CollectionSet set) {
             // no-op
-        }
-
-        private static CollectionAgent resourceAgent(CollectionResource resource) {
-            // horizon CollectionResource does not expose getAgent() on the public
-            // interface in all versions. Try reflectively; if absent, return null
-            // and let the caller keep nodeId/location at their defaults.
-            try {
-                java.lang.reflect.Method m = resource.getClass().getMethod("getAgent");
-                Object val = m.invoke(resource);
-                return val instanceof CollectionAgent ? (CollectionAgent) val : null;
-            } catch (ReflectiveOperationException e) {
-                return null;
-            }
         }
     }
 

@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -36,17 +35,11 @@ class CollectionSetToProtobufTranslatorTest {
 
     private final CollectionSetToProtobufTranslator translator = new CollectionSetToProtobufTranslator();
 
-    /**
-     * Option B: CollectionSet has no getAgent() — nodeId and location can only be captured
-     * from the visitor callbacks when resources are visited. For an empty CollectionSet the
-     * visitor walk produces no resource callbacks, so nodeId stays 0 and location stays "".
-     * The translator reads timestamp, status, and package from the set directly.
-     */
     @Test
     void emptyCollectionSetProducesEmptyResourceList() {
         CollectionSet set = mockCollectionSet(CollectionStatus.SUCCEEDED, 1700000000000L);
 
-        TimeseriesBatch batch = translator.translate(set, "default");
+        TimeseriesBatch batch = translator.translate(set, "default", 0, "");
 
         assertThat(batch.getNodeId()).isEqualTo(0);
         assertThat(batch.getLocation()).isEqualTo("");
