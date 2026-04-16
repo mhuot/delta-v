@@ -1,0 +1,116 @@
+// Copyright (C) 2026 BeaconStrategists, Inc.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License,
+// or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// API version: 1
+//
+// Public contract for the deltav-node-context Kafka topic (compacted).
+//
+// Versioning: during Phase 1 (feature flag off in production) breaking
+// schema changes are permissible. Once Phase 2 ships (flag on by default),
+// only forward-compatible changes are allowed: new fields with new tag
+// numbers, new enum values at the end. Renaming or renumbering existing
+// fields, deleting fields, or changing field types are breaking changes
+// that require a deprecation cycle.
+//
+// Producer: provisiond change feed (future PR). This file is committed in
+// the Kafka Time Series producer PR for contract completeness and to allow
+// the NewTopic bean for deltav-node-context to be declared alongside the
+// deltav-timeseries topic.
+
+syntax = "proto3";
+
+package org.deltav.timeseries;
+
+option java_package = "org.deltav.timeseries.proto";
+option java_multiple_files = true;
+
+// One record per node, published to the deltav-node-context topic whenever a
+// node is provisioned, updated, deleted, or its metadata changes. The topic is
+// compacted (log.cleanup.policy=compact), so the latest record per key
+// survives forever and a new consumer can bootstrap from the beginning of the
+// topic to materialize the full current state.
+//
+// Keyed by "{location}@{node_id}" — same key shape as TimeseriesBatch so
+// consumers can join directly without a key transformer.
+message NodeContext {
+  // Numeric node ID. Matches TimeseriesBatch.node_id.
+  int32 node_id = 1;
+
+  // Location. Matches TimeseriesBatch.location.
+  string location = 2;
+
+  // Human-readable node label as displayed in the UI (e.g.
+  // "server-01.prod.example.com"). Comes from OnmsNode.label.
+  string node_label = 3;
+
+  // Provisioning foreign source (e.g. "provision-prod"). Empty if the
+  // node was not created via provisioning.
+  string foreign_source = 4;
+
+  // Provisioning foreign ID (e.g. "server-01"). Stable identifier for
+  // this node within its foreign source.
+  string foreign_id = 5;
+
+  // Categories assigned to the node. Typically 0-5 entries.
+  repeated string categories = 6;
+
+  // Full metadata map for the node. Keys follow OnmsMetaData convention:
+  // "context:key" (e.g. "requisition:sysLocation", "snmp:sysContact",
+  // "ip:hostname"). Values are whatever provisiond or SNMP discovery
+  // populated. Can be large — hundreds of entries for heavily-metadataed
+  // nodes is not unusual.
+  //
+  // Consumer responsibility: metadata values should be used as-is; don't
+  // attempt to parse or reinterpret them. If a consumer needs to filter
+  // by a metadata value, it filters on the string.
+  map<string, string> metadata = 7;
+
+  // Interface-level metadata, keyed by IP address (IPv4 or IPv6 string).
+  // For nodes with many interfaces this can grow — each entry carries
+  // its own metadata map. Empty map is a valid value meaning "no
+  // interface-scoped metadata for this node."
+  map<string, InterfaceContext> interface_metadata = 8;
+
+  // Service-level metadata, keyed by "{ip_address}/{service_name}" for
+  // stable uniqueness (e.g. "192.0.2.1/ICMP").
+  map<string, ServiceContext> service_metadata = 9;
+
+  // Wall-clock time when this record was produced, in epoch milliseconds.
+  // Consumers use this for freshness checks. Strictly informational —
+  // the topic's log compaction determines which record wins per key, not
+  // this timestamp.
+  int64 updated_at_ms = 10;
+
+  // Tombstone marker. When a node is deleted from provisioning, provisiond
+  // publishes a final NodeContext with deleted=true, allowing log
+  // compaction to eventually garbage-collect the key. Consumers should
+  // treat a tombstoned node as "not present."
+  bool deleted = 11;
+}
+
+// Interface-scoped metadata. Carried as a nested message so the map value
+// in NodeContext.interface_metadata can hold both a metadata map and any
+// future interface-level fields without schema churn.
+message InterfaceContext {
+  map<string, string> metadata = 1;
+  // Future: interface description, interface alias, snmp_ifindex, etc.
+  // Leaving space open (fields 2+) for incremental additions.
+}
+
+// Service-scoped metadata. Same structure as InterfaceContext.
+message ServiceContext {
+  map<string, string> metadata = 1;
+  // Future: service-level display name, criticality hint, etc.
+}
