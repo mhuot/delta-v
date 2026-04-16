@@ -510,6 +510,15 @@
             <artifactId>testcontainers-kafka</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- commons-compress 1.28.0 (bundled with Testcontainers 2.x) requires
+             FileTimes.toUnixTime() which was added in commons-io 2.16.0.
+             Force the minimum compatible version so copyFileToContainer works. -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.18.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
