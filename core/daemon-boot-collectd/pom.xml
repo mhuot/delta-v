@@ -434,20 +434,19 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Kafka Time Series producer: protobuf wire format -->
+        <!-- protobuf runtime (version managed by Spring Boot BOM; protoc binary pinned via ${protoc.version} in the plugin config below) -->
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
-            <version>${protoc.version}</version>
         </dependency>
 
-        <!-- Kafka Time Series producer: Spring Cloud Stream Kafka binder for StreamBridge -->
+        <!-- Spring Cloud Stream Kafka binder starter (includes Kafka broker health indicator for /actuator/health) -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-stream-kafka</artifactId>
         </dependency>
 
-        <!-- Kafka Time Series producer: Prometheus metrics registry for /actuator/prometheus -->
+        <!-- Prometheus meter registry for /actuator/prometheus -->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
