@@ -24,7 +24,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
     scanBasePackages = {
         "org.deltav.core.daemon.common",
         "org.opennms.netmgt.model.jakarta.dao",
-        "org.deltav.netmgt.provision.boot"
+        "org.deltav.netmgt.provision.boot",
+        "org.deltav.netmgt.provision.nodecontext"
     }
     // Do NOT exclude HibernateJpaAutoConfiguration — Provisiond needs JPA
 )

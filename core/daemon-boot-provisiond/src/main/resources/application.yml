@@ -23,6 +23,31 @@ spring:
     job-store-type: memory
     scheduler-name: provisiond
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+
+  cloud:
+    stream:
+      bindings:
+        publishNodeContext-out-0:
+          destination: deltav-node-context
+          producer:
+            partition-count: ${DELTAV_NODE_CONTEXT_PARTITIONS:8}
+            use-native-encoding: true
+      kafka:
+        bindings:
+          publishNodeContext-out-0:
+            producer:
+              configuration:
+                key.serializer: org.apache.kafka.common.serialization.ByteArraySerializer
+                value.serializer: org.apache.kafka.common.serialization.ByteArraySerializer
+                compression.type: lz4
+                linger.ms: 50
+                batch.size: 32768
+                acks: all
+                enable.idempotence: true
+                max.in.flight.requests.per.connection: 5
+
 server:
   port: 8080
 
@@ -51,6 +76,14 @@ opennms:
       enabled: ${RPC_KAFKA_ENABLED:true}
       bootstrap-servers: ${RPC_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
       force-remote: ${RPC_KAFKA_FORCE_REMOTE:true}
+
+deltav:
+  node-context:
+    enabled: ${DELTAV_NODE_CONTEXT_ENABLED:true}
+    partitions: ${DELTAV_NODE_CONTEXT_PARTITIONS:8}
+    replication-factor: ${DELTAV_NODE_CONTEXT_REPLICATION_FACTOR:1}
+    debounce-ms: ${DELTAV_NODE_CONTEXT_DEBOUNCE_MS:250}
+    debounce-threads: ${DELTAV_NODE_CONTEXT_DEBOUNCE_THREADS:2}
 
 logging:
   level:
