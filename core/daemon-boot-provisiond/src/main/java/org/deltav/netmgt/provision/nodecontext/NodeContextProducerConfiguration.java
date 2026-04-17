@@ -37,8 +37,10 @@ import org.springframework.kafka.config.TopicBuilder;
  *
  * <p>When {@code deltav.node-context.enabled=true} (default — the flag is
  * matchIfMissing=true so the feature is on unless explicitly disabled), the
- * six producer beans wire up and provisiond starts publishing on every
- * node-lifecycle UEI plus one bootstrap pass.</p>
+ * seven producer beans (translator, publisher, debouncer, listener,
+ * event-subscription adapter, bootstrap runner, NewTopic) wire up and
+ * provisiond starts publishing on every node-lifecycle UEI plus one
+ * bootstrap pass.</p>
  */
 @Configuration
 @ConditionalOnProperty(name = "deltav.node-context.enabled", havingValue = "true", matchIfMissing = true)
