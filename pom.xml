@@ -59,6 +59,7 @@
     <module>core/daemon-registry</module>
     <module>core/daemon-sink-kafka</module>
     <module>core/dao-jpa-support</module>
+    <module>core/deltav-kafka-contracts</module>
     <module>core/event-forwarder-kafka</module>
     <module>core/opennms-model-jakarta</module>
 
