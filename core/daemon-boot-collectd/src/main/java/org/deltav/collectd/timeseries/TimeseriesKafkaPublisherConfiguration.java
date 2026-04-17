@@ -70,7 +70,7 @@ public class TimeseriesKafkaPublisherConfiguration {
     public NewTopic deltavTimeseriesTopic(
             @Value("${deltav.timeseries.partitions:16}") int partitions,
             @Value("${deltav.timeseries.replication-factor:1}") short replicationFactor,
-            @Value("${deltav.timeseries.retention-days:7}") int retentionDays) {
+            @Value("${deltav.timeseries.retention-days:1}") int retentionDays) {
         return TopicBuilder.name("deltav-timeseries")
                 .partitions(partitions)
                 .replicas(replicationFactor)
