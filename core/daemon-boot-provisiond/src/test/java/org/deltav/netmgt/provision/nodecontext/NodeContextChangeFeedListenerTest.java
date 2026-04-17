@@ -67,7 +67,7 @@ class NodeContextChangeFeedListenerTest {
     void onNodeDeleted_publishesTombstoneAndEvicts() {
         Event e = eventForNode(EventConstants.NODE_DELETED_EVENT_UEI, 9);
         addParm(e, "nodelabel", "n9");
-        addParm(e, "location", "Default");
+        addParm(e, EventConstants.PARM_LOCATION, "Default");
 
         listener.onNodeDeleted(e);
 
@@ -91,8 +91,8 @@ class NodeContextChangeFeedListenerTest {
     @Test
     void onNodeLocationChanged_publishesRelocationAndEvicts() {
         Event e = eventForNode(EventConstants.NODE_LOCATION_CHANGED_EVENT_UEI, 10);
-        addParm(e, "oldLocation", "Site-A");
-        addParm(e, "newLocation", "Site-B");
+        addParm(e, EventConstants.PARM_NODE_PREV_LOCATION, "Site-A");
+        addParm(e, EventConstants.PARM_NODE_CURRENT_LOCATION, "Site-B");
 
         listener.onNodeLocationChanged(e);
 
@@ -104,7 +104,7 @@ class NodeContextChangeFeedListenerTest {
     void onImportSuccessful_enqueuesEveryNodeInForeignSource() {
         Event e = new Event();
         e.setUei(EventConstants.IMPORT_SUCCESSFUL_UEI);
-        addParm(e, "foreignSource", "fs-1");
+        addParm(e, EventConstants.PARM_FOREIGN_SOURCE, "fs-1");
         when(nodeDao.findByForeignSource("fs-1")).thenReturn(List.of(
                 nodeWithId(100), nodeWithId(101), nodeWithId(102)));
 

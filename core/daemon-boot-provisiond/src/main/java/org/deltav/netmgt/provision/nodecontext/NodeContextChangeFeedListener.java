@@ -121,9 +121,9 @@ public class NodeContextChangeFeedListener {
         if (nodeId == null) {
             return;
         }
-        String location = parm(e, "location");
+        String location = parm(e, EventConstants.PARM_LOCATION);
         if (location == null || location.isEmpty()) {
-            LOG.warn("nodeDeleted event for nodeId={} missing 'location' parm; skipping tombstone", nodeId);
+            LOG.warn("nodeDeleted event for nodeId={} missing '{}' parm; skipping tombstone", nodeId, EventConstants.PARM_LOCATION);
             meters.counter("deltav_node_context_records_failed_total",
                     "location", "", "reason", "missing_location").increment();
             return;
@@ -138,8 +138,8 @@ public class NodeContextChangeFeedListener {
         if (nodeId == null) {
             return;
         }
-        String oldLocation = parm(e, "oldLocation");
-        String newLocation = parm(e, "newLocation");
+        String oldLocation = parm(e, EventConstants.PARM_NODE_PREV_LOCATION);
+        String newLocation = parm(e, EventConstants.PARM_NODE_CURRENT_LOCATION);
         if (oldLocation == null || newLocation == null) {
             LOG.warn("nodeLocationChanged event for nodeId={} missing location parms; skipping", nodeId);
             meters.counter("deltav_node_context_records_failed_total",
@@ -152,7 +152,7 @@ public class NodeContextChangeFeedListener {
 
     @EventHandler(uei = EventConstants.IMPORT_SUCCESSFUL_UEI)
     public void onImportSuccessful(Event e) {
-        String foreignSource = parm(e, "foreignSource");
+        String foreignSource = parm(e, EventConstants.PARM_FOREIGN_SOURCE);
         if (foreignSource == null) {
             LOG.debug("IMPORT_SUCCESSFUL without foreignSource parm; skipping fan-out");
             return;
