@@ -24,9 +24,9 @@ import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.events.api.EventConstants;
 import org.opennms.netmgt.events.api.annotations.EventHandler;
 import org.opennms.netmgt.events.api.annotations.EventListener;
+import org.opennms.netmgt.events.api.model.IEvent;
+import org.opennms.netmgt.events.api.model.IParm;
 import org.opennms.netmgt.model.OnmsNode;
-import org.opennms.netmgt.xml.event.Event;
-import org.opennms.netmgt.xml.event.Parm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,57 +66,57 @@ public class NodeContextChangeFeedListener {
     }
 
     @EventHandler(uei = EventConstants.NODE_ADDED_EVENT_UEI)
-    public void onNodeAdded(Event e) {
+    public void onNodeAdded(IEvent e) {
         enqueue(e);
     }
 
     @EventHandler(uei = EventConstants.NODE_UPDATED_EVENT_UEI)
-    public void onNodeUpdated(Event e) {
+    public void onNodeUpdated(IEvent e) {
         enqueue(e);
     }
 
     @EventHandler(uei = EventConstants.NODE_LABEL_CHANGED_EVENT_UEI)
-    public void onNodeLabelChanged(Event e) {
+    public void onNodeLabelChanged(IEvent e) {
         enqueue(e);
     }
 
     @EventHandler(uei = EventConstants.NODE_INFO_CHANGED_EVENT_UEI)
-    public void onNodeInfoChanged(Event e) {
+    public void onNodeInfoChanged(IEvent e) {
         enqueue(e);
     }
 
     @EventHandler(uei = EventConstants.NODE_CATEGORY_MEMBERSHIP_CHANGED_EVENT_UEI)
-    public void onNodeCategoryMembershipChanged(Event e) {
+    public void onNodeCategoryMembershipChanged(IEvent e) {
         enqueue(e);
     }
 
     @EventHandler(uei = EventConstants.ASSET_INFO_CHANGED_EVENT_UEI)
-    public void onAssetInfoChanged(Event e) {
+    public void onAssetInfoChanged(IEvent e) {
         enqueue(e);
     }
 
     @EventHandler(uei = EventConstants.NODE_GAINED_INTERFACE_EVENT_UEI)
-    public void onNodeGainedInterface(Event e) {
+    public void onNodeGainedInterface(IEvent e) {
         enqueue(e);
     }
 
     @EventHandler(uei = EventConstants.INTERFACE_DELETED_EVENT_UEI)
-    public void onInterfaceDeleted(Event e) {
+    public void onInterfaceDeleted(IEvent e) {
         enqueue(e);
     }
 
     @EventHandler(uei = EventConstants.NODE_GAINED_SERVICE_EVENT_UEI)
-    public void onNodeGainedService(Event e) {
+    public void onNodeGainedService(IEvent e) {
         enqueue(e);
     }
 
     @EventHandler(uei = EventConstants.SERVICE_DELETED_EVENT_UEI)
-    public void onServiceDeleted(Event e) {
+    public void onServiceDeleted(IEvent e) {
         enqueue(e);
     }
 
     @EventHandler(uei = EventConstants.NODE_DELETED_EVENT_UEI)
-    public void onNodeDeleted(Event e) {
+    public void onNodeDeleted(IEvent e) {
         Integer nodeId = nodeIdOrSkip(e);
         if (nodeId == null) {
             return;
@@ -133,7 +133,7 @@ public class NodeContextChangeFeedListener {
     }
 
     @EventHandler(uei = EventConstants.NODE_LOCATION_CHANGED_EVENT_UEI)
-    public void onNodeLocationChanged(Event e) {
+    public void onNodeLocationChanged(IEvent e) {
         Integer nodeId = nodeIdOrSkip(e);
         if (nodeId == null) {
             return;
@@ -151,7 +151,7 @@ public class NodeContextChangeFeedListener {
     }
 
     @EventHandler(uei = EventConstants.IMPORT_SUCCESSFUL_UEI)
-    public void onImportSuccessful(Event e) {
+    public void onImportSuccessful(IEvent e) {
         String foreignSource = parm(e, EventConstants.PARM_FOREIGN_SOURCE);
         if (foreignSource == null) {
             LOG.debug("IMPORT_SUCCESSFUL without foreignSource parm; skipping fan-out");
@@ -171,7 +171,7 @@ public class NodeContextChangeFeedListener {
         }
     }
 
-    private void enqueue(Event e) {
+    private void enqueue(IEvent e) {
         Integer nodeId = nodeIdOrSkip(e);
         if (nodeId == null) {
             return;
@@ -179,7 +179,7 @@ public class NodeContextChangeFeedListener {
         debouncer.enqueueUpdate(nodeId);
     }
 
-    private Integer nodeIdOrSkip(Event e) {
+    private Integer nodeIdOrSkip(IEvent e) {
         if (!e.hasNodeid()) {
             LOG.warn("Event {} has null nodeid; skipping", e.getUei());
             meters.counter("deltav_node_context_records_failed_total",
@@ -196,8 +196,8 @@ public class NodeContextChangeFeedListener {
         return (int) longId;
     }
 
-    private static String parm(Event e, String name) {
-        Parm p = e.getParm(name);
+    private static String parm(IEvent e, String name) {
+        IParm p = e.getParm(name);
         if (p == null || p.getValue() == null) {
             return null;
         }

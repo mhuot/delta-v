@@ -24,16 +24,19 @@ import static org.mockito.Mockito.when;
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.events.api.EventConstants;
+import org.opennms.netmgt.events.api.model.IEvent;
+import org.opennms.netmgt.events.api.model.IParm;
+import org.opennms.netmgt.events.api.model.ImmutableEvent;
+import org.opennms.netmgt.events.api.model.ImmutableParm;
+import org.opennms.netmgt.events.api.model.ImmutableValue;
 import org.opennms.netmgt.model.OnmsNode;
-import org.opennms.netmgt.xml.event.Event;
-import org.opennms.netmgt.xml.event.Parm;
-import org.opennms.netmgt.xml.event.Value;
 
 class NodeContextChangeFeedListenerTest {
 
@@ -65,9 +68,9 @@ class NodeContextChangeFeedListenerTest {
 
     @Test
     void onNodeDeleted_publishesTombstoneAndEvicts() {
-        Event e = eventForNode(EventConstants.NODE_DELETED_EVENT_UEI, 9);
-        addParm(e, "nodelabel", "n9");
-        addParm(e, EventConstants.PARM_LOCATION, "Default");
+        IEvent e = eventForNodeWithParms(EventConstants.NODE_DELETED_EVENT_UEI, 9,
+                parm("nodelabel", "n9"),
+                parm(EventConstants.PARM_LOCATION, "Default"));
 
         listener.onNodeDeleted(e);
 
@@ -90,9 +93,9 @@ class NodeContextChangeFeedListenerTest {
 
     @Test
     void onNodeLocationChanged_publishesRelocationAndEvicts() {
-        Event e = eventForNode(EventConstants.NODE_LOCATION_CHANGED_EVENT_UEI, 10);
-        addParm(e, EventConstants.PARM_NODE_PREV_LOCATION, "Site-A");
-        addParm(e, EventConstants.PARM_NODE_CURRENT_LOCATION, "Site-B");
+        IEvent e = eventForNodeWithParms(EventConstants.NODE_LOCATION_CHANGED_EVENT_UEI, 10,
+                parm(EventConstants.PARM_NODE_PREV_LOCATION, "Site-A"),
+                parm(EventConstants.PARM_NODE_CURRENT_LOCATION, "Site-B"));
 
         listener.onNodeLocationChanged(e);
 
@@ -102,9 +105,10 @@ class NodeContextChangeFeedListenerTest {
 
     @Test
     void onImportSuccessful_enqueuesEveryNodeInForeignSource() {
-        Event e = new Event();
-        e.setUei(EventConstants.IMPORT_SUCCESSFUL_UEI);
-        addParm(e, EventConstants.PARM_FOREIGN_SOURCE, "fs-1");
+        IEvent e = ImmutableEvent.newBuilder()
+                .setUei(EventConstants.IMPORT_SUCCESSFUL_UEI)
+                .setParms(List.of(parm(EventConstants.PARM_FOREIGN_SOURCE, "fs-1")))
+                .build();
         when(nodeDao.findByForeignSource("fs-1")).thenReturn(List.of(
                 nodeWithId(100), nodeWithId(101), nodeWithId(102)));
 
@@ -120,9 +124,11 @@ class NodeContextChangeFeedListenerTest {
         SimpleMeterRegistry meters = new SimpleMeterRegistry();
         NodeContextChangeFeedListener l = new NodeContextChangeFeedListener(
                 debouncer, publisher, nodeDao, meters);
-        Event e = new Event();
-        e.setUei(EventConstants.NODE_UPDATED_EVENT_UEI);
-        e.setNodeid(null);
+
+        IEvent e = ImmutableEvent.newBuilder()
+                .setUei(EventConstants.NODE_UPDATED_EVENT_UEI)
+                .setNodeid(null)
+                .build();
 
         l.onNodeUpdated(e);
 
@@ -133,20 +139,30 @@ class NodeContextChangeFeedListenerTest {
 
     // --- helpers ---
 
-    private static Event eventForNode(String uei, long nodeid) {
-        Event e = new Event();
-        e.setUei(uei);
-        e.setNodeid(nodeid);
-        return e;
+    private static IEvent eventForNode(String uei, long nodeid) {
+        return ImmutableEvent.newBuilder()
+                .setUei(uei)
+                .setNodeid(nodeid)
+                .build();
     }
 
-    private static void addParm(Event e, String name, String value) {
-        Value v = new Value();
-        v.setContent(value);
-        Parm p = new Parm();
-        p.setParmName(name);
-        p.setValue(v);
-        e.addParm(p);
+    private static IEvent eventForNodeWithParms(String uei, long nodeid, IParm... parms) {
+        List<IParm> parmList = new ArrayList<>();
+        for (IParm p : parms) {
+            parmList.add(p);
+        }
+        return ImmutableEvent.newBuilder()
+                .setUei(uei)
+                .setNodeid(nodeid)
+                .setParms(parmList)
+                .build();
+    }
+
+    private static IParm parm(String name, String value) {
+        return ImmutableParm.newBuilder()
+                .setParmName(name)
+                .setValue(ImmutableValue.newBuilder().setContent(value).build())
+                .build();
     }
 
     private static OnmsNode nodeWithId(int id) {
