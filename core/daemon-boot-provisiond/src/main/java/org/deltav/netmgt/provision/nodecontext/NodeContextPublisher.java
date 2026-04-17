@@ -70,41 +70,62 @@ public class NodeContextPublisher {
         Timer.Sample sample = Timer.start(meters);
         String loc = "";
         try {
-            OnmsNode node;
+            // DB read + translate MUST run inside the same read-only transaction
+            // so LAZY associations (categories, metadata, interfaces, services)
+            // resolve instead of throwing LazyInitializationException.
+            PublishPayload payload;
             try {
-                node = sessionUtils.withReadOnlyTransaction(() -> nodeDao.get(nodeId));
+                payload = sessionUtils.withReadOnlyTransaction(
+                        () -> readAndTranslateInSession(nodeId, reason));
             } catch (RuntimeException ex) {
-                LOG.warn("DB read failed for nodeId={} reason={}", nodeId, reason, ex);
+                LOG.warn("Read+translate transaction failed for nodeId={} reason={}",
+                        nodeId, reason, ex);
                 meters.counter("deltav_node_context_records_failed_total",
-                        "location", loc, "reason", "db_read_error").increment();
+                        "location", "", "reason", "db_read_error").increment();
                 return;
             }
-            if (node == null) {
-                LOG.debug("Node {} not found (likely deleted between event and read)", nodeId);
-                meters.counter("deltav_node_context_records_failed_total",
-                        "location", loc, "reason", "node_not_found").increment();
-                return;
+            if (payload == null) {
+                return;  // Handled path: counter already incremented inside the closure.
             }
-            loc = node.getLocation() != null && node.getLocation().getLocationName() != null
-                    ? node.getLocation().getLocationName() : "";
-
-            NodeContext ctx;
-            try {
-                ctx = translator.translate(node, System.currentTimeMillis());
-            } catch (RuntimeException ex) {
-                LOG.warn("Translator failed for nodeId={} reason={}", nodeId, reason, ex);
-                meters.counter("deltav_node_context_records_failed_total",
-                        "location", loc, "reason", "translator_error").increment();
-                return;
-            }
-
-            sendRecord(ctx, loc, reason);
+            loc = payload.location;
+            sendRecord(payload.context, loc, reason);
         } finally {
             sample.stop(Timer.builder("deltav_node_context_publish_duration_seconds")
                     .tags("location", loc, "reason", reason)
                     .register(meters));
         }
     }
+
+    private PublishPayload readAndTranslateInSession(int nodeId, String reason) {
+        OnmsNode node;
+        try {
+            node = nodeDao.get(nodeId);
+        } catch (RuntimeException ex) {
+            LOG.warn("DB read failed for nodeId={} reason={}", nodeId, reason, ex);
+            meters.counter("deltav_node_context_records_failed_total",
+                    "location", "", "reason", "db_read_error").increment();
+            return null;
+        }
+        if (node == null) {
+            LOG.debug("Node {} not found (likely deleted between event and read)", nodeId);
+            meters.counter("deltav_node_context_records_failed_total",
+                    "location", "", "reason", "node_not_found").increment();
+            return null;
+        }
+        String loc = node.getLocation() != null && node.getLocation().getLocationName() != null
+                ? node.getLocation().getLocationName() : "";
+        try {
+            NodeContext ctx = translator.translate(node, System.currentTimeMillis());
+            return new PublishPayload(loc, ctx);
+        } catch (RuntimeException ex) {
+            LOG.warn("Translator failed for nodeId={} reason={}", nodeId, reason, ex);
+            meters.counter("deltav_node_context_records_failed_total",
+                    "location", loc, "reason", "translator_error").increment();
+            return null;
+        }
+    }
+
+    private record PublishPayload(String location, NodeContext context) {}
 
     public void publishTombstone(int nodeId, String location) {
         String loc = location != null ? location : "";

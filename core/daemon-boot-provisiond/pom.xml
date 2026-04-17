@@ -548,14 +548,18 @@
             <artifactId>testcontainers-junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- commons-compress 1.28.0 (bundled with Testcontainers 2.x) requires
-             FileTimes.toUnixTime() which was added in commons-io 2.16.0.
-             Force the minimum compatible version so copyFileToContainer works. -->
+        <!-- commons-io is needed at two layers:
+             1. Runtime: horizon's SnmpAssetAdapterConfigFactory.<init> calls
+                org.apache.commons.io.IOUtils; without commons-io on the
+                runtime classpath the provisiond container fails to start.
+             2. Test: commons-compress 1.28.0 (bundled with Testcontainers 2.x)
+                requires FileTimes.toUnixTime() which was added in commons-io
+                2.16.0. Pin to a known-good version so copyFileToContainer works.
+             Compile scope satisfies both layers. -->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.18.0</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.awaitility</groupId>
