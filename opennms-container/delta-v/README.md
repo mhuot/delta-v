@@ -281,8 +281,55 @@ A 1,000-node deployment polling every 5 minutes with default settings produces r
 
 - Collectd is a singleton service today: there is no horizontal scale and no leader election. If Collectd restarts mid-poll, the current CollectionSet may not reach Kafka. The scheduler/publisher split that addresses this is tracked separately.
 - The wire format is subject to breaking changes during Phase 1 (dev-only). Once Phase 2 ships (production-enabled), only forward-compatible schema changes are allowed.
-- The `deltav-node-context` topic has no producer in this release — provisiond's change feed ships in a separate follow-up PR. Consumers that depend on context joining will need to wait for that PR or tolerate "unknown node" fallback behavior.
+- The `deltav-node-context` producer shipped in Phase 1 (provisiond change feed). See the Node-Context Change Feed section below for the full env-var and metric catalog.
 - Node identity on the wire (`node_id`, `location`) is sourced from Collectd's `ServiceParameters` keys `node-id` and `location`. If Collectd does not populate these keys in a given deployment, records land with `node_id=0` / `location=""`; consumers must still be able to join via the `deltav-node-context` GlobalKTable to resolve identity.
+
+## Node-Context Change Feed (Phase 1)
+
+Provisiond publishes a compacted `deltav-node-context` Kafka topic keyed
+`{location}@{node_id}`. Every node-lifecycle event (add, update, delete,
+label/location/category/info/asset change) produces a `NodeContext`
+protobuf record; `nodeDeleted` produces an explicit `deleted=true`
+tombstone. On every provisiond restart, the full node set is re-published
+(compaction absorbs duplicates).
+
+**Feature flag:**
+
+| Env var | Default | Purpose |
+|---|---|---|
+| `DELTAV_NODE_CONTEXT_ENABLED` | `true` | Kill switch. Flip to `false` + restart provisiond to remove all producer beans. |
+| `DELTAV_NODE_CONTEXT_PARTITIONS` | `8` | Topic partition count. Used at first topic creation only (KafkaAdmin is idempotent; existing topic keeps its original partition count). |
+| `DELTAV_NODE_CONTEXT_REPLICATION_FACTOR` | `1` (dev) / `3` (prod) | Topic replication factor. |
+| `DELTAV_NODE_CONTEXT_DEBOUNCE_MS` | `250` | Per-nodeId debounce window. Collapses bursts of UEIs for the same node into one publish. |
+| `DELTAV_NODE_CONTEXT_DEBOUNCE_THREADS` | `2` | Debouncer executor pool size. |
+
+**Metrics (on `/actuator/prometheus`):**
+
+- `deltav_node_context_records_published_total{location, producer="provisiond", reason}` — `reason` ∈ `change`, `bootstrap`, `tombstone`, `relocation_old_key`, `relocation_new_key`
+- `deltav_node_context_records_failed_total{location, reason}` — `db_read_error`, `translator_error`, `serialization_error`, `kafka_send_error`, `node_not_found`, `malformed_event`, `missing_location`, `bootstrap_error`, `debouncer_rejected`
+- `deltav_node_context_record_size_bytes{location}` — protobuf size distribution (pre-compression)
+- `deltav_node_context_record_size_warning_total{location}` — count of records >800 KB (still published)
+- `deltav_node_context_publish_duration_seconds{location, reason}` — end-to-end publish latency
+- `deltav_node_context_debounce_coalesced_total` — count of events that hit an existing pending future
+- `deltav_node_context_debounce_pending_gauge` — current pending-future count
+- `deltav_node_context_bootstrap_duration_seconds` — total wall-clock for the startup enumeration pass
+
+**Topic properties:**
+
+- `cleanup.policy=compact` (log-compacted — latest-per-key forever)
+- `min.compaction.lag.ms=60000` (1 min; gives bootstrapping consumers a chance to see recent updates)
+- `delete.retention.ms=86400000` (24 h tombstone retention)
+- `retention.ms=-1` (compaction, not time-based)
+
+**Known limitations:**
+
+- No horizon `metadataChanged` UEI. Metadata writes that don't also fire `nodeUpdated`/`nodeInfoChanged`/`nodeLabelChanged` are invisible until the next UEI or restart-bootstrap. `IMPORT_SUCCESSFUL_UEI` catch-all + restart-bootstrap cover most windows.
+- Schema is **not frozen** during Phase 1. Breaking changes to `NodeContext` are permitted until the first consumer ships.
+- Every provisiond restart republishes all nodes; log compaction absorbs the duplicates within 60 s. At 10k nodes this is ~20 MB of transient Kafka writes per restart.
+
+### Related — `deltav-timeseries` retention default changed
+
+Default changed from **7 days → 1 day** in Phase 1. Override via `DELTAV_TIMESERIES_RETENTION_DAYS`. Rationale: at production scale, 7-day retention for high-volume metric records consumes significantly more disk than necessary (≈40 GB steady state at 10k nodes vs ≈5.76 GB with 1-day).
 
 ## Troubleshooting
 
