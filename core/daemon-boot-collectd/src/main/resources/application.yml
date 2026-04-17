@@ -85,7 +85,7 @@ deltav:
     enabled: ${DELTAV_TIMESERIES_ENABLED:false}
     partitions: ${DELTAV_TIMESERIES_PARTITIONS:16}
     replication-factor: ${DELTAV_TIMESERIES_REPLICATION_FACTOR:1}
-    retention-days: ${DELTAV_TIMESERIES_RETENTION_DAYS:7}
+    retention-days: ${DELTAV_TIMESERIES_RETENTION_DAYS:1}
   node-context:
     partitions: ${DELTAV_NODE_CONTEXT_PARTITIONS:8}
     replication-factor: ${DELTAV_NODE_CONTEXT_REPLICATION_FACTOR:1}
