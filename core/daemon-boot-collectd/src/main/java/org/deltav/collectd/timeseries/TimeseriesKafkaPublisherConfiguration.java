@@ -82,27 +82,6 @@ public class TimeseriesKafkaPublisherConfiguration {
     }
 
     /**
-     * Initial dual-ownership per design doc: the deltav-node-context topic's
-     * producer is provisiond, shipping in a separate future PR. The NewTopic
-     * bean is declared here now so the topic is provisioned on first start;
-     * when provisiond's change-feed PR lands, this bean moves to that module
-     * and is deleted from here.
-     */
-    @Bean
-    public NewTopic deltavNodeContextTopic(
-            @Value("${deltav.node-context.partitions:8}") int partitions,
-            @Value("${deltav.node-context.replication-factor:1}") short replicationFactor) {
-        return TopicBuilder.name("deltav-node-context")
-                .partitions(partitions)
-                .replicas(replicationFactor)
-                .config(TopicConfig.CLEANUP_POLICY_CONFIG, TopicConfig.CLEANUP_POLICY_COMPACT)
-                .config(TopicConfig.RETENTION_MS_CONFIG, "-1")
-                .config(TopicConfig.MIN_COMPACTION_LAG_MS_CONFIG, "60000")
-                .config(TopicConfig.DELETE_RETENTION_MS_CONFIG, "86400000")
-                .build();
-    }
-
-    /**
      * Composite factory that fans out each createPersister() call to both the
      * existing InMemoryStorage-backed TimeseriesPersisterFactory and a fresh
      * TimeseriesKafkaPersister. Declared @Primary so Collectd's constructor

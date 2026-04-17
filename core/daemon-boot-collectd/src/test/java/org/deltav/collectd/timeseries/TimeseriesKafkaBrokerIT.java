@@ -156,17 +156,6 @@ class TimeseriesKafkaBrokerIT {
             assertThat(tsConfig.get("compression.type").value()).isEqualTo("lz4");
             assertThat(tsConfig.get("retention.ms").value())
                     .isEqualTo(String.valueOf(Duration.ofDays(7).toMillis()));
-
-            TopicDescription ctxTs = admin.describeTopics(
-                    Collections.singletonList("deltav-node-context")).allTopicNames().get()
-                    .get("deltav-node-context");
-            assertThat(ctxTs.partitions()).hasSize(8);
-
-            ConfigResource ctxResource = new ConfigResource(ConfigResource.Type.TOPIC, "deltav-node-context");
-            Config ctxConfig = admin.describeConfigs(Collections.singletonList(ctxResource))
-                    .all().get().get(ctxResource);
-            assertThat(ctxConfig.get("cleanup.policy").value()).isEqualTo("compact");
-            assertThat(ctxConfig.get("min.compaction.lag.ms").value()).isEqualTo("60000");
         }
     }
 
