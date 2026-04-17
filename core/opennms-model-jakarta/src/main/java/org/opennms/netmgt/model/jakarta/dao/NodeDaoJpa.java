@@ -149,7 +149,13 @@ public class NodeDaoJpa extends AbstractDaoJpa<OnmsNode, Integer> implements Nod
 
     @Override
     public List<OnmsNode> findByForeignSource(String foreignSource) {
-        throw new UnsupportedOperationException("findByForeignSource() is not used by Alarmd");
+        if (foreignSource == null) {
+            return List.of();
+        }
+        return entityManager()
+                .createQuery("SELECT n FROM OnmsNode n WHERE n.foreignSource = :fs", OnmsNode.class)
+                .setParameter("fs", foreignSource)
+                .getResultList();
     }
 
     @Override
