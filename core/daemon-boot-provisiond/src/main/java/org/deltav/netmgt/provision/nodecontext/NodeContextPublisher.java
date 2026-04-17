@@ -121,8 +121,15 @@ public class NodeContextPublisher {
 
     public void publishRelocation(int nodeId, String oldLocation, String newLocation) {
         String oldLoc = oldLocation != null ? oldLocation : "";
-        NodeContext tomb = translator.tombstone(nodeId, oldLoc, System.currentTimeMillis());
-        sendRecord(tomb, oldLoc, "relocation_old_key");
+        try {
+            NodeContext tomb = translator.tombstone(nodeId, oldLoc, System.currentTimeMillis());
+            sendRecord(tomb, oldLoc, "relocation_old_key");
+        } catch (RuntimeException ex) {
+            LOG.warn("Relocation tombstone build/send failed for nodeId={} oldLocation={}",
+                    nodeId, oldLoc, ex);
+            meters.counter("deltav_node_context_records_failed_total",
+                    "location", oldLoc, "reason", "translator_error").increment();
+        }
         publishNode(nodeId, "relocation_new_key");
     }
 
