@@ -98,6 +98,12 @@ public class NodeToProtobufTranslator {
         return b.build();
     }
 
+    /**
+     * Build a tombstone (deleted=true) NodeContext. Caller MUST resolve a
+     * non-null nodeId before invoking — this method takes a primitive {@code int}
+     * because tombstones are only emitted in response to a {@code nodeDeleted}
+     * UEI whose {@code nodeid} field is already validated upstream.
+     */
     public NodeContext tombstone(int nodeId, String location, long updatedAtMs) {
         return NodeContext.newBuilder()
                 .setNodeId(nodeId)

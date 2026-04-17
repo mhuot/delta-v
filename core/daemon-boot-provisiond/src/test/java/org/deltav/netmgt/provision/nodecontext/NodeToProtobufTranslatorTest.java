@@ -173,7 +173,14 @@ class NodeToProtobufTranslatorTest {
 
         NodeContext ctx = translator.translate(node, 0L);
 
-        assertThat(ctx.getInterfaceMetadataMap().keySet()).anyMatch(k -> k.contains(":"));
+        // Pin the test to the same key the production code emits: whatever
+        // OnmsIpInterface.getIpAddressAsString() returns is the wire-level key
+        // downstream consumers must match. Re-deriving here rather than
+        // hard-coding a literal makes the test robust against JDK-version
+        // changes in InetAddress.getHostAddress().
+        String expectedKey = ip.getIpAddressAsString();
+        assertThat(ctx.getInterfaceMetadataMap()).containsOnlyKeys(expectedKey);
+        assertThat(expectedKey).contains(":");
     }
 
     @Test
