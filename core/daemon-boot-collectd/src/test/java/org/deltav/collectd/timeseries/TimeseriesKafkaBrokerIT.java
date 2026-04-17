@@ -155,7 +155,7 @@ class TimeseriesKafkaBrokerIT {
             assertThat(tsConfig.get("cleanup.policy").value()).isEqualTo("delete");
             assertThat(tsConfig.get("compression.type").value()).isEqualTo("lz4");
             assertThat(tsConfig.get("retention.ms").value())
-                    .isEqualTo(String.valueOf(Duration.ofDays(7).toMillis()));
+                    .isEqualTo(String.valueOf(Duration.ofDays(1).toMillis()));
         }
     }
 
