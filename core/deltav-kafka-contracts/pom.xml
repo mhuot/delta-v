@@ -13,7 +13,7 @@
     </parent>
 
     <groupId>org.deltav.core</groupId>
-    <artifactId>deltav-kafka-contracts</artifactId>
+    <artifactId>org.opennms.core.deltav-kafka-contracts</artifactId>
     <name>OpenNMS :: Core :: Delta-V Kafka Contracts</name>
     <description>Shared protobuf schemas for deltav-timeseries and deltav-node-context Kafka topics.
         Consumed by both daemon-boot-collectd (timeseries producer) and daemon-boot-provisiond
