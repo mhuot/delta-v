@@ -174,8 +174,11 @@ fi
 
 echo "==> Checking failure counters"
 metrics=$(docker compose exec -T provisiond curl -sf http://localhost:8080/actuator/prometheus)
-failed_sum=$(echo "${metrics}" \
+# grep returns 1 on no-match (the success path), which would kill the script
+# under set -euo pipefail. Tolerate no-match with a trailing `|| true`.
+failed_sum=$( { echo "${metrics}" \
     | grep -E '^deltav_node_context_records_failed_total\{' \
+    || true; } \
     | awk '{sum += $NF} END {print sum + 0}')
 if [[ "${failed_sum}" != "0" ]]; then
     echo "ERROR: deltav_node_context_records_failed_total sum = ${failed_sum} (expected 0)"
