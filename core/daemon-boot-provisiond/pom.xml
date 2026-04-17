@@ -524,6 +524,14 @@
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- junit-platform-launcher must be on the test classpath at the same
+             version as junit-platform-engine (6.0.3) to avoid the
+             OutputDirectoryCreator misalignment error from surefire 3.5.5. -->
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-stream-test-binder</artifactId>
@@ -582,8 +590,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <!-- Override to 3.5.5 which supports JUnit Platform 6.0.3
+                     required by Spring Boot 4 -->
                 <version>3.5.5</version>
                 <configuration>
+                    <!-- Only use JUnit Jupiter; the vintage engine from the parent
+                         is incompatible with JUnit Platform 6.0.3 from Spring Boot 4 -->
                     <includeJUnit5Engines>
                         <includeJUnit5Engine>junit-jupiter</includeJUnit5Engine>
                     </includeJUnit5Engines>
@@ -592,12 +604,18 @@
                     <dependency>
                         <groupId>org.junit.jupiter</groupId>
                         <artifactId>junit-jupiter-engine</artifactId>
-                        <version>5.12.2</version>
+                        <version>6.0.3</version>
                     </dependency>
                     <dependency>
                         <groupId>org.junit.platform</groupId>
                         <artifactId>junit-platform-launcher</artifactId>
-                        <version>1.12.2</version>
+                        <version>6.0.3</version>
+                    </dependency>
+                    <!-- Override parent's vintage engine to align versions -->
+                    <dependency>
+                        <groupId>org.junit.vintage</groupId>
+                        <artifactId>junit-vintage-engine</artifactId>
+                        <version>6.0.3</version>
                     </dependency>
                 </dependencies>
             </plugin>
