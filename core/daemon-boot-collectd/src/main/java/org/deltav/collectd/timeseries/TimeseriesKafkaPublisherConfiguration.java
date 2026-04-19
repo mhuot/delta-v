@@ -23,10 +23,13 @@ import java.time.Duration;
 
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.config.TopicConfig;
+import org.deltav.collectd.identity.AgentIdentityCapturingCollectorClient;
+import org.deltav.collectd.identity.AgentIdentityHolder;
 import org.opennms.netmgt.collection.api.AttributeGroup;
 import org.opennms.netmgt.collection.api.CollectionAttribute;
 import org.opennms.netmgt.collection.api.CollectionResource;
 import org.opennms.netmgt.collection.api.CollectionSet;
+import org.opennms.netmgt.collection.api.LocationAwareCollectorClient;
 import org.opennms.netmgt.collection.api.Persister;
 import org.opennms.netmgt.collection.api.PersisterFactory;
 import org.opennms.netmgt.collection.api.ServiceParameters;
@@ -59,6 +62,38 @@ public class TimeseriesKafkaPublisherConfiguration {
     @Bean
     public CollectionSetToProtobufTranslator collectionSetToProtobufTranslator() {
         return new CollectionSetToProtobufTranslator();
+    }
+
+    /**
+     * Per-scheduler-thread holder for the {@code nodeId} + {@code location}
+     * of the {@code CollectionAgent} currently being collected. Populated by
+     * {@link org.deltav.collectd.identity.AgentIdentityCapturingCollectorClient}
+     * at RPC dispatch and read by {@link TimeseriesKafkaPersister} at publish time.
+     */
+    @Bean
+    public AgentIdentityHolder agentIdentityHolder() {
+        return new AgentIdentityHolder();
+    }
+
+    /**
+     * {@code @Primary} decorator over horizon's {@link LocationAwareCollectorClient}
+     * that captures {@code (nodeId, location)} into {@link AgentIdentityHolder}
+     * before every RPC dispatch, so {@link TimeseriesKafkaPersister} can read
+     * identity at publish time.
+     *
+     * <p>{@code CollectdRpcConfiguration} registers the original bean under the
+     * default name {@code locationAwareCollectorClient}; Spring Boot 4 disables
+     * bean-definition overriding, so the decorator uses a distinct method name
+     * and is made primary. The {@code @Qualifier} on the delegate parameter
+     * selects the horizon bean (not this decorator, which would cause infinite
+     * recursion).</p>
+     */
+    @Bean
+    @Primary
+    public LocationAwareCollectorClient agentIdentityCapturingCollectorClient(
+            @Qualifier("locationAwareCollectorClient") LocationAwareCollectorClient inner,
+            AgentIdentityHolder holder) {
+        return new AgentIdentityCapturingCollectorClient(inner, holder);
     }
 
     @Bean
@@ -95,6 +130,7 @@ public class TimeseriesKafkaPublisherConfiguration {
     public PersisterFactory compositePersisterFactory(
             @Qualifier("timeseriesPersisterFactory") PersisterFactory innerFactory,
             TimeseriesKafkaPublisher publisher,
+            AgentIdentityHolder agentIdentityHolder,
             MeterRegistry meterRegistry,
             @Value("${deltav.collectd.persister.inner.fail-fast:false}") boolean failFastInner,
             @Value("${deltav.collectd.persister.kafka.fail-fast:false}") boolean failFastKafka) {
@@ -102,7 +138,7 @@ public class TimeseriesKafkaPublisherConfiguration {
                 innerFactory.getClass().getName(),
                 System.identityHashCode(innerFactory),
                 failFastInner, failFastKafka);
-        return new FanoutPersisterFactory(innerFactory, publisher, meterRegistry,
+        return new FanoutPersisterFactory(innerFactory, publisher, agentIdentityHolder, meterRegistry,
                 failFastInner, failFastKafka);
     }
 
@@ -113,15 +149,18 @@ public class TimeseriesKafkaPublisherConfiguration {
     static final class FanoutPersisterFactory implements PersisterFactory {
         private final PersisterFactory innerFactory;
         private final TimeseriesKafkaPublisher publisher;
+        private final AgentIdentityHolder holder;
         private final MeterRegistry meterRegistry;
         private final boolean failFastInner;
         private final boolean failFastKafka;
 
         FanoutPersisterFactory(PersisterFactory innerFactory, TimeseriesKafkaPublisher publisher,
+                               AgentIdentityHolder holder,
                                MeterRegistry meterRegistry,
                                boolean failFastInner, boolean failFastKafka) {
             this.innerFactory = innerFactory;
             this.publisher = publisher;
+            this.holder = holder;
             this.meterRegistry = meterRegistry;
             this.failFastInner = failFastInner;
             this.failFastKafka = failFastKafka;
@@ -131,7 +170,7 @@ public class TimeseriesKafkaPublisherConfiguration {
         public Persister createPersister(ServiceParameters params, RrdRepository repository) {
             return new FanoutPersister(
                     innerFactory.createPersister(params, repository),
-                    new TimeseriesKafkaPersister(publisher, params),
+                    new TimeseriesKafkaPersister(publisher, extractCollection(params), holder),
                     meterRegistry, failFastInner, failFastKafka);
         }
 
@@ -142,8 +181,13 @@ public class TimeseriesKafkaPublisherConfiguration {
             return new FanoutPersister(
                     innerFactory.createPersister(params, repository, dontPersistCounters,
                             forceStoreByGroup, dontReorderAttributes),
-                    new TimeseriesKafkaPersister(publisher, params),
+                    new TimeseriesKafkaPersister(publisher, extractCollection(params), holder),
                     meterRegistry, failFastInner, failFastKafka);
+        }
+
+        private static String extractCollection(ServiceParameters params) {
+            Object raw = params.getParameters().get("collection");
+            return raw == null ? "default" : raw.toString();
         }
     }
 
