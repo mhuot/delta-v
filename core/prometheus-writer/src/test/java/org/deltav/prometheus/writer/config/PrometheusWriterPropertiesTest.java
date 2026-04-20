@@ -1,6 +1,7 @@
 /* Copyright (C) 2026 BeaconStrategists, Inc.  AGPL-3.0-or-later */
 package org.deltav.prometheus.writer.config;
 
+import org.deltav.prometheus.writer.translate.InstanceSource;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -27,6 +28,9 @@ class PrometheusWriterPropertiesTest {
                 Map.entry("prometheus-writer.retry.max-backoff-ms", "30000"),
                 Map.entry("prometheus-writer.circuit-breaker.failure-rate-threshold", "50"),
                 Map.entry("prometheus-writer.labels.from-metadata[0]", "requisition:region"),
+                Map.entry("prometheus-writer.labels.instance-source", "FOREIGN_ID"),
+                Map.entry("prometheus-writer.metrics.cardinality-tracking.enabled", "false"),
+                Map.entry("prometheus-writer.metrics.cardinality-tracking.cap", "50000"),
                 Map.entry("prometheus-writer.startup-gate.enabled", "true")
         );
         ConfigurationPropertySource src = new MapConfigurationPropertySource(map);
@@ -41,6 +45,9 @@ class PrometheusWriterPropertiesTest {
         assertThat(props.batch().maxSamples()).isEqualTo(1000);
         assertThat(props.batch().maxBytes()).isEqualTo(1_048_576);
         assertThat(props.labels().fromMetadata()).containsExactly("requisition:region");
+        assertThat(props.labels().instanceSource()).isEqualTo(InstanceSource.FOREIGN_ID);
+        assertThat(props.metrics().cardinalityTracking().enabled()).isFalse();
+        assertThat(props.metrics().cardinalityTracking().cap()).isEqualTo(50_000);
         assertThat(props.startupGate().enabled()).isTrue();
     }
 
@@ -59,5 +66,54 @@ class PrometheusWriterPropertiesTest {
         assertThat(props.batch().maxIntervalMs()).isEqualTo(1000);
         assertThat(props.remoteWrite().auth().type()).isEqualTo(PrometheusWriterProperties.AuthType.NONE);
         assertThat(props.startupGate().enabled()).isTrue();
+    }
+
+    @Test
+    void defaults_include_new_instance_source_and_metadata_keys() {
+        Map<String, Object> map = Map.of(
+                "prometheus-writer.remote-write.url", "http://localhost/write"
+        );
+        ConfigurationPropertySource src = new MapConfigurationPropertySource(map);
+        PrometheusWriterProperties props = new Binder(src)
+                .bind("prometheus-writer", Bindable.of(PrometheusWriterProperties.class))
+                .get();
+
+        assertThat(props.labels().instanceSource()).isEqualTo(InstanceSource.NODE_LABEL);
+        assertThat(props.labels().fromMetadata())
+                .containsExactly("snmp:sysContact", "snmp:sysLocation");
+    }
+
+    @Test
+    void defaults_include_metrics_cardinality_tracking_enabled_with_default_cap() {
+        Map<String, Object> map = Map.of(
+                "prometheus-writer.remote-write.url", "http://localhost/write"
+        );
+        ConfigurationPropertySource src = new MapConfigurationPropertySource(map);
+        PrometheusWriterProperties props = new Binder(src)
+                .bind("prometheus-writer", Bindable.of(PrometheusWriterProperties.class))
+                .get();
+
+        assertThat(props.metrics().cardinalityTracking().enabled()).isTrue();
+        assertThat(props.metrics().cardinalityTracking().cap()).isEqualTo(100_000);
+    }
+
+    @Test
+    void partial_labels_block_still_gets_populated_from_metadata_default() {
+        // Operator overrides instance-source but omits from-metadata.
+        // Per spec: the default from-metadata should still apply because the
+        // canonical default is "[snmp:sysContact, snmp:sysLocation]" — operators
+        // wanting zero metadata labels must explicitly set from-metadata: [].
+        Map<String, Object> map = Map.of(
+                "prometheus-writer.remote-write.url", "http://localhost/write",
+                "prometheus-writer.labels.instance-source", "FOREIGN_ID"
+        );
+        ConfigurationPropertySource src = new MapConfigurationPropertySource(map);
+        PrometheusWriterProperties props = new Binder(src)
+                .bind("prometheus-writer", Bindable.of(PrometheusWriterProperties.class))
+                .get();
+
+        assertThat(props.labels().instanceSource()).isEqualTo(InstanceSource.FOREIGN_ID);
+        assertThat(props.labels().fromMetadata())
+                .containsExactly("snmp:sysContact", "snmp:sysLocation");
     }
 }
