@@ -96,6 +96,60 @@ services:
       interval: 10s
       retries: 3
 
+  l8opensim:
+    # Pinned to the digest validated in Task 1 spike. Update deliberately.
+    image: ghcr.io/labmonkeys-space/l8opensim@sha256:714b83cbdda904dd748bc850cb6f6977815dbfece0ca1393ded22eb24fe61b07
+    container_name: delta-v-l8opensim
+    profiles: [lite, full, metrics]
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    devices:
+      - /dev/net/tun
+    # Start with no devices; the provisioner POSTs the 20-device mix from
+    # ./l8opensim/devices.json after this service is healthy.
+    # `-no-namespace` mode keeps the per-device TUN interfaces in this
+    # container's root netns so minion-lab (which shares the netns) can
+    # reach the device IPs at 10.0.0.1-20 directly.
+    command: ["-no-namespace"]
+    healthcheck:
+      # 127.0.0.1 not localhost — BusyBox wget IPv6 quirk per delta-v#182.
+      test: ["CMD", "wget", "-q", "-O-", "http://127.0.0.1:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    ports:
+      - "19161:161/udp"  # ad-hoc SNMP testing from the host
+      - "19081:8080/tcp" # web UI + REST API
+
+  l8opensim-provisioner:
+    image: curlimages/curl:8.10.1
+    container_name: delta-v-l8opensim-provisioner
+    profiles: [lite, full, metrics]
+    depends_on:
+      l8opensim:
+        condition: service_healthy
+    network_mode: "container:delta-v-l8opensim"
+    restart: "no"
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -eu
+        echo "provisioner: posting 20-device spec to l8opensim REST API"
+        # devices.json is a JSON array; pipe each entry as one line through
+        # post-each.sh which iterates and POSTs.
+        cat /seed/devices.json \
+            | sed -e 's/^\[//' -e 's/\]$//' -e 's/},/}\n/g' \
+            | sh /seed/post-each.sh http://127.0.0.1:8080
+        # Verify total count.
+        count=$$(wget -q -O- http://127.0.0.1:8080/api/v1/devices \
+                 | grep -o '"id"' | wc -l)
+        echo "provisioner: l8opensim now reports $$count devices"
+        [ "$$count" -ge 20 ] || { echo "FAIL expected >= 20 devices got $$count"; exit 1; }
+    volumes:
+      - ./l8opensim:/seed:ro
+
   minion:
     image: ${IMAGE_PREFIX:-opennms}/minion-boot:${VERSION}
     container_name: delta-v-minion
@@ -132,6 +186,37 @@ services:
       - "4729:4729/udp"       # Flow telemetry (Netflow v5/v9, IPFIX, sFlow)
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  minion-lab:
+    image: ${IMAGE_PREFIX:-opennms}/minion-boot:${VERSION}
+    container_name: delta-v-minion-lab
+    profiles: [lite, full, metrics]
+    network_mode: "container:delta-v-l8opensim"
+    cap_add:
+      - NET_RAW
+    depends_on:
+      kafka:
+        condition: service_healthy
+      l8opensim-provisioner:
+        condition: service_completed_successfully
+    environment:
+      MINION_ID: minion-l8opensim-lab-01
+      MINION_LOCATION: l8opensim-lab
+      KAFKA_IPC_BOOTSTRAP_SERVERS: kafka:9092
+      # Port-collision avoidance under shared netns: l8opensim binds 8080 for
+      # its REST API, Minion's actuator defaults to 8080 too. Move Minion's
+      # actuator to 8181.
+      SERVER_PORT: "8181"
+      JAVA_OPTS: >-
+        -Xms256m -Xmx512m
+        -Djava.security.egd=file:/dev/./urandom
+    healthcheck:
+      # Healthcheck targets the relocated actuator port (see SERVER_PORT above).
+      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:8181/actuator/health | grep -q '\"status\":\"UP\"'"]
       interval: 10s
       timeout: 5s
       retries: 12
