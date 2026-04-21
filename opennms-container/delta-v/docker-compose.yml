@@ -111,7 +111,23 @@ services:
     # `-no-namespace` mode keeps the per-device TUN interfaces in this
     # container's root netns so minion-lab (which shares the netns) can
     # reach the device IPs at 10.0.0.1-20 directly.
-    command: ["-no-namespace"]
+    # `-flow-protocol ipfix -flow-collector 127.0.0.1:4729`: l8opensim's flow
+    # config is process-wide (no per-device REST API), so all 20 devices emit
+    # IPFIX to the loopback minion-lab listener. Together with the test-node
+    # containers at Default location (NetFlow v5/v9 + sFlow), all 4 flow
+    # protocols reach the Minion dispatcher and exercise all flow-enricher
+    # parser paths.
+    # `-flow-source-per-device` makes each simulated device send flow packets
+    # from its own TUN-interface IP (10.0.0.1-20) instead of all flows
+    # appearing to come from one process source IP (127.0.0.1). This gives
+    # provisiond the correct per-device exporter IP for foreign-source /
+    # foreign-id attribution in the Grafana flow sources inventory.
+    # Collector on 127.0.0.2 (not 127.0.0.1) so the aggregate exporter node in
+    # the l8opensim-lab requisition has a unique loopback address that doesn't
+    # collide with delta-v/localhost (also at 127.0.0.1). Linux loopback covers
+    # 127.0.0.0/8 — minion-lab listens on 0.0.0.0:4729 in the shared netns and
+    # receives packets to any 127.x.x.x address.
+    command: ["-no-namespace", "-flow-protocol", "ipfix", "-flow-collector", "127.0.0.2:4729", "-flow-source-per-device"]
     healthcheck:
       # 127.0.0.1 not localhost — BusyBox wget IPv6 quirk per delta-v#182.
       test: ["CMD", "wget", "-q", "-O-", "http://127.0.0.1:8080/health"]
@@ -595,7 +611,7 @@ services:
       start_period: 20s
 
   clickhouse:
-    profiles: [full]
+    profiles: [lite, full, metrics]
     image: clickhouse/clickhouse-server:25.8
     container_name: delta-v-clickhouse
     hostname: clickhouse
@@ -625,7 +641,7 @@ services:
       start_period: 15s
 
   clickhouse-init:
-    profiles: [full]
+    profiles: [lite, full, metrics]
     image: clickhouse/clickhouse-server:25.8
     container_name: delta-v-clickhouse-init
     hostname: clickhouse-init
@@ -647,7 +663,7 @@ services:
     entrypoint: ["/bin/bash", "/usr/local/bin/init-runner.sh"]
 
   flow-enricher:
-    profiles: [full]
+    profiles: [lite, full, metrics]
     image: ${IMAGE_PREFIX:-opennms}/flow-enricher:${VERSION}
     container_name: delta-v-flow-enricher
     hostname: flow-enricher
@@ -673,7 +689,7 @@ services:
       start_period: 30s
 
   flow-default-testnode-1:
-    profiles: [full]
+    profiles: [lite, full, metrics]
     build: ./flow-exporter
     container_name: flow-default-testnode-1
     hostname: flow-default-testnode-1
@@ -686,9 +702,12 @@ services:
       NETFLOW_COLLECTOR: minion:4729
       NETFLOW_VERSION: "9"
       TRAFFIC_INTERVAL: "5"
+    networks:
+      default:
+        ipv4_address: 172.18.0.21
 
   flow-sflow-testnode-1:
-    profiles: [full]
+    profiles: [lite, full, metrics]
     build: ./sflow-exporter
     container_name: flow-sflow-testnode-1
     hostname: flow-sflow-testnode-1
@@ -704,6 +723,27 @@ services:
       SAMPLING_RATE: "1"
       POLLING_INTERVAL: "10"
       TRAFFIC_INTERVAL: "2"
+    networks:
+      default:
+        ipv4_address: 172.18.0.20
+
+  flow-v5-testnode-1:
+    profiles: [lite, full, metrics]
+    build: ./flow-exporter
+    container_name: flow-v5-testnode-1
+    hostname: flow-v5-testnode-1
+    cap_add:
+      - NET_RAW
+    depends_on:
+      minion:
+        condition: service_healthy
+    environment:
+      NETFLOW_COLLECTOR: minion:4729
+      NETFLOW_VERSION: "5"
+      TRAFFIC_INTERVAL: "5"
+    networks:
+      default:
+        ipv4_address: 172.18.0.22
 
   prometheus-writer:
     image: opennms/prometheus-writer:${ONMS_DELTAV_VERSION:-latest}
@@ -765,6 +805,11 @@ services:
       # Disable telemetry phone-home and update checks — this is a demo container.
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      # Auto-install grafana-clickhouse-datasource plugin on first boot.
+      # First-boot ~10-15s download; subsequent boots cache in the grafana volume.
+      # Healthcheck start_period may need to bump to 60s if Task 7 measurement
+      # shows races with readiness — defer to that task's verification gate.
+      GF_INSTALL_PLUGINS: grafana-clickhouse-datasource
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
@@ -790,3 +835,19 @@ volumes:
   collectd-data:
   clickhouse-data:
   grafanadata:
+
+networks:
+  # Explicit subnet so the test-node containers can be pinned to predictable
+  # IPs that match the foreign-source/foreign-id assignments in the
+  # flow-test requisition. Without this, Docker assigns IPs from an
+  # auto-generated subnet in arrival order, which means the requisition's
+  # static IP-to-node mapping fails to attribute flows correctly in the
+  # Grafana flow sources inventory panel. Subnet matches the historical
+  # Docker default (172.18.0.0/16) so existing services aren't disturbed.
+  default:
+    name: delta-v_default
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1
