@@ -1,0 +1,255 @@
+---
+# Optional tracing overlay for the Delta-V smoke compose. Adds:
+#   - tempo            : Grafana Tempo (single-binary, OTLP receivers on 4317/4318).
+#   - otel-agent-init  : one-shot job that downloads the OpenTelemetry Java
+#                        agent into a shared volume on first up. Idempotent on
+#                        re-up, and the only step that requires network egress
+#                        beyond what the rest of the stack already needs.
+#   - JAVA_TOOL_OPTIONS / OTEL_* env on every JVM daemon so the agent
+#     auto-instruments Spring Web, JDBC, Kafka clients, JAX-RS, HTTP client
+#     and exports OTLP spans to tempo:4317.
+#   - Tempo datasource provisioning on the existing grafana service so it
+#     appears under Connections → Data sources without manual setup.
+#
+# No application source changes. The agent attaches at JVM startup via the
+# JAVA_TOOL_OPTIONS environment variable and bytecode-instruments classes at
+# load time. Trace context propagates across the Kafka RPC boundary because
+# the agent's kafka-clients instrumentation injects W3C trace headers into
+# Kafka record headers on the producer side and extracts them on the consumer.
+#
+# Usage:
+#   docker compose -f docker-compose.yml \
+#                  -f docker-compose.dev.yml \
+#                  -f docker-compose.tracing.yml \
+#                  --profile metrics up -d
+#
+# Browse:
+#   Grafana  http://localhost:13000 → Explore → Tempo → Search
+#   Tempo    http://localhost:13200 (HTTP API; for ad-hoc curl)
+#
+# To revert: re-run `docker compose up -d` without `-f docker-compose.tracing.yml`.
+# Volumes (otel-agent, tempodata) persist until removed manually.
+#
+# Requires Compose v2.23+ for top-level `configs:` with inline `content:`.
+
+x-otel-mounts: &otel-mounts
+  volumes:
+    - otel-agent:/otel:ro
+  depends_on:
+    otel-agent-init:
+      condition: service_completed_successfully
+
+x-otel-env: &otel-env
+  JAVA_TOOL_OPTIONS: "-javaagent:/otel/agent.jar"
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
+  OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+  OTEL_TRACES_EXPORTER: otlp
+  OTEL_METRICS_EXPORTER: none
+  OTEL_LOGS_EXPORTER: none
+  OTEL_TRACES_SAMPLER: parentbased_always_on
+  OTEL_RESOURCE_ATTRIBUTES: deployment.environment=smoke
+
+configs:
+
+  tempo_config:
+    content: |
+      stream_over_http_enabled: true
+      server:
+        http_listen_port: 3200
+        log_level: info
+      distributor:
+        receivers:
+          otlp:
+            protocols:
+              grpc:
+                endpoint: 0.0.0.0:4317
+              http:
+                endpoint: 0.0.0.0:4318
+      ingester:
+        max_block_duration: 5m
+      compactor:
+        compaction:
+          block_retention: 1h
+      storage:
+        trace:
+          backend: local
+          wal:
+            path: /var/tempo/wal
+          local:
+            path: /var/tempo/blocks
+
+  grafana_tempo_datasource:
+    content: |
+      apiVersion: 1
+      datasources:
+        - name: Tempo
+          type: tempo
+          access: proxy
+          uid: tempo
+          url: http://tempo:3200
+          isDefault: false
+          jsonData:
+            httpMethod: GET
+            search:
+              hide: false
+            nodeGraph:
+              enabled: true
+
+services:
+
+  # One-shot: download the OpenTelemetry Java agent into a shared volume.
+  # Subsequent `up` invocations are no-ops thanks to the [ -s ] guard.
+  # The default URL pulls the latest stable release; pin the version for
+  # reproducibility in CI by replacing `latest/download` with a concrete tag,
+  # e.g. .../releases/download/v2.27.0/opentelemetry-javaagent.jar
+  otel-agent-init:
+    image: alpine:3.20
+    container_name: delta-v-otel-agent-init
+    restart: "no"
+    profiles: [lite, full, metrics, metrics-e2e]
+    volumes:
+      - otel-agent:/otel
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        if [ -s /otel/agent.jar ]; then
+          echo "otel-agent-init: agent already present ($(stat -c %s /otel/agent.jar) bytes), skipping"
+          exit 0
+        fi
+        echo "otel-agent-init: downloading opentelemetry-javaagent.jar"
+        wget -q -O /otel/agent.jar \
+          "${OTEL_AGENT_URL:-https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar}"
+        chmod a+r /otel/agent.jar
+        echo "otel-agent-init: done ($(stat -c %s /otel/agent.jar) bytes)"
+
+  tempo:
+    image: grafana/tempo:2.5.0
+    container_name: delta-v-tempo
+    profiles: [metrics, metrics-e2e]
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    configs:
+      - source: tempo_config
+        target: /etc/tempo/tempo.yaml
+    volumes:
+      - tempodata:/var/tempo
+    ports:
+      - "13200:3200"   # Tempo HTTP API
+      - "14317:4317"   # OTLP gRPC (host-side, e.g. for otel-cli testing)
+      - "14318:4318"   # OTLP HTTP
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:3200/ready | grep -q ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+
+  # Inject the Tempo datasource into grafana's provisioning dir.
+  # Grafana auto-loads /etc/grafana/provisioning/datasources/*.yaml at boot.
+  grafana:
+    configs:
+      - source: grafana_tempo_datasource
+        target: /etc/grafana/provisioning/datasources/tempo.yaml
+    depends_on:
+      tempo:
+        condition: service_healthy
+
+  # ---- JVM daemons: attach the agent + OTLP env -----------------------------
+  # Each block re-uses the *otel-mounts and *otel-env anchors and only sets the
+  # service-specific OTEL_SERVICE_NAME so spans group correctly in the trace UI.
+  # Daemons gated to non-metrics profiles still receive the override; it has no
+  # effect when the daemon's profile is not active.
+
+  minion:
+    <<: *otel-mounts
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: minion
+
+  minion-lab:
+    <<: *otel-mounts
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: minion-lab
+
+  provisiond:
+    <<: *otel-mounts
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: provisiond
+
+  alarmd:
+    <<: *otel-mounts
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: alarmd
+
+  pollerd:
+    <<: *otel-mounts
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: pollerd
+
+  collectd:
+    <<: *otel-mounts
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: collectd
+
+  discovery:
+    <<: *otel-mounts
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: discovery
+
+  trapd:
+    <<: *otel-mounts
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: trapd
+
+  syslogd:
+    <<: *otel-mounts
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: syslogd
+
+  eventtranslator:
+    <<: *otel-mounts
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: eventtranslator
+
+  enlinkd:
+    <<: *otel-mounts
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: enlinkd
+
+  bsmd:
+    <<: *otel-mounts
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: bsmd
+
+  perspectivepollerd:
+    <<: *otel-mounts
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: perspectivepollerd
+
+  telemetryd:
+    <<: *otel-mounts
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: telemetryd
+
+  flow-enricher:
+    <<: *otel-mounts
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: flow-enricher
+
+volumes:
+  otel-agent:
+  tempodata:

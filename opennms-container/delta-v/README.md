@@ -425,6 +425,145 @@ To log in as admin (e.g. to create custom dashboards):
 - Username: `admin`
 - Password: `admin` (override via `GF_ADMIN_PASSWORD` environment variable).
 
+## Distributed tracing (optional)
+
+`docker-compose.tracing.yml` is an opt-in overlay that adds end-to-end
+distributed tracing across the JVM daemons. **No application source changes
+are required**: the OpenTelemetry Java agent attaches at JVM startup via
+`JAVA_TOOL_OPTIONS` and bytecode-instruments Spring Web, JDBC, Kafka clients,
+JAX-RS, and the JDK HTTP client at class-load time. Trace context propagates
+across the Kafka RPC boundary because the agent's `kafka-clients`
+instrumentation injects W3C trace headers into Kafka record headers on the
+producer side and extracts them on the consumer.
+
+### What the overlay adds
+
+- **`tempo`** — Grafana Tempo single-binary, OTLP receivers on `4317` (gRPC)
+  and `4318` (HTTP), local block storage, 1h retention. Exposed on host
+  ports `13200` (HTTP API), `14317`, `14318`.
+- **`otel-agent-init`** — one-shot Alpine container that downloads
+  `opentelemetry-javaagent.jar` into a shared volume on first `up`. Idempotent
+  on subsequent `up`. Override the source URL with `OTEL_AGENT_URL` (e.g. to
+  pin a release tag in CI, or to fetch from an internal mirror in air-gapped
+  environments).
+- **Per-daemon env** — `JAVA_TOOL_OPTIONS=-javaagent:/otel/agent.jar`,
+  `OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4317`, `OTEL_SERVICE_NAME=<daemon>`,
+  and a read-only mount of the agent volume at `/otel`.
+- **Grafana datasource** — Tempo provisioned automatically via inlined
+  config; appears under Connections → Data sources without manual setup.
+
+The Tempo config and the Grafana datasource yaml are embedded directly in the
+overlay using Compose top-level `configs:` with inline `content:`, so the
+overlay is a single self-contained file. Requires Compose **v2.23+**.
+
+### Bringing the OpenTelemetry agent in
+
+The `otel-agent-init` service downloads the agent jar at first `up`. By
+default it pulls the latest stable release from GitHub:
+
+```
+https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar
+```
+
+The jar lands in the named volume `otel-agent`, which the JVM daemons mount
+read-only at `/otel`. Two ways to override the source:
+
+```bash
+# Pin a specific agent version (recommended for CI / reproducibility):
+OTEL_AGENT_URL=https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.27.0/opentelemetry-javaagent.jar \
+  docker compose -f docker-compose.yml -f docker-compose.tracing.yml up -d
+
+# Pre-seed the volume from a local jar (air-gapped):
+docker volume create delta-v_otel-agent
+docker run --rm -v $(pwd)/opentelemetry-javaagent.jar:/src/agent.jar:ro \
+  -v delta-v_otel-agent:/dst alpine:3.20 cp /src/agent.jar /dst/agent.jar
+```
+
+The init container short-circuits with `[ -s /otel/agent.jar ]` if a jar is
+already present, so a pre-seeded volume is never overwritten.
+
+### Usage
+
+```bash
+docker compose -f docker-compose.yml \
+               -f docker-compose.dev.yml \
+               -f docker-compose.tracing.yml \
+               --profile metrics up -d
+```
+
+Then in Grafana (`http://localhost:13000`): **Explore → Tempo → Search**.
+Anonymous Viewer access is on, so no login is needed to browse traces.
+
+To revert, drop the `-f docker-compose.tracing.yml` from the next `up`. The
+daemons recreate without the agent attached. The `otel-agent` and `tempodata`
+volumes remain until removed (`docker volume rm delta-v_otel-agent
+delta-v_tempodata`).
+
+### Example: a thin wrapper script
+
+A non-destructive wrapper that pulls only the new images, applies the
+overlay, waits for Tempo to report ready, and verifies the agent jar landed.
+Save as `tracing.sh` next to the compose files:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+
+OVERLAY=(-f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.tracing.yml)
+PROFILE=(--profile metrics)
+
+case "${1:-status}" in
+  up)
+    docker compose "${OVERLAY[@]}" "${PROFILE[@]}" pull tempo otel-agent-init
+    docker compose "${OVERLAY[@]}" "${PROFILE[@]}" up -d
+    for i in $(seq 1 30); do
+      if docker exec delta-v-tempo wget -q -O- http://127.0.0.1:3200/ready 2>/dev/null | grep -q ready; then
+        echo "tempo ready (after ${i}s)"; break
+      fi
+      sleep 1
+    done
+    size=$(docker run --rm -v delta-v_otel-agent:/o alpine:3.20 stat -c %s /o/agent.jar 2>/dev/null || echo 0)
+    [ "$size" -gt 1000000 ] || { echo "FAIL agent jar missing"; exit 1; }
+    echo "agent.jar: ${size} bytes — open http://localhost:13000 → Explore → Tempo"
+    ;;
+  down)
+    docker compose "${OVERLAY[@]}" "${PROFILE[@]}" stop tempo otel-agent-init || true
+    docker compose "${OVERLAY[@]}" "${PROFILE[@]}" rm -f tempo otel-agent-init || true
+    docker compose -f docker-compose.yml -f docker-compose.dev.yml "${PROFILE[@]}" up -d
+    ;;
+  status)
+    docker compose "${OVERLAY[@]}" "${PROFILE[@]}" ps
+    ;;
+  *) echo "usage: $0 {up|down|status}"; exit 1 ;;
+esac
+```
+
+### Caveats
+
+- **100% sampling** by default (`OTEL_TRACES_SAMPLER=parentbased_always_on`)
+  — fine for the smoke profile, dial down with `traceidratio` in production.
+- **Tempo storage is local block** with 1h retention. For longer-lived
+  smoke runs or shared environments, point Tempo at S3 / GCS / Azure Blob.
+- **First `up` requires network egress** for the agent jar (~25 MB) and the
+  tempo image (~80 MB). After that the volume holds the agent.
+- **JVM startup is slower** with the agent attached (typically 5-15s extra
+  for class-load instrumentation).
+
+### Follow-up ideas (not in this overlay)
+
+- **Service map dashboard** — enable Tempo's `metrics-generator` and write
+  RED metrics + service-graph metrics to VictoriaMetrics. Adds the visual
+  node-and-edge graph in Grafana.
+- **Bridge `org.deltav.core.daemon.common.NoOpTracerRegistry`** — replace
+  the no-op with an OTel-shim implementation so the in-tree
+  `io.opentracing` callsites (e.g., telemetryd's
+  `LocalMessageDispatcherFactory`) feed the same trace tree as the
+  agent-instrumented spans.
+- **Migrate off OpenTracing API** — the in-tree `io.opentracing` 0.32.0
+  dependency is archived; eventually it should move to
+  `io.opentelemetry.api.trace.Tracer` directly.
+
 ## Troubleshooting
 
 **Images not found:** Run `./build.sh` to build all images. Verify with `docker images | grep opennms`.
